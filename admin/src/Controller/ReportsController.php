@@ -9,10 +9,9 @@ use Danieldiazi\Component\Usertools\Administrator\Model\ReportsModel;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Joomla\CMS\Access\Exception\NotAllowed;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\MVC\Controller\BaseController;
 
 /** CSV download of one task report. */
-class ReportsController extends BaseController
+class ReportsController extends DisplayController
 {
     public function export(): void
     {

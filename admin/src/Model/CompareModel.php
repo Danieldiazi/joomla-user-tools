@@ -95,6 +95,7 @@ class CompareModel extends BaseDatabaseModel
         $comparison = $this->calculate($preview['names'], $draft['exclusions']);
         $offered    = array_fill_keys($preview['ids'], true);
         $comparison['candidates'] = array_values(array_filter($comparison['candidates'], fn ($u) => isset($offered[(int) $u->id])));
+        $this->assertReviewedCandidates($preview, $comparison['candidates']);
         $comparison['unknown']    = array_values(array_intersect($preview['unknown'], array_map('strval', $comparison['unknown'])));
         return $comparison + [
             'threshold'  => Toolkit::settings()->confirmThreshold(),
@@ -128,7 +129,9 @@ class CompareModel extends BaseDatabaseModel
         if ((int) ($input['confirm'] ?? 0) !== 1) {
             throw new UserFacingException('COM_USERTOOLS_ERROR_CONFIRM');
         }
-        $this->checkTypedCount(\count($preview['ids']), $input);
+        // Revalidate the offered set before validating the count or performing any write.
+        $review = $this->getReview();
+        $this->checkTypedCount(\count($review['candidates']), $input);
         $draft      = $this->getDraft();
         $directory  = Toolkit::directory();
         $selection  = Registration::select(
@@ -232,6 +235,25 @@ class CompareModel extends BaseDatabaseModel
             $log->created((object) ['id' => $row['id'], 'username' => $row['username']], $operator, $mode);
         }
         return $result;
+    }
+
+    /**
+     * A changed offered set requires a new comparison, so the typed count always matches the review.
+     * Newly eligible accounts are not added to an existing preview.
+     *
+     * @param array<string, mixed> $preview
+     * @param list<UserRecord> $candidates
+     */
+    private function assertReviewedCandidates(array $preview, array $candidates): void
+    {
+        $offered = array_map('intval', $preview['ids']);
+        $current = array_map(static fn (UserRecord $user): int => $user->id, $candidates);
+        sort($offered);
+        sort($current);
+        if ($offered !== $current) {
+            $this->session()->set(self::PREVIEW, []);
+            throw new UserFacingException('COM_USERTOOLS_ERROR_REVIEW_CHANGED');
+        }
     }
 
     private function assertRegisteredGroup(): void

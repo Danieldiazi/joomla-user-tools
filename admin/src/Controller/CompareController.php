@@ -9,10 +9,9 @@ use Danieldiazi\Component\Usertools\Administrator\Model\CompareModel;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Danieldiazi\Component\Usertools\Administrator\View\Compare\HtmlView as CompareView;
 use Joomla\CMS\Language\Text;
-use Joomla\CMS\MVC\Controller\BaseController;
 
 /** POST actions of the manual comparison. */
-class CompareController extends BaseController
+class CompareController extends DisplayController
 {
     use ToolControllerTrait;
 

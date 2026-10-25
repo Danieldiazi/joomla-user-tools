@@ -6,10 +6,9 @@ namespace Danieldiazi\Component\Usertools\Administrator\Controller;
 
 use Danieldiazi\Component\Usertools\Administrator\Model\InactiveModel;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
-use Joomla\CMS\MVC\Controller\BaseController;
 
 /** POST actions of the manual inactivity review. */
-class InactiveController extends BaseController
+class InactiveController extends DisplayController
 {
     use ToolControllerTrait;
 
