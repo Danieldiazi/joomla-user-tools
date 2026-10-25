@@ -19,6 +19,8 @@ Todas las operaciones muestran una revisión antes de aplicar cambios, protegen 
 
 **Índice:** [Instalación](#instalación-y-actualización) · [Exclusiones](#exclusiones-independientes) · [Comparación manual](#comparación-manual) · [Inactividad manual](#revisión-manual-por-inactividad) · [Tarea programada](#tarea-programada-por-inactividad) · [Resultados](#resultados-dentro-de-user-tools) · [Construcción y pruebas](#construcción-y-pruebas) · [Publicación](#publicación-automática-por-etiquetas)
 
+¿Dudas concretas? Consulta las [preguntas frecuentes](FAQ.md).
+
 ## Instalación y actualización
 
 1. Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) el fichero **pkg_usertools-VERSIÓN.zip**.
