@@ -22,7 +22,7 @@ for (const size of [0, 1800]) {
   };
   const document = {
     readyState: 'loading',
-    querySelectorAll: () => [form],
+    querySelectorAll: selector => selector === '[data-ut-review]' ? [form] : [],
     addEventListener: (event, cb) => { handlers[event] = cb; }
   };
   vm.runInNewContext(script, { document });
@@ -44,3 +44,38 @@ for (const size of [0, 1800]) {
   }
 }
 console.log('OK: review loads after DOM ready, preserves edits and serialises 1800 rows');
+
+function groupOption(admin, manual, locked) {
+  const input = { checked: locked || manual, disabled: locked,
+    dataset: { utAdminGroup: admin ? '1' : '0', utManual: manual ? '1' : '0' } };
+  const preserve = { disabled: !(locked && manual) };
+  const note = { hidden: !locked };
+  return { input, preserve, note, classList: { toggle() {} },
+    querySelector: s => s === '[data-ut-group]' ? input : s === '[data-ut-group-preserve]' ? preserve : note };
+}
+const auto = groupOption(true, false, true);
+const manual = groupOption(true, true, true);
+const ordinary = groupOption(false, false, false);
+const protect = { checked: true, addEventListener: (event, handler) => { protect.change = handler; } };
+const exclusionForm = { querySelector: () => protect, querySelectorAll: () => [auto, manual, ordinary] };
+vm.runInNewContext(script, { document: { readyState: 'complete',
+  querySelectorAll: s => s === '[data-ut-exclusions]' ? [exclusionForm] : [] } });
+assert.equal(auto.input.checked, true);
+assert.equal(auto.input.disabled, true);
+assert.equal(auto.preserve.disabled, true, 'Automatic protection must not become a manual exclusion');
+assert.equal(manual.preserve.disabled, false, 'Preserve previously saved manual selections');
+assert.equal(ordinary.input.disabled, false);
+protect.checked = false; protect.change();
+assert.equal(auto.input.checked, false);
+assert.equal(auto.input.disabled, false);
+assert.equal(auto.note.hidden, true);
+assert.equal(manual.input.checked, true);
+assert.equal(manual.input.disabled, false);
+auto.input.checked = true;
+protect.checked = true; protect.change();
+assert.equal(auto.input.disabled, true);
+assert.equal(auto.preserve.disabled, false);
+protect.checked = false; protect.change();
+assert.equal(auto.input.checked, true, 'Restore manual changes made while unlocked');
+assert.equal(manual.preserve.disabled, true, 'Do not submit manual selections twice');
+console.log('OK: automatic administrator groups locked, explained and restored');

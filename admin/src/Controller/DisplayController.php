@@ -159,6 +159,10 @@ class DisplayController extends BaseController
         $db = Factory::getContainer()->get(DatabaseInterface::class);
         $groups = $db->setQuery($db->createQuery()->select($db->quoteName(['id', 'title']))
             ->from($db->quoteName('#__usergroups'))->order($db->quoteName('lft')))->loadObjectList();
+        foreach ($groups as $group) {
+            $group->adminProtected = Access::checkGroup((int) $group->id, 'core.admin')
+                || Access::checkGroup((int) $group->id, 'core.login.admin');
+        }
         $pluginInstalled = (bool) $db->setQuery($db->createQuery()->select('COUNT(*)')
             ->from($db->quoteName('#__extensions'))
             ->where($db->quoteName('type') . ' = ' . $db->quote('plugin'))

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="component" method="upgrade">
-  <name>User Tools</name><author>Danieldiazi</author><version>0.3.1</version>
+  <name>User Tools</name><author>Danieldiazi</author><version>0.3.2</version>
   <creationDate>2026-10</creationDate><description>Asistente de gestión de usuarios y bloqueo por inactividad.</description>
   <namespace path="src">Danieldiazi\Component\Usertools</namespace>
   <media folder="media" destination="com_usertools"><folder>css</folder><folder>js</folder></media>

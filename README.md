@@ -1,10 +1,10 @@
 # Joomla User Tools
 
-Herramientas de administración para Joomla 6: comparación de una lista vigente y tarea programada de bloqueo por inactividad. Versión 0.3.1, GPL-2.0-or-later.
+Herramientas de administración para Joomla 6: comparación de una lista vigente y tarea programada de bloqueo por inactividad. Versión 0.3.2, GPL-2.0-or-later.
 
 ## Instalación y actualización
 
-Instala **pkg_usertools-0.3.1.zip** desde Sistema → Instalar → Extensiones. El paquete instala/actualiza el componente y el plugin de tareas. Conserva las exclusiones por nombre de la versión 0.1.0. No desinstales el componente para actualizar.
+Instala **pkg_usertools-0.3.2.zip** desde Sistema → Instalar → Extensiones. El paquete instala/actualiza el componente y el plugin de tareas. Conserva las exclusiones por nombre de la versión 0.1.0. No desinstales el componente para actualizar.
 
 También se generan ZIP separados del componente y del plugin. El plugin necesita el componente 0.2.0 o posterior. Habilita «Tarea - User Tools» desde Sistema → Gestionar → Plugins; la instalación no habilita tareas de bloqueo por sí sola.
 
@@ -36,7 +36,7 @@ Una lista parcialmente incompleta puede producir bajas incorrectas: revisa la vi
 
 ### Altas seleccionadas
 
-La portada permite elegir herramienta; el asistente manual tiene pantallas de entrada, revisión y resultado. Los grupos excluidos se eligen con casillas.
+La portada permite elegir herramienta; el asistente manual tiene pantallas de entrada, revisión y resultado. Los grupos excluidos se eligen con casillas. Al activar «Excluir administradores», los grupos con permisos de administración aparecen marcados, en gris y bloqueados, con el motivo. Al desactivar la opción se recuperan las selecciones manuales. La protección automática no se guarda como una exclusión manual.
 
 Los nombres desconocidos están desmarcados por defecto. Solo las cuentas seleccionadas se crean como **Registrados (grupo ID 2)**; se comprueba que el grupo exista y no conceda acceso a la administración. El nombre visible inicial coincide con el nombre de usuario.
 
@@ -69,6 +69,10 @@ La tarea revalida fechas y exclusiones con un objeto de usuario nuevo antes del 
 Ambas herramientas bloquean mediante la API de usuarios de Joomla y ejecutan sus eventos de guardado. La tarea registra los bloqueos por ID y un resumen. Un error de guardado se comunica como fallo de tarea; los bloqueos previos de esa ejecución permanecen aplicados.
 
 El plugin usa el programador nativo: para ejecutarlo aunque no haya visitas, configura el cron del alojamiento según la [guía oficial](https://guide.joomla.org/user-guide/scheduled-tasks/how-to-choose-a-scheduler).
+
+### Consultar resultados de las tareas
+
+En Sistema → Tareas programadas → Historial de ejecución se consulta el estado de cada ejecución. El detalle se escribe en el directorio de registros configurado en Joomla, normalmente en el fichero task_ID.log.php (ID es el identificador de la tarea), salvo que se indique otro nombre en la tarea. Incluye IDs candidatos en simulación, bloqueos realizados y resumen de candidatos, bloqueados y errores.
 
 ## Construcción y pruebas
 

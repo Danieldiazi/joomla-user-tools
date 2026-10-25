@@ -20,13 +20,18 @@ namespace {
     $groups = array_map(fn($g)=>(object)$g,[
         ['id'=>1,'title'=>'Public'],['id'=>2,'title'=>'Registered'],['id'=>3,'title'=>'Author'],
         ['id'=>4,'title'=>'Editor'],['id'=>5,'title'=>'Publisher'],['id'=>6,'title'=>'Manager'],
-        ['id'=>7,'title'=>'Administrator'],['id'=>8,'title'=>'Super Users']]);
+        ['id'=>7,'title'=>'Administrator','adminProtected'=>true],['id'=>8,'title'=>'Super Users','adminProtected'=>true]]);
     $pluginInstalled=true; $pluginEnabled=false;
     foreach (['home','edit','review','result','schedule'] as $step) {
         ob_start(); require __DIR__ . '/../admin/tmpl/wizard.php'; $html=ob_get_clean();
         if (str_contains($html,'<script>alert')) { throw new \RuntimeException('Unescaped username'); }
         if ($step==='edit' && (str_contains($html,'<select') || str_contains($html,'data-ut-review'))) {
             throw new \RuntimeException('Edit step must not show review or multi-select');
+        }
+        if ($step==='edit' && (!preg_match('/id="ut-group-7"[^>]* checked disabled/', $html)
+            || !preg_match('/id="ut-group-8"[^>]* checked disabled/', $html)
+            || !str_contains($html,'Protegido por la exclusión de administradores'))) {
+            throw new \RuntimeException('Administrative groups must be checked, disabled and explained');
         }
         if ($step==='review' && (!str_contains($html,'Volver y editar') || str_contains($html,'name="names"'))) {
             throw new \RuntimeException('Review must be separate from input');

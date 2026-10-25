@@ -42,7 +42,7 @@ $draftSettings = Exclusions::fromArray($draft['settings']);
   </ol></nav>
 <?php if ($step === 'edit'): ?>
   <h2>¿Quién debe conservar acceso?</h2><p class="ut-intro">Pega la lista completa de nombres vigentes, uno por línea. En el siguiente paso podrás revisar los cambios.</p>
-  <form method="post" action="index.php?option=com_usertools" class="ut-form">
+  <form method="post" action="index.php?option=com_usertools" class="ut-form" data-ut-exclusions>
     <div class="ut-grid ut-edit-grid">
       <section class="ut-card"><label for="ut-names"><strong>Lista de usuarios vigentes</strong></label><p class="ut-muted" id="ut-names-help">Puedes copiar una columna de Excel. No se distinguen mayúsculas y minúsculas.</p>
         <textarea id="ut-names" name="names" rows="10" required aria-describedby="ut-names-help" placeholder="usuario1&#10;usuario2&#10;usuario3"><?= $e($draft['text']) ?></textarea>
@@ -50,11 +50,16 @@ $draftSettings = Exclusions::fromArray($draft['settings']);
       </section>
       <section class="ut-card"><h3>Excluir de los bloqueos</h3>
         <input type="hidden" name="protect_admins" value="0">
-        <label class="ut-check"><input type="checkbox" name="protect_admins" value="1"<?= $draftSettings->protectAdmins ? ' checked' : '' ?>> Administradores y usuarios con acceso a la administración</label>
+        <label class="ut-check"><input type="checkbox" name="protect_admins" value="1" data-ut-protect-admins<?= $draftSettings->protectAdmins ? ' checked' : '' ?>> Administradores y usuarios con acceso a la administración</label>
         <label for="ut-excluded"><strong>Nombres excluidos</strong></label><textarea id="ut-excluded" name="excluded" rows="3" placeholder="Un nombre por línea"><?= $e(implode("\n",$draftSettings->names)) ?></textarea>
         <fieldset class="ut-groups"><legend>Grupos excluidos</legend><div class="ut-group-list">
         <?php foreach ($groups as $group): ?>
-          <label class="ut-check"><input type="checkbox" name="excluded_groups[]" value="<?= (int)$group->id ?>"<?= in_array((int)$group->id,$draftSettings->groups,true) ? ' checked' : '' ?>><?= $e($group->title) ?></label>
+          <?php $manual = in_array((int)$group->id,$draftSettings->groups,true); $adminGroup = !empty($group->adminProtected); $locked = $adminGroup && $draftSettings->protectAdmins; ?>
+          <div class="ut-group-option<?= $locked ? ' ut-is-protected' : '' ?>" data-ut-group-option>
+            <label class="ut-check"><input id="ut-group-<?= (int)$group->id ?>" type="checkbox" name="excluded_groups[]" value="<?= (int)$group->id ?>" data-ut-group data-ut-admin-group="<?= $adminGroup ? '1' : '0' ?>" data-ut-manual="<?= $manual ? '1' : '0' ?>" aria-describedby="ut-group-note-<?= (int)$group->id ?>"<?= ($manual || $locked) ? ' checked' : '' ?><?= $locked ? ' disabled' : '' ?>><?= $e($group->title) ?></label>
+            <input type="hidden" name="excluded_groups[]" value="<?= (int)$group->id ?>" data-ut-group-preserve<?= ($manual && $locked) ? '' : ' disabled' ?>>
+            <small id="ut-group-note-<?= (int)$group->id ?>" data-ut-group-note<?= $locked ? '' : ' hidden' ?>>Protegido por la exclusión de administradores</small>
+          </div>
         <?php endforeach; ?>
         </div></fieldset><p class="ut-muted">Se incluyen los subgrupos. Estas exclusiones se guardan al continuar.</p>
       </section>
