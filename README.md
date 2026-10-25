@@ -32,7 +32,7 @@ Las exclusiones de la comparación manual se guardan en los parámetros del comp
 
 Puedes usar «Guardar exclusiones» sin pegar una lista. No se admiten CSV ni se eliminan o reactivan usuarios.
 
-Los nombres se comparan sin distinguir mayúsculas y minúsculas: OTRO y otro son la misma cuenta. Se conservan los nombres originales y se eliminan espacios exteriores, líneas vacías y duplicados. Una lista vacía o sin coincidencias no permite bloquear cuentas. La vista previa caduca a los 15 minutos y se consume una sola vez. Un cambio de exclusiones invalida la vista previa. Antes de guardar se revalidan las cuentas.
+Los nombres se comparan sin distinguir mayúsculas y minúsculas: OTRO y otro son la misma cuenta. Se conservan los nombres originales y se eliminan espacios exteriores, líneas vacías y duplicados. Una lista vacía no se admite. Si ningún nombre de la lista coincide con una cuenta existente, la revisión lo avisa de forma destacada y propone bloquear todas las cuentas no protegidas; solo se aplican al marcar la confirmación. La vista previa caduca a los 15 minutos y se consume una sola vez. Un cambio de exclusiones invalida la vista previa. Antes de guardar se revalidan las cuentas.
 
 Una lista parcialmente incompleta puede producir bajas incorrectas: revisa la vista previa y utiliza la lista completa.
 
@@ -42,7 +42,7 @@ La portada permite elegir herramienta; el asistente manual tiene pantallas de en
 
 Los nombres desconocidos están desmarcados por defecto. Solo las cuentas seleccionadas se crean como **Registrados (grupo ID 2)**; se comprueba que el grupo exista y no conceda acceso a la administración. El nombre visible inicial coincide con el nombre de usuario.
 
-Se valida el correo, su unicidad y la existencia del nombre antes de aplicar cambios. Si la selección es inválida, no se aplican ni altas ni bloqueos. Una lista sin coincidencias sigue impidiendo bajas, pero permite seleccionar altas.
+Se valida el correo, su unicidad y la existencia del nombre antes de aplicar cambios. Si la selección es inválida, no se aplican ni altas ni bloqueos. Una lista sin coincidencias permite tanto bajas como altas, siempre con el aviso y la confirmación.
 
 Cada cuenta recibe una contraseña aleatoria diferente y debe cambiarla en su primer acceso. Las contraseñas se muestran **una sola vez** en la pantalla de resultado. Se retiran del resultado guardado al mostrarlo y no se registran en logs. Al recargar o salir ya no se pueden consultar: usa la recuperación de contraseña de Joomla. Si el resultado no se abre, las credenciales pendientes caducan a los 15 minutos.
 

@@ -53,7 +53,8 @@ final class Comparison
             }
         }
         $result['unknown'] = array_values($remaining);
-        if ($result['matched'] === 0) { $result['candidates'] = []; }
+        // An empty list is never a valid roster; without matches the review warns instead.
+        if (!$valid) { $result['candidates'] = []; }
         return $result;
     }
 }

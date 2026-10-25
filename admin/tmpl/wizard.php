@@ -74,6 +74,8 @@ $draftSettings = Exclusions::fromArray($draft['settings']);
   </form>
 <?php elseif ($step === 'review'): ?>
   <h2>Revisa antes de aplicar</h2><p class="ut-intro">Comprueba las bajas y selecciona las altas que necesitas. Puedes volver atrás sin perder tus datos.</p>
+  <?php if (!$comparison['matched']): ?><div class="ut-warning" role="alert" data-ut-no-matches><strong>Ningún nombre de la lista coincide con un usuario de Joomla.</strong>
+    <?= $comparison['candidates'] ? 'Por eso se propone bloquear todas las cuentas no protegidas. Comprueba que has pegado la lista correcta antes de confirmar.' : 'No hay cuentas que bloquear con las exclusiones actuales.' ?></div><?php endif; ?>
   <div class="ut-stats">
     <?php foreach (['Coincidencias'=>$comparison['matched'],'Protegidos'=>$comparison['protected'],'Se bloquearán'=>count($comparison['candidates']),'Nombres nuevos'=>count($comparison['unknown'])] as $label=>$number): ?>
     <div class="ut-card"><strong><?= (int)$number ?></strong><span><?= $e($label) ?></span></div>
@@ -84,7 +86,6 @@ $draftSettings = Exclusions::fromArray($draft['settings']);
     <input type="hidden" name="registrations" data-ut-registrations value="{}">
     <input type="hidden" name="review_ready" data-ut-ready value="0">
     <section class="ut-card"><div class="ut-section-heading"><h3>Cuentas que se bloquearán</h3><span class="ut-count"><?= count($comparison['candidates']) ?></span></div>
-      <?php if (!$comparison['matched']): ?><p class="ut-note">No hay coincidencias con Joomla: se han desactivado los bloqueos. Puedes seleccionar altas de usuarios nuevos.</p><?php endif; ?>
       <?php if ($comparison['candidates']): ?><div class="ut-table-scroll"><table class="ut-table"><thead><tr><th>Nombre de usuario</th><th>Acción</th></tr></thead><tbody>
         <?php foreach ($comparison['candidates'] as $user): ?><tr><td><?= $e($user->username) ?></td><td><span class="ut-tag ut-danger-tag">Bloquear acceso</span></td></tr><?php endforeach; ?>
       </tbody></table></div><?php else: ?><p class="ut-muted">No se bloqueará ninguna cuenta.</p><?php endif; ?>

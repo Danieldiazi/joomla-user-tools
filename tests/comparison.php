@@ -15,7 +15,8 @@ check(array_column($r['candidates'], 'id') === [3], 'Solo bloquear ausentes no p
 check($r['matched'] === 1 && $r['unknown'] === ['desconocido'], 'Coincidencias y desconocidos');
 check($r['protected'] === 2 && $r['blocked'] === 1, 'Exclusiones y ya bloqueados');
 check(Comparison::compare($users, [], [], [])['candidates'] === [], 'Lista vacía');
-check(Comparison::compare($users, ['AJENO'], [], [])['candidates'] === [], 'Sin coincidencias');
+$none = Comparison::compare($users, ['AJENO'], ['servicio'], [1]);
+check($none['matched'] === 0 && array_column($none['candidates'], 'id') === [2, 3], 'Sin coincidencias: se proponen las no protegidas');
 check(count(Comparison::parse(implode("\n", array_map(fn($i) => 'usuario'.$i, range(1, 1800))))) === 1800, '1800 usuarios');
 try { Comparison::parse("\xFF"); throw new RuntimeException('UTF-8 inválido aceptado'); } catch (InvalidArgumentException $e) {}
 echo "OK: comparación, protecciones, listas vacías y 1800 usuarios\n";

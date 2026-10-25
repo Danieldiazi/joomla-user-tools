@@ -46,5 +46,19 @@ namespace {
             file_put_contents($dir.'/'.$step.'.html','<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>User Tools</title><style>body{margin:0;background:#f5f7fb;font-family:system-ui,sans-serif}'.$css.'</style><body>'.$html.'<script>'.$js.'</script></body></html>');
         }
     }
+    $step = 'review';
+    foreach ([[(object)['id'=>9,'username'=>'baja']], []] as $candidates) {
+        $comparison = ['matched'=>0,'protected'=>1,'blocked'=>0,'candidates'=>$candidates,'unknown'=>['pepito']];
+        ob_start(); require __DIR__ . '/../admin/tmpl/wizard.php'; $html=ob_get_clean();
+        if (!str_contains($html,'data-ut-no-matches') || !str_contains($html,'Ningún nombre de la lista coincide')) {
+            throw new \RuntimeException('Missing no-match warning');
+        }
+        if ($candidates && (!str_contains($html,'todas las cuentas no protegidas') || !str_contains($html,'baja'))) {
+            throw new \RuntimeException('No-match review must list accounts to block');
+        }
+    }
+    $comparison['matched'] = 1;
+    ob_start(); require __DIR__ . '/../admin/tmpl/wizard.php'; $html=ob_get_clean();
+    if (str_contains($html,'data-ut-no-matches')) { throw new \RuntimeException('Warning shown with matches'); }
     echo "OK: wizard and report screens, navigation, checkboxes, plugin state and HTML escaping\n";
 }
