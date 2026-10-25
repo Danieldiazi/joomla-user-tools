@@ -53,7 +53,8 @@ namespace {
         if (!str_contains($html,'data-ut-no-matches') || !str_contains($html,'Ningún nombre de la lista coincide')) {
             throw new \RuntimeException('Missing no-match warning');
         }
-        if ($candidates && (!str_contains($html,'todas las cuentas no protegidas') || !str_contains($html,'baja'))) {
+        if (!$candidates && str_contains($html,'ut-warning-danger')) { throw new \RuntimeException('Red only when accounts would be blocked'); }
+        if ($candidates && (!str_contains($html,'ut-warning-danger') || !str_contains($html,'todas las cuentas no protegidas') || !str_contains($html,'baja'))) {
             throw new \RuntimeException('No-match review must list accounts to block');
         }
     }

@@ -74,7 +74,7 @@ $draftSettings = Exclusions::fromArray($draft['settings']);
   </form>
 <?php elseif ($step === 'review'): ?>
   <h2>Revisa antes de aplicar</h2><p class="ut-intro">Comprueba las bajas y selecciona las altas que necesitas. Puedes volver atrás sin perder tus datos.</p>
-  <?php if (!$comparison['matched']): ?><div class="ut-warning" role="alert" data-ut-no-matches><strong>Ningún nombre de la lista coincide con un usuario de Joomla.</strong>
+  <?php if (!$comparison['matched']): ?><div class="ut-warning<?= $comparison['candidates'] ? ' ut-warning-danger' : '' ?>" role="alert" data-ut-no-matches><strong>Ningún nombre de la lista coincide con un usuario de Joomla.</strong>
     <?= $comparison['candidates'] ? 'Por eso se propone bloquear todas las cuentas no protegidas. Comprueba que has pegado la lista correcta antes de confirmar.' : 'No hay cuentas que bloquear con las exclusiones actuales.' ?></div><?php endif; ?>
   <div class="ut-stats">
     <?php foreach (['Coincidencias'=>$comparison['matched'],'Protegidos'=>$comparison['protected'],'Se bloquearán'=>count($comparison['candidates']),'Nombres nuevos'=>count($comparison['unknown'])] as $label=>$number): ?>
