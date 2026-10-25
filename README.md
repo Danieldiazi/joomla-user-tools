@@ -1,34 +1,82 @@
 # Joomla User Tools
 
-Componente de administración para Joomla 6. Pega una lista completa de nombres de usuario y bloquea las cuentas que ya no aparecen, tras revisar una vista previa.
+Herramientas de administración para Joomla 6: comparación de una lista vigente y tarea programada de bloqueo por inactividad. Versión 0.2.0, GPL-2.0-or-later.
 
-## Uso
+## Instalación y actualización
 
-1. Instala `com_usertools-0.1.0.zip` desde Sistema → Instalar → Extensiones.
-2. Abre Componentes → User Tools como superusuario.
-3. Pega los nombres vigentes, uno por línea.
-4. Indica las cuentas de servicio excluidas, una por línea.
-5. Pulsa Comparar, revisa el resultado y confirma los bloqueos.
+Instala **pkg_usertools-0.2.0.zip** desde Sistema → Instalar → Extensiones. El paquete instala/actualiza el componente y el plugin de tareas. Conserva las exclusiones por nombre de la versión 0.1.0. No desinstales el componente para actualizar.
 
-No importa CSV ni crea, elimina o reactiva usuarios. Protege automáticamente al operador y a cualquier cuenta con permiso de acceso a la administración. Las exclusiones manuales se guardan al comparar y se recuperan en las siguientes sesiones.
+También se generan ZIP separados del componente y del plugin. El plugin necesita el componente 0.2.0 o posterior. Habilita «Tarea - User Tools» desde Sistema → Gestionar → Plugins; la instalación no habilita tareas de bloqueo por sí sola.
 
-Se ignoran líneas vacías y espacios al principio/final, se eliminan duplicados y se distinguen mayúsculas y minúsculas. Los nombres desconocidos se muestran. Una lista vacía o sin coincidencias nunca permite bloquear cuentas. La vista previa caduca a los 15 minutos, se consume una sola vez y se vuelve a comprobar cada cuenta al aplicar los cambios.
+## Exclusiones independientes
 
-El fichero pegado debe ser la lista COMPLETA de usuarios vigentes. La vista previa no puede detectar que falte una parte de una lista válida.
+Cada herramienta tiene sus propios ajustes persistentes:
 
-Bloquea mediante la API de usuarios de Joomla para ejecutar sus eventos de guardado. No garantiza cerrar sesiones ya abiertas. No incluye tareas programadas ni bloqueo por antigüedad.
+- **Excluir administradores**: activado por defecto. Protege superusuarios y cualquier cuenta con permiso de acceso a la administración. Se puede desactivar.
+- **Nombres de usuario excluidos**: uno por línea; distingue mayúsculas y minúsculas.
+- **Grupos excluidos**: selección múltiple, incluidos los subgrupos.
 
-## Estado y pruebas
+Basta que se cumpla cualquiera de las exclusiones para proteger una cuenta. La cuenta que ejecuta la operación, cuando hay un usuario identificado, siempre queda protegida.
 
-Versión inicial 0.1.0. Sintaxis y lógica comprobables con PHP 8.3/8.4. Pendiente de validar instalación y flujo completo en una instancia real de Joomla 6 antes de usar en producción.
+Las exclusiones de la comparación manual se guardan en los parámetros del componente. Las de la tarea se guardan en los parámetros de **cada tarea programada**. No se copian ni se mezclan entre ambas herramientas ni entre tareas.
 
-```sh
+## Comparación manual
+
+1. Abre Componentes → User Tools como superusuario.
+2. Pega la lista **completa** de nombres vigentes, uno por línea.
+3. Configura las exclusiones de la comparación manual y pulsa Comparar.
+4. Revisa los candidatos y confirma los bloqueos.
+
+Puedes usar «Guardar exclusiones» sin pegar una lista. No se admiten CSV ni se crean, eliminan o reactivan usuarios.
+
+Se eliminan espacios exteriores, líneas vacías y duplicados. Una lista vacía o sin coincidencias no permite bloquear cuentas. La vista previa caduca a los 15 minutos y se consume una sola vez. Un cambio de exclusiones invalida la vista previa. Antes de guardar se revalidan las cuentas.
+
+Una lista parcialmente incompleta puede producir bajas incorrectas: revisa la vista previa y utiliza la lista completa.
+
+## Tarea programada por inactividad
+
+1. Habilita el plugin «Tarea - User Tools».
+2. Ve a Sistema → Tareas programadas → Nueva.
+3. Elige **User Tools: bloquear usuarios inactivos**.
+4. Configura el periodo en días: **365** por defecto.
+5. Configura sus propias exclusiones de administradores, nombres y grupos.
+6. La **simulación está activada por defecto**. Ejecuta la tarea y revisa su registro: indica los IDs candidatos sin modificar cuentas.
+7. Desactiva la simulación y establece una frecuencia, por ejemplo diaria, para aplicar los bloqueos.
+
+El último acceso debe ser **estrictamente anterior** al límite UTC. El periodo admite entre 1 y 36500 días; 365 días es una duración fija, no un año de calendario. Fechas inválidas y cuentas ya bloqueadas se omiten.
+
+Los usuarios que nunca accedieron se excluyen por defecto. La opción «Incluir usuarios que nunca han accedido» permite tratarlos usando su fecha de registro.
+
+La tarea revalida fechas y exclusiones con un objeto de usuario nuevo antes del guardado. Omite sesiones recientes registradas en la tabla de sesiones de Joomla; la detección depende de que Joomla mantenga esos metadatos. No garantiza cerrar sesiones ya abiertas.
+
+Ambas herramientas bloquean mediante la API de usuarios de Joomla y ejecutan sus eventos de guardado. La tarea registra los bloqueos por ID y un resumen. Un error de guardado se comunica como fallo de tarea; los bloqueos previos de esa ejecución permanecen aplicados.
+
+El plugin usa el programador nativo: para ejecutarlo aunque no haya visitas, configura el cron del alojamiento según la [guía oficial](https://guide.joomla.org/user-guide/scheduled-tasks/how-to-choose-a-scheduler).
+
+## Construcción y pruebas
+
+Con PHP 8.3/8.4:
+
+~~~sh
 php tests/comparison.php
-find admin tests -name '*.php' -exec php -l {} \;
-```
+php tests/policies.php
+php tests/task.php
+~~~
 
-El paquete instalable contiene únicamente `com_usertools.xml` y `admin/` en su raíz.
+El último fichero comprueba el adaptador de la tarea con servicios simulados. No equivale a una prueba en Joomla real.
 
-## Licencia
+Con PowerShell y .NET:
 
-GPL-2.0-or-later. Proyecto independiente, sin afiliación oficial a Joomla.
+~~~powershell
+.\scripts\build.ps1 -OutputDirectory .\dist
+~~~
+
+Genera los tres paquetes instalables. El paquete principal contiene los ZIP del componente y del plugin.
+
+Sintaxis PHP, políticas de exclusión, fechas límite, simulación y aplicación se comprueban localmente. **Pendiente de validar la instalación, edición de tareas y ejecución completa en una instancia real de Joomla 6.**
+
+## Referencias
+
+Implementación propia basada en la API del programador y el patrón de los plugins oficiales de Joomla 6.0.0: [DeleteActionLogs](https://github.com/joomla/joomla-cms/tree/6.0.0/plugins/task/deleteactionlogs). La funcionalidad solicitada tiene como referencia [Task - Inactive Users de RicheyWeb](https://www.richeyweb.com/software/joomla/plugins/task-inactive-users); no se ha copiado su implementación.
+
+Proyecto independiente, sin afiliación oficial a Joomla.

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<form>
+  <fields name="params">
+    <fieldset name="task_params">
+      <field name="days" type="number" label="PLG_TASK_USERTOOLS_DAYS" description="PLG_TASK_USERTOOLS_DAYS_DESC" default="365" min="1" max="36500" filter="integer" validate="number" required="true" />
+      <field name="protect_admins" type="radio" layout="joomla.form.field.radio.switcher" label="PLG_TASK_USERTOOLS_PROTECT_ADMINS" description="PLG_TASK_USERTOOLS_PROTECT_ADMINS_DESC" default="1" filter="integer">
+        <option value="0">JNO</option><option value="1">JYES</option>
+      </field>
+      <field name="excluded_names" type="textarea" label="PLG_TASK_USERTOOLS_NAMES" description="PLG_TASK_USERTOOLS_NAMES_DESC" rows="5" filter="string" />
+      <field name="excluded_groups" type="usergrouplist" label="PLG_TASK_USERTOOLS_GROUPS" description="PLG_TASK_USERTOOLS_GROUPS_DESC" multiple="true" filter="int_array" />
+      <field name="include_never" type="radio" layout="joomla.form.field.radio.switcher" label="PLG_TASK_USERTOOLS_NEVER" description="PLG_TASK_USERTOOLS_NEVER_DESC" default="0" filter="integer">
+        <option value="0">JNO</option><option value="1">JYES</option>
+      </field>
+      <field name="dry_run" type="radio" layout="joomla.form.field.radio.switcher" label="PLG_TASK_USERTOOLS_DRY_RUN" description="PLG_TASK_USERTOOLS_DRY_RUN_DESC" default="1" filter="integer">
+        <option value="0">JNO</option><option value="1">JYES</option>
+      </field>
+    </fieldset>
+  </fields>
+</form>

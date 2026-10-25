@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="component" method="upgrade">
-<name>User Tools</name><author>Danieldiazi</author><version>0.1.0</version>
+<name>User Tools</name><author>Danieldiazi</author><version>0.2.0</version>
 <creationDate>2026-10</creationDate><description>Bloqueo de usuarios ausentes de una lista vigente.</description>
 <namespace path="src">Danieldiazi\Component\Usertools</namespace>
 <administration><menu link="option=com_usertools">User Tools</menu>

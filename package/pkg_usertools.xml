@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="package" method="upgrade">
+  <name>User Tools</name><packagename>usertools</packagename>
+  <author>Danieldiazi</author><version>0.2.0</version><creationDate>2026-10</creationDate>
+  <license>GPL-2.0-or-later</license>
+  <description>User Tools: comparación manual y bloqueo programado por inactividad.</description>
+  <files folder="packages">
+    <file type="component" id="com_usertools">com_usertools.zip</file>
+    <file type="plugin" id="usertools" group="task">plg_task_usertools.zip</file>
+  </files>
+</extension>
