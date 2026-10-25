@@ -36,17 +36,17 @@ final class Exclusions
 
     public function protects(object $user, int $operatorId = 0): bool
     {
-        if ($operatorId > 0 && (int) $user->id === $operatorId) {
-            return true;
+        return $this->reason($user, $operatorId) !== '';
+    }
+
+    public function reason(object $user, int $operatorId = 0): string
+    {
+        if ($operatorId > 0 && (int) $user->id === $operatorId) { return 'Es el usuario que ejecuta la operación.'; }
+        if (Comparison::contains($this->names, (string) $user->username)) { return 'Está en la lista de nombres excluidos.'; }
+        if ($this->protectAdmins && ($user->authorise('core.admin') || $user->authorise('core.login.admin'))) {
+            return 'Protegido por la exclusión de administradores.';
         }
-        if (Comparison::contains($this->names, (string) $user->username)) {
-            return true;
-        }
-        if ($this->protectAdmins
-            && ($user->authorise('core.admin') || $user->authorise('core.login.admin'))) {
-            return true;
-        }
-        // Authorised groups include ancestors: selecting a parent protects its children.
-        return (bool) array_intersect($this->groups, $user->getAuthorisedGroups());
+        if (array_intersect($this->groups, $user->getAuthorisedGroups())) { return 'Pertenece a un grupo excluido o a uno de sus subgrupos.'; }
+        return '';
     }
 }

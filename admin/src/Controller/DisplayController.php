@@ -6,6 +6,7 @@ defined('_JEXEC') or die;
 use Danieldiazi\Component\Usertools\Administrator\Service\Comparison;
 use Danieldiazi\Component\Usertools\Administrator\Service\Exclusions;
 use Danieldiazi\Component\Usertools\Administrator\Service\Registration;
+use Danieldiazi\Component\Usertools\Administrator\Service\ReportStore;
 use Joomla\CMS\Access\Access;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
@@ -35,7 +36,7 @@ class DisplayController extends BaseController
             && isset($preview['unknown']) && ($preview['comparison_version'] ?? 0) === 2;
         if (!$validPreview) { $preview = []; $session->set('usertools.preview', []); }
         $step = $input->getCmd('step', 'home');
-        if (!in_array($step, ['home', 'edit', 'review', 'result', 'schedule'], true)) { $step = 'home'; }
+        if (!in_array($step, ['home', 'edit', 'review', 'result', 'schedule', 'reports', 'report'], true)) { $step = 'home'; }
 
         if ($input->getMethod() === 'POST') {
             if (!Session::checkToken()) { throw new \RuntimeException('La sesión ha caducado.', 403); }
@@ -171,6 +172,20 @@ class DisplayController extends BaseController
         $pluginEnabled = PluginHelper::isEnabled('task', 'usertools');
         $app->getDocument()->addStyleSheet(Uri::root(true) . '/media/com_usertools/css/admin.css');
         $app->getDocument()->addScript(Uri::root(true) . '/media/com_usertools/js/admin.js', [], ['defer' => true]);
+        $reportPage = ['items' => [], 'total' => 0];
+        $taskReport = null;
+        $reportError = '';
+        $reportPageNumber = max(1, min(100000, $input->getInt('page', 1)));
+        if (in_array($step, ['reports', 'report'], true)) {
+            try {
+                $reports = new ReportStore(rtrim((string) $app->get('log_path', JPATH_ADMINISTRATOR . '/logs'), '/\\') . '/usertools-reports');
+                if ($step === 'reports') { $reportPage = $reports->page($reportPageNumber); }
+                else {
+                    $taskReport = $reports->get($input->getString('report_id'));
+                    if (!$taskReport) { $reportError = 'No se ha encontrado este informe.'; }
+                }
+            } catch (\Throwable $e) { $reportError = 'No se pudo leer el informe. Comprueba los permisos de la carpeta de registros.'; }
+        }
         require JPATH_ADMINISTRATOR . '/components/com_usertools/tmpl/wizard.php';
         return $this;
     }

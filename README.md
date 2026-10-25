@@ -1,12 +1,14 @@
 # Joomla User Tools
 
-Herramientas de administración para Joomla 6: comparación de una lista vigente y tarea programada de bloqueo por inactividad. Versión 0.3.2, GPL-2.0-or-later.
+Herramientas de administración para Joomla 6: comparación de una lista vigente y tarea programada de bloqueo por inactividad. Versión 2026.10.0, GPL-2.0-or-later.
+
+La numeración sigue **año.mes.revisión**, sin cero inicial en el mes: 2026.10.0, 2026.10.1; el siguiente mes empieza en 2026.11.0. Las etiquetas llevan el prefijo v.
 
 ## Instalación y actualización
 
-Instala **pkg_usertools-0.3.2.zip** desde Sistema → Instalar → Extensiones. El paquete instala/actualiza el componente y el plugin de tareas. Conserva las exclusiones por nombre de la versión 0.1.0. No desinstales el componente para actualizar.
+Instala **pkg_usertools-2026.10.0.zip** desde Sistema → Instalar → Extensiones. El paquete instala/actualiza el componente y el plugin de tareas. Conserva las exclusiones por nombre de la versión 0.1.0. No desinstales el componente para actualizar.
 
-También se generan ZIP separados del componente y del plugin. El plugin necesita el componente 0.2.0 o posterior. Habilita «Tarea - User Tools» desde Sistema → Gestionar → Plugins; la instalación no habilita tareas de bloqueo por sí sola.
+También se generan ZIP separados del componente y del plugin. El plugin necesita el componente 2026.10.0 o posterior. Habilita «Tarea - User Tools» desde Sistema → Gestionar → Plugins; la instalación no habilita tareas de bloqueo por sí sola.
 
 ## Exclusiones independientes
 
@@ -50,6 +52,12 @@ La revisión envía las selecciones y correos en un único campo JSON para no su
 
 La portada y la sección de tareas muestran si el plugin está instalado/habilitado y ofrecen accesos a Plugins y Tareas programadas.
 
+## Revisión manual por inactividad
+
+En la portada, abre «Revisar usuarios inactivos». Configura un plazo en días, si se incluyen quienes nunca accedieron y sus exclusiones. Son independientes de la comparación de lista y de las tareas programadas.
+
+Busca candidatos, marca solo las cuentas que quieres suspender y confirma. Puedes volver y editar. No hay cuentas marcadas inicialmente. Se revalidan fechas, exclusiones y sesiones antes de guardar, se protege al operador y solo se bloquean los IDs seleccionados en la revisión. La selección caduca a los 15 minutos. Se muestra el resultado final y no se eliminan cuentas.
+
 ## Tarea programada por inactividad
 
 1. Habilita el plugin «Tarea - User Tools».
@@ -70,7 +78,15 @@ Ambas herramientas bloquean mediante la API de usuarios de Joomla y ejecutan sus
 
 El plugin usa el programador nativo: para ejecutarlo aunque no haya visitas, configura el cron del alojamiento según la [guía oficial](https://guide.joomla.org/user-guide/scheduled-tasks/how-to-choose-a-scheduler).
 
-### Consultar resultados de las tareas
+### Resultados dentro de User Tools
+
+Abre Componentes → User Tools → Resultados de tareas. Cada ejecución registra fecha UTC, título e ID de tarea, simulación/real, plazo, estado, cantidades y detalle por usuario. Se indican motivos de protección u omisión, como administrador, grupo excluido, nunca accedió, registro reciente, sesión activa o cuenta ya bloqueada. Solo los superusuarios pueden consultarlos.
+
+No depende del registro individual de Joomla. Las ejecuciones anteriores a esta versión no se importan. No se registran contraseñas ni correos. Los informes se conservan en la subcarpeta usertools-reports del directorio de registros, con cabecera PHP que impide su lectura directa por web. No se borran automáticamente.
+
+Se guarda un informe inicial antes de modificar cuentas y se actualiza cada 50 usuarios y al terminar. Si se interrumpe la ejecución, el informe puede aparecer sin finalizar con datos parciales. Si no se puede guardar el informe inicial, la tarea termina con error antes de bloquear cuentas. Si falla una actualización posterior, puede haber cambios ya aplicados.
+
+### Registro técnico opcional de Joomla
 
 En Sistema → Tareas programadas → Historial de ejecución se consulta el estado de cada ejecución. Para generar un archivo de detalle, abre la tarea y habilita «Registro individual de la tarea» en la pestaña de registro; viene desactivado por defecto. Guarda y vuelve a ejecutar. El detalle se escribe en el directorio de registros configurado en Joomla, normalmente en el fichero task_ID.log.php (ID es el identificador de la tarea), salvo que se indique otro nombre en la tarea. Incluye IDs candidatos en simulación, bloqueos realizados y resumen de candidatos, bloqueados y errores.
 
@@ -85,6 +101,8 @@ php tests/task.php
 php tests/registration.php
 php tests/wizard.php
 php tests/username-case.php
+php tests/reports.php
+php tests/inactive.php
 ~~~
 
 tests/task.php comprueba el adaptador de la tarea con servicios simulados. No equivale a una prueba en Joomla real.
@@ -101,21 +119,21 @@ Sintaxis PHP, políticas de exclusión, fechas límite, simulación y aplicació
 
 ## Publicación automática por etiquetas
 
-Al enviar una etiqueta o publicar una release con formato **vX.Y.Z** (por ejemplo **v0.2.1**) al repositorio, GitHub Actions comprueba la sintaxis PHP, ejecuta las pruebas y genera los tres ZIP instalables. Después crea una release para esa etiqueta y adjunta los ZIP y un fichero SHA256SUMS.txt. Si la release ya existe, actualiza sus adjuntos.
+Al enviar una etiqueta o publicar una release con formato **vAAAA.M.REVISIÓN** (por ejemplo **v2026.10.0**) al repositorio, GitHub Actions comprueba la sintaxis PHP, ejecuta las pruebas y genera los tres ZIP instalables. Después crea una release para esa etiqueta y adjunta los ZIP y un fichero SHA256SUMS.txt. Si la release ya existe, actualiza sus adjuntos.
 
 La versión de la etiqueta se incorpora a los nombres de archivo y a los tres manifiestos dentro de los ZIP, sin modificar los fuentes. No hace falta cambiar manualmente los manifiestos para publicar una etiqueta. No se admiten sufijos de preversión en este flujo.
 
-Desde GitHub: Releases → Draft a new release → Choose a tag → crea, por ejemplo, v0.2.1 sobre main → Publish release. También puedes enviar la etiqueta desde Git. El flujo debe estar presente en el commit etiquetado. Crear una rama o enviar commits sin etiqueta no publica paquetes.
+Desde GitHub: Releases → Draft a new release → Choose a tag → crea, por ejemplo, v2026.10.0 sobre main → Publish release. También puedes enviar la etiqueta desde Git. El flujo debe estar presente en el commit etiquetado. Crear una rama o enviar commits sin etiqueta no publica paquetes.
 
-En la release, el fichero recomendado para instalar ambas herramientas es **pkg_usertools-X.Y.Z.zip**. Los ZIP com_usertools y plg_task_usertools son las instalaciones separadas.
+En la release, el fichero recomendado para instalar ambas herramientas es **pkg_usertools-2026.10.0.zip**. Los ZIP com_usertools y plg_task_usertools son las instalaciones separadas.
 
 El flujo usa el GITHUB_TOKEN del propio repositorio, con permiso de escritura de contenido para adjuntar los archivos; no requiere un token personal. El lanzamiento y resultado se pueden consultar en la pestaña Actions.
 
 Para construir una versión concreta localmente:
 
 ~~~powershell
-.\scripts\build.ps1 -Version v0.2.1 -OutputDirectory .\dist
-.\tests\build.ps1 -Version v0.2.1 -PackageDirectory .\dist
+.\scripts\build.ps1 -Version v2026.10.0 -OutputDirectory .\dist
+.\tests\build.ps1 -Version v2026.10.0 -PackageDirectory .\dist
 ~~~
 
 ## Referencias

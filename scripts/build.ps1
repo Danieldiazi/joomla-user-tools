@@ -10,8 +10,8 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
     $manifest = [xml][IO.File]::ReadAllText((Join-Path $root 'com_usertools.xml'))
     $Version = [string]$manifest.extension.version
 }
-if ($Version -notmatch '^v?((0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*))$') {
-    throw 'La versión debe tener el formato X.Y.Z o vX.Y.Z, por ejemplo v0.2.1.'
+if ($Version -notmatch '^v?((20[0-9]{2})\.([1-9]|1[0-2])\.(0|[1-9][0-9]*))$') {
+    throw 'La versión debe tener el formato AAAA.M.REVISIÓN o vAAAA.M.REVISIÓN, por ejemplo v2026.10.0.'
 }
 $Version = $Matches[1]
 [IO.Directory]::CreateDirectory($out) | Out-Null

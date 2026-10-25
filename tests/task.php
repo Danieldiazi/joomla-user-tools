@@ -38,7 +38,9 @@ namespace Joomla\Component\Scheduler\Administrator\Traits {
 namespace {
     define('_JEXEC', 1);
     require __DIR__ . '/../admin/src/Service/Comparison.php';
+    require __DIR__ . '/../admin/src/Service/ReportStore.php';
     require __DIR__ . '/../admin/src/Service/Exclusions.php';
+    require __DIR__ . '/../admin/src/Service/InactivityPolicy.php';
     require __DIR__ . '/../plugins/task/usertools/src/Service/InactivityPolicy.php';
     require __DIR__ . '/../plugins/task/usertools/src/Extension/Usertools.php';
 
@@ -93,25 +95,32 @@ namespace {
     function runTask(array $params, array $users, ?array $snapshot = null, array $active = []): array {
         $plugin = new Usertools();
         $plugin->app = new TaskApp();
+        $reports = new \Danieldiazi\Component\Usertools\Administrator\Service\ReportStore(__DIR__ . '/../../task-report-fixtures/' . bin2hex(random_bytes(6)));
+        $plugin->setReportStore($reports);
         $plugin->setDatabase(new TaskDb($snapshot ?? array_values($users), $active));
         $plugin->setUserFactory(new TaskFactory($users));
         $method = new \ReflectionMethod($plugin, 'blockInactive');
         $status = $method->invoke($plugin, new ExecuteTaskEvent($params));
-        return [$status, $plugin->logs];
+        $items = $reports->page()['items'];
+        $report = $items ? $reports->get($items[0]['id']) : null;
+        return [$status, $plugin->logs, $report];
     }
 
     $normal = new TaskUser(1, 'normal');
-    [$status, $logs] = runTask([], [1 => $normal]);
+    [$status, $logs, $report] = runTask([], [1 => $normal]);
     verify($status === 0 && $normal->saved === 0 && str_contains(implode('', $logs), 'se bloquearía'), 'Simulación por defecto');
-    runTask(['dry_run' => 0], [1 => $normal]);
+    verify($report['status'] === 'completed' && $report['candidates'] === 1 && $report['users'][0]['action'] === 'simulated', 'Informe de simulación persistido');
+    [$status, $logs, $report] = runTask(['dry_run' => 0], [1 => $normal]);
+    verify($report['blocked'] === 1 && $report['users'][0]['action'] === 'blocked', 'Informe de bloqueo real');
     verify($normal->saved === 1 && $normal->block === 1, 'Bloqueo real mediante API');
 
     $admin = new TaskUser(2, 'admin'); $admin->admin = true;
     $named = new TaskUser(3, 'servicio');
     $grouped = new TaskUser(4, 'grupo'); $grouped->groups = [7, 8];
     $active = new TaskUser(5, 'sesion');
-    runTask(['dry_run' => 0, 'excluded_names' => 'servicio', 'excluded_groups' => [7]],
+    [$status, $logs, $report] = runTask(['dry_run' => 0, 'excluded_names' => 'servicio', 'excluded_groups' => [7]],
         [2=>$admin, 3=>$named, 4=>$grouped, 5=>$active], active: [5]);
+    verify($report['protected'] === 3 && $report['omitted'] === 1, 'Motivos de protección y sesión en informe');
     foreach ([$admin, $named, $grouped, $active] as $user) {
         verify($user->saved === 0, 'Administrador, nombre, grupo y sesión protegidos');
     }
@@ -124,7 +133,8 @@ namespace {
     runTask(['dry_run'=>0], [6=>$fresh], [$snapshot]);
     verify($fresh->saved === 0, 'Revalidar acceso reciente antes de guardar');
     $bad = new TaskUser(7, 'fallo'); $bad->fail = true;
-    [$status, $logs] = runTask(['dry_run'=>0], [7=>$bad]);
+    [$status, $logs, $report] = runTask(['dry_run'=>0], [7=>$bad]);
+    verify($report['status'] === 'failed' && $report['errors'] === 1, 'Error persistido en informe');
     verify($status === 5 && str_contains(implode('', $logs), 'errores=1'), 'Fallo de guardado reportado');
     $untouched = new TaskUser(8, 'intacto');
     [$status] = runTask(['dry_run'=>0, 'days'=>0], [8=>$untouched]);

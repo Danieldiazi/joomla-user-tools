@@ -18,12 +18,16 @@ $draftSettings = Exclusions::fromArray($draft['settings']);
       <ol><li>Pega la lista y elige las exclusiones.</li><li>Revisa los cambios, sin modificar cuentas.</li><li>Confirma y consulta el resultado.</li></ol>
       <a class="ut-button" href="<?= $url('edit') ?>">Empezar comparación</a>
     </section>
+<section class="ut-card"><span class="ut-tag">MANUAL</span><h2>Revisar usuarios inactivos</h2><p>Elige un plazo y unas exclusiones propias. Revisa las cuentas sin acceso y marca solo las que quieres suspender.</p><a class="ut-button ut-secondary" href="index.php?option=com_usertools&amp;task=inactive.display">Revisar cuentas inactivas</a></section>
     <section class="ut-card"><span class="ut-tag">PROGRAMADO</span><h2>Bloquear por inactividad</h2><p>Programa el bloqueo de las cuentas que lleven un tiempo sin acceder, con su propio plazo y sus propias exclusiones.</p>
       <p class="ut-status"><?= $pluginEnabled ? 'Plugin habilitado' : ($pluginInstalled ? 'Plugin instalado, pendiente de habilitar' : 'Plugin pendiente de instalar') ?></p>
       <a class="ut-button ut-secondary" href="<?= $url('schedule') ?>">Configurar tarea programada</a>
     </section>
   </div>
+  <section class="ut-card" style="margin-top:22px"><h2>Resultados de tareas</h2><p>Revisa las ejecuciones, los usuarios bloqueados y el motivo de las exclusiones.</p><a class="ut-button ut-secondary" href="<?= $url('reports') ?>">Ver resultados de tareas</a></section>
   <aside class="ut-note">Las exclusiones de cada herramienta son independientes. Tu propia cuenta siempre queda protegida en las operaciones manuales.</aside>
+<?php elseif (in_array($step, ['reports', 'report'], true)): ?>
+  <?php require __DIR__ . '/reports.php'; ?>
 <?php elseif ($step === 'schedule'): ?>
   <section class="ut-card ut-narrow"><span class="ut-tag">BLOQUEO POR INACTIVIDAD</span><h2>Configura tu tarea programada</h2>
     <div class="ut-note"><?= $pluginEnabled ? 'El plugin está habilitado y listo para crear una tarea.' : ($pluginInstalled ? 'El plugin está instalado, pero debes habilitarlo para que aparezca en las tareas programadas.' : 'Instala el paquete completo pkg_usertools para añadir el plugin de tareas.') ?></div>

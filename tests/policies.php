@@ -1,7 +1,8 @@
 <?php
 require __DIR__ . '/../admin/src/Service/Comparison.php';
 require __DIR__ . '/../admin/src/Service/Exclusions.php';
-require __DIR__ . '/../plugins/task/usertools/src/Service/InactivityPolicy.php';
+require __DIR__ . '/../admin/src/Service/InactivityPolicy.php';
+    require __DIR__ . '/../plugins/task/usertools/src/Service/InactivityPolicy.php';
 
 use Danieldiazi\Component\Usertools\Administrator\Service\Exclusions;
 use Danieldiazi\Plugin\Task\Usertools\Service\InactivityPolicy;

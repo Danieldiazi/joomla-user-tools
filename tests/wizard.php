@@ -22,7 +22,8 @@ namespace {
         ['id'=>4,'title'=>'Editor'],['id'=>5,'title'=>'Publisher'],['id'=>6,'title'=>'Manager'],
         ['id'=>7,'title'=>'Administrator','adminProtected'=>true],['id'=>8,'title'=>'Super Users','adminProtected'=>true]]);
     $pluginInstalled=true; $pluginEnabled=false;
-    foreach (['home','edit','review','result','schedule'] as $step) {
+    $reportError=''; $reportPage=['items'=>[], 'total'=>0]; $taskReport=null; $reportPageNumber=1;
+    foreach (['home','edit','review','result','schedule','reports'] as $step) {
         ob_start(); require __DIR__ . '/../admin/tmpl/wizard.php'; $html=ob_get_clean();
         if (str_contains($html,'<script>alert')) { throw new \RuntimeException('Unescaped username'); }
         if ($step==='edit' && (str_contains($html,'<select') || str_contains($html,'data-ut-review'))) {
@@ -45,5 +46,5 @@ namespace {
             file_put_contents($dir.'/'.$step.'.html','<!doctype html><html lang="es"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>User Tools</title><style>body{margin:0;background:#f5f7fb;font-family:system-ui,sans-serif}'.$css.'</style><body>'.$html.'<script>'.$js.'</script></body></html>');
         }
     }
-    echo "OK: five separate screens, navigation, checkboxes, plugin state and HTML escaping\n";
+    echo "OK: wizard and report screens, navigation, checkboxes, plugin state and HTML escaping\n";
 }

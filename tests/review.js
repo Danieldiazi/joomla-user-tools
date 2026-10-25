@@ -79,3 +79,26 @@ protect.checked = false; protect.change();
 assert.equal(auto.input.checked, true, 'Restore manual changes made while unlocked');
 assert.equal(manual.preserve.disabled, true, 'Do not submit manual selections twice');
 console.log('OK: automatic administrator groups locked, explained and restored');
+
+const suspendHandlers = {};
+const boxes = [1,2,3].map(id => ({checked:false,dataset:{utSuspendId:String(id)},addEventListener:(type,cb)=>{suspendHandlers['box'+id]=cb;}}));
+const selectAll = {checked:false,indeterminate:false,addEventListener:(type,cb)=>{suspendHandlers.all=cb;}};
+const output={value:'[]'},ready={value:'0'},count={textContent:''},submit={disabled:false};
+const suspensionForm={
+  querySelectorAll:()=>boxes,
+  querySelector:s=>({'[data-ut-suspend-all]':selectAll,'[data-ut-suspend-submit]':submit,'[data-ut-selected]':output,'[data-ut-selection-ready]':ready,'[data-ut-suspension-count]':count})[s],
+  addEventListener:(type,cb)=>{suspendHandlers[type]=cb;}
+};
+vm.runInNewContext(script,{document:{readyState:'complete',querySelectorAll:s=>s==='[data-ut-suspension-form]'?[suspensionForm]:[]}});
+assert.equal(output.value,'[]');
+assert.equal(submit.disabled,true);
+boxes[1].checked=true;suspendHandlers.box2();
+assert.equal(output.value,'[2]');
+assert.equal(selectAll.indeterminate,true);
+assert.equal(submit.disabled,false);
+selectAll.checked=true;suspendHandlers.all();
+assert.equal(output.value,'[1,2,3]');
+selectAll.checked=false;suspendHandlers.all();
+assert.equal(output.value,'[]');
+assert.equal(submit.disabled,true);
+console.log('OK: manual inactivity starts unselected and submits only chosen users');
