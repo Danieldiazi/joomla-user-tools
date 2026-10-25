@@ -1,0 +1,23 @@
+{
+  "$schema": "https://developer.joomla.org/schemas/json-schema/web_assets.json",
+  "name": "com_usertools",
+  "version": "2026.10.3",
+  "description": "User Tools administrator assets",
+  "license": "GPL-2.0-or-later",
+  "assets": [
+    {
+      "name": "com_usertools.admin",
+      "type": "style",
+      "uri": "com_usertools/admin.css"
+    },
+    {
+      "name": "com_usertools.admin",
+      "type": "script",
+      "uri": "com_usertools/admin.js",
+      "dependencies": ["core"],
+      "attributes": {
+        "defer": true
+      }
+    }
+  ]
+}

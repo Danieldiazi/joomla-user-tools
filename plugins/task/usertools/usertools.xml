@@ -2,16 +2,17 @@
 <extension type="plugin" group="task" method="upgrade">
   <name>PLG_TASK_USERTOOLS</name>
   <author>Danieldiazi</author>
-  <version>2026.10.0</version>
   <creationDate>2026-10</creationDate>
+  <copyright>(C) 2026 Danieldiazi</copyright>
   <license>GPL-2.0-or-later</license>
+  <authorUrl>https://github.com/Danieldiazi/joomla-user-tools</authorUrl>
+  <version>2026.10.3</version>
   <description>PLG_TASK_USERTOOLS_XML_DESCRIPTION</description>
   <namespace path="src">Danieldiazi\Plugin\Task\Usertools</namespace>
-  <files><folder plugin="usertools">services</folder><folder>src</folder><folder>forms</folder></files>
-  <languages>
-    <language tag="es-ES">language/es-ES/plg_task_usertools.ini</language>
-    <language tag="es-ES">language/es-ES/plg_task_usertools.sys.ini</language>
-    <language tag="en-GB">language/en-GB/plg_task_usertools.ini</language>
-    <language tag="en-GB">language/en-GB/plg_task_usertools.sys.ini</language>
-  </languages>
+  <files>
+    <folder plugin="usertools">services</folder>
+    <folder>src</folder>
+    <folder>forms</folder>
+    <folder>language</folder>
+  </files>
 </extension>

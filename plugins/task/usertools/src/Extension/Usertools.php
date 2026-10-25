@@ -1,135 +1,193 @@
 <?php
+
 namespace Danieldiazi\Plugin\Task\Usertools\Extension;
 
-defined('_JEXEC') or die;
+\defined('_JEXEC') or die;
 
+use Danieldiazi\Component\Usertools\Administrator\Service\AccountBlocker;
 use Danieldiazi\Component\Usertools\Administrator\Service\Exclusions;
+use Danieldiazi\Component\Usertools\Administrator\Service\InactivityPolicy;
+use Danieldiazi\Component\Usertools\Administrator\Service\MassBlockGuard;
+use Danieldiazi\Component\Usertools\Administrator\Service\Operator;
 use Danieldiazi\Component\Usertools\Administrator\Service\ReportStore;
-use Danieldiazi\Plugin\Task\Usertools\Service\InactivityPolicy;
+use Danieldiazi\Component\Usertools\Administrator\Service\Settings;
+use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
+use Danieldiazi\Component\Usertools\Administrator\Service\UserDirectory;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Plugin\CMSPlugin;
-use Joomla\CMS\User\UserFactoryInterface;
 use Joomla\Component\Scheduler\Administrator\Event\ExecuteTaskEvent;
 use Joomla\Component\Scheduler\Administrator\Task\Status;
 use Joomla\Component\Scheduler\Administrator\Traits\TaskPluginTrait;
-use Joomla\Database\DatabaseAwareTrait;
 use Joomla\Event\SubscriberInterface;
 
+/**
+ * Scheduled task "User Tools: block inactive users". It acts without a user identity, even when
+ * the lazy scheduler is triggered by a logged-in visitor, and never blocks Super Users.
+ */
 final class Usertools extends CMSPlugin implements SubscriberInterface
 {
-    use DatabaseAwareTrait;
     use TaskPluginTrait;
-    private UserFactoryInterface $userFactory;
-    private ?ReportStore $reportStore = null;
+
+    /** Report checkpoint: rewrite the report after this many account changes. */
+    private const CHECKPOINT = 50;
+
     protected $autoloadLanguage = true;
 
-    private const TASKS_MAP = [
+    protected const TASKS_MAP = [
         'usertools.block_inactive' => [
             'langConstPrefix' => 'PLG_TASK_USERTOOLS_BLOCK',
-            'method' => 'blockInactive',
-            'form' => 'inactive',
+            'method'          => 'blockInactive',
+            'form'            => 'inactive',
         ],
     ];
 
-    public function setUserFactory(UserFactoryInterface $factory): void { $this->userFactory = $factory; }
-    public function setReportStore(ReportStore $store): void { $this->reportStore = $store; }
+    /** @var (\Closure(): array{directory: UserDirectory, blocker: AccountBlocker, reports: ReportStore, settings: Settings, window: int})|null */
+    private ?\Closure $services = null;
 
-    public static function getSubscribedEvents(): array
+    /** Tests replace Joomla's services. */
+    public function setServices(\Closure $factory): void
     {
-        return ['onTaskOptionsList' => 'advertiseRoutines', 'onExecuteTask' => 'standardRoutineHandler',
-            'onContentPrepareForm' => 'enhanceTaskItemForm'];
+        $this->services = $factory;
     }
 
-    private function blockInactive(ExecuteTaskEvent $event): int
+    /** @return array<string, string> */
+    public static function getSubscribedEvents(): array
     {
-        $values = (array) $event->getArgument('params');
-        $subject = $event->getArgument('subject');
-        $report = [
-            'task_id' => is_object($subject) && method_exists($subject, 'get') ? (int) $subject->get('id') : 0,
-            'task_title' => is_object($subject) && method_exists($subject, 'get') ? (string) $subject->get('title') : 'User Tools',
-            'started_at' => gmdate('Y-m-d H:i:s'), 'finished_at' => null, 'status' => 'running',
-            'dry_run' => (int) ($values['dry_run'] ?? 1) !== 0, 'days' => $values['days'] ?? 365,
-            'include_never' => (int) ($values['include_never'] ?? 0) === 1,
-            'cutoff' => null, 'candidates' => 0, 'blocked' => 0, 'errors' => 0,
-            'protected' => 0, 'omitted' => 0, 'users' => [], 'message' => '',
+        return [
+            'onTaskOptionsList'    => 'advertiseRoutines',
+            'onExecuteTask'        => 'standardRoutineHandler',
+            'onContentPrepareForm' => 'enhanceTaskItemForm',
         ];
-        $store = null;
+    }
+
+    protected function blockInactive(ExecuteTaskEvent $event): int
+    {
+        $values  = (array) $event->getArgument('params');
+        $subject = $event->getArgument('subject');
+        $title   = \is_object($subject) && method_exists($subject, 'get') ? (string) $subject->get('title') : 'User Tools';
+        $guard   = MassBlockGuard::fromParams($values);
+        $report  = [
+            'version'       => 2,
+            'task_id'       => \is_object($subject) && method_exists($subject, 'get') ? (int) $subject->get('id') : 0,
+            'task_title'    => $title,
+            'started_at'    => gmdate('Y-m-d H:i:s'), 'finished_at' => null, 'status' => 'running',
+            'dry_run'       => (int) ($values['dry_run'] ?? 1) !== 0,
+            'days'          => $values['days'] ?? 365,
+            'include_never' => (int) ($values['include_never'] ?? 0) === 1,
+            'guard'         => ['percent' => $guard->percent, 'minimum' => $guard->minimum],
+            'cutoff'        => null, 'active_accounts' => 0,
+            'candidates'    => 0, 'blocked' => 0, 'errors' => 0, 'protected' => 0, 'omitted' => 0,
+            'omitted_reasons' => [], 'users' => [], 'message' => '',
+        ];
+        $store    = null;
         $reportId = '';
-        $exit = Status::OK;
+        $exit     = Status::OK;
         try {
             if (!ComponentHelper::isEnabled('com_usertools')) {
-                throw new \RuntimeException('Instala y habilita el componente User Tools 2026.10.0 o posterior.');
+                throw new \RuntimeException('COM_USERTOOLS_REPORT_ERROR_COMPONENT');
             }
             $this->getApplication()->bootComponent('com_usertools');
-            $store = $this->reportStore ?? new ReportStore(
-                rtrim((string) $this->getApplication()->get('log_path', JPATH_ADMINISTRATOR . '/logs'), '/\\') . '/usertools-reports'
-            );
-            // Abort before account changes if the report cannot be persisted.
-            $reportId = $store->start($report);
-            $settings = Exclusions::fromArray($values);
-            $cutoff = InactivityPolicy::cutoff($values['days'] ?? 365, new \DateTimeImmutable('now', new \DateTimeZone('UTC')));
+            $services = $this->services ? ($this->services)() : [
+                'directory' => Toolkit::directory(),
+                'blocker'   => Toolkit::blocker(),
+                'reports'   => Toolkit::reports(),
+                'settings'  => Toolkit::settings(),
+                'window'    => Toolkit::sessionWindow(),
+            ];
+            $store = $services['reports'];
+            // Abort before any account change if the report cannot be written.
+            $reportId   = $store->start($report);
+            $exclusions = Exclusions::fromArray($values);
+            $cutoff     = InactivityPolicy::cutoff($values['days'] ?? 365, new \DateTimeImmutable('now', new \DateTimeZone('UTC')));
+            $operator   = Operator::system($title);
             $report['cutoff'] = $cutoff->format('Y-m-d H:i:s');
-            $actorId = (int) ($this->getApplication()->getIdentity()?->id ?? 0);
-            $db = $this->getDatabase();
-            $records = $db->setQuery($db->createQuery()
-                ->select($db->quoteName(['id', 'username', 'block', 'lastvisitDate', 'registerDate']))
-                ->from($db->quoteName('#__users'))->order($db->quoteName('id')))->loadObjectList();
-            $this->logTask('Inicio. Corte UTC: ' . $report['cutoff'] . '; simulación: ' . ($report['dry_run'] ? 'sí' : 'no'));
-            foreach ($records as $record) {
-                $user = $this->userFactory->loadUserById((int) $record->id);
-                $row = ['id' => (int) $record->id, 'username' => (string) ($user->username ?? $record->username ?? ''),
-                    'last_visit' => $user->lastvisitDate ?? null, 'action' => 'omitted', 'reason' => ''];
-                if (!$user->id) {
-                    $row['reason'] = 'La cuenta ya no existe.';
-                } elseif ((int) $user->block === 1) {
-                    $row['reason'] = 'La cuenta ya estaba bloqueada.';
-                } elseif (($reason = $settings->reason($user, $actorId)) !== '') {
-                    $row['action'] = 'protected';
-                    $row['reason'] = $reason;
-                } elseif (!InactivityPolicy::eligible($user, $cutoff, $report['include_never'])) {
-                    $row['reason'] = InactivityPolicy::omissionReason($user, $report['include_never']);
-                } elseif ($this->hasActiveSession((int) $user->id)) {
-                    $row['reason'] = 'Tiene una sesión reciente registrada en Joomla.';
-                } else {
-                    $report['candidates']++;
-                    $row['reason'] = 'Ha superado el plazo de inactividad.';
-                    if ($report['dry_run']) {
-                        $row['action'] = 'simulated';
-                        $this->logTask('Simulación: se bloquearía el usuario ID ' . (int) $user->id);
-                    } else {
-                        $user->block = 1;
-                        try {
-                            if (!$user->save()) { throw new \RuntimeException('Guardado rechazado.'); }
-                            $report['blocked']++;
-                            $row['action'] = 'blocked';
-                            $this->logTask('Bloqueado por inactividad: usuario ID ' . (int) $user->id);
-                        } catch (\Throwable $e) {
-                            $report['errors']++;
-                            $row['action'] = 'error';
-                            $row['reason'] = 'Joomla no pudo guardar el bloqueo.';
-                            $this->logTask('No se pudo bloquear el usuario ID ' . (int) $user->id, 'error');
-                        }
-                    }
+            $this->logTask(\sprintf('Start. UTC cutoff %s; dry run: %s', $report['cutoff'], $report['dry_run'] ? 'yes' : 'no'));
+
+            // 1. Classify every account with bulk queries.
+            $directory  = $services['directory'];
+            $candidates = [];
+            foreach ($directory->users() as $user) {
+                if ($user->block === 1) {
+                    continue;
                 }
-                if ($row['action'] === 'protected') { $report['protected']++; }
-                if ($row['action'] === 'omitted') { $report['omitted']++; }
-                $report['users'][] = $row;
-                if (count($report['users']) % 50 === 0) { $store->save($reportId, $report); }
+                $report['active_accounts']++;
+                $reason = $exclusions->reason($user, $operator);
+                if ($reason !== '') {
+                    $report['protected']++;
+                    $report['users'][] = $this->row($user, 'protected', $reason);
+                } elseif (!InactivityPolicy::eligible($user, $cutoff, $report['include_never'])) {
+                    $this->omit($report, InactivityPolicy::omissionReason($user, $report['include_never']));
+                } else {
+                    $candidates[$user->id] = $user;
+                }
             }
-            $exit = $report['errors'] ? Status::KNOCKOUT : Status::OK;
-            $this->logTask("Resumen: candidatos={$report['candidates']}; bloqueados={$report['blocked']}; errores={$report['errors']}.");
+            foreach (array_keys($directory->withRecentSession(array_keys($candidates), time() - $services['window'])) as $id) {
+                unset($candidates[$id]);
+                $this->omit($report, 'COM_USERTOOLS_REASON_ACTIVE_SESSION');
+            }
+            $report['candidates'] = \count($candidates);
+
+            // 2. Safety net against mass blocking.
+            if ($guard->exceeded($report['candidates'], $report['active_accounts'])) {
+                $share   = MassBlockGuard::share($report['candidates'], $report['active_accounts']);
+                $report['guard_triggered'] = true;
+                $report['message']         = 'COM_USERTOOLS_REPORT_GUARD_' . ($report['dry_run'] ? 'DRY' : 'STOPPED');
+                $report['guard_share']     = $share;
+                foreach ($candidates as $user) {
+                    $report['users'][] = $this->row($user, $report['dry_run'] ? 'simulated' : 'guarded', 'COM_USERTOOLS_REASON_INACTIVE');
+                }
+                $this->logTask(\sprintf('Mass block guard: %d candidates (%s%% of %d active accounts) exceed %d%%. Nothing was blocked.',
+                    $report['candidates'], $share, $report['active_accounts'], $guard->percent), 'warning');
+                $candidates = [];
+            }
+
+            // 3. Block (or simulate), revalidating each account with a fresh Joomla User.
+            $changes = 0;
+            foreach ($candidates as $user) {
+                if ($report['dry_run']) {
+                    $report['users'][] = $this->row($user, 'simulated', 'COM_USERTOOLS_REASON_INACTIVE');
+                    $this->logTask('Dry run: would block user ID ' . $user->id);
+                    continue;
+                }
+                $outcome = $services['blocker']->block($user->id, $exclusions, $operator,
+                    fn (object $fresh) => InactivityPolicy::eligible($fresh, $cutoff, $report['include_never'])
+                        && !$directory->withRecentSession([$user->id], time() - $services['window']), 'COM_USERTOOLS_TOOL_TASK');
+                if ($outcome['status'] === AccountBlocker::BLOCKED) {
+                    $report['blocked']++;
+                    $report['users'][] = $this->row($user, 'blocked', 'COM_USERTOOLS_REASON_INACTIVE');
+                    $this->logTask('Blocked for inactivity: user ID ' . $user->id);
+                } elseif ($outcome['status'] === AccountBlocker::ERROR) {
+                    $report['errors']++;
+                    $report['users'][] = $this->row($user, 'error', $outcome['reason']);
+                    $this->logTask('Could not block user ID ' . $user->id, 'error');
+                } elseif ($outcome['status'] === AccountBlocker::PROTECTED) {
+                    $report['protected']++;
+                    $report['users'][] = $this->row($user, 'protected', $outcome['reason']);
+                } else {
+                    $this->omit($report, $outcome['reason']);
+                }
+                if (++$changes % self::CHECKPOINT === 0) {
+                    $store->save($reportId, $report);
+                }
+            }
+            $stopped = !empty($report['guard_triggered']) && !$report['dry_run'];
+            $exit    = $report['errors'] || $stopped ? Status::KNOCKOUT : Status::OK;
+            $this->logTask(\sprintf('Summary: candidates=%d; blocked=%d; errors=%d.', $report['candidates'], $report['blocked'], $report['errors']));
         } catch (\Throwable $e) {
             $report['errors']++;
-            $report['message'] = 'No se pudo completar la tarea. Revisa la configuración y el registro técnico de Joomla.';
-            $exit = Status::KNOCKOUT;
-            $this->logTask('No se pudo completar la tarea: ' . $e->getMessage(), 'error');
+            $report['message'] = str_starts_with($e->getMessage(), 'COM_USERTOOLS_') ? $e->getMessage() : 'COM_USERTOOLS_REPORT_ERROR_GENERIC';
+            $exit              = Status::KNOCKOUT;
+            $this->logTask('The task could not be completed: ' . $e->getMessage(), 'error');
         } finally {
-            $report['status'] = $exit === Status::OK ? 'completed' : 'failed';
+            $report['status']      = !empty($report['guard_triggered']) && !$report['dry_run'] ? 'guarded' : ($exit === Status::OK ? 'completed' : 'failed');
             $report['finished_at'] = gmdate('Y-m-d H:i:s');
             if ($store && $reportId !== '') {
-                try { $store->save($reportId, $report); }
-                catch (\Throwable $e) {
-                    $this->logTask('No se pudo actualizar el informe. Puede aparecer como sin finalizar.', 'error');
+                try {
+                    $store->save($reportId, $report);
+                    $retention = isset($services['settings']) ? $services['settings']->retentionDays() : 0;
+                    $store->prune($retention);
+                } catch (\Throwable) {
+                    $this->logTask('The report could not be updated. It may appear as unfinished.', 'error');
                     $exit = Status::KNOCKOUT;
                 }
             }
@@ -137,13 +195,20 @@ final class Usertools extends CMSPlugin implements SubscriberInterface
         return $exit;
     }
 
-    private function hasActiveSession(int $userId): bool
+    /** @return array{id: int, username: string, last_visit: ?string, action: string, reason: string} */
+    private function row(object $user, string $action, string $reason): array
     {
-        $db = $this->getDatabase();
-        $lifetime = max(1, (int) $this->getApplication()->get('lifetime', 15)) * 60;
-        $query = $db->createQuery()->select('COUNT(*)')->from($db->quoteName('#__session'))
-            ->where($db->quoteName('userid') . ' = ' . $userId)
-            ->where($db->quoteName('time') . ' >= ' . $db->quote((string) (time() - $lifetime)));
-        return (int) $db->setQuery($query)->loadResult() > 0;
+        return ['id' => (int) $user->id, 'username' => (string) $user->username, 'last_visit' => $user->lastvisitDate, 'action' => $action, 'reason' => $reason];
+    }
+
+    /**
+     * Omitted accounts are only counted by reason, so reports stay small on large sites.
+     *
+     * @param array<string, mixed> $report
+     */
+    private function omit(array &$report, string $reason): void
+    {
+        $report['omitted']++;
+        $report['omitted_reasons'][$reason] = ($report['omitted_reasons'][$reason] ?? 0) + 1;
     }
 }
