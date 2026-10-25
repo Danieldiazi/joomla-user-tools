@@ -44,7 +44,7 @@ $draftSettings = Exclusions::fromArray($draft['settings']);
   <h2>¿Quién debe conservar acceso?</h2><p class="ut-intro">Pega la lista completa de nombres vigentes, uno por línea. En el siguiente paso podrás revisar los cambios.</p>
   <form method="post" action="index.php?option=com_usertools" class="ut-form">
     <div class="ut-grid ut-edit-grid">
-      <section class="ut-card"><label for="ut-names"><strong>Lista de usuarios vigentes</strong></label><p class="ut-muted" id="ut-names-help">Puedes copiar una columna de Excel. Se distinguen mayúsculas y minúsculas.</p>
+      <section class="ut-card"><label for="ut-names"><strong>Lista de usuarios vigentes</strong></label><p class="ut-muted" id="ut-names-help">Puedes copiar una columna de Excel. No se distinguen mayúsculas y minúsculas.</p>
         <textarea id="ut-names" name="names" rows="10" required aria-describedby="ut-names-help" placeholder="usuario1&#10;usuario2&#10;usuario3"><?= $e($draft['text']) ?></textarea>
         <div class="ut-note">Las cuentas ausentes de esta lista se propondrán para bloqueo, salvo las excluidas. Aún no se aplicará ningún cambio.</div>
       </section>

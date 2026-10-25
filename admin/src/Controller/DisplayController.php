@@ -32,7 +32,7 @@ class DisplayController extends BaseController
         $validPreview = $preview && ($preview['expires'] ?? 0) >= time()
             && ($preview['actor'] ?? 0) === (int) $actor->id
             && ($preview['settings'] ?? []) === $settings->toArray()
-            && isset($preview['unknown']);
+            && isset($preview['unknown']) && ($preview['comparison_version'] ?? 0) === 2;
         if (!$validPreview) { $preview = []; $session->set('usertools.preview', []); }
         $step = $input->getCmd('step', 'home');
         if (!in_array($step, ['home', 'edit', 'review', 'result', 'schedule'], true)) { $step = 'home'; }
@@ -60,7 +60,7 @@ class DisplayController extends BaseController
                     if (!$names) { throw new \InvalidArgumentException('Pega la lista completa de usuarios vigentes.'); }
                     $comparison = $this->calculate($names, $settings);
                     $preview = [
-                        'names' => $names, 'settings' => $settings->toArray(),
+                        'comparison_version' => 2, 'names' => $names, 'settings' => $settings->toArray(),
                         'ids' => array_map(fn($u) => (int) $u->id, $comparison['candidates']),
                         'unknown' => array_map('strval', $comparison['unknown']),
                         'expires' => time() + 900, 'actor' => (int) $actor->id,
@@ -99,7 +99,7 @@ class DisplayController extends BaseController
                         if (!in_array((int) $candidate->id, $preview['ids'], true)) { continue; }
                         $user = $factory->loadUserById((int) $candidate->id);
                         if (!$user->id || $user->block || $settings->protects($user, (int) $actor->id)
-                            || in_array($user->username, $preview['names'], true)) { continue; }
+                            || Comparison::contains($preview['names'], (string) $user->username)) { continue; }
                         $user->block = 1;
                         try {
                             if (!$user->save()) { throw new \RuntimeException('Guardado rechazado.'); }

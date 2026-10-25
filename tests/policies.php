@@ -55,7 +55,7 @@ expect(!(new Exclusions(false))->protects($admin), 'Protección administradores 
 expect((new Exclusions(false))->protects($admin, 10), 'El operador siempre protegido');
 $u = new PolicyUser();
 expect(Exclusions::fromArray(['excluded_names' => "ana\nana\n"])->protects($u), 'Lista de nombres');
-expect(!Exclusions::fromArray(['excluded_names' => 'ANA'])->protects($u), 'Coincidencia exacta');
+expect(Exclusions::fromArray(['excluded_names' => 'ANA'])->protects($u), 'Coincidencia sin distinguir mayúsculas');
 expect(Exclusions::fromArray(['excluded_groups' => ['2']])->protects($u), 'Grupo directo');
 expect(Exclusions::fromArray(['excluded_groups' => ['1']])->protects($u), 'Grupo antecesor');
 expect(!Exclusions::fromArray(['excluded_groups' => ['8']])->protects($u), 'Otro grupo');

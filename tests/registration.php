@@ -1,4 +1,5 @@
 <?php
+require __DIR__ . '/../admin/src/Service/Comparison.php';
 require __DIR__ . '/../admin/src/Service/Registration.php';
 use Danieldiazi\Component\Usertools\Administrator\Service\Registration;
 function check($ok, $message) { if (!$ok) { throw new RuntimeException($message); } }

@@ -39,7 +39,7 @@ final class Exclusions
         if ($operatorId > 0 && (int) $user->id === $operatorId) {
             return true;
         }
-        if (in_array((string) $user->username, $this->names, true)) {
+        if (Comparison::contains($this->names, (string) $user->username)) {
             return true;
         }
         if ($this->protectAdmins

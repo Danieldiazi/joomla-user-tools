@@ -47,7 +47,7 @@ jobs:
             php -l $_.FullName
             if ($LASTEXITCODE -ne 0) { throw "PHP syntax check failed: $($_.FullName)" }
           }
-          foreach ($test in @('tests/comparison.php', 'tests/policies.php', 'tests/task.php', 'tests/registration.php', 'tests/wizard.php')) {
+          foreach ($test in @('tests/comparison.php', 'tests/policies.php', 'tests/task.php', 'tests/registration.php', 'tests/wizard.php', 'tests/username-case.php')) {
             php $test
             if ($LASTEXITCODE -ne 0) { throw "Test failed: $test" }
           }

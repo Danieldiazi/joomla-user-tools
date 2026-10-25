@@ -5,7 +5,7 @@ final class Registration
 {
     public static function key(string $name): string
     {
-        return hash('sha256', $name);
+        return hash('sha256', Comparison::normalise($name));
     }
 
     public static function draft(string $json, array $unknown): array

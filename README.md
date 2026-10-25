@@ -1,10 +1,10 @@
 # Joomla User Tools
 
-Herramientas de administración para Joomla 6: comparación de una lista vigente y tarea programada de bloqueo por inactividad. Versión 0.3.0, GPL-2.0-or-later.
+Herramientas de administración para Joomla 6: comparación de una lista vigente y tarea programada de bloqueo por inactividad. Versión 0.3.1, GPL-2.0-or-later.
 
 ## Instalación y actualización
 
-Instala **pkg_usertools-0.3.0.zip** desde Sistema → Instalar → Extensiones. El paquete instala/actualiza el componente y el plugin de tareas. Conserva las exclusiones por nombre de la versión 0.1.0. No desinstales el componente para actualizar.
+Instala **pkg_usertools-0.3.1.zip** desde Sistema → Instalar → Extensiones. El paquete instala/actualiza el componente y el plugin de tareas. Conserva las exclusiones por nombre de la versión 0.1.0. No desinstales el componente para actualizar.
 
 También se generan ZIP separados del componente y del plugin. El plugin necesita el componente 0.2.0 o posterior. Habilita «Tarea - User Tools» desde Sistema → Gestionar → Plugins; la instalación no habilita tareas de bloqueo por sí sola.
 
@@ -13,7 +13,7 @@ También se generan ZIP separados del componente y del plugin. El plugin necesit
 Cada herramienta tiene sus propios ajustes persistentes:
 
 - **Excluir administradores**: activado por defecto. Protege superusuarios y cualquier cuenta con permiso de acceso a la administración. Se puede desactivar.
-- **Nombres de usuario excluidos**: uno por línea; distingue mayúsculas y minúsculas.
+- **Nombres de usuario excluidos**: uno por línea; no distingue mayúsculas y minúsculas.
 - **Grupos excluidos**: selección múltiple, incluidos los subgrupos.
 
 Basta que se cumpla cualquiera de las exclusiones para proteger una cuenta. La cuenta que ejecuta la operación, cuando hay un usuario identificado, siempre queda protegida.
@@ -30,7 +30,7 @@ Las exclusiones de la comparación manual se guardan en los parámetros del comp
 
 Puedes usar «Guardar exclusiones» sin pegar una lista. No se admiten CSV ni se eliminan o reactivan usuarios.
 
-Se eliminan espacios exteriores, líneas vacías y duplicados. Una lista vacía o sin coincidencias no permite bloquear cuentas. La vista previa caduca a los 15 minutos y se consume una sola vez. Un cambio de exclusiones invalida la vista previa. Antes de guardar se revalidan las cuentas.
+Los nombres se comparan sin distinguir mayúsculas y minúsculas: OTRO y otro son la misma cuenta. Se conservan los nombres originales y se eliminan espacios exteriores, líneas vacías y duplicados. Una lista vacía o sin coincidencias no permite bloquear cuentas. La vista previa caduca a los 15 minutos y se consume una sola vez. Un cambio de exclusiones invalida la vista previa. Antes de guardar se revalidan las cuentas.
 
 Una lista parcialmente incompleta puede producir bajas incorrectas: revisa la vista previa y utiliza la lista completa.
 
@@ -80,9 +80,10 @@ php tests/policies.php
 php tests/task.php
 php tests/registration.php
 php tests/wizard.php
+php tests/username-case.php
 ~~~
 
-El último fichero comprueba el adaptador de la tarea con servicios simulados. No equivale a una prueba en Joomla real.
+tests/task.php comprueba el adaptador de la tarea con servicios simulados. No equivale a una prueba en Joomla real.
 
 Con PowerShell y .NET:
 
