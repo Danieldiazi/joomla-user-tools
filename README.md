@@ -75,6 +75,25 @@ Genera los tres paquetes instalables. El paquete principal contiene los ZIP del 
 
 Sintaxis PHP, políticas de exclusión, fechas límite, simulación y aplicación se comprueban localmente. **Pendiente de validar la instalación, edición de tareas y ejecución completa en una instancia real de Joomla 6.**
 
+## Publicación automática por etiquetas
+
+Al enviar una etiqueta o publicar una release con formato **vX.Y.Z** (por ejemplo **v0.2.1**) al repositorio, GitHub Actions comprueba la sintaxis PHP, ejecuta las pruebas y genera los tres ZIP instalables. Después crea una release para esa etiqueta y adjunta los ZIP y un fichero SHA256SUMS.txt. Si la release ya existe, actualiza sus adjuntos.
+
+La versión de la etiqueta se incorpora a los nombres de archivo y a los tres manifiestos dentro de los ZIP, sin modificar los fuentes. No hace falta cambiar manualmente los manifiestos para publicar una etiqueta. No se admiten sufijos de preversión en este flujo.
+
+Desde GitHub: Releases → Draft a new release → Choose a tag → crea, por ejemplo, v0.2.1 sobre main → Publish release. También puedes enviar la etiqueta desde Git. El flujo debe estar presente en el commit etiquetado. Crear una rama o enviar commits sin etiqueta no publica paquetes.
+
+En la release, el fichero recomendado para instalar ambas herramientas es **pkg_usertools-X.Y.Z.zip**. Los ZIP com_usertools y plg_task_usertools son las instalaciones separadas.
+
+El flujo usa el GITHUB_TOKEN del propio repositorio, con permiso de escritura de contenido para adjuntar los archivos; no requiere un token personal. El lanzamiento y resultado se pueden consultar en la pestaña Actions.
+
+Para construir una versión concreta localmente:
+
+~~~powershell
+.\scripts\build.ps1 -Version v0.2.1 -OutputDirectory .\dist
+.\tests\build.ps1 -Version v0.2.1 -PackageDirectory .\dist
+~~~
+
 ## Referencias
 
 Implementación propia basada en la API del programador y el patrón de los plugins oficiales de Joomla 6.0.0: [DeleteActionLogs](https://github.com/joomla/joomla-cms/tree/6.0.0/plugins/task/deleteactionlogs). La funcionalidad solicitada tiene como referencia [Task - Inactive Users de RicheyWeb](https://www.richeyweb.com/software/joomla/plugins/task-inactive-users); no se ha copiado su implementación.
