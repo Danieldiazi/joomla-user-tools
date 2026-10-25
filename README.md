@@ -6,6 +6,8 @@ La numeración sigue **año.mes.revisión**, sin cero inicial en el mes: 2026.10
 
 Requisitos: Joomla 6 y PHP 8.3 o posterior. Funciona con MySQL/MariaDB y PostgreSQL.
 
+¿Dudas concretas? Consulta las [preguntas frecuentes](FAQ.md).
+
 ## Instalación y actualizaciones
 
 Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) el fichero **pkg_usertools-VERSIÓN.zip** e instálalo desde Sistema → Instalar → Extensiones. El paquete instala el componente y el plugin de tareas, y en una instalación nueva habilita el plugin «Tarea - User Tools». Las tareas que crees empiezan siempre en modo simulación.
@@ -124,6 +126,30 @@ php tests/verify-build.php 2026.10.3 dist
 Genera los tres ZIP instalables (`pkg_usertools`, `com_usertools` y `plg_task_usertools`), `SHA256SUMS.txt` y `updates.xml`. En Windows también vale `scripts\build.ps1`, que llama al mismo script.
 
 Para publicar, crea una release en GitHub con una etiqueta **vAAAA.M.REVISIÓN** sobre `main` (Releases → Draft a new release → Choose a tag → Publish release). GitHub Actions pasa las pruebas, genera los paquetes con esa versión en los manifiestos y los adjunta a la release junto con `SHA256SUMS.txt` y `updates.xml`. Las instalaciones existentes ven la actualización a través del servidor de actualizaciones. No se admiten sufijos de preversión.
+
+## Capturas de las herramientas
+
+Estas capturas corresponden a una versión anterior de la interfaz en Joomla 6.2.0. Sirven como recorrido visual; para las opciones y el comportamiento actuales, consulta las secciones anteriores y las [preguntas frecuentes](FAQ.md).
+
+![Portada de User Tools](docs/screenshots/01-portada.jpg)
+
+![Comparación: lista y exclusiones](docs/screenshots/02-comparacion-lista.jpg)
+
+![Comparación: revisión de cambios](docs/screenshots/03-comparacion-revision.jpg)
+
+![Comparación: resultado con contraseñas ocultas](docs/screenshots/04-comparacion-resultado.jpg)
+
+![Aviso de lista sin coincidencias](docs/screenshots/05-aviso-sin-coincidencias.jpg)
+
+![Inactividad manual: plazo y exclusiones](docs/screenshots/06-inactivos-plazo.jpg)
+
+![Inactividad manual: selección de cuentas](docs/screenshots/07-inactivos-seleccion.jpg)
+
+![Configuración de una tarea programada](docs/screenshots/08-tarea-programada.jpg)
+
+![Listado de resultados de tareas](docs/screenshots/09-resultados-tareas.jpg)
+
+![Detalle de un informe de tarea](docs/screenshots/10-informe-tarea.jpg)
 
 ## Referencias
 
