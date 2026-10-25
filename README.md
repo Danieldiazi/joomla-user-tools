@@ -1,12 +1,12 @@
 # Joomla User Tools
 
-Herramientas de administración para Joomla 6: comparación de una lista vigente y tarea programada de bloqueo por inactividad. Versión 2026.10.0, GPL-2.0-or-later.
+Herramientas de administración para Joomla 6: comparación de una lista vigente y tarea programada de bloqueo por inactividad. Licencia GPL-2.0-or-later. La versión vigente es la de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest).
 
 La numeración sigue **año.mes.revisión**, sin cero inicial en el mes: 2026.10.0, 2026.10.1; el siguiente mes empieza en 2026.11.0. Las etiquetas llevan el prefijo v.
 
 ## Instalación y actualización
 
-Instala **pkg_usertools-2026.10.0.zip** desde Sistema → Instalar → Extensiones. El paquete instala/actualiza el componente y el plugin de tareas. Conserva las exclusiones por nombre de la versión 0.1.0. No desinstales el componente para actualizar.
+Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) el fichero **pkg_usertools-VERSIÓN.zip** e instálalo desde Sistema → Instalar → Extensiones. El paquete instala/actualiza el componente y el plugin de tareas. Conserva las exclusiones por nombre de la versión 0.1.0. No desinstales el componente para actualizar.
 
 También se generan ZIP separados del componente y del plugin. El plugin necesita el componente 2026.10.0 o posterior. Habilita «Tarea - User Tools» desde Sistema → Gestionar → Plugins; la instalación no habilita tareas de bloqueo por sí sola.
 
@@ -125,7 +125,7 @@ La versión de la etiqueta se incorpora a los nombres de archivo y a los tres ma
 
 Desde GitHub: Releases → Draft a new release → Choose a tag → crea, por ejemplo, v2026.10.0 sobre main → Publish release. También puedes enviar la etiqueta desde Git. El flujo debe estar presente en el commit etiquetado. Crear una rama o enviar commits sin etiqueta no publica paquetes.
 
-En la release, el fichero recomendado para instalar ambas herramientas es **pkg_usertools-2026.10.0.zip**. Los ZIP com_usertools y plg_task_usertools son las instalaciones separadas.
+En la release, el fichero recomendado para instalar ambas herramientas es **pkg_usertools-VERSIÓN.zip** (por ejemplo, pkg_usertools-2026.10.0.zip). Los ZIP com_usertools y plg_task_usertools son las instalaciones separadas.
 
 El flujo usa el GITHUB_TOKEN del propio repositorio, con permiso de escritura de contenido para adjuntar los archivos; no requiere un token personal. El lanzamiento y resultado se pueden consultar en la pestaña Actions.
 
