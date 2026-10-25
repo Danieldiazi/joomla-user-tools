@@ -72,7 +72,7 @@ El plugin usa el programador nativo: para ejecutarlo aunque no haya visitas, con
 
 ### Consultar resultados de las tareas
 
-En Sistema → Tareas programadas → Historial de ejecución se consulta el estado de cada ejecución. El detalle se escribe en el directorio de registros configurado en Joomla, normalmente en el fichero task_ID.log.php (ID es el identificador de la tarea), salvo que se indique otro nombre en la tarea. Incluye IDs candidatos en simulación, bloqueos realizados y resumen de candidatos, bloqueados y errores.
+En Sistema → Tareas programadas → Historial de ejecución se consulta el estado de cada ejecución. Para generar un archivo de detalle, abre la tarea y habilita «Registro individual de la tarea» en la pestaña de registro; viene desactivado por defecto. Guarda y vuelve a ejecutar. El detalle se escribe en el directorio de registros configurado en Joomla, normalmente en el fichero task_ID.log.php (ID es el identificador de la tarea), salvo que se indique otro nombre en la tarea. Incluye IDs candidatos en simulación, bloqueos realizados y resumen de candidatos, bloqueados y errores.
 
 ## Construcción y pruebas
 
