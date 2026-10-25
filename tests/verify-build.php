@@ -1,0 +1,98 @@
+<?php
+
+/**
+ * Checks the packages built by scripts/build.php:
+ *   php tests/verify-build.php 2026.10.3 dist
+ */
+
+declare(strict_types=1);
+
+[$version, $dir] = [ltrim($argv[1] ?? '', 'v'), rtrim($argv[2] ?? 'dist', '/')];
+$errors = [];
+$check  = function (bool $ok, string $message) use (&$errors): void {
+    if (!$ok) {
+        $errors[] = $message;
+    }
+};
+
+$read = function (string $zipFile, string $entry): ?string {
+    $zip = new ZipArchive();
+    if ($zip->open($zipFile) !== true) {
+        return null;
+    }
+    $content = $zip->getFromName($entry);
+    $zip->close();
+    return $content === false ? null : $content;
+};
+$names = function (string $zipFile): array {
+    $zip = new ZipArchive();
+    $zip->open($zipFile);
+    $list = [];
+    for ($i = 0; $i < $zip->numFiles; $i++) {
+        $list[] = $zip->getNameIndex($i);
+    }
+    $zip->close();
+    return $list;
+};
+
+$com = "$dir/com_usertools-$version.zip";
+$plg = "$dir/plg_task_usertools-$version.zip";
+$pkg = "$dir/pkg_usertools-$version.zip";
+foreach ([$com, $plg, $pkg, "$dir/SHA256SUMS.txt", "$dir/updates.xml"] as $file) {
+    $check(is_file($file), "missing $file");
+}
+if ($errors) {
+    fwrite(STDERR, implode("\n", $errors) . "\n");
+    exit(1);
+}
+
+foreach ([[$com, 'com_usertools.xml'], [$plg, 'usertools.xml'], [$pkg, 'pkg_usertools.xml']] as [$zip, $manifest]) {
+    $xml = simplexml_load_string((string) $read($zip, $manifest));
+    $check($xml !== false && (string) $xml->version === $version, "$manifest has version $version");
+}
+$assets = json_decode((string) $read($com, 'media/joomla.asset.json'), true);
+$check(($assets['version'] ?? '') === $version, 'joomla.asset.json has the version');
+
+$comFiles = $names($com);
+foreach (['admin/access.xml', 'admin/config.xml', 'admin/services/provider.php', 'admin/language/es-ES/com_usertools.ini', 'admin/language/en-GB/com_usertools.ini',
+    'admin/language/es-ES/com_usertools.sys.ini', 'admin/language/en-GB/com_usertools.sys.ini', 'admin/layouts/usertools/exclusions.php',
+    'admin/tmpl/compare/review.php', 'media/css/admin.css', 'media/js/admin.js'] as $file) {
+    $check(in_array($file, $comFiles, true), "component contains $file");
+}
+foreach ($comFiles as $file) {
+    $check(!preg_match('#(^|/)(tests|vendor|node_modules|\.git)/#', $file), "component does not ship $file");
+}
+$plgFiles = $names($plg);
+foreach (['usertools.xml', 'services/provider.php', 'src/Extension/Usertools.php', 'forms/inactive.xml', 'language/es-ES/plg_task_usertools.ini', 'language/en-GB/plg_task_usertools.sys.ini'] as $file) {
+    $check(in_array($file, $plgFiles, true), "plugin contains $file");
+}
+$pkgFiles = $names($pkg);
+foreach (['script.php', 'packages/com_usertools.zip', 'packages/plg_task_usertools.zip', 'language/es-ES/pkg_usertools.sys.ini'] as $file) {
+    $check(in_array($file, $pkgFiles, true), "package contains $file");
+}
+$pkgXml = simplexml_load_string((string) $read($pkg, 'pkg_usertools.xml'));
+$check(str_contains((string) $pkgXml->updateservers->server, 'releases/latest/download/updates.xml'), 'package declares the update server');
+
+foreach (file("$dir/SHA256SUMS.txt", FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
+    [$hash, $file] = preg_split('/\s+/', $line);
+    $check(hash_file('sha256', "$dir/$file") === $hash, "checksum of $file");
+}
+$updates = simplexml_load_file("$dir/updates.xml");
+$check((string) $updates->update->version === $version, 'updates.xml version');
+$check((string) $updates->update->element === 'pkg_usertools', 'updates.xml element');
+$check((string) $updates->update->sha256 === hash_file('sha256', $pkg), 'updates.xml checksum matches the package');
+$check(str_ends_with((string) $updates->update->downloads->downloadurl, "/v$version/pkg_usertools-$version.zip"), 'updates.xml download URL');
+
+// Every language key used by the code exists in both languages.
+$languages = [];
+foreach (['es-ES', 'en-GB'] as $tag) {
+    $languages[$tag] = parse_ini_string((string) $read($com, "admin/language/$tag/com_usertools.ini"), false, INI_SCANNER_RAW) ?: [];
+    $check(count($languages[$tag]) > 200, "$tag language file parses");
+}
+$check(array_keys($languages['es-ES']) == array_keys($languages['en-GB']) || !array_diff_key($languages['es-ES'], $languages['en-GB']) && !array_diff_key($languages['en-GB'], $languages['es-ES']), 'es-ES and en-GB have the same keys');
+
+if ($errors) {
+    fwrite(STDERR, "Build verification failed:\n- " . implode("\n- ", $errors) . "\n");
+    exit(1);
+}
+echo "Build $version verified\n";
