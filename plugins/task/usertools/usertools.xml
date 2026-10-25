@@ -6,7 +6,7 @@
   <copyright>(C) 2026 Danieldiazi</copyright>
   <license>GPL-2.0-or-later</license>
   <authorUrl>https://github.com/Danieldiazi/joomla-user-tools</authorUrl>
-  <version>2026.10.3</version>
+  <version>2026.10.4</version>
   <description>PLG_TASK_USERTOOLS_XML_DESCRIPTION</description>
   <namespace path="src">Danieldiazi\Plugin\Task\Usertools</namespace>
   <files>
@@ -15,4 +15,11 @@
     <folder>forms</folder>
     <folder>language</folder>
   </files>
+  <!-- Keep Joomla's shared language copies current when upgrading older installations. -->
+  <languages>
+    <language tag="es-ES">language/es-ES/plg_task_usertools.ini</language>
+    <language tag="es-ES">language/es-ES/plg_task_usertools.sys.ini</language>
+    <language tag="en-GB">language/en-GB/plg_task_usertools.ini</language>
+    <language tag="en-GB">language/en-GB/plg_task_usertools.sys.ini</language>
+  </languages>
 </extension>

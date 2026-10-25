@@ -66,6 +66,26 @@ $plgFiles = $names($plg);
 foreach (['usertools.xml', 'services/provider.php', 'src/Extension/Usertools.php', 'forms/inactive.xml', 'language/es-ES/plg_task_usertools.ini', 'language/en-GB/plg_task_usertools.sys.ini'] as $file) {
     $check(in_array($file, $plgFiles, true), "plugin contains $file");
 }
+// Older releases installed translations in Joomla's shared language folder. Those files
+// take precedence over plugin-local files, so upgrades must refresh both locations.
+$pluginManifest = simplexml_load_string((string) $read($plg, 'usertools.xml'));
+$declaredLanguages = [];
+foreach ($pluginManifest->languages->language as $language) {
+    $declaredLanguages[(string) $language['tag']][] = (string) $language;
+}
+preg_match_all('/PLG_TASK_USERTOOLS_[A-Z0-9_]+/', (string) $read($plg, 'forms/inactive.xml'), $formKeys);
+foreach (['es-ES', 'en-GB'] as $tag) {
+    foreach (['ini', 'sys.ini'] as $suffix) {
+        $entry = "language/$tag/plg_task_usertools.$suffix";
+        $check(in_array($entry, $declaredLanguages[$tag] ?? [], true), "manifest refreshes shared $tag $suffix translations");
+        $check($read($plg, $entry) !== null, "plugin ships $entry");
+    }
+    $strings = parse_ini_string((string) $read($plg, "language/$tag/plg_task_usertools.ini"), false, INI_SCANNER_RAW) ?: [];
+    foreach (array_unique($formKeys[0]) as $key) {
+        $check(isset($strings[$key]) && $strings[$key] !== '', "$tag translates task form key $key");
+    }
+}
+
 $pkgFiles = $names($pkg);
 foreach (['script.php', 'packages/com_usertools.zip', 'packages/plg_task_usertools.zip', 'language/es-ES/pkg_usertools.sys.ini'] as $file) {
     $check(in_array($file, $pkgFiles, true), "package contains $file");
