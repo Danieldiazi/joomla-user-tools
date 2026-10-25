@@ -16,8 +16,10 @@ Desde Joomla: **Usuarios → Gestionar**, marca la cuenta y usa la acción **Des
 
 ### ¿Qué cuentas no se bloquean nunca?
 
-- La cuenta del usuario que ejecuta la operación.
-- Con «Excluir administradores» activado (opción por defecto), los superusuarios y cualquier cuenta con permiso para entrar en la administración.
+- Los superusuarios, en todas las herramientas y aunque se desactive «Excluir administradores».
+- La cuenta del usuario que ejecuta una operación manual.
+- Con «Excluir administradores» activado (opción por defecto), cualquier cuenta con permiso para entrar en la administración.
+- Quien no es superusuario nunca puede bloquear cuentas con acceso a la administración.
 - Las que coincidan con los nombres o grupos excluidos de esa herramienta (los grupos incluyen sus subgrupos).
 
 Basta con cumplir cualquiera de estas condiciones.
@@ -28,7 +30,7 @@ No. La comparación de listas, la revisión manual por inactividad y **cada** ta
 
 ### ¿Quién puede usarlo?
 
-Los superusuarios. Los resultados de tareas también son visibles solo para superusuarios.
+Los superusuarios y los usuarios con los permisos delegados correspondientes en **Opciones → Permisos**. Hay permisos separados para comparar listas y bloquear, crear cuentas, revisar usuarios inactivos y consultar resultados de tareas. El acceso al componente también requiere `core.manage`.
 
 ### ¿Necesita JavaScript?
 
@@ -58,7 +60,7 @@ No. Ese paso solo guarda las exclusiones y calcula la vista previa. Los cambios 
 
 ### Me dice que la vista previa ha caducado
 
-La vista previa dura **15 minutos** y solo se puede aplicar una vez. También se invalida si cambias las exclusiones. Vuelve al primer paso (los datos se conservan con «Volver y editar») y genera una revisión nueva.
+La vista previa dura **15 minutos** y solo se puede aplicar una vez. También se invalida si cambias las exclusiones o si cambia el conjunto de cuentas que se había propuesto bloquear. En ese caso debes volver a comparar; la lista introducida se conserva. Vuelve al primer paso (los datos se conservan con «Volver y editar») y genera una revisión nueva.
 
 ### ¿Por qué un usuario de la lista no aparece en ningún apartado?
 
@@ -76,7 +78,7 @@ En **Registrados** (grupo ID 2). La herramienta comprueba que el grupo exista y 
 
 ### ¿Se envía un correo de bienvenida?
 
-No. Durante las altas se suprime el correo del plugin de usuarios de Joomla y después se restaura su configuración. Tendrás que comunicar los accesos tú mismo. Otros plugins siguen recibiendo los eventos normales de creación.
+Hay dos modos de alta. Por defecto se envía un correo con un enlace para elegir la contraseña, mediante la plantilla editable «User Tools: cuenta creada». También puedes elegir mostrar una contraseña temporal una sola vez y comunicarla tú mismo. En ambos casos se suprime el correo de bienvenida del plugin de usuarios de Joomla y después se restaura su configuración. Otros plugins siguen recibiendo los eventos normales de creación.
 
 ### He perdido la contraseña temporal
 
@@ -106,7 +108,7 @@ Por defecto se excluyen las cuentas sin ningún acceso. Activa «Incluir usuario
 
 ### ¿Qué pasa con alguien que tiene la sesión abierta?
 
-Si tiene una sesión reciente en la tabla de sesiones de Joomla (dentro del tiempo de sesión configurado en la configuración global), se omite. La detección depende de que Joomla guarde esos datos, y la herramienta no cierra sesiones ya abiertas.
+En las herramientas de inactividad, si tiene una sesión reciente en la tabla de sesiones de Joomla (dentro del tiempo de sesión configurado en la configuración global), se omite. Al bloquear una cuenta, User Tools solicita a Joomla cerrar sus sesiones abiertas. Ambas operaciones dependen de los metadatos de sesión de Joomla.
 
 ### La tarea no se ejecuta sola
 
@@ -116,15 +118,19 @@ Comprueba que el plugin **Tarea - User Tools** está habilitado y que la tarea t
 
 Sí. Cada tarea programada tiene su propio plazo, simulación y exclusiones, por ejemplo una de 365 días para todos y otra más estricta solo para un grupo.
 
+### ¿Por qué una tarea se detiene por seguridad?
+
+El límite contra bloqueos masivos detiene la ejecución real si los candidatos superan el porcentaje configurado de cuentas activas y alcanzan el mínimo de candidatos. Por defecto: más del 20 % y al menos 10 candidatos. En simulación solo avisa. Revisa el informe y la configuración antes de cambiar esos límites.
+
 ## Resultados e informes
 
 ### ¿Dónde veo qué ha hecho una tarea?
 
-En **Componentes → User Tools → Resultados de tareas**. Cada ejecución muestra modo (simulación o real), estado y cantidades, y «Ver informe» abre el detalle por usuario con el motivo: bloqueado, protegido u omitido.
+En **Componentes → User Tools → Resultados de tareas**. Cada ejecución muestra modo (simulación o real), estado y cantidades. «Ver informe» abre el detalle de cuentas bloqueadas, simuladas, protegidas o con error, y un resumen de las omitidas por motivo. Puedes filtrar ejecuciones y exportar cada informe a CSV.
 
 ### ¿Dónde se guardan los informes y ocupan espacio?
 
-En la subcarpeta `usertools-reports` del directorio de registros de Joomla, protegidos contra la lectura directa por web. No guardan contraseñas ni correos. **No se borran automáticamente**: si acumulas muchas ejecuciones, puedes eliminar los antiguos de esa carpeta.
+En la subcarpeta `usertools-reports` del directorio de registros de Joomla, protegidos contra la lectura directa por web. No guardan contraseñas ni correos. Se eliminan al terminar las ejecuciones según la retención configurada en **Opciones**: 90 días por defecto; 0 los conserva siempre.
 
 ### ¿Por qué no veo ejecuciones antiguas?
 
@@ -142,7 +148,7 @@ Joomla 6. Las capturas de la documentación se han tomado en Joomla 6.2.0.
 
 ### ¿Qué fichero instalo?
 
-**pkg_usertools-VERSIÓN.zip** de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest). Instala o actualiza el componente y el plugin a la vez. Los ZIP sueltos `com_usertools` y `plg_task_usertools` son para instalaciones separadas; el plugin necesita el componente 2026.10.0 o posterior.
+**pkg_usertools-VERSIÓN.zip** de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest). Instala o actualiza el componente y el plugin a la vez. Los ZIP sueltos `com_usertools` y `plg_task_usertools` son para instalaciones separadas; deben corresponder a la misma versión del componente y del plugin.
 
 ### ¿Cómo actualizo sin perder la configuración?
 

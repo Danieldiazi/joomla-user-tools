@@ -1,0 +1,11 @@
+parameters:
+  level: 6
+  phpVersion: 80300
+  paths:
+    - admin/src
+    - plugins/task/usertools/src
+    - package/script.php
+    - scripts/build.php
+  bootstrapFiles:
+    - tests/phpstan-bootstrap.php
+  treatPhpDocTypesAsCertain: false

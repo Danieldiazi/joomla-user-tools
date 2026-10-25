@@ -1,0 +1,128 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  JOOMLA_VERSION: '6.2.0'
+
+jobs:
+  unit:
+    name: Unit tests (PHP ${{ matrix.php }})
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php: ['8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: zip, intl, mbstring
+          coverage: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install development tools
+        run: |
+          composer install --no-interaction --no-progress
+          npm ci --no-audit --no-fund
+      - name: PHP syntax
+        run: find admin plugins package scripts tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+      - name: PHPUnit
+        run: vendor/bin/phpunit
+      - name: JavaScript
+        run: npm test
+      - name: Build and verify packages
+        run: |
+          php scripts/build.php --output=dist
+          php tests/verify-build.php "$(php -r 'echo simplexml_load_file("com_usertools.xml")->version;')" dist
+
+  static:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      - name: Download Joomla
+        run: |
+          curl -sSfL -o joomla.zip "https://github.com/joomla/joomla-cms/releases/download/${JOOMLA_VERSION}/Joomla_${JOOMLA_VERSION}-Stable-Full_Package.zip"
+          mkdir -p "$RUNNER_TEMP/joomla" && unzip -q joomla.zip -d "$RUNNER_TEMP/joomla"
+      - run: composer install --no-interaction --no-progress
+      - name: PHPStan
+        run: JOOMLA_PATH="$RUNNER_TEMP/joomla" vendor/bin/phpstan analyse --no-progress --memory-limit=1G
+
+  integration:
+    name: Joomla ${{ matrix.database }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [postgresql, mysql]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: joomla
+          POSTGRES_PASSWORD: joomla
+          POSTGRES_DB: joomla
+        ports: ['5432:5432']
+        options: --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: joomla
+          MYSQL_DATABASE: joomla
+          MYSQL_USER: joomla
+          MYSQL_PASSWORD: joomla
+        ports: ['3306:3306']
+        options: --health-cmd "mysqladmin ping -h 127.0.0.1" --health-interval 5s --health-timeout 5s --health-retries 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          extensions: zip, intl, mbstring, gd, pdo_pgsql, pgsql, pdo_mysql, mysqli
+          coverage: none
+      - name: Install Joomla ${{ env.JOOMLA_VERSION }}
+        run: |
+          curl -sSfL -o joomla.zip "https://github.com/joomla/joomla-cms/releases/download/${JOOMLA_VERSION}/Joomla_${JOOMLA_VERSION}-Stable-Full_Package.zip"
+          mkdir -p "$RUNNER_TEMP/site" && unzip -q joomla.zip -d "$RUNNER_TEMP/site"
+          if [ "${{ matrix.database }}" = postgresql ]; then DBTYPE=pgsql; else DBTYPE=mysqli; fi
+          echo "ADMIN_PASS=Ci-$(openssl rand -hex 12)Aa1!" >> "$GITHUB_ENV"
+          source "$GITHUB_ENV"
+          php "$RUNNER_TEMP/site/installation/joomla.php" install -n --site-name=CI --admin-user="CI Admin" --admin-username=admin \
+            --admin-password="$ADMIN_PASS" --admin-email=admin@example.test --db-type=$DBTYPE --db-host=127.0.0.1 \
+            --db-user=joomla --db-pass=joomla --db-name=joomla --db-prefix=ci_
+      - name: Install the current build
+        run: |
+          php scripts/build.php --output=dist
+          php "$RUNNER_TEMP/site/cli/joomla.php" extension:install --path="$PWD/dist/$(ls dist | grep '^pkg_usertools-.*\.zip$')"
+          php "$RUNNER_TEMP/site/cli/joomla.php" extension:list | grep -i usertools
+      - name: Start web server and mail sink
+        run: |
+          mkdir -p "$RUNNER_TEMP/mails"
+          nohup php -S 127.0.0.1:8090 -t "$RUNNER_TEMP/site" > "$RUNNER_TEMP/server.log" 2>&1 &
+          nohup php tests/integration/smtp-sink.php 2525 "$RUNNER_TEMP/mails" > "$RUNNER_TEMP/smtp.log" 2>&1 &
+          sleep 2
+      - name: End-to-end tests
+        run: |
+          UT_URL=http://127.0.0.1:8090 UT_JOOMLA="$RUNNER_TEMP/site" UT_ADMIN_USER=admin UT_ADMIN_PASS="$ADMIN_PASS" \
+            UT_MAILS="$RUNNER_TEMP/mails" php tests/integration/run.php
+      - name: Logs on failure
+        if: failure()
+        run: |
+          tail -n 50 "$RUNNER_TEMP/server.log" || true
+          tail -n 50 "$RUNNER_TEMP/site/administrator/logs/"*.php || true

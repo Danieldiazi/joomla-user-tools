@@ -1,11 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="package" method="upgrade">
-  <name>User Tools</name><packagename>usertools</packagename>
-  <author>Danieldiazi</author><version>2026.10.0</version><creationDate>2026-10</creationDate>
+  <name>PKG_USERTOOLS</name>
+  <packagename>usertools</packagename>
+  <author>Danieldiazi</author>
+  <creationDate>2026-10</creationDate>
+  <copyright>(C) 2026 Danieldiazi</copyright>
   <license>GPL-2.0-or-later</license>
-  <description>User Tools: comparación manual y bloqueo programado por inactividad.</description>
+  <packagerurl>https://github.com/Danieldiazi/joomla-user-tools</packagerurl>
+  <version>2026.10.3</version>
+  <description>PKG_USERTOOLS_XML_DESCRIPTION</description>
+  <scriptfile>script.php</scriptfile>
+  <blockChildUninstall>true</blockChildUninstall>
   <files folder="packages">
     <file type="component" id="com_usertools">com_usertools.zip</file>
     <file type="plugin" id="usertools" group="task">plg_task_usertools.zip</file>
   </files>
+  <languages folder="language">
+    <language tag="es-ES">es-ES/pkg_usertools.sys.ini</language>
+    <language tag="en-GB">en-GB/pkg_usertools.sys.ini</language>
+  </languages>
+  <updateservers>
+    <server type="extension" priority="1" name="User Tools">https://github.com/Danieldiazi/joomla-user-tools/releases/latest/download/updates.xml</server>
+  </updateservers>
 </extension>

@@ -1,10 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="component" method="upgrade">
-  <name>User Tools</name><author>Danieldiazi</author><version>2026.10.0</version>
-  <creationDate>2026-10</creationDate><description>Asistente de gestión de usuarios y bloqueo por inactividad.</description>
+  <name>COM_USERTOOLS</name>
+  <author>Danieldiazi</author>
+  <creationDate>2026-10</creationDate>
+  <copyright>(C) 2026 Danieldiazi</copyright>
+  <license>GPL-2.0-or-later</license>
+  <authorUrl>https://github.com/Danieldiazi/joomla-user-tools</authorUrl>
+  <version>2026.10.3</version>
+  <description>COM_USERTOOLS_XML_DESCRIPTION</description>
   <namespace path="src">Danieldiazi\Component\Usertools</namespace>
-  <media folder="media" destination="com_usertools"><folder>css</folder><folder>js</folder></media>
-  <administration><menu link="option=com_usertools">User Tools</menu>
-    <files folder="admin"><folder>services</folder><folder>src</folder><folder>tmpl</folder></files>
+  <media folder="media" destination="com_usertools">
+    <filename>joomla.asset.json</filename>
+    <folder>css</folder>
+    <folder>js</folder>
+  </media>
+  <administration>
+    <menu link="option=com_usertools" img="class:users">COM_USERTOOLS</menu>
+    <files folder="admin">
+      <filename>access.xml</filename>
+      <filename>config.xml</filename>
+      <folder>language</folder>
+      <folder>layouts</folder>
+      <folder>services</folder>
+      <folder>src</folder>
+      <folder>tmpl</folder>
+    </files>
   </administration>
 </extension>

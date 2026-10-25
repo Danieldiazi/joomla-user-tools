@@ -1,0 +1,12 @@
+{
+  "name": "joomla-user-tools",
+  "private": true,
+  "description": "Development tooling for User Tools (tests only; not shipped in the packages).",
+  "license": "GPL-2.0-or-later",
+  "scripts": {
+    "test": "node --test tests/js/*.test.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}

@@ -16,69 +16,55 @@ concurrency:
 
 jobs:
   release:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: write
-    defaults:
-      run:
-        shell: pwsh
     steps:
       - name: Checkout tagged source
         uses: actions/checkout@v4
         with:
           persist-credentials: false
 
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+      - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.3'
+          extensions: zip, intl, mbstring
           coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
       - name: Validate tag
         run: |
-          if ($env:GITHUB_REF_NAME -notmatch '^v20[0-9]{2}\.([1-9]|1[0-2])\.(0|[1-9][0-9]*)$') {
-            throw 'Use a release tag such as v2026.10.0.'
-          }
+          if ! [[ "$GITHUB_REF_NAME" =~ ^v20[0-9]{2}\.([1-9]|1[0-2])\.(0|[1-9][0-9]*)$ ]]; then
+            echo 'Use a release tag such as v2026.10.3.' >&2
+            exit 1
+          fi
 
-      - name: Check PHP syntax and run tests
+      - name: Tests
         run: |
-          Get-ChildItem admin,plugins,tests -Filter *.php -Recurse | ForEach-Object {
-            php -l $_.FullName
-            if ($LASTEXITCODE -ne 0) { throw "PHP syntax check failed: $($_.FullName)" }
-          }
-          foreach ($test in @('tests/comparison.php', 'tests/policies.php', 'tests/task.php', 'tests/registration.php', 'tests/wizard.php', 'tests/username-case.php', 'tests/reports.php', 'tests/inactive.php')) {
-            php $test
-            if ($LASTEXITCODE -ne 0) { throw "Test failed: $test" }
-          }
+          composer install --no-interaction --no-progress
+          npm ci --no-audit --no-fund
+          find admin plugins package scripts tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+          vendor/bin/phpunit
+          npm test
 
-      - name: Check review form behaviour
-        run: node tests/review.js
-
-      - name: Build installable packages
+      - name: Build and verify installable packages
         run: |
-          ./scripts/build.ps1 -Version $env:GITHUB_REF_NAME -OutputDirectory ./dist
-
-      - name: Verify package versions and contents
-        run: |
-          ./tests/build.ps1 -Version $env:GITHUB_REF_NAME -PackageDirectory ./dist
+          php scripts/build.php --version="$GITHUB_REF_NAME" --output=dist
+          php tests/verify-build.php "$GITHUB_REF_NAME" dist
 
       - name: Publish release assets
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: |
-          $version = $env:GITHUB_REF_NAME.Substring(1)
-          $assets = @(
-            "dist/pkg_usertools-$version.zip",
-            "dist/com_usertools-$version.zip",
-            "dist/plg_task_usertools-$version.zip",
-            'dist/SHA256SUMS.txt'
-          )
-          gh release view $env:GITHUB_REF_NAME *> $null
-          if ($LASTEXITCODE -eq 0) {
-            gh release upload $env:GITHUB_REF_NAME @assets --clobber
-          } else {
-            gh release create $env:GITHUB_REF_NAME @assets --verify-tag --title "User Tools $version" --generate-notes
-          }
-          if ($LASTEXITCODE -ne 0) { throw 'Failed to publish release assets.' }
+          version="${GITHUB_REF_NAME#v}"
+          assets=("dist/pkg_usertools-$version.zip" "dist/com_usertools-$version.zip" "dist/plg_task_usertools-$version.zip" dist/SHA256SUMS.txt dist/updates.xml)
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "${assets[@]}" --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "${assets[@]}" --verify-tag --title "User Tools $version" --generate-notes
+          fi
