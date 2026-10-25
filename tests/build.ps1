@@ -35,6 +35,11 @@ try {
         try {
             Assert-Manifest $nested $part.manifest
             if (!$nested.GetEntry($part.required)) { throw 'Required installable file missing.' }
+            if ($part.manifest -eq 'com_usertools.xml') {
+                foreach ($required in @('admin/tmpl/wizard.php', 'admin/src/Service/Registration.php', 'media/css/admin.css', 'media/js/admin.js')) {
+                    if (!$nested.GetEntry($required)) { throw "Missing wizard asset: $required" }
+                }
+            }
             foreach ($file in $nested.Entries) {
                 if ($file.FullName -match '(^/|\\|\.\.)' -or $file.FullName -match '^(tests|scripts)/') {
                     throw "Invalid installable path: $($file.FullName)"

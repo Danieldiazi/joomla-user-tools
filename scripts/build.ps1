@@ -37,6 +37,9 @@ $component = @{ 'com_usertools.xml' = (Join-Path $root 'com_usertools.xml') }
 foreach ($file in [IO.Directory]::GetFiles((Join-Path $root 'admin'), '*', [IO.SearchOption]::AllDirectories)) {
     $component[$file.Substring($root.Length + 1).Replace('\', '/')] = $file
 }
+foreach ($file in [IO.Directory]::GetFiles((Join-Path $root 'media'), '*', [IO.SearchOption]::AllDirectories)) {
+    $component[$file.Substring($root.Length + 1).Replace('\', '/')] = $file
+}
 $pluginRoot = Join-Path $root 'plugins/task/usertools'
 $plugin = @{}
 foreach ($file in [IO.Directory]::GetFiles($pluginRoot, '*', [IO.SearchOption]::AllDirectories)) {

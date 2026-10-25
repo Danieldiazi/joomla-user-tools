@@ -1,10 +1,10 @@
 # Joomla User Tools
 
-Herramientas de administración para Joomla 6: comparación de una lista vigente y tarea programada de bloqueo por inactividad. Versión 0.2.0, GPL-2.0-or-later.
+Herramientas de administración para Joomla 6: comparación de una lista vigente y tarea programada de bloqueo por inactividad. Versión 0.3.0, GPL-2.0-or-later.
 
 ## Instalación y actualización
 
-Instala **pkg_usertools-0.2.0.zip** desde Sistema → Instalar → Extensiones. El paquete instala/actualiza el componente y el plugin de tareas. Conserva las exclusiones por nombre de la versión 0.1.0. No desinstales el componente para actualizar.
+Instala **pkg_usertools-0.3.0.zip** desde Sistema → Instalar → Extensiones. El paquete instala/actualiza el componente y el plugin de tareas. Conserva las exclusiones por nombre de la versión 0.1.0. No desinstales el componente para actualizar.
 
 También se generan ZIP separados del componente y del plugin. El plugin necesita el componente 0.2.0 o posterior. Habilita «Tarea - User Tools» desde Sistema → Gestionar → Plugins; la instalación no habilita tareas de bloqueo por sí sola.
 
@@ -24,14 +24,31 @@ Las exclusiones de la comparación manual se guardan en los parámetros del comp
 
 1. Abre Componentes → User Tools como superusuario.
 2. Pega la lista **completa** de nombres vigentes, uno por línea.
-3. Configura las exclusiones de la comparación manual y pulsa Comparar.
-4. Revisa los candidatos y confirma los bloqueos.
+3. Configura las exclusiones y pulsa «Siguiente: revisar cambios».
+4. En una pantalla independiente, revisa los bloqueos y marca los usuarios nuevos que deseas crear, indicando un correo distinto para cada uno.
+5. Usa «Volver y editar» si necesitas corregir la lista: conserva los datos introducidos. Confirma para aplicar y consultar el resultado.
 
-Puedes usar «Guardar exclusiones» sin pegar una lista. No se admiten CSV ni se crean, eliminan o reactivan usuarios.
+Puedes usar «Guardar exclusiones» sin pegar una lista. No se admiten CSV ni se eliminan o reactivan usuarios.
 
 Se eliminan espacios exteriores, líneas vacías y duplicados. Una lista vacía o sin coincidencias no permite bloquear cuentas. La vista previa caduca a los 15 minutos y se consume una sola vez. Un cambio de exclusiones invalida la vista previa. Antes de guardar se revalidan las cuentas.
 
 Una lista parcialmente incompleta puede producir bajas incorrectas: revisa la vista previa y utiliza la lista completa.
+
+### Altas seleccionadas
+
+La portada permite elegir herramienta; el asistente manual tiene pantallas de entrada, revisión y resultado. Los grupos excluidos se eligen con casillas.
+
+Los nombres desconocidos están desmarcados por defecto. Solo las cuentas seleccionadas se crean como **Registrados (grupo ID 2)**; se comprueba que el grupo exista y no conceda acceso a la administración. El nombre visible inicial coincide con el nombre de usuario.
+
+Se valida el correo, su unicidad y la existencia del nombre antes de aplicar cambios. Si la selección es inválida, no se aplican ni altas ni bloqueos. Una lista sin coincidencias sigue impidiendo bajas, pero permite seleccionar altas.
+
+Cada cuenta recibe una contraseña aleatoria diferente y debe cambiarla en su primer acceso. Las contraseñas se muestran **una sola vez** en la pantalla de resultado. Se retiran del resultado guardado al mostrarlo y no se registran en logs. Al recargar o salir ya no se pueden consultar: usa la recuperación de contraseña de Joomla. Si el resultado no se abre, las credenciales pendientes caducan a los 15 minutos.
+
+La herramienta suprime el correo de bienvenida del plugin de usuarios de Joomla durante las altas y restaura su configuración al terminar. Los demás plugins instalados siguen recibiendo los eventos normales de creación. Los fallos parciales aparecen en el resultado; no se revierten los cambios ya aplicados.
+
+La revisión envía las selecciones y correos en un único campo JSON para no superar el límite de campos de PHP con listas grandes. Requiere JavaScript.
+
+La portada y la sección de tareas muestran si el plugin está instalado/habilitado y ofrecen accesos a Plugins y Tareas programadas.
 
 ## Tarea programada por inactividad
 
@@ -61,6 +78,8 @@ Con PHP 8.3/8.4:
 php tests/comparison.php
 php tests/policies.php
 php tests/task.php
+php tests/registration.php
+php tests/wizard.php
 ~~~
 
 El último fichero comprueba el adaptador de la tarea con servicios simulados. No equivale a una prueba en Joomla real.
@@ -96,6 +115,6 @@ Para construir una versión concreta localmente:
 
 ## Referencias
 
-Implementación propia basada en la API del programador y el patrón de los plugins oficiales de Joomla 6.0.0: [DeleteActionLogs](https://github.com/joomla/joomla-cms/tree/6.0.0/plugins/task/deleteactionlogs). La funcionalidad solicitada tiene como referencia [Task - Inactive Users de RicheyWeb](https://www.richeyweb.com/software/joomla/plugins/task-inactive-users); no se ha copiado su implementación.
+Implementación propia basada en la API del programador y el patrón de los plugins oficiales de Joomla 6.0.0: [DeleteActionLogs](https://github.com/joomla/joomla-cms/tree/6.0.0/plugins/task/deleteactionlogs).
 
 Proyecto independiente, sin afiliación oficial a Joomla.

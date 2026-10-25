@@ -2,7 +2,7 @@
 <extension type="plugin" group="task" method="upgrade">
   <name>PLG_TASK_USERTOOLS</name>
   <author>Danieldiazi</author>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
   <creationDate>2026-10</creationDate>
   <license>GPL-2.0-or-later</license>
   <description>PLG_TASK_USERTOOLS_XML_DESCRIPTION</description>
