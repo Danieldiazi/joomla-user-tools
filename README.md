@@ -1,10 +1,32 @@
 # Joomla User Tools
 
-Herramientas de administración de cuentas para Joomla 6: comparación con una lista vigente, revisión de usuarios inactivos, eliminación de usuarios inactivos y bloqueo programado por inactividad, con informes. Licencia GPL-2.0-or-later. La versión vigente es la de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest).
+Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usuarios vigentes, crear cuentas nuevas, revisar la inactividad y programar bloqueos con informes.
 
-La numeración sigue **año.mes.revisión**, sin cero inicial en el mes: 2026.10.0, 2026.10.1; el siguiente mes empieza en 2026.11.0. Las etiquetas llevan el prefijo v.
+| Herramienta | Qué hace |
+|---|---|
+| Comparar una lista | Propone bloquear las cuentas ausentes de la lista completa, salvo las protegidas, y permite crear los usuarios nuevos que selecciones. |
+| Revisar usuarios inactivos | Busca cuentas inactivas para que selecciones cuáles bloquear. |
+| Eliminar usuarios inactivos | Permite seleccionar y borrar definitivamente cuentas inactivas, activas o bloqueadas. Disponible desde 2026.10.5. |
+| Tarea programada | Bloquea cuentas por inactividad; empieza en modo simulación y genera informes. |
 
-Requisitos: Joomla 6 y PHP 8.3 o posterior. Funciona con MySQL/MariaDB y PostgreSQL.
+**Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
+
+**Requisitos:** Joomla 6 y PHP 8.3 o posterior. Compatible con MySQL/MariaDB y PostgreSQL.  
+**Descarga:** [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest), paquete `pkg_usertools-VERSIÓN.zip`.  
+**Licencia:** [GPL-2.0-or-later](LICENSE).
+
+## Índice
+
+- [Instalación y actualizaciones](#instalación-y-actualizaciones)
+- [Comparar una lista de usuarios](#comparar-una-lista-de-usuarios)
+- [Revisar usuarios inactivos](#revisar-usuarios-inactivos)
+- [Eliminar usuarios inactivos](#eliminar-usuarios-inactivos)
+- [Tarea programada e informes](#tarea-programada-por-inactividad)
+- [Seguridad](#seguridad)
+- [Opciones](#opciones)
+- [Capturas de las herramientas](#capturas-de-las-herramientas)
+- [Desarrollo](#desarrollo)
+- [Construcción y publicación](#construcción-y-publicación)
 
 ¿Dudas concretas? Consulta las [preguntas frecuentes](FAQ.md).
 
@@ -16,34 +38,9 @@ A partir de la 2026.10.3, Joomla avisa de las versiones nuevas en Sistema → Ac
 
 El instalador comprueba las versiones mínimas, registra la extensión en el registro de acciones de usuarios y crea la plantilla de correo «User Tools: cuenta creada». Al desinstalar avisa de que los informes de tareas se conservan en la carpeta de registros.
 
-## Seguridad
-
-- **Los superusuarios están siempre protegidos**, en todas las herramientas y aunque se desactive «Excluir administradores». Un sitio nunca puede quedarse sin superusuarios por User Tools.
-- **La cuenta que ejecuta una operación manual siempre queda protegida.**
-- **Cada bloqueo cierra las sesiones abiertas** de la cuenta, como hace el gestor de usuarios de Joomla (requiere «Metadatos de sesión», activado por defecto).
-- **Todo queda en el registro de acciones de usuarios** (Usuarios → Registro de acciones de usuarios): quién bloqueó, creó o eliminó cada cuenta y con qué herramienta, o qué tarea programada lo hizo.
-- **Permisos propios**, delegables sin dar superusuario (Opciones → Permisos):
-  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos*, *Eliminar usuarios inactivos* y *Ver resultados de tareas*.
-  - Quien no es superusuario nunca puede bloquear ni eliminar cuentas con acceso a la administración.
-- **Confirmación reforzada configurable**: a partir de N cuentas (10 por defecto) hay que escribir el número exacto de cuentas afectadas, además de marcar la casilla.
-- **Límite de seguridad en las tareas programadas** contra bloqueos masivos (ver más abajo).
-- Previsualizaciones de un solo uso que caducan a los 15 minutos, revalidación de cada cuenta justo antes de guardarla, protección CSRF y páginas que no se guardan en caché.
-
-## Opciones
-
-Componentes → User Tools → **Opciones** (botón de la barra de herramientas):
-
-| Pestaña | Ajustes |
-|---|---|
-| Seguridad | Confirmación reforzada a partir de N cuentas (0 la desactiva); modo de alta por defecto (enlace por correo o contraseña temporal); días que se conservan los informes (90 por defecto, 0 = siempre) |
-| Comparación | Excluir administradores, nombres excluidos y grupos excluidos de la comparación manual |
-| Revisión de inactivos | Plazo, incluir quien nunca accedió y exclusiones de la revisión manual |
-| Eliminación de inactivos | Plazo, cuentas que se listan (activas, bloqueadas o ambas), incluir quien nunca accedió y exclusiones de la eliminación |
-| Permisos | Permisos de cada herramienta |
-
-Las exclusiones de las herramientas manuales también se guardan al usarlas. Cada tarea programada tiene las suyas en su propia configuración.
-
 ## Comparar una lista de usuarios
+
+**Ejemplo:** en Joomla existen las cuentas `ana`, `luis` y `marta`. Si pegas una lista con `ana` y `marta`, se propone bloquear a `luis`, salvo que esté protegido o ya bloqueado. Si añades `pedro` y no existe, podrás seleccionarlo para crear su cuenta; no se crea automáticamente.
 
 1. Abre Componentes → User Tools → «Empezar comparación».
 2. Pega la lista **completa** de nombres de usuario vigentes, uno por línea, y revisa las exclusiones.
@@ -52,7 +49,7 @@ Las exclusiones de las herramientas manuales también se guardan al usarlas. Cad
 
 Los nombres se comparan sin distinguir mayúsculas y minúsculas: OTRO y otro son la misma cuenta. Una lista vacía no se admite. Si **ningún nombre coincide** con una cuenta existente, la revisión lo avisa en rojo arriba del todo, porque se propondría bloquear todas las cuentas no protegidas.
 
-Una lista parcialmente incompleta produce bajas incorrectas: revisa siempre la previsualización.
+Una lista incompleta puede producir bloqueos incorrectos: revisa siempre la previsualización.
 
 ### Altas de cuentas nuevas
 
@@ -71,12 +68,14 @@ En la portada, «Revisar cuentas inactivas». Elige el plazo en días, si se inc
 
 En la portada, «Revisar cuentas para eliminar». Es la única herramienta que **borra** cuentas, y el borrado no se puede deshacer; para impedir el acceso sin borrar, usa la revisión de inactivos.
 
-1. Elige el plazo en días (730, dos años, por defecto), si se incluyen quienes nunca accedieron y qué cuentas se listan: **activas y bloqueadas**, **solo bloqueadas** (las que ya bloqueó la revisión de inactivos o la tarea programada) o **solo activas**.
+1. Elige el plazo en días (730 por defecto), si se incluyen quienes nunca accedieron y qué cuentas se listan: **activas y bloqueadas**, **solo bloqueadas** (las que ya bloqueó la revisión de inactivos o la tarea programada) o **solo activas**.
 2. Configura sus exclusiones, que son propias e iguales que en el resto de herramientas: excluir administradores, nombres de usuario y grupos (con sus subgrupos). Los superusuarios y tu propia cuenta nunca se listan.
 3. En la revisión verás nombre, correo, estado, último acceso, fecha de registro y grupos de cada cuenta, con un filtro si la lista es larga. Ninguna cuenta viene marcada.
 4. Marca las que quieras eliminar, confirma la casilla y **escribe el número de cuentas**. En esta herramienta se pide siempre, aunque sea una.
 
 Antes de borrar se vuelve a comprobar cada cuenta. Las que hayan cambiado después de la revisión (porque accedieron, pasaron a estar excluidas o tienen una sesión reciente) se omiten y no se sustituyen por otras.
+
+El plazo se cuenta desde el último acceso o, si nunca accedió y se incluye esa opción, desde la fecha de registro. **730 días es una duración fija, no dos años de calendario.**
 
 La cuenta se elimina con la API de usuarios de Joomla, igual que desde el gestor de usuarios. Se borran sus grupos, su perfil, sus sesiones y sus mensajes privados, y otras extensiones pueden limpiar sus propios datos. Los artículos y demás contenidos que creó se conservan, como al borrar desde Joomla.
 
@@ -108,6 +107,44 @@ Componentes → User Tools → Resultados de tareas muestra cada ejecución con 
 
 Los informes se guardan en la subcarpeta usertools-reports de la carpeta de registros de Joomla, con una cabecera PHP que impide leerlos desde la web. Se borran al terminar cada ejecución según los días configurados en Opciones.
 
+## Seguridad
+
+- **Los superusuarios están siempre protegidos**, en todas las herramientas y aunque se desactive «Excluir administradores». User Tools no bloquea ni elimina cuentas de superusuario.
+- **La cuenta que ejecuta una operación manual siempre queda protegida.**
+- **Cada bloqueo cierra las sesiones abiertas** de la cuenta, como hace el gestor de usuarios de Joomla (requiere «Metadatos de sesión», activado por defecto).
+- **Las altas, los bloqueos y las eliminaciones quedan en el registro de acciones de usuarios** (Usuarios → Registro de acciones de usuarios): quién bloqueó, creó o eliminó cada cuenta y con qué herramienta, o qué tarea programada lo hizo.
+- **Permisos propios**, delegables sin dar superusuario (Opciones → Permisos):
+  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos*, *Eliminar usuarios inactivos* y *Ver resultados de tareas*.
+  - Quien no es superusuario nunca puede bloquear ni eliminar cuentas con acceso a la administración.
+- **Confirmación reforzada configurable**: a partir de N cuentas (10 por defecto) hay que escribir el número exacto de cuentas afectadas, además de marcar la casilla.
+- **El borrado exige siempre escribir el número de cuentas**, aunque solo se elimine una; el umbral configurable no desactiva esta confirmación.
+- **Límite de seguridad en las tareas programadas** contra bloqueos masivos (ver [límite de seguridad](#límite-de-seguridad-contra-bloqueos-masivos)).
+- Previsualizaciones de un solo uso que caducan a los 15 minutos, revalidación de cada cuenta justo antes de guardarla, protección CSRF y páginas que no se guardan en caché.
+
+## Opciones
+
+Componentes → User Tools → **Opciones** (botón de la barra de herramientas):
+
+| Pestaña | Ajustes |
+|---|---|
+| Seguridad | Confirmación reforzada a partir de N cuentas (0 la desactiva); modo de alta por defecto (enlace por correo o contraseña temporal); días que se conservan los informes (90 por defecto, 0 = siempre) |
+| Comparación | Excluir administradores, nombres excluidos y grupos excluidos de la comparación manual |
+| Revisión de inactivos | Plazo, incluir quien nunca accedió y exclusiones de la revisión manual |
+| Eliminación de inactivos | Plazo, cuentas que se listan (activas, bloqueadas o ambas), incluir quien nunca accedió y exclusiones de la eliminación |
+| Permisos | Permisos de cada herramienta |
+
+Las exclusiones de las herramientas manuales también se guardan al usarlas. Cada tarea programada tiene las suyas en su propia configuración.
+
+## Capturas de las herramientas
+
+Estas dos capturas se incorporaron con la herramienta de eliminación en 2026.10.5, en Joomla 6.2.0.
+
+![Eliminar inactivos: plazo, cuentas listadas y exclusiones](docs/screenshots/11-eliminar-plazo.jpg)
+
+![Eliminar inactivos: selección de cuentas y confirmación](docs/screenshots/12-eliminar-seleccion.jpg)
+
+Consulta la [galería completa](docs/capturas.md) para recorrer las demás herramientas; incluye capturas de versiones anteriores.
+
 ## Desarrollo
 
 Estructura:
@@ -127,49 +164,23 @@ npm test                              # comportamiento del JavaScript (jsdom)
 JOOMLA_PATH=/ruta/a/joomla-6 vendor/bin/phpstan analyse   # análisis estático, nivel 6
 ~~~
 
-La prueba de extremo a extremo `tests/integration/run.php` recorre todos los flujos contra un Joomla 6 real y desechable: comparación, altas por correo hasta elegir la contraseña y entrar, contraseñas temporales, permisos delegados, revisión de inactivos, tarea con límite de seguridad, informes, CSV y registro de acciones. Instrucciones de uso en la cabecera del fichero; usa `tests/integration/smtp-sink.php` como servidor de correo de pruebas.
+La prueba de extremo a extremo `tests/integration/run.php` recorre todos los flujos contra un Joomla 6 real y desechable: comparación, altas por correo hasta elegir la contraseña y entrar, contraseñas temporales, permisos delegados, revisión y eliminación de inactivos, tarea con límite de seguridad, informes, CSV y registro de acciones. Instrucciones de uso en la cabecera del fichero; usa `tests/integration/smtp-sink.php` como servidor de correo de pruebas.
 
 GitHub Actions ejecuta en cada push y pull request las pruebas unitarias (PHP 8.3 y 8.4), JavaScript, PHPStan y la prueba de extremo a extremo con PostgreSQL y con MySQL.
 
 ## Construcción y publicación
 
+La numeración sigue **año.mes.revisión**, sin cero inicial en el mes: 2026.10.0, 2026.10.1; el siguiente mes empieza en 2026.11.0. Las etiquetas llevan el prefijo v.
+
 ~~~sh
 php scripts/build.php --output=dist                     # versión del manifiesto
-php scripts/build.php --version=v2026.10.3 --output=dist
-php tests/verify-build.php 2026.10.3 dist
+php scripts/build.php --version=v2026.10.5 --output=dist
+php tests/verify-build.php 2026.10.5 dist
 ~~~
 
 Genera los tres ZIP instalables (`pkg_usertools`, `com_usertools` y `plg_task_usertools`), `SHA256SUMS.txt` y `updates.xml`. En Windows también vale `scripts\build.ps1`, que llama al mismo script.
 
 Para publicar, crea una release en GitHub con una etiqueta **vAAAA.M.REVISIÓN** sobre `main` (Releases → Draft a new release → Choose a tag → Publish release). GitHub Actions pasa las pruebas, genera los paquetes con esa versión en los manifiestos y los adjunta a la release junto con `SHA256SUMS.txt` y `updates.xml`. Las instalaciones existentes ven la actualización a través del servidor de actualizaciones. No se admiten sufijos de preversión.
-
-## Capturas de las herramientas
-
-Estas capturas corresponden a una versión anterior de la interfaz en Joomla 6.2.0. Sirven como recorrido visual; para las opciones y el comportamiento actuales, consulta las secciones anteriores y las [preguntas frecuentes](FAQ.md).
-
-![Portada de User Tools](docs/screenshots/01-portada.jpg)
-
-![Comparación: lista y exclusiones](docs/screenshots/02-comparacion-lista.jpg)
-
-![Comparación: revisión de cambios](docs/screenshots/03-comparacion-revision.jpg)
-
-![Comparación: resultado con contraseñas ocultas](docs/screenshots/04-comparacion-resultado.jpg)
-
-![Aviso de lista sin coincidencias](docs/screenshots/05-aviso-sin-coincidencias.jpg)
-
-![Inactividad manual: plazo y exclusiones](docs/screenshots/06-inactivos-plazo.jpg)
-
-![Inactividad manual: selección de cuentas](docs/screenshots/07-inactivos-seleccion.jpg)
-
-![Eliminar inactivos: plazo, cuentas listadas y exclusiones](docs/screenshots/11-eliminar-plazo.jpg)
-
-![Eliminar inactivos: selección de cuentas y confirmación](docs/screenshots/12-eliminar-seleccion.jpg)
-
-![Configuración de una tarea programada](docs/screenshots/08-tarea-programada.jpg)
-
-![Listado de resultados de tareas](docs/screenshots/09-resultados-tareas.jpg)
-
-![Detalle de un informe de tarea](docs/screenshots/10-informe-tarea.jpg)
 
 ## Referencias
 
