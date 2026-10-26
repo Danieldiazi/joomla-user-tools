@@ -38,8 +38,9 @@ $names = function (string $zipFile): array {
 $com = "$dir/com_usertools-$version.zip";
 $plg = "$dir/plg_task_usertools-$version.zip";
 $mod = "$dir/mod_usertools-$version.zip";
+$grp = "$dir/mod_usertools_groups-$version.zip";
 $pkg = "$dir/pkg_usertools-$version.zip";
-foreach ([$com, $plg, $mod, $pkg, "$dir/SHA256SUMS.txt", "$dir/updates.xml"] as $file) {
+foreach ([$com, $plg, $mod, $grp, $pkg, "$dir/SHA256SUMS.txt", "$dir/updates.xml"] as $file) {
     $check(is_file($file), "missing $file");
 }
 if ($errors) {
@@ -47,7 +48,7 @@ if ($errors) {
     exit(1);
 }
 
-foreach ([[$com, 'com_usertools.xml'], [$plg, 'usertools.xml'], [$mod, 'mod_usertools.xml'], [$pkg, 'pkg_usertools.xml']] as [$zip, $manifest]) {
+foreach ([[$com, 'com_usertools.xml'], [$plg, 'usertools.xml'], [$mod, 'mod_usertools.xml'], [$grp, 'mod_usertools_groups.xml'], [$pkg, 'pkg_usertools.xml']] as [$zip, $manifest]) {
     $xml = simplexml_load_string((string) $read($zip, $manifest));
     $check($xml !== false && (string) $xml->version === $version, "$manifest has version $version");
 }
@@ -92,7 +93,25 @@ $modFiles = $names($mod);
 foreach (['mod_usertools.xml', 'services/provider.php', 'src/Dispatcher/Dispatcher.php', 'tmpl/default.php', 'language/es-ES/mod_usertools.ini', 'language/en-GB/mod_usertools.sys.ini'] as $file) {
     $check(in_array($file, $modFiles, true), "module contains $file");
 }
-foreach (['script.php', 'packages/com_usertools.zip', 'packages/plg_task_usertools.zip', 'packages/mod_usertools.zip', 'language/es-ES/pkg_usertools.sys.ini'] as $file) {
+$grpFiles = $names($grp);
+foreach (['mod_usertools_groups.xml', 'services/provider.php', 'src/Dispatcher/Dispatcher.php', 'src/Helper/MembershipHelper.php', 'src/Service/GroupTree.php',
+    'tmpl/default.php', 'language/es-ES/mod_usertools_groups.ini', 'language/en-GB/mod_usertools_groups.sys.ini'] as $file) {
+    $check(in_array($file, $grpFiles, true), "groups module contains $file");
+}
+$groupStrings = [];
+foreach (['es-ES', 'en-GB'] as $tag) {
+    foreach (['ini', 'sys.ini'] as $suffix) {
+        $groupStrings[$tag][$suffix] = parse_ini_string((string) $read($grp, "language/$tag/mod_usertools_groups.$suffix"), false, INI_SCANNER_RAW) ?: [];
+    }
+}
+foreach (['ini', 'sys.ini'] as $suffix) {
+    $check(array_keys($groupStrings['es-ES'][$suffix]) === array_keys($groupStrings['en-GB'][$suffix]), "groups module es-ES and en-GB $suffix have the same keys");
+}
+preg_match_all('/MOD_USERTOOLS_GROUPS_[A-Z0-9_]+/', implode("\n", array_map(fn ($f) => (string) $read($grp, $f), ['mod_usertools_groups.xml', 'tmpl/default.php'])), $groupKeys);
+foreach (array_unique($groupKeys[0]) as $key) {
+    $check(isset($groupStrings['es-ES']['ini'][$key]), "groups module translates $key");
+}
+foreach (['script.php', 'packages/com_usertools.zip', 'packages/plg_task_usertools.zip', 'packages/mod_usertools.zip', 'packages/mod_usertools_groups.zip', 'language/es-ES/pkg_usertools.sys.ini'] as $file) {
     $check(in_array($file, $pkgFiles, true), "package contains $file");
 }
 $pkgXml = simplexml_load_string((string) $read($pkg, 'pkg_usertools.xml'));

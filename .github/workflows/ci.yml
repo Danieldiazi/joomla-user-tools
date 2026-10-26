@@ -37,7 +37,7 @@ jobs:
           composer install --no-interaction --no-progress
           npm ci --no-audit --no-fund
       - name: PHP syntax
-        run: find admin plugins package scripts tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+        run: find admin plugins modules package scripts tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
       - name: PHPUnit
         run: vendor/bin/phpunit
       - name: JavaScript

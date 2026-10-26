@@ -23,6 +23,7 @@ spl_autoload_register(static function (string $class) use ($joomla): void {
         'Danieldiazi\\Component\\Usertools\\Administrator\\' => __DIR__ . '/../admin/src/',
         'Danieldiazi\\Plugin\\Task\\Usertools\\' => __DIR__ . '/../plugins/task/usertools/src/',
         'Danieldiazi\\Module\\Usertools\\Administrator\\' => __DIR__ . '/../modules/mod_usertools/src/',
+        'Danieldiazi\\Module\\UsertoolsGroups\\Site\\' => __DIR__ . '/../modules/mod_usertools_groups/src/',
     ];
     foreach ($map as $prefix => $dir) {
         if (str_starts_with($class, $prefix)) {

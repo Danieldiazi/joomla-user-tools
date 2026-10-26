@@ -8,8 +8,9 @@ if (is_file(__DIR__ . '/../vendor/autoload.php')) {
 } else {
     spl_autoload_register(static function (string $class): void {
         $map = [
-            'Danieldiazi\\Component\\Usertools\\Administrator\\' => __DIR__ . '/../admin/src/',
-            'Danieldiazi\\Tests\\'                              => __DIR__ . '/Unit/',
+            'Danieldiazi\\Component\\Usertools\\Administrator\\'  => __DIR__ . '/../admin/src/',
+            'Danieldiazi\\Module\\UsertoolsGroups\\Site\\' => __DIR__ . '/../modules/mod_usertools_groups/src/',
+            'Danieldiazi\\Tests\\'                               => __DIR__ . '/Unit/',
         ];
         foreach ($map as $prefix => $dir) {
             if (str_starts_with($class, $prefix)) {

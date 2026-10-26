@@ -40,6 +40,7 @@ Arrows represent main calls or dependencies, not a complete timeline. The plugin
 | Browser | [media/js/admin.js](../media/js/admin.js) filters tables, maintains selections and serializes fields. Its checks do not replace server validation. |
 | Scheduled task | [Usertools](../plugins/task/usertools/src/Extension/Usertools.php) classifies accounts, applies the limit, simulates or blocks, and saves reports. |
 | Evidence | [ActionLogger](../admin/src/Service/ActionLogger.php) writes to Joomla; [ReportStore](../admin/src/Service/ReportStore.php) stores task reports; [CsvExport](../admin/src/Service/CsvExport.php) prepares exports. |
+| Site groups module | [Dispatcher](../modules/mod_usertools_groups/src/Dispatcher/Dispatcher.php) picks the mode; [MembershipHelper](../modules/mod_usertools_groups/src/Helper/MembershipHelper.php) reads memberships and members with a fixed number of queries and never writes; [GroupTree](../modules/mod_usertools_groups/src/Service/GroupTree.php) holds the pure group-tree rules (inheritance, subgroups, groups with administrator access and how each member is shown). It does not depend on the component. |
 
 ## 2. Following a manual operation
 
@@ -124,6 +125,7 @@ These are limits of the current implementation, not guarantees of complete audit
 | Creation, reports or CSV | Registration, AccountMailer, ReportStore, CsvExport | [RecordsTest](../tests/Unit/RecordsTest.php) and integration |
 | Permissions, routes or previews | Controllers and ToolStateTrait | MvcRegressionTest, which runs [tests/regression/mvc.php](../tests/regression/mvc.php), and integration |
 | Filters, selection and confirmation | admin.js, templates and layouts | [tests/js/admin.test.js](../tests/js/admin.test.js); also check keyboard interaction, filters and hidden selected accounts in a browser |
+| Site groups module | mod_usertools_groups (GroupTree, MembershipHelper, template) | [GroupTreeTest](../tests/Unit/GroupTreeTest.php) and the “Groups module on the site” integration section |
 | Packaging and installation | Manifests, package and scripts/build.php | [tests/verify-build.php](../tests/verify-build.php) and package installation in Joomla |
 
 Commands are in [Development](../README.en.md#development) and [Building and publishing](../README.en.md#building-and-publishing). The header of [tests/integration/run.php](../tests/integration/run.php) explains how to test against a disposable Joomla site: these tests create, block and delete accounts.

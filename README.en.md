@@ -11,6 +11,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Delete inactive users | Lets you select and permanently delete inactive accounts. By default, only blocked accounts are listed. Available since 2026.10.5. |
 | Scheduled task | Blocks accounts for inactivity; starts in dry-run mode and generates reports. |
 | Dashboard summary | Shows pending accounts, task status and notices on the Users dashboard. Available since 2026.10.6. |
+| User groups on the site | Site module that lists the groups of a user or the members of a group. Read only. Available since 2026.10.7. |
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
 
@@ -26,6 +27,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 - [Delete inactive users](#delete-inactive-users)
 - [Scheduled inactivity task and reports](#scheduled-inactivity-task)
 - [Users dashboard summary](#users-dashboard-summary)
+- [User groups module on the site](#user-groups-module-on-the-site)
 - [Security](#security)
 - [Options](#options)
 - [Tool screenshots](#tool-screenshots)
@@ -37,7 +39,7 @@ For specific questions, see the [FAQ](FAQ.en.md). If you are contributing or wor
 
 ## Installation and updates
 
-Download **pkg_usertools-VERSION.zip** from the [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) and install it through System → Install → Extensions. The package installs the component, task plugin and “User Tools” administrator module. A fresh installation enables the “Task - User Tools” plugin; the first module installation publishes it on the Users dashboard. New tasks always start in dry-run mode.
+Download **pkg_usertools-VERSION.zip** from the [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) and install it through System → Install → Extensions. The package installs the component, task plugin, “User Tools” administrator module and “User Tools - User Groups” site module. A fresh installation enables the “Task - User Tools” plugin; the first module installation publishes it on the Users dashboard. New tasks always start in dry-run mode.
 
 Since 2026.10.3, Joomla notifies you of new versions under System → Update → Extensions, like any other extension: the package declares an update server pointing to the latest GitHub release. To update, install the new package over the existing installation; do not uninstall the component. Saved exclusions migrate automatically when updating from earlier versions.
 
@@ -129,6 +131,28 @@ The shared screenshots show the Spanish interface.
 
 ![User Tools module on the Users dashboard](docs/screenshots/13-panel-usuarios.jpg)
 
+## User groups module on the site
+
+Since 2026.10.7, the package includes the **“User Tools - User Groups”** site module. Joomla has no module that shows on the site which groups someone belongs to or who is in a group; this one does it in two modes. The installer does not publish it: create it in Content → Site Modules → New.
+
+**Groups of a user.** Shows the groups of the *logged-in visitor* (each person sees their own; guests see nothing) or of *a specific user* chosen in the configuration. Options:
+
+- *Include inherited groups*: adds the parent groups it inherits permissions from, dimmed. For example, a member of “Author” also sees “Registered”.
+- *Groups not shown*: groups that never appear, such as “Public”.
+
+**Members of a group.** Lists the active accounts of a group in alphabetical order. Options:
+
+- *Include subgroups*: also lists people in the groups below the chosen one.
+- *Show each member as*: name, username or both.
+- *Hide accounts with administrator access* (on by default): does not list anyone in a group with administrator access or in Super Users, so the most sensitive accounts are not exposed on the site.
+- *Maximum members* (50 by default, up to 1000) and *Show the member total*. When there are more members than the maximum, the module says how many are left.
+
+In both modes, *Show when the list is empty* decides whether the module appears when there is nothing to list.
+
+**Privacy.** The module never shows email addresses or blocked accounts, and it never changes accounts or groups. Even so, member names are personal data: use the module's **Access** field to decide who sees it (for example, *Registered*) instead of leaving it *Public*. For guests, the member list follows Joomla's module cache; for logged-in users it is always computed on the spot.
+
+The list is read with a fixed number of queries, whatever the size of the group. Accounts with administrator access are decided per group, with Joomla's global permissions, as in the rest of User Tools.
+
 ## Security
 
 - **Super Users are always protected**, in every tool, even when “Exclude administrators” is disabled. User Tools does not block or delete Super User accounts.
@@ -140,6 +164,7 @@ The shared screenshots show the Spanish interface.
   - Non-Super Users can never block or delete accounts with administrator access.
 - **Configurable reinforced confirmation**: from N accounts (10 by default), the exact number must be typed in addition to ticking the box.
 - **Deletion always requires typing the number of accounts**, even for one; the configurable threshold does not disable this confirmation.
+- **The site groups module is read only**: it never shows email addresses or blocked accounts, and by default it hides accounts with administrator access (see [groups module](#user-groups-module-on-the-site)).
 - **Scheduled-task safety limit** against mass blocking (see [safety limit](#safety-limit-against-mass-blocking)).
 - Single-use previews expire after 15 minutes; each account is revalidated immediately before saving; CSRF protection and non-cacheable pages are used.
 
@@ -178,6 +203,7 @@ Structure:
 - `media/`: CSS and JS loaded through Web Asset Manager (`joomla.asset.json`).
 - `plugins/task/usertools/`: task plugin.
 - `modules/mod_usertools/`: Users dashboard summary module.
+- `modules/mod_usertools_groups/`: site module that lists groups and members.
 - `package/`: package manifest, installation script and languages.
 
 Tests:
@@ -189,7 +215,7 @@ npm test                              # JavaScript behaviour (jsdom)
 JOOMLA_PATH=/path/to/joomla-6 vendor/bin/phpstan analyse   # static analysis, level 6
 ~~~
 
-The end-to-end test `tests/integration/run.php` exercises the flows against a real disposable Joomla 6 site: comparison, emailed password setup through login, temporary passwords, delegated permissions, inactivity review and deletion, task safety limit, reports, CSV and action logging. See the file header for instructions; use `tests/integration/smtp-sink.php` as the test mail server.
+The end-to-end test `tests/integration/run.php` exercises the flows against a real disposable Joomla 6 site: comparison, emailed password setup through login, temporary passwords, delegated permissions, inactivity review and deletion, task safety limit, reports, CSV, action logging and the site groups module. See the file header for instructions; use `tests/integration/smtp-sink.php` as the test mail server.
 
 GitHub Actions runs unit tests (PHP 8.3 and 8.4), JavaScript, PHPStan and end-to-end tests with PostgreSQL and MySQL on each push and pull request.
 
@@ -203,7 +229,7 @@ php scripts/build.php --version=v2026.10.5 --output=dist
 php tests/verify-build.php 2026.10.5 dist
 ~~~
 
-Generates the four installable ZIPs (`pkg_usertools`, `com_usertools`, `plg_task_usertools` and `mod_usertools`), `SHA256SUMS.txt` and `updates.xml`. On Windows, `scripts\build.ps1` calls the same script.
+Generates the five installable ZIPs (`pkg_usertools`, `com_usertools`, `plg_task_usertools`, `mod_usertools` and `mod_usertools_groups`), `SHA256SUMS.txt` and `updates.xml`. On Windows, `scripts\build.ps1` calls the same script.
 
 To publish, create a GitHub release with a **vYYYY.M.REVISION** tag on `main` (Releases → Draft a new release → Choose a tag → Publish release). GitHub Actions runs tests, builds packages with that version in their manifests, and attaches them to the release with `SHA256SUMS.txt` and `updates.xml`. Existing installations receive updates through the update server. Prerelease suffixes are not supported.
 

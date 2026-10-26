@@ -4,7 +4,7 @@
 
 Common questions about **Joomla User Tools**. For a complete description of each tool, see the [README](README.en.md).
 
-**Contents:** [General](#general) · [List comparison](#list-comparison) · [Accounts and passwords](#accounts-and-passwords) · [Inactivity and scheduled tasks](#inactivity-and-scheduled-tasks) · [Results and reports](#results-and-reports) · [Installation and updates](#installation-and-updates)
+**Contents:** [General](#general) · [List comparison](#list-comparison) · [Accounts and passwords](#accounts-and-passwords) · [Inactivity and scheduled tasks](#inactivity-and-scheduled-tasks) · [Results and reports](#results-and-reports) · [Groups module on the site](#groups-module-on-the-site) · [Installation and updates](#installation-and-updates)
 
 ## General
 
@@ -166,6 +166,24 @@ The module only shows information permitted by the user's permissions: counts re
 
 The run was interrupted. Reports are saved at the start, every 50 users and at the end, so they reflect progress saved before the interruption; already applied blocks remain.
 
+## Groups module on the site
+
+### How do I show on the site the groups of a user or the members of a group?
+
+With the “User Tools - User Groups” module, included since 2026.10.7. The installer does not publish it: create it in Content → Site Modules → New and choose *Groups of a user* or *Members of a group* in “What to show”. Details are in the [README](README.en.md#user-groups-module-on-the-site).
+
+### Why don't guests see the module?
+
+In *Groups of a user* mode with *Logged-in visitor*, the module shows each person their own groups; someone who has not logged in has no groups to see, so it does not appear. To always show the groups of the same account, choose *A specific user*.
+
+### Why is someone missing from the member list?
+
+It may be a blocked account, which is never listed, or an account with administrator access, which is hidden while *Hide accounts with administrator access* is on. If they belong to a subgroup, turn on *Include subgroups*. And if the group exceeds *Maximum members*, the module says how many are left.
+
+### Does it expose personal data?
+
+It shows names or usernames, never email addresses. Decide who sees it with the module's **Access** field (for example, *Registered*) and keep accounts with administrator access hidden unless you have a reason to show them.
+
 ## Installation and updates
 
 ### Which Joomla version is required?
@@ -174,7 +192,7 @@ Joomla 6. Documentation screenshots were taken on Joomla 6.2.0.
 
 ### Which file should I install?
 
-**pkg_usertools-VERSION.zip** from the [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest). It installs or updates the component, plugin and dashboard module together. Separate `com_usertools`, `plg_task_usertools` and `mod_usertools` ZIPs are for separate installations and must use the same version.
+**pkg_usertools-VERSION.zip** from the [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest). It installs or updates the component, plugin, dashboard module and site groups module together. Separate `com_usertools`, `plg_task_usertools`, `mod_usertools` and `mod_usertools_groups` ZIPs are for separate installations and must use the same version.
 
 ### How do I update without losing settings?
 
