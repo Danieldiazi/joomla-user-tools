@@ -57,7 +57,10 @@ class UngroupModel extends BaseDatabaseModel
         if (mb_strlen($text) < 2) {
             return [];
         }
-        return Toolkit::directory()->search($text, self::SUGGESTIONS);
+        // The operator's own account is never offered: it cannot be chosen.
+        $own = (string) $this->identity()->username;
+        $all = Toolkit::directory()->search($text, self::SUGGESTIONS + 1);
+        return \array_slice(array_values(array_filter($all, fn (array $row) => $row['username'] !== $own)), 0, self::SUGGESTIONS);
     }
 
     /**

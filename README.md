@@ -164,9 +164,9 @@ Desde la 2026.10.8, **Quitar de grupos** saca una cuenta de los grupos que elija
 3. **Revisar**: cada grupo de la cuenta con «Se quita» o «Se mantiene», y por qué grupo se quita uno por la opción recursiva. No se cambia nada hasta confirmar. La revisión es de un solo uso y caduca a los 15 minutos.
 4. **Resultado**: los grupos que conserva la cuenta y enlaces a su ficha y al registro de acciones.
 
-![Quitar de grupos: grupos de la cuenta con la opción recursiva](docs/screenshots/15-quitar-grupo-cuenta.jpg)
+![Quitar de grupos: grupos de la cuenta con la opción recursiva](docs/screenshots/16-quitar-grupos-seleccion.jpg)
 
-![Quitar de grupos: revisión](docs/screenshots/16-quitar-grupo-revision.jpg)
+![Quitar de grupos: revisión](docs/screenshots/17-quitar-grupos-revision.jpg)
 
 Reglas:
 
@@ -178,7 +178,7 @@ Reglas:
 - Justo antes de guardar se comprueba que los grupos de la cuenta siguen siendo los revisados; si han cambiado, no se aplica nada.
 - El cambio pasa por la API de usuarios de Joomla, **cierra las sesiones abiertas** de la cuenta para que los permisos nuevos se apliquen enseguida y queda en el **registro de acciones de usuarios** con los grupos quitados y, si lo hubo, el grupo añadido.
 - **Se comprueba que no quede ninguna sesión abierta.** Si alguna sobrevive, el cambio de grupos se mantiene, pero el resultado lo avisa en rojo y ofrece cerrarlas de nuevo, porque mientras siga abierta la cuenta conserva los permisos antiguos. Con «Metadatos de sesión» desactivado no se puede comprobar, y también se avisa.
-- La lista de cuentas que aparece al escribir se pide al servidor con el token del formulario y el permiso de la herramienta, muestra como mucho 10 cuentas y no cambia nada.
+- La lista de cuentas que aparece al escribir se pide al servidor con el token del formulario y el permiso de la herramienta, muestra como mucho 10 cuentas, nunca la tuya, y no cambia nada.
 
 Requiere el permiso propio *Quitar de grupos*: los superusuarios lo tienen; a los demás hay que concedérselo en Opciones → Permisos. Se aplica a una cuenta cada vez.
 
