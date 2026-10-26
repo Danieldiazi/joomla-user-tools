@@ -1,8 +1,10 @@
 # Capturas de Joomla User Tools
 
+**Español** · [English](screenshots.en.md)
+
 [Volver al README](../README.md)
 
-Las capturas se tomaron en Joomla 6.2.0. Las de eliminación se incorporaron con 2026.10.5; las demás corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Las de eliminación se incorporaron con 2026.10.5 y la del panel de Usuarios con 2026.10.6; las demás corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
 ![Portada de User Tools](screenshots/01-portada.jpg)
 
