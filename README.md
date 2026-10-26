@@ -147,6 +147,8 @@ Consulta la [galería completa](docs/capturas.md) para recorrer las demás herra
 
 ## Desarrollo
 
+Consulta el [mapa de arquitectura](docs/arquitectura.md) para seguir los flujos, localizar responsabilidades, entender la persistencia y elegir las pruebas relacionadas con cada cambio.
+
 Estructura:
 
 - `admin/`: componente con controladores, modelos, vistas MVC, plantillas y ficheros de idioma es-ES y en-GB.
