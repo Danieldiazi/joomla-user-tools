@@ -4,12 +4,13 @@ Guía para agentes de código (Copilot, Codex, Claude y similares) y para cualqu
 
 ## Qué es
 
-User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y PostgreSQL) que gestiona cuentas de usuario. Tiene cuatro herramientas y una pantalla de consulta:
+User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y PostgreSQL) que gestiona cuentas de usuario. Tiene cinco herramientas y una pantalla de consulta:
 
 - **Comparar una lista**: bloquea las cuentas que no están en una lista vigente y da de alta las nuevas.
 - **Revisar usuarios inactivos**: bloquea las cuentas seleccionadas.
 - **Eliminar usuarios inactivos**: borra las cuentas seleccionadas.
 - **Tarea programada**: bloquea por inactividad.
+- **Quitar de un grupo**: saca una cuenta de un grupo y de todos sus subgrupos. Una cuenta cada vez; la lógica está en `GroupRemoval` y la escritura en `AccountRegrouper`.
 - **Grupos y niveles de acceso** (solo lectura): qué niveles tiene cada grupo, asignados o heredados. La lógica está en `AccessMatrix`.
 
 Además, un módulo de administración resume en el panel de Usuarios las cuentas pendientes, el estado de las tareas y los avisos, y un módulo del sitio lista los grupos de un usuario o los miembros de un grupo.
@@ -40,10 +41,10 @@ Cualquier cambio debe mantener estas garantías. Hay pruebas que las cubren.
 
 1. **Los superusuarios nunca se bloquean ni se eliminan**, en ninguna herramienta, aunque se desactive «Excluir administradores». Lo decide `Exclusions::reason()`.
 2. **La cuenta que ejecuta una operación manual siempre queda protegida.** La tarea programada actúa sin identidad (`Operator::system()`).
-3. **Quien no es superusuario nunca puede bloquear ni eliminar cuentas con acceso a la administración.**
+3. **Quien no es superusuario nunca puede bloquear, eliminar ni quitar de grupos cuentas con acceso a la administración.** Un superusuario solo puede perder ese estado si queda otro superusuario activo.
 4. **Nada se modifica sin revisión previa.** Las previsualizaciones son de un solo uso, caducan a los 15 minutos y se consumen antes de escribir. Cada cuenta se revalida con un objeto `User` recién cargado justo antes de cambiarla, y la que haya cambiado se omite, nunca se sustituye por otra.
 5. **Los cambios en cuentas pasan por la API de usuarios de Joomla** (`User::save()`, `User::delete()`) para que se ejecuten los eventos de los plugins. No se toca `#__users` con SQL para modificar cuentas.
-6. **Cada bloqueo cierra las sesiones de la cuenta**, y cada bloqueo, alta o eliminación se anota en el registro de acciones de usuarios (`ActionLogger`).
+6. **Cada bloqueo o cambio de grupos cierra las sesiones de la cuenta**, y cada bloqueo, alta, eliminación o cambio de grupos se anota en el registro de acciones de usuarios (`ActionLogger`).
 7. **Las contraseñas temporales nunca se guardan**: ni en sesión, ni en base de datos, ni en registros. Solo se muestran en la respuesta que crea la cuenta.
 8. **Confirmaciones**: la comparación y la revisión de inactivos piden escribir el número de cuentas a partir del umbral configurado. La eliminación lo pide siempre.
 9. **La tarea programada tiene un límite de seguridad**: si los candidatos superan el porcentaje configurado de cuentas activas, no bloquea ninguna.

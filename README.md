@@ -12,6 +12,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Tarea programada | Bloquea cuentas por inactividad; empieza en modo simulación y genera informes. |
 | Resumen en el panel | Muestra en el panel de Usuarios las cuentas pendientes, el estado de las tareas y avisos. Disponible desde 2026.10.6. |
 | Grupos de usuarios en el sitio | Módulo del sitio que lista los grupos de un usuario o los miembros de un grupo. Solo lee. Disponible desde 2026.10.7. |
+| Quitar de un grupo | Quita una cuenta de un grupo y de todos sus subgrupos, con revisión previa y confirmación. Disponible desde 2026.10.8. |
 | Grupos y niveles de acceso | Tabla de solo lectura con los niveles de acceso que tiene cada grupo, asignados o heredados. Disponible desde 2026.10.8. |
 
 **Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
@@ -29,6 +30,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 - [Tarea programada e informes](#tarea-programada-por-inactividad)
 - [Resumen en el panel de Usuarios](#resumen-en-el-panel-de-usuarios)
 - [Módulo de grupos de usuarios en el sitio](#módulo-de-grupos-de-usuarios-en-el-sitio)
+- [Quitar de un grupo](#quitar-de-un-grupo)
 - [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso)
 - [Seguridad](#seguridad)
 - [Opciones](#opciones)
@@ -153,6 +155,28 @@ En los dos modos, *Mostrar si la lista está vacía* decide si el módulo se ve 
 
 La lista se obtiene con un número fijo de consultas, sea cual sea el tamaño del grupo. Las cuentas con acceso a la administración se deciden por grupo, con los permisos globales de Joomla, como en el resto de User Tools.
 
+## Quitar de un grupo
+
+Desde la 2026.10.8, **Quitar de un grupo** saca una cuenta de un grupo y de todos los grupos que cuelgan de él: hijos, nietos y siguientes. El lote de Joomla («Quitar del grupo» en Usuarios) solo quita del grupo exacto que eliges. Los grupos padre no se tocan.
+
+1. **Cuenta y grupo**: escribe el nombre de usuario o el correo (sin distinguir mayúsculas) y elige el grupo.
+2. **Revisar**: se ve cada grupo actual de la cuenta con «Se quita» o «Se mantiene». No se cambia nada hasta confirmar. La revisión es de un solo uso y caduca a los 15 minutos.
+3. **Resultado**: los grupos que conserva la cuenta y un enlace a su ficha y al registro de acciones.
+
+![Quitar de un grupo: revisión](docs/screenshots/16-quitar-grupo-revision.jpg)
+
+Reglas:
+
+- **Si la cuenta se queda sin grupos**, se le asigna el grupo de los usuarios nuevos de las Opciones de Usuarios (normalmente «Registrado»). Si ese grupo es uno de los que se quitan, no se cambia nada y se explica por qué.
+- **Nunca cambia tu propia cuenta.**
+- **Quien no es superusuario nunca cambia cuentas con acceso a la administración** ni superusuarios.
+- **Un superusuario puede dejar de serlo** solo si queda al menos otro superusuario activo; la revisión avisa cuando la cuenta pierde ese estado o el acceso a la administración.
+- Justo antes de guardar se comprueba que los grupos de la cuenta siguen siendo los revisados; si han cambiado, no se aplica nada.
+- El cambio pasa por la API de usuarios de Joomla, **cierra las sesiones abiertas** de la cuenta para que los permisos nuevos se apliquen enseguida y queda en el **registro de acciones de usuarios** con los grupos quitados y, si lo hubo, el grupo añadido.
+- **Se comprueba que no quede ninguna sesión abierta.** Si alguna sobrevive, el cambio de grupos se mantiene, pero el resultado lo avisa en rojo y ofrece cerrarlas de nuevo, porque mientras siga abierta la cuenta conserva los permisos antiguos. Con «Metadatos de sesión» desactivado no se puede comprobar, y también se avisa.
+
+Requiere el permiso propio *Quitar de un grupo*: los superusuarios lo tienen; a los demás hay que concedérselo en Opciones → Permisos. Se aplica a una cuenta cada vez.
+
 ## Grupos y niveles de acceso
 
 Desde la 2026.10.8, **Grupos y niveles de acceso** muestra en una sola tabla qué niveles de acceso de visualización tiene cada grupo de usuarios. Joomla solo enseña esta relación desde los niveles (Usuarios → Niveles de acceso, columna de grupos), sin la herencia y sin una vista por grupo. Esta pantalla solo lee: no cambia grupos, niveles ni cuentas.
@@ -173,11 +197,11 @@ Un cuadro de búsqueda filtra los grupos. Los títulos de grupos y niveles enlaz
 
 - **Los superusuarios están siempre protegidos**, en todas las herramientas y aunque se desactive «Excluir administradores». User Tools no bloquea ni elimina cuentas de superusuario.
 - **La cuenta que ejecuta una operación manual siempre queda protegida.**
-- **Cada bloqueo cierra las sesiones abiertas** de la cuenta, como hace el gestor de usuarios de Joomla (requiere «Metadatos de sesión», activado por defecto).
-- **Las altas, los bloqueos y las eliminaciones quedan en el registro de acciones de usuarios** (Usuarios → Registro de acciones de usuarios): quién bloqueó, creó o eliminó cada cuenta y con qué herramienta, o qué tarea programada lo hizo.
+- **Cada bloqueo o cambio de grupos cierra las sesiones abiertas** de la cuenta, como hace el gestor de usuarios de Joomla (requiere «Metadatos de sesión», activado por defecto).
+- **Las altas, los bloqueos, las eliminaciones y los cambios de grupo quedan en el registro de acciones de usuarios** (Usuarios → Registro de acciones de usuarios): quién bloqueó, creó o eliminó cada cuenta y con qué herramienta, o qué tarea programada lo hizo.
 - **Permisos propios**, delegables sin dar superusuario (Opciones → Permisos):
-  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos*, *Eliminar usuarios inactivos*, *Ver resultados de tareas* y *Ver grupos y niveles de acceso*.
-  - Quien no es superusuario nunca puede bloquear ni eliminar cuentas con acceso a la administración.
+  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos*, *Eliminar usuarios inactivos*, *Ver resultados de tareas*, *Quitar de un grupo* y *Ver grupos y niveles de acceso*.
+  - Quien no es superusuario nunca puede bloquear, eliminar ni quitar de grupos cuentas con acceso a la administración.
 - **Confirmación reforzada configurable**: a partir de N cuentas (10 por defecto) hay que escribir el número exacto de cuentas afectadas, además de marcar la casilla.
 - **El borrado exige siempre escribir el número de cuentas**, aunque solo se elimine una; el umbral configurable no desactiva esta confirmación.
 - **El módulo de grupos del sitio solo lee**: nunca muestra correos ni cuentas bloqueadas, y por defecto oculta las cuentas con acceso a la administración (ver [módulo de grupos](#módulo-de-grupos-de-usuarios-en-el-sitio)).

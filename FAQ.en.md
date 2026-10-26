@@ -4,7 +4,7 @@
 
 Common questions about **Joomla User Tools**. For a complete description of each tool, see the [README](README.en.md).
 
-**Contents:** [General](#general) · [List comparison](#list-comparison) · [Accounts and passwords](#accounts-and-passwords) · [Inactivity and scheduled tasks](#inactivity-and-scheduled-tasks) · [Results and reports](#results-and-reports) · [Groups module on the site](#groups-module-on-the-site) · [Groups and access levels](#groups-and-access-levels) · [Installation and updates](#installation-and-updates)
+**Contents:** [General](#general) · [List comparison](#list-comparison) · [Accounts and passwords](#accounts-and-passwords) · [Inactivity and scheduled tasks](#inactivity-and-scheduled-tasks) · [Results and reports](#results-and-reports) · [Groups module on the site](#groups-module-on-the-site) · [Remove from a group](#remove-from-a-group) · [Groups and access levels](#groups-and-access-levels) · [Installation and updates](#installation-and-updates)
 
 ## General
 
@@ -183,6 +183,24 @@ It may be a blocked account, which is never listed, or an account with administr
 ### Does it expose personal data?
 
 It shows names or usernames, never email addresses. Decide who sees it with the module's **Access** field (for example, *Registered*) and keep accounts with administrator access hidden unless you have a reason to show them.
+
+## Remove from a group
+
+### How is it different from Joomla's “Remove from group” batch?
+
+Joomla's batch removes only the exact group you choose. **Remove from a group** also removes every group below it (children, grandchildren…), shows beforehand which groups the account loses and closes its sessions when applied. Details are in the [README](README.en.md#remove-from-a-group).
+
+### What happens if the account is left without groups?
+
+It is assigned the group for new users from the Users Options. If that group is one of those being removed, nothing changes: assign it another group in the user manager first.
+
+### Why can't I apply the change to an account?
+
+The review gives the reason: it is your own account; it has administrator access and you are not a Super User; it is the last active Super User; or it is not in that group or any of its subgroups.
+
+### Can I remove several accounts at once?
+
+No: the tool works with one account at a time, so every permission change is reviewed separately.
 
 ## Groups and access levels
 
