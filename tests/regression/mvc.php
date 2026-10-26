@@ -80,8 +80,8 @@ namespace {
     };
     Toolkit::$store = new class { public function save($values) {} };
 
-    foreach (['Compare', 'Inactive', 'Reports'] as $controllerName) {
-        foreach (['compare' => 'usertools.compare', 'inactive' => 'usertools.inactive',
+    foreach (['Compare', 'Inactive', 'Delete', 'Reports'] as $controllerName) {
+        foreach (['compare' => 'usertools.compare', 'inactive' => 'usertools.inactive', 'delete' => 'usertools.delete',
                   'reports' => 'usertools.reports', 'report' => 'usertools.reports'] as $view => $permission) {
             $input = new class($view) {
                 public function __construct(private string $view) {}

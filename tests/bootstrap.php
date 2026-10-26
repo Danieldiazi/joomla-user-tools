@@ -23,6 +23,9 @@ if (is_file(__DIR__ . '/../vendor/autoload.php')) {
 }
 
 // Minimal stand-ins for the Joomla interfaces some services type-hint.
+if (!class_exists(\Joomla\CMS\Language\Text::class)) {
+    eval('namespace Joomla\CMS\Language; class Text { public static function _($key) { return $key; } }');
+}
 if (!interface_exists(\Joomla\CMS\User\UserFactoryInterface::class)) {
     eval('namespace Joomla\CMS\User; interface UserFactoryInterface { public function loadUserById(int $id); public function loadUserByUsername(string $username); }');
 }

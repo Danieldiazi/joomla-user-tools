@@ -8,29 +8,37 @@ Dudas habituales sobre **Joomla User Tools**. Para la descripción completa de c
 
 ### ¿Borra usuarios?
 
-No. Ninguna herramienta elimina cuentas: solo las **bloquea** (el campo «Habilitado» de Joomla), y conservan todos sus datos, grupos e historial. Tampoco reactiva cuentas por sí sola.
+Solo la herramienta **Eliminar usuarios inactivos**, y únicamente las cuentas que marques una a una, con confirmación y escribiendo el número de cuentas. El resto de herramientas solo **bloquean** (el campo «Habilitado» de Joomla), y las cuentas bloqueadas conservan todos sus datos, grupos e historial. Ninguna herramienta reactiva cuentas.
+
+### ¿Puedo recuperar una cuenta eliminada?
+
+No. La eliminación es definitiva. En el registro de acciones de usuarios quedan su ID, su nombre de usuario y quién la eliminó, pero no sus datos. Si dudas, bloquéala primero con la revisión de inactivos y elimínala más adelante con «Solo bloqueadas».
+
+### ¿Qué pasa con los artículos de una cuenta eliminada?
+
+Se conservan, como cuando se elimina un usuario desde Joomla, pero dejan de estar asociados a una cuenta existente. Si necesitas reasignarlos, hazlo antes de eliminarla.
 
 ### He bloqueado una cuenta por error, ¿cómo la recupero?
 
 Desde Joomla: **Usuarios → Gestionar**, marca la cuenta y usa la acción **Desbloquear**, o pulsa el icono de la columna «Habilitado». User Tools no deshace bloqueos automáticamente.
 
-### ¿Qué cuentas no se bloquean nunca?
+### ¿Qué cuentas no se bloquean ni se eliminan nunca?
 
 - Los superusuarios, en todas las herramientas y aunque se desactive «Excluir administradores».
 - La cuenta del usuario que ejecuta una operación manual.
 - Con «Excluir administradores» activado (opción por defecto), cualquier cuenta con permiso para entrar en la administración.
-- Quien no es superusuario nunca puede bloquear cuentas con acceso a la administración.
+- Quien no es superusuario nunca puede bloquear ni eliminar cuentas con acceso a la administración.
 - Las que coincidan con los nombres o grupos excluidos de esa herramienta (los grupos incluyen sus subgrupos).
 
 Basta con cumplir cualquiera de estas condiciones.
 
 ### ¿Las exclusiones son compartidas entre herramientas?
 
-No. La comparación de listas, la revisión manual por inactividad y **cada** tarea programada guardan sus propias exclusiones. Cambiar una no afecta a las demás.
+No. La comparación de listas, la revisión manual por inactividad, la eliminación de inactivos y **cada** tarea programada guardan sus propias exclusiones. Cambiar una no afecta a las demás.
 
 ### ¿Quién puede usarlo?
 
-Los superusuarios y los usuarios con los permisos delegados correspondientes en **Opciones → Permisos**. Hay permisos separados para comparar listas y bloquear, crear cuentas, revisar usuarios inactivos y consultar resultados de tareas. El acceso al componente también requiere `core.manage`.
+Los superusuarios y los usuarios con los permisos delegados correspondientes en **Opciones → Permisos**. Hay permisos separados para comparar listas y bloquear, crear cuentas, revisar usuarios inactivos, eliminar usuarios inactivos y consultar resultados de tareas. El de eliminar no se concede a nadie más que a los superusuarios hasta que lo des expresamente. El acceso al componente también requiere `core.manage`.
 
 ### ¿Necesita JavaScript?
 

@@ -19,6 +19,7 @@ final class Fixtures
         return new class ($id, $username, $block, $saves) {
             public array $bound = [];
             public int $saved = 0;
+            public string $name = '';
             public ?string $lastvisitDate = '2000-01-01 00:00:00';
             public ?string $registerDate = '2000-01-01 00:00:00';
 

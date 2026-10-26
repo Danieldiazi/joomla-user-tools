@@ -18,6 +18,7 @@ class DisplayController extends BaseController
         'home'     => 'core.manage',
         'compare'  => 'usertools.compare',
         'inactive' => 'usertools.inactive',
+        'delete'   => 'usertools.delete',
         'schedule' => 'core.manage',
         'reports'  => 'usertools.reports',
         'report'   => 'usertools.reports',
