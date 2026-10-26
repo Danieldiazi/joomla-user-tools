@@ -12,7 +12,7 @@ $layouts    = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
 $review     = $this->review;
 $candidates = $review['candidates'];
 $steps      = ['setup' => 'COM_USERTOOLS_STEP_PERIOD', 'review' => 'COM_USERTOOLS_STEP_SELECT_DELETE', 'result' => 'COM_USERTOOLS_STEP_RESULT'];
-$statusKey  = ['all' => 'COM_USERTOOLS_DELETE_STATUS_ALL', 'blocked' => 'COM_USERTOOLS_DELETE_STATUS_BLOCKED', 'active' => 'COM_USERTOOLS_DELETE_STATUS_ACTIVE'][$review['status']] ?? 'COM_USERTOOLS_DELETE_STATUS_ALL';
+$statusKey  = ['all' => 'COM_USERTOOLS_DELETE_STATUS_ALL', 'blocked' => 'COM_USERTOOLS_DELETE_STATUS_BLOCKED', 'active' => 'COM_USERTOOLS_DELETE_STATUS_ACTIVE'][$review['status']] ?? 'COM_USERTOOLS_DELETE_STATUS_BLOCKED';
 ?>
 <div class="ut-app">
   <?= LayoutHelper::render('usertools.steps', ['steps' => $steps, 'current' => 'review', 'label' => 'COM_USERTOOLS_DELETE_PROGRESS'], $layouts) ?>
