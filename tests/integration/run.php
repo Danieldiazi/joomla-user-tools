@@ -564,6 +564,8 @@ preg_match('/data-ut-account-search="([^"]+)"/', $choosePage, $m);
 $suggestUrl = html_entity_decode($m[1] ?? '', ENT_QUOTES);
 [$code, $json] = $admin->request(preg_replace('#^.*?/administrator/#', '', $suggestUrl) . '&q=UG_O');
 Test::check($code === 200 && in_array('ug_one', array_column((array) json_decode($json, true), 'username'), true), 'typing part of a username suggests the account');
+[, $mine] = $admin->request(preg_replace('#^.*?/administrator/#', '', $suggestUrl) . '&q=' . rawurlencode(getenv('UT_ADMIN_USER') ?: 'admin'));
+Test::check(!in_array(getenv('UT_ADMIN_USER') ?: 'admin', array_column((array) json_decode($mine, true), 'username'), true), 'the operator\'s own account is never suggested');
 [$code] = $admin->request('index.php?option=com_usertools&task=ungroup.suggest&q=ug_');
 Test::check($code === 403, 'suggestions need the form token (got ' . $code . ')');
 
