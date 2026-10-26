@@ -28,7 +28,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 - [Desarrollo](#desarrollo)
 - [Construcción y publicación](#construcción-y-publicación)
 
-¿Dudas concretas? Consulta las [preguntas frecuentes](FAQ.md).
+¿Dudas concretas? Consulta las [preguntas frecuentes](FAQ.md). Si vas a contribuir, o a trabajar con un agente de código, lee [AGENTS.md](AGENTS.md).
 
 ## Instalación y actualizaciones
 
