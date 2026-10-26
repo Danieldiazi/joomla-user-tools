@@ -1,6 +1,6 @@
 # Joomla User Tools
 
-Herramientas de administración de cuentas para Joomla 6: comparación con una lista vigente, revisión de usuarios inactivos y bloqueo programado por inactividad, con informes. Licencia GPL-2.0-or-later. La versión vigente es la de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest).
+Herramientas de administración de cuentas para Joomla 6: comparación con una lista vigente, revisión de usuarios inactivos, eliminación de usuarios inactivos y bloqueo programado por inactividad, con informes. Licencia GPL-2.0-or-later. La versión vigente es la de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest).
 
 La numeración sigue **año.mes.revisión**, sin cero inicial en el mes: 2026.10.0, 2026.10.1; el siguiente mes empieza en 2026.11.0. Las etiquetas llevan el prefijo v.
 
@@ -21,10 +21,10 @@ El instalador comprueba las versiones mínimas, registra la extensión en el reg
 - **Los superusuarios están siempre protegidos**, en todas las herramientas y aunque se desactive «Excluir administradores». Un sitio nunca puede quedarse sin superusuarios por User Tools.
 - **La cuenta que ejecuta una operación manual siempre queda protegida.**
 - **Cada bloqueo cierra las sesiones abiertas** de la cuenta, como hace el gestor de usuarios de Joomla (requiere «Metadatos de sesión», activado por defecto).
-- **Todo queda en el registro de acciones de usuarios** (Usuarios → Registro de acciones de usuarios): quién bloqueó o creó cada cuenta y con qué herramienta, o qué tarea programada lo hizo.
+- **Todo queda en el registro de acciones de usuarios** (Usuarios → Registro de acciones de usuarios): quién bloqueó, creó o eliminó cada cuenta y con qué herramienta, o qué tarea programada lo hizo.
 - **Permisos propios**, delegables sin dar superusuario (Opciones → Permisos):
-  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos* y *Ver resultados de tareas*.
-  - Quien no es superusuario nunca puede bloquear cuentas con acceso a la administración.
+  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos*, *Eliminar usuarios inactivos* y *Ver resultados de tareas*.
+  - Quien no es superusuario nunca puede bloquear ni eliminar cuentas con acceso a la administración.
 - **Confirmación reforzada configurable**: a partir de N cuentas (10 por defecto) hay que escribir el número exacto de cuentas afectadas, además de marcar la casilla.
 - **Límite de seguridad en las tareas programadas** contra bloqueos masivos (ver más abajo).
 - Previsualizaciones de un solo uso que caducan a los 15 minutos, revalidación de cada cuenta justo antes de guardarla, protección CSRF y páginas que no se guardan en caché.
@@ -38,6 +38,7 @@ Componentes → User Tools → **Opciones** (botón de la barra de herramientas)
 | Seguridad | Confirmación reforzada a partir de N cuentas (0 la desactiva); modo de alta por defecto (enlace por correo o contraseña temporal); días que se conservan los informes (90 por defecto, 0 = siempre) |
 | Comparación | Excluir administradores, nombres excluidos y grupos excluidos de la comparación manual |
 | Revisión de inactivos | Plazo, incluir quien nunca accedió y exclusiones de la revisión manual |
+| Eliminación de inactivos | Plazo, cuentas que se listan (activas, bloqueadas o ambas), incluir quien nunca accedió y exclusiones de la eliminación |
 | Permisos | Permisos de cada herramienta |
 
 Las exclusiones de las herramientas manuales también se guardan al usarlas. Cada tarea programada tiene las suyas en su propia configuración.
@@ -65,6 +66,21 @@ La herramienta no envía el correo de bienvenida del plugin de usuarios de Jooml
 ## Revisar usuarios inactivos
 
 En la portada, «Revisar cuentas inactivas». Elige el plazo en días, si se incluyen quienes nunca accedieron (con el plazo contado desde su registro) y las exclusiones. Busca, marca solo las cuentas que quieres suspender y confirma. No hay cuentas marcadas de entrada, y «Seleccionar todos» solo afecta a las filas visibles con el filtro. Se omiten las cuentas ya bloqueadas y las que tienen una sesión reciente.
+
+## Eliminar usuarios inactivos
+
+En la portada, «Revisar cuentas para eliminar». Es la única herramienta que **borra** cuentas, y el borrado no se puede deshacer; para impedir el acceso sin borrar, usa la revisión de inactivos.
+
+1. Elige el plazo en días (730, dos años, por defecto), si se incluyen quienes nunca accedieron y qué cuentas se listan: **activas y bloqueadas**, **solo bloqueadas** (las que ya bloqueó la revisión de inactivos o la tarea programada) o **solo activas**.
+2. Configura sus exclusiones, que son propias e iguales que en el resto de herramientas: excluir administradores, nombres de usuario y grupos (con sus subgrupos). Los superusuarios y tu propia cuenta nunca se listan.
+3. En la revisión verás nombre, correo, estado, último acceso, fecha de registro y grupos de cada cuenta, con un filtro si la lista es larga. Ninguna cuenta viene marcada.
+4. Marca las que quieras eliminar, confirma la casilla y **escribe el número de cuentas**. En esta herramienta se pide siempre, aunque sea una.
+
+Antes de borrar se vuelve a comprobar cada cuenta. Las que hayan cambiado después de la revisión (porque accedieron, pasaron a estar excluidas o tienen una sesión reciente) se omiten y no se sustituyen por otras.
+
+La cuenta se elimina con la API de usuarios de Joomla, igual que desde el gestor de usuarios. Se borran sus grupos, su perfil, sus sesiones y sus mensajes privados, y otras extensiones pueden limpiar sus propios datos. Los artículos y demás contenidos que creó se conservan, como al borrar desde Joomla.
+
+Cada eliminación queda en el **registro de acciones de usuarios** con el ID, el nombre de usuario, el nombre y quién la hizo («… eliminó con User Tools la cuenta inactiva …»). Joomla añade además su propia entrada de borrado de usuario.
 
 ## Tarea programada por inactividad
 
@@ -144,6 +160,10 @@ Estas capturas corresponden a una versión anterior de la interfaz en Joomla 6.2
 ![Inactividad manual: plazo y exclusiones](docs/screenshots/06-inactivos-plazo.jpg)
 
 ![Inactividad manual: selección de cuentas](docs/screenshots/07-inactivos-seleccion.jpg)
+
+![Eliminar inactivos: plazo, cuentas listadas y exclusiones](docs/screenshots/11-eliminar-plazo.jpg)
+
+![Eliminar inactivos: selección de cuentas y confirmación](docs/screenshots/12-eliminar-seleccion.jpg)
 
 ![Configuración de una tarea programada](docs/screenshots/08-tarea-programada.jpg)
 

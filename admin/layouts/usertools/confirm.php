@@ -2,7 +2,7 @@
 
 /**
  * Confirmation block of the manual tools.
- * $displayData: label (string key), count (int, accounts to block), threshold (int), dynamic (bool: count follows the selection)
+ * $displayData: label (string key), count (int, accounts to block), threshold (int), dynamic (bool: count follows the selection), help (optional string key)
  */
 
 \defined('_JEXEC') or die;
@@ -24,7 +24,7 @@ $typed     = $threshold > 0 && ($dynamic || $count >= $threshold);
     <div class="mt-3" data-ut-typed<?= (!$dynamic || $count >= $threshold) ? '' : ' hidden' ?>>
       <label class="form-label" for="ut-confirm-count" data-ut-typed-label><?= Text::sprintf('COM_USERTOOLS_TYPE_COUNT', $count) ?></label>
       <input class="form-control ut-count-input" type="text" inputmode="numeric" autocomplete="off" name="confirm_count" id="ut-confirm-count" data-ut-typed-input<?= (!$dynamic || $count >= $threshold) ? ' required' : '' ?>>
-      <div class="form-text"><?= Text::sprintf('COM_USERTOOLS_TYPE_COUNT_HELP', $threshold) ?></div>
+      <div class="form-text"><?= Text::sprintf($displayData['help'] ?? 'COM_USERTOOLS_TYPE_COUNT_HELP', $threshold) ?></div>
     </div>
     <?php endif; ?>
   </div>

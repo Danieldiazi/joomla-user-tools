@@ -40,12 +40,19 @@ final class ActionLogger
         $this->write($operator->id > 0 ? 'COM_USERTOOLS_ACTION_LOG_BLOCKED' : 'COM_USERTOOLS_ACTION_LOG_TASK_BLOCKED', 'block', $account, $operator, $tool);
     }
 
+    /** The account no longer exists afterwards, so the message keeps its ID, username and name. */
+    public function deleted(object $account, Operator $operator): void
+    {
+        $this->write('COM_USERTOOLS_ACTION_LOG_DELETED', 'delete', $account, $operator, 'COM_USERTOOLS_TOOL_DELETE', ['name' => (string) ($account->name ?? '')]);
+    }
+
     public function created(object $account, Operator $operator, string $mode): void
     {
         $this->write($mode === Registration::MODE_PASSWORD ? 'COM_USERTOOLS_ACTION_LOG_CREATED_PASSWORD' : 'COM_USERTOOLS_ACTION_LOG_CREATED_EMAIL', 'create', $account, $operator, '');
     }
 
-    private function write(string $key, string $action, object $account, Operator $operator, string $tool): void
+    /** @param array<string, string> $extra */
+    private function write(string $key, string $action, object $account, Operator $operator, string $tool, array $extra = []): void
     {
         $message = [
             'action'      => $action,
@@ -58,7 +65,7 @@ final class ActionLogger
             'accountlink' => 'index.php?option=com_users&task=user.edit&id=' . $operator->id,
             'tool'        => $tool !== '' ? Text::_($tool) : '',
             'task'        => $operator->name,
-        ];
+        ] + $extra;
         try {
             ($this->writer)([$message], $key, self::CONTEXT, $operator->id);
         } catch (\Throwable) {

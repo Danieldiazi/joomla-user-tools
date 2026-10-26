@@ -53,6 +53,11 @@ final class Toolkit
         return new AccountBlocker(self::users(), new ActionLogger());
     }
 
+    public static function deleter(): AccountDeleter
+    {
+        return new AccountDeleter(self::users(), new ActionLogger());
+    }
+
     public static function reports(): ReportStore
     {
         $app = Factory::getApplication();

@@ -87,9 +87,9 @@ trait ToolStateTrait
      *
      * @param array<string, mixed> $input
      */
-    protected function checkTypedCount(int $count, array $input): void
+    protected function checkTypedCount(int $count, array $input, ?int $threshold = null): void
     {
-        $threshold = Toolkit::settings()->confirmThreshold();
+        $threshold ??= Toolkit::settings()->confirmThreshold();
         if ($threshold > 0 && $count >= $threshold && (string) ($input['confirm_count'] ?? '') !== (string) $count) {
             throw new UserFacingException('COM_USERTOOLS_ERROR_CONFIRM_COUNT', [$count]);
         }

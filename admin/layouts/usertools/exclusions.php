@@ -2,7 +2,7 @@
 
 /**
  * Exclusion fields shared by the manual tools.
- * $displayData: exclusions (Exclusions), groups (array<int, object>), idPrefix (string), saveNote (string key)
+ * $displayData: exclusions (Exclusions), groups (array<int, object>), idPrefix (string), saveNote (string key), title (optional string key)
  */
 
 \defined('_JEXEC') or die;
@@ -16,7 +16,7 @@ $e          = fn ($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITU
 ?>
 <div class="card ut-card" data-ut-exclusions>
   <div class="card-body">
-    <h3 class="h5"><?= Text::_('COM_USERTOOLS_EXCLUSIONS_TITLE') ?></h3>
+    <h3 class="h5"><?= Text::_($displayData['title'] ?? 'COM_USERTOOLS_EXCLUSIONS_TITLE') ?></h3>
     <input type="hidden" name="protect_admins" value="0">
     <div class="form-check mb-3">
       <input class="form-check-input" type="checkbox" name="protect_admins" value="1" id="<?= $prefix ?>-protect" data-ut-protect-admins<?= $exclusions->protectAdmins ? ' checked' : '' ?>>
@@ -40,7 +40,7 @@ $e          = fn ($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITU
             <label class="form-check-label" for="<?= $id ?>"><?= $e($group->title) ?></label>
           </div>
           <input type="hidden" name="excluded_groups[]" value="<?= (int) $group->id ?>" data-ut-group-preserve<?= ($manual && $locked) ? '' : ' disabled' ?>>
-          <small class="form-text d-block" id="<?= $id ?>-note" data-ut-group-note data-ut-note-super="<?= Text::_('COM_USERTOOLS_GROUP_SUPER_NOTE') ?>" data-ut-note-backend="<?= Text::_('COM_USERTOOLS_GROUP_ADMIN_NOTE') ?>"<?= $locked ? '' : ' hidden' ?>><?= Text::_($kind === 'super' ? 'COM_USERTOOLS_GROUP_SUPER_NOTE' : 'COM_USERTOOLS_GROUP_ADMIN_NOTE') ?></small>
+          <small class="form-text ut-group-note" id="<?= $id ?>-note" data-ut-group-note data-ut-note-super="<?= Text::_('COM_USERTOOLS_GROUP_SUPER_NOTE') ?>" data-ut-note-backend="<?= Text::_('COM_USERTOOLS_GROUP_ADMIN_NOTE') ?>"<?= $locked ? '' : ' hidden' ?>><?= Text::_($kind === 'super' ? 'COM_USERTOOLS_GROUP_SUPER_NOTE' : 'COM_USERTOOLS_GROUP_ADMIN_NOTE') ?></small>
         </div>
       <?php endforeach; ?>
       </div>

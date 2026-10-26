@@ -335,5 +335,71 @@ Test::check(str_contains($detail, '>stale1<') && str_contains($detail, 'Skipped 
 [$code, $csv, $headers] = $admin->request('index.php?option=com_usertools&task=reports.export&report_id=' . ($rid[1] ?? ''));
 Test::check($code === 200 && str_starts_with($csv, "\xEF\xBB\xBF") && str_contains($csv, 'stale1') && str_contains($headers['content-type'] ?? '', 'text/csv'), 'CSV export works');
 
+Test::section('Delete inactive users: selection, protections, typed confirmation and logs');
+$recent = gmdate('Y-m-d H:i:s');
+$site->q('UPDATE #__users SET "lastvisitDate" = ?, block = 0 WHERE username IN (?, ?)', [$old, 'super2', 'mgr']);
+// The scheduled task above blocked old2; it is the active inactive account of this section.
+$site->q('UPDATE #__users SET "lastvisitDate" = ?, block = 0 WHERE username = ?', [$old, 'old2']);
+$deletePage = $admin->get('index.php?option=com_usertools&view=delete');
+Test::check(str_contains($deletePage, 'Deletion is permanent'), 'the deletion screen warns that it cannot be undone');
+$search = fn (Client $c, array $extra) => $c->submit('index.php?option=com_usertools&view=delete', $extra + ['task' => 'delete.search', 'days' => 365, 'include_never' => 0, 'protect_admins' => 0, 'excluded' => '', 'excluded_groups' => []]);
+$rows = function (string $html): array {
+    $table = substr($html, (int) strpos($html, 'id="ut-delete-table"'));
+    $table = substr($table, 0, (int) strpos($table, '</table>'));
+    preg_match_all('/data-ut-suspend-id="(\d+)"/', $table, $m);
+    return array_map('intval', $m[1]);
+};
+$id = fn (string $name) => $site->userId($name);
+
+$review = $search($admin, ['status' => 'blocked', 'excluded' => 'stale6']);
+$listed = $rows($review);
+Test::check(in_array($id('stale1'), $listed, true) && in_array($id('stale5'), $listed, true) && in_array($id('old1'), $listed, true), '"Only blocked" lists the blocked inactive accounts');
+Test::check(!in_array($id('stale6'), $listed, true), 'excluded usernames are not listed');
+Test::check(!in_array($id('old2'), $listed, true) && !in_array($id('mgr'), $listed, true), '"Only blocked" leaves active accounts out');
+Test::check(str_contains($review, 'I confirm the permanent deletion'), 'the review asks for explicit confirmation');
+
+$review = $search($admin, ['status' => 'all']);
+$listed = $rows($review);
+Test::check(in_array($id('old2'), $listed, true) && in_array($id('mgr'), $listed, true), 'a Super User may delete inactive backend accounts when administrators are not excluded');
+Test::check(!in_array($id('super2'), $listed, true) && !in_array($id('admin'), $listed, true), 'Super Users are never listed for deletion');
+$review = $search($admin, ['status' => 'all', 'protect_admins' => 1, 'excluded_groups' => [2]]);
+$listed = $rows($review);
+Test::check(!in_array($id('mgr'), $listed, true) && !in_array($id('old2'), $listed, true) && !in_array($id('stale1'), $listed, true), 'administrator and group exclusions apply');
+
+$review = $search($admin, ['status' => 'blocked']);
+$staleIds = [$id('stale1'), $id('stale2')];
+$stale1   = $staleIds[0];
+$site->q('INSERT INTO #__session (session_id, client_id, guest, time, data, userid, username) VALUES (?, 0, 0, ?, ?, ?, ?)', [bin2hex(random_bytes(16)), time() - 3 * 86400, '', $stale1, 'stale1']);
+$fields = ['task' => 'delete.delete', 'selection_ready' => 1, 'confirm' => 1, 'selected' => json_encode([$stale1])];
+$denied = $admin->submit('index.php?option=com_usertools&view=delete&layout=review', $fields, 'data-ut-suspension-form');
+Test::check(str_contains($denied, 'type the number of affected accounts: 1') && $id('stale1') === $stale1, 'deletion always requires typing the number, even for one account');
+$result = $admin->submit('index.php?option=com_usertools&view=delete&layout=review', ['selected' => json_encode($staleIds), 'confirm_count' => '2'] + $fields, 'data-ut-suspension-form');
+Test::check(str_contains($result, 'Deletion finished'), 'deletion applied');
+Test::check($id('stale1') === 0 && $id('stale2') === 0 && $id('stale3') > 0, 'only the selected accounts were deleted');
+Test::check(count($site->q('SELECT user_id FROM #__user_usergroup_map WHERE user_id IN (?, ?)', $staleIds)) === 0, 'group memberships of deleted accounts are removed');
+Test::check($site->sessions($stale1) === 0, 'sessions of deleted accounts are removed');
+$logs = $site->q("SELECT message FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_DELETED'");
+$logged = array_map(fn ($r) => json_decode($r['message'], true)['title'] ?? '', $logs);
+sort($logged);
+Test::check($logged === ['stale1', 'stale2'], 'each deletion is in the User Actions Log (' . json_encode($logged) . ')');
+$actionLog = $admin->get('index.php?option=com_actionlogs&view=actionlogs');
+Test::check(str_contains($actionLog, 'deleted the inactive account stale1'), 'the User Actions Log shows a readable deletion entry');
+[$code, $replay] = $admin->request('index.php?option=com_usertools', ['selected' => json_encode([$id('stale3')]), 'confirm_count' => '1'] + $fields + [Client::token($result) => 1]);
+Test::check($id('stale3') > 0, 'a replayed deletion request deletes nothing');
+
+$review = $search($admin, ['status' => 'blocked']);
+$site->q('UPDATE #__users SET "lastvisitDate" = ? WHERE username = ?', [$recent, 'stale3']);
+$result = $admin->submit('index.php?option=com_usertools&view=delete&layout=review', ['selected' => json_encode([$id('stale3')]), 'confirm_count' => '1'] + $fields, 'data-ut-suspension-form');
+Test::check($id('stale3') > 0 && str_contains($result, 'changed after the review'), 'an account that logged in after the review is skipped');
+
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.compare' => ['6' => 1]])]);
+[$code] = $delegate->request('index.php?option=com_usertools&view=delete');
+Test::check($code === 403, 'deletion needs its own permission (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.delete' => ['6' => 1]])]);
+$review = $search($delegate, ['status' => 'all']);
+$listed = $rows($review);
+Test::check(in_array($id('old2'), $listed, true) && !in_array($id('mgr'), $listed, true) && !in_array($id('delegate'), $listed, true), 'a delegate can delete registered accounts but never backend accounts or itself');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);

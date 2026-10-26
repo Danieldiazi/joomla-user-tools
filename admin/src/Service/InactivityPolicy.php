@@ -19,13 +19,24 @@ final class InactivityPolicy
         return $now->setTimezone(new \DateTimeZone('UTC'))->sub(new \DateInterval('P' . $days . 'D'));
     }
 
-    public static function eligible(object $user, \DateTimeImmutable $cutoff, bool $includeNever): bool
+    /** Blocked accounts are only eligible when $allowBlocked is set (account deletion). */
+    public static function eligible(object $user, \DateTimeImmutable $cutoff, bool $includeNever, bool $allowBlocked = false): bool
     {
-        if (empty($user->id) || (int) $user->block !== 0) {
+        if (empty($user->id) || (!$allowBlocked && (int) $user->block !== 0)) {
             return false;
         }
         $date = self::reference($user, $includeNever);
         return $date !== null && $date < $cutoff;
+    }
+
+    /** Account status filter of the deletion tool: 'all', 'blocked' or 'active'. */
+    public static function matchesStatus(object $user, string $status): bool
+    {
+        return match ($status) {
+            'blocked' => (int) $user->block === 1,
+            'active'  => (int) $user->block === 0,
+            default   => true,
+        };
     }
 
     /** Language key explaining why an active account is not a candidate. */
