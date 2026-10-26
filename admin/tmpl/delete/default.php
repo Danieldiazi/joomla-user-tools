@@ -32,7 +32,7 @@ $steps   = ['setup' => 'COM_USERTOOLS_STEP_PERIOD', 'review' => 'COM_USERTOOLS_S
           </div>
           <fieldset>
             <legend class="form-label fw-bold fs-6"><?= Text::_('COM_USERTOOLS_DELETE_STATUS') ?></legend>
-            <?php foreach (['all' => 'COM_USERTOOLS_DELETE_STATUS_ALL', 'blocked' => 'COM_USERTOOLS_DELETE_STATUS_BLOCKED', 'active' => 'COM_USERTOOLS_DELETE_STATUS_ACTIVE'] as $value => $label) : ?>
+            <?php foreach (['blocked' => 'COM_USERTOOLS_DELETE_STATUS_BLOCKED', 'all' => 'COM_USERTOOLS_DELETE_STATUS_ALL', 'active' => 'COM_USERTOOLS_DELETE_STATUS_ACTIVE'] as $value => $label) : ?>
             <div class="form-check">
               <input class="form-check-input" type="radio" name="status" value="<?= $value ?>" id="ut-status-<?= $value ?>"<?= $this->draft['status'] === $value ? ' checked' : '' ?>>
               <label class="form-check-label" for="ut-status-<?= $value ?>"><?= Text::_($label) ?></label>
