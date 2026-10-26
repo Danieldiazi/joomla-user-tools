@@ -166,9 +166,9 @@ Since 2026.10.8, **Remove from groups** takes an account out of the groups you c
 3. **Review**: each group of the account as “Removed” or “Kept”, and which group causes a removal through the recursive option. Nothing changes until you confirm. The review is single-use and expires after 15 minutes.
 4. **Result**: the groups the account keeps, with links to its user record and the action log.
 
-![Remove from groups: the account's groups with the recursive option (Spanish interface)](docs/screenshots/15-quitar-grupo-cuenta.jpg)
+![Remove from groups: the account's groups with the recursive option (Spanish interface)](docs/screenshots/16-quitar-grupos-seleccion.jpg)
 
-![Remove from groups: review (Spanish interface)](docs/screenshots/16-quitar-grupo-revision.jpg)
+![Remove from groups: review (Spanish interface)](docs/screenshots/17-quitar-grupos-revision.jpg)
 
 Rules:
 
@@ -180,7 +180,7 @@ Rules:
 - Right before saving, the account's groups are checked against the reviewed ones; if they changed, nothing is applied.
 - The change goes through Joomla's user API, **closes the account's open sessions** so the new permissions apply at once, and is written to the **User Actions Log** with the groups removed and, if any, the group added.
 - **It checks that no session is left open.** If one survives, the group change is kept, but the result warns in red and offers to close them again, because the account keeps its old permissions while it stays open. With “Session Metadata” off this cannot be checked, and that is also reported.
-- The list of accounts shown while typing is requested with the form token and the tool permission, shows at most 10 accounts and changes nothing.
+- The list of accounts shown while typing is requested with the form token and the tool permission, shows at most 10 accounts, never your own, and changes nothing.
 
 It requires its own permission, *Remove from groups*: Super Users have it; grant it to others in Options → Permissions. It works on one account at a time.
 
