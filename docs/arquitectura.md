@@ -1,5 +1,7 @@
 # Arquitectura de Joomla User Tools
 
+**Español** · [English](architecture.en.md)
+
 [Volver al README](../README.md#desarrollo)
 
 Esta guía describe la implementación de 2026.10.5. Está dirigida a quien necesite localizar una regla, seguir una petición o modificar una herramienta. Al cambiar los flujos, la persistencia o las garantías, actualiza también esta guía. Las instrucciones de uso están en el [README](../README.md) y la [FAQ](../FAQ.md).
