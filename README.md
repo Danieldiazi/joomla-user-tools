@@ -163,6 +163,8 @@ Desde la 2026.10.8, **Quitar de un grupo** saca una cuenta de un grupo y de todo
 2. **Revisar**: se ve cada grupo actual de la cuenta con «Se quita» o «Se mantiene». No se cambia nada hasta confirmar. La revisión es de un solo uso y caduca a los 15 minutos.
 3. **Resultado**: los grupos que conserva la cuenta y un enlace a su ficha y al registro de acciones.
 
+![Quitar de un grupo: revisión](docs/screenshots/16-quitar-grupo-revision.jpg)
+
 Reglas:
 
 - **Si la cuenta se queda sin grupos**, se le asigna el grupo de los usuarios nuevos de las Opciones de Usuarios (normalmente «Registrado»). Si ese grupo es uno de los que se quitan, no se cambia nada y se explica por qué.

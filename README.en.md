@@ -165,6 +165,8 @@ Since 2026.10.8, **Remove from a group** takes an account out of a group and eve
 2. **Review**: each current group of the account is shown as “Removed” or “Kept”. Nothing changes until you confirm. The review is single-use and expires after 15 minutes.
 3. **Result**: the groups the account keeps, with links to its user record and the action log.
 
+![Remove from a group: review (Spanish interface)](docs/screenshots/16-quitar-grupo-revision.jpg)
+
 Rules:
 
 - **If the account is left without groups**, it is assigned the group for new users from the Users Options (usually “Registered”). If that group is one of those being removed, nothing changes and the reason is shown.
