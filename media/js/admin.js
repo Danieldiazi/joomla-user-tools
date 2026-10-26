@@ -146,7 +146,8 @@
       const counter = form.querySelector('[data-ut-ungroup-count]');
       const next = form.querySelector('[data-ut-ungroup-next]');
       const byId = new Map(boxes.map((box) => [box.dataset.utKeep, box]));
-      const title = (box) => box.parentElement.querySelector('label').firstChild.textContent.trim();
+      const title = (box) => [...box.parentElement.querySelector('label').childNodes]
+        .find((node) => node.nodeType === 3 && node.textContent.trim()).textContent.trim();
       // utOwn keeps the operator's own tick, so a group unticked only by the cascade comes back
       // ticked when its parent is ticked again or the option is turned off.
       boxes.forEach((box) => { box.dataset.utOwn = box.checked ? '1' : '0'; });

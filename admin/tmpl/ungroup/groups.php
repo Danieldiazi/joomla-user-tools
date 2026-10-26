@@ -25,10 +25,11 @@ $minLevel = $this->selection['groups'] ? min(array_column($this->selection['grou
       <fieldset class="mb-3">
         <legend class="visually-hidden"><?= Text::_('COM_USERTOOLS_UNGROUP_CHANGES') ?></legend>
         <?php foreach ($this->selection['groups'] as $group) : ?>
-        <div class="form-check ut-group-option" style="--ut-level: <?= (int) $group['level'] - $minLevel ?>" data-ut-ungroup-row>
+        <?php $depth = (int) $group['level'] - $minLevel; ?>
+        <div class="form-check ut-tree-row" style="--ut-level: <?= $depth ?>" data-ut-ungroup-row data-ut-depth="<?= $depth ?>">
           <input class="form-check-input" type="checkbox" name="keep[]" value="<?= (int) $group['id'] ?>" id="ut-keep-<?= (int) $group['id'] ?>"
             data-ut-keep="<?= (int) $group['id'] ?>" data-ut-parents="<?= $this->escape(implode(',', $group['parents'])) ?>"<?= isset($removed[$group['id']]) ? '' : ' checked' ?>>
-          <label class="form-check-label" for="ut-keep-<?= (int) $group['id'] ?>"><?= $this->escape($group['title']) ?>
+          <label class="form-check-label" for="ut-keep-<?= (int) $group['id'] ?>"><?php if ($depth > 0) : ?><span class="ut-tree-branch" aria-hidden="true">└</span><?php endif; ?><?= $this->escape($group['title']) ?>
             <?php if ($group['superUser']) : ?><span class="badge bg-danger"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_SUPER') ?></span>
             <?php elseif ($group['backend']) : ?><span class="badge bg-warning text-dark"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_BACKEND') ?></span><?php endif; ?></label>
           <small class="d-block text-body-secondary" data-ut-cascade-note hidden></small>
