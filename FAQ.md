@@ -170,7 +170,7 @@ La ejecución se interrumpió a mitad. El informe se guarda al empezar, cada 50 
 
 ### ¿Cómo muestro en el sitio los grupos de un usuario o los miembros de un grupo?
 
-Con el módulo «User Tools - Grupos de usuarios», incluido desde la 2026.10.7. El instalador no lo publica: créalo en Contenido → Módulos del sitio → Nuevo y elige en «Qué mostrar» entre *Grupos de un usuario* y *Miembros de un grupo*. Los detalles están en el [README](README.md#módulo-de-grupos-de-usuarios-en-el-sitio).
+Con el módulo «User Tools - Grupos de usuarios», incluido desde la 2026.10.9. El instalador no lo publica: créalo en Contenido → Módulos del sitio → Nuevo y elige en «Qué mostrar» entre *Grupos de un usuario* y *Miembros de un grupo*. Los detalles están en el [README](README.md#módulo-de-grupos-de-usuarios-en-el-sitio).
 
 ### ¿Por qué un invitado no ve el módulo?
 
@@ -210,7 +210,7 @@ No: la herramienta trabaja con una cuenta cada vez, para que cada cambio de perm
 
 ### ¿Cómo veo qué niveles de acceso tiene cada grupo?
 
-Con **Grupos y niveles de acceso**, desde la 2026.10.8. Muestra una tabla con los grupos en filas y los niveles en columnas. Los detalles están en el [README](README.md#grupos-y-niveles-de-acceso).
+Con **Grupos y niveles de acceso**, desde la 2026.10.9. Muestra una tabla con los grupos en filas y los niveles en columnas. Los detalles están en el [README](README.md#grupos-y-niveles-de-acceso).
 
 ### ¿Por qué un grupo aparece con «Heredado» si no lo he asignado al nivel?
 

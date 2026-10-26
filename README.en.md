@@ -11,9 +11,9 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Delete inactive users | Lets you select and permanently delete inactive accounts. By default, only blocked accounts are listed. Available since 2026.10.5. |
 | Scheduled task | Blocks accounts for inactivity; starts in dry-run mode and generates reports. |
 | Dashboard summary | Shows pending accounts, task status and notices on the Users dashboard. Available since 2026.10.6. |
-| User groups on the site | Site module that lists the groups of a user or the members of a group. Read only. Available since 2026.10.7. |
-| Remove from groups | Choose an account, untick the groups it should leave and, if you want, also remove it from all their subgroups. With a review and a confirmation. Available since 2026.10.8. |
-| Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.8. |
+| User groups on the site | Site module that lists the groups of a user or the members of a group. Read only. Available since 2026.10.9. |
+| Remove from groups | Choose an account, untick the groups it should leave and, if you want, also remove it from all their subgroups. With a review and a confirmation. Available since 2026.10.9. |
+| Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.9. |
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
 
@@ -137,7 +137,7 @@ The shared screenshots show the Spanish interface.
 
 ## User groups module on the site
 
-Since 2026.10.7, the package includes the **“User Tools - User Groups”** site module. Joomla has no module that shows on the site which groups someone belongs to or who is in a group; this one does it in two modes. The installer does not publish it: create it in Content → Site Modules → New.
+Since 2026.10.9, the package includes the **“User Tools - User Groups”** site module. Joomla has no module that shows on the site which groups someone belongs to or who is in a group; this one does it in two modes. The installer does not publish it: create it in Content → Site Modules → New.
 
 **Groups of a user.** Shows the groups of the *logged-in visitor* (each person sees their own; guests see nothing) or of *a specific user* chosen in the configuration. Options:
 
@@ -159,7 +159,7 @@ The list is read with a fixed number of queries, whatever the size of the group.
 
 ## Remove from groups
 
-Since 2026.10.8, **Remove from groups** takes an account out of the groups you choose and, if you ask, also out of every group below them: children, grandchildren and so on. Joomla's batch (“Remove from group” in Users) only removes the exact group you choose and does not show the account's groups first.
+Since 2026.10.9, **Remove from groups** takes an account out of the groups you choose and, if you ask, also out of every group below them: children, grandchildren and so on. Joomla's batch (“Remove from group” in Users) only removes the exact group you choose and does not show the account's groups first.
 
 1. **Account**: type part of the username, name or email and pick the account from the list that appears while you type. The full username or email also works, not case-sensitive.
 2. **Groups**: only the groups the account belongs to are shown, all ticked and in their tree. Untick those it should leave. With **“Also remove from subgroups (recursive)”**, unticking a group unticks the groups below it and says why; tick it again and they get their state back. Parent groups are never touched.
@@ -186,7 +186,7 @@ It requires its own permission, *Remove from groups*: Super Users have it; grant
 
 ## Groups and access levels
 
-Since 2026.10.8, **Groups and access levels** shows in a single table which viewing access levels each user group has. Joomla only shows this relation from the levels side (Users → Access Levels, groups column), without inheritance and without a per-group view. This screen is read only: it never changes groups, levels or accounts.
+Since 2026.10.9, **Groups and access levels** shows in a single table which viewing access levels each user group has. Joomla only shows this relation from the levels side (Users → Access Levels, groups column), without inheritance and without a per-group view. This screen is read only: it never changes groups, levels or accounts.
 
 - **Rows**: the groups, in their tree, with the number of active accounts assigned directly (linked to the user manager filtered by that group) and labels for Super Users, groups with administrator access and the guest group set in the Users Options.
 - **Columns**: the levels, in their order. Each cell says whether the group has the level:
