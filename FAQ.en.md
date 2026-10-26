@@ -4,7 +4,7 @@
 
 Common questions about **Joomla User Tools**. For a complete description of each tool, see the [README](README.en.md).
 
-**Contents:** [General](#general) · [List comparison](#list-comparison) · [Accounts and passwords](#accounts-and-passwords) · [Inactivity and scheduled tasks](#inactivity-and-scheduled-tasks) · [Results and reports](#results-and-reports) · [Groups module on the site](#groups-module-on-the-site) · [Remove from a group](#remove-from-a-group) · [Groups and access levels](#groups-and-access-levels) · [Installation and updates](#installation-and-updates)
+**Contents:** [General](#general) · [List comparison](#list-comparison) · [Accounts and passwords](#accounts-and-passwords) · [Inactivity and scheduled tasks](#inactivity-and-scheduled-tasks) · [Results and reports](#results-and-reports) · [Groups module on the site](#groups-module-on-the-site) · [Remove from groups](#remove-from-groups) · [Groups and access levels](#groups-and-access-levels) · [Installation and updates](#installation-and-updates)
 
 ## General
 
@@ -184,19 +184,23 @@ It may be a blocked account, which is never listed, or an account with administr
 
 It shows names or usernames, never email addresses. Decide who sees it with the module's **Access** field (for example, *Registered*) and keep accounts with administrator access hidden unless you have a reason to show them.
 
-## Remove from a group
+## Remove from groups
 
 ### How is it different from Joomla's “Remove from group” batch?
 
-Joomla's batch removes only the exact group you choose. **Remove from a group** also removes every group below it (children, grandchildren…), shows beforehand which groups the account loses and closes its sessions when applied. Details are in the [README](README.en.md#remove-from-a-group).
+Joomla's batch removes only the exact group you choose, without showing the account's groups first. **Remove from groups** shows only the groups it has, lets you untick several and, with the recursive option, also removes every group below them (children, grandchildren…). Before applying it shows what the account loses and, when applied, it closes its sessions. Details are in the [README](README.en.md#remove-from-groups).
+
+### What exactly does the recursive option do?
+
+When you untick a group, the account also leaves every group below it that it belongs to, however many levels down. Parent groups are not touched. Without the option, it only leaves the groups you untick.
 
 ### What happens if the account is left without groups?
 
-It is assigned the group for new users from the Users Options. If that group is one of those being removed, nothing changes: assign it another group in the user manager first.
+It is assigned the group for new users from the Users Options. If that group is one of those being removed, nothing changes: keep a group ticked or assign it another one in the user manager first.
 
-### Why can't I apply the change to an account?
+### Why can't I choose an account or apply the change?
 
-The review gives the reason: it is your own account; it has administrator access and you are not a Super User; it is the last active Super User; or it is not in that group or any of its subgroups.
+The tool gives the reason: it is your own account; it has administrator access and you are not a Super User; it is the last active Super User; or you did not untick any group.
 
 ### Can I remove several accounts at once?
 

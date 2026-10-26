@@ -10,7 +10,7 @@ User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y Postgre
 - **Revisar usuarios inactivos**: bloquea las cuentas seleccionadas.
 - **Eliminar usuarios inactivos**: borra las cuentas seleccionadas.
 - **Tarea programada**: bloquea por inactividad.
-- **Quitar de un grupo**: saca una cuenta de un grupo y de todos sus subgrupos. Una cuenta cada vez; la lógica está en `GroupRemoval` y la escritura en `AccountRegrouper`.
+- **Quitar de grupos**: saca una cuenta de los grupos que se desmarquen y, con la opción recursiva, de todos los que cuelgan de ellos. Una cuenta cada vez; la lógica está en `GroupRemoval` y la escritura en `AccountRegrouper`.
 - **Grupos y niveles de acceso** (solo lectura): qué niveles tiene cada grupo, asignados o heredados. La lógica está en `AccessMatrix`.
 
 Además, un módulo de administración resume en el panel de Usuarios las cuentas pendientes, el estado de las tareas y los avisos, y un módulo del sitio lista los grupos de un usuario o los miembros de un grupo.

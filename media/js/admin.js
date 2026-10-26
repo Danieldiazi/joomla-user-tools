@@ -111,6 +111,72 @@
       sync();
     });
 
+    // Remove from groups: suggestions while typing the account.
+    document.querySelectorAll('[data-ut-account-search]').forEach((field) => {
+      const list = document.getElementById(field.getAttribute('list'));
+      let timer = 0;
+      let last = '';
+      field.addEventListener('input', () => {
+        clearTimeout(timer);
+        const term = field.value.trim();
+        if (term.length < 2 || term === last) return;
+        timer = setTimeout(async () => {
+          last = term;
+          try {
+            const base = field.dataset.utAccountSearch;
+            const url = `${base}${base.includes('?') ? '&' : '?'}q=${encodeURIComponent(term)}`;
+            const response = await fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json' } });
+            if (!response.ok) return;
+            const accounts = await response.json();
+            list.replaceChildren(...accounts.map((account) => {
+              const option = document.createElement('option');
+              option.value = account.username;
+              option.label = [account.name, account.email].filter(Boolean).join(' · ');
+              return option;
+            }));
+          } catch (e) { /* Suggestions are a convenience: the full username or email still works. */ }
+        }, 250);
+      });
+    });
+
+    // Remove from groups: with the recursive option, unticking a group also unticks the groups below it.
+    document.querySelectorAll('[data-ut-ungroup-groups]').forEach((form) => {
+      const boxes = [...form.querySelectorAll('[data-ut-keep]')];
+      const recursive = form.querySelector('[data-ut-recursive]');
+      const counter = form.querySelector('[data-ut-ungroup-count]');
+      const next = form.querySelector('[data-ut-ungroup-next]');
+      const byId = new Map(boxes.map((box) => [box.dataset.utKeep, box]));
+      const title = (box) => box.parentElement.querySelector('label').firstChild.textContent.trim();
+      // utOwn keeps the operator's own tick, so a group unticked only by the cascade comes back
+      // ticked when its parent is ticked again or the option is turned off.
+      boxes.forEach((box) => { box.dataset.utOwn = box.checked ? '1' : '0'; });
+      const sync = () => {
+        let removed = 0;
+        boxes.forEach((box) => {
+          const parent = recursive && recursive.checked
+            ? (box.dataset.utParents || '').split(',').map((id) => byId.get(id)).find((p) => p && p.dataset.utOwn === '0')
+            : undefined;
+          // A box disabled by the cascade is not submitted, so the server removes that group too.
+          box.disabled = !!parent;
+          box.checked = parent ? false : box.dataset.utOwn === '1';
+          const note = box.parentElement.querySelector('[data-ut-cascade-note]');
+          if (note) {
+            note.hidden = !parent;
+            note.textContent = parent ? sprintf(text('COM_USERTOOLS_JS_UNGROUP_CASCADED', 'Removed because it is inside «%s».'), title(parent)) : '';
+          }
+          if (!box.checked) removed += 1;
+        });
+        if (counter) {
+          counter.textContent = removed
+            ? sprintf(text(removed === 1 ? 'COM_USERTOOLS_JS_UNGROUP_COUNT_1' : 'COM_USERTOOLS_JS_UNGROUP_COUNT', 'It will leave %d groups.'), removed) : '';
+        }
+        if (next) next.disabled = !removed;
+      };
+      boxes.forEach((box) => box.addEventListener('change', () => { box.dataset.utOwn = box.checked ? '1' : '0'; sync(); }));
+      if (recursive) recursive.addEventListener('change', sync);
+      sync();
+    });
+
     document.querySelectorAll('[data-ut-copy]').forEach((button) => {
       button.addEventListener('click', async () => {
         try {

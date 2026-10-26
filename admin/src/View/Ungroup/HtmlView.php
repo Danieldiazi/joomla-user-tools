@@ -8,21 +8,28 @@ use Danieldiazi\Component\Usertools\Administrator\Model\UngroupModel;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Danieldiazi\Component\Usertools\Administrator\View\ViewTrait;
+use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 
-/** "Remove from a group": choose, review, result. */
+/** "Remove from groups": account, groups, review, result. */
 class HtmlView extends BaseHtmlView
 {
     use ViewTrait;
 
-    /** @var array{login: string, group: int} */
-    public array $draft = ['login' => '', 'group' => 0];
+    /** @var array{login: string, account: int, removed: list<int>, recursive: bool} */
+    public array $draft = ['login' => '', 'account' => 0, 'removed' => [], 'recursive' => false];
+    /** @var array<string, mixed> */
+    public array $selection = [];
     /** @var array<string, mixed> */
     public array $review = [];
     /** @var array<string, mixed>|null */
     public ?array $result = null;
     /** @var array<int, object> */
     public array $groups = [];
+
+    /** Steps shown at the top of every screen. */
+    public const STEPS = ['setup' => 'COM_USERTOOLS_UNGROUP_STEP_CHOOSE', 'groups' => 'COM_USERTOOLS_UNGROUP_STEP_GROUPS',
+        'review' => 'COM_USERTOOLS_UNGROUP_STEP_REVIEW', 'result' => 'COM_USERTOOLS_STEP_RESULT'];
 
     public function display($tpl = null): void
     {
@@ -31,24 +38,39 @@ class HtmlView extends BaseHtmlView
         $this->draft  = $model->getDraft();
         $this->groups = $model->getGroups();
         $layout       = $this->getLayout();
-        if ($layout === 'review') {
-            try {
+        try {
+            if ($layout === 'groups') {
+                $this->selection = $model->getSelection();
+            } elseif ($layout === 'review') {
                 $this->review = $model->getReview();
-            } catch (UserFacingException $e) {
-                $this->leave($e, 'view=ungroup');
-                return;
+            } elseif ($layout === 'result') {
+                $this->result = $model->getResult();
+                if (!$this->result) {
+                    Toolkit::app()->redirect('index.php?option=com_usertools&view=ungroup');
+                    return;
+                }
+            } else {
+                $this->setLayout('default');
             }
-        } elseif ($layout === 'result') {
-            $this->result = $model->getResult();
-            if (!$this->result) {
-                Toolkit::app()->redirect('index.php?option=com_usertools&view=ungroup');
-                return;
-            }
-        } else {
-            $this->setLayout('default');
+        } catch (UserFacingException $e) {
+            $this->leave($e, $this->draft['account'] ? 'view=ungroup&layout=groups' : 'view=ungroup');
+            return;
         }
         $this->prepareDocument('COM_USERTOOLS_UNGROUP_TITLE');
+        Text::script('COM_USERTOOLS_JS_UNGROUP_COUNT');
+        Text::script('COM_USERTOOLS_JS_UNGROUP_COUNT_1');
+        Text::script('COM_USERTOOLS_JS_UNGROUP_CASCADED');
         parent::display($tpl);
+    }
+
+    /**
+     * @param  list<int> $ids
+     * @return list<int> the ids in the order of the group tree
+     */
+    public function treeOrder(array $ids): array
+    {
+        $wanted = array_flip($ids);
+        return array_values(array_filter(array_map('intval', array_keys($this->groups)), fn (int $id) => isset($wanted[$id])));
     }
 
     public function groupTitle(int $id): string

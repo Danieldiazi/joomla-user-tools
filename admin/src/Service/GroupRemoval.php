@@ -5,7 +5,8 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service;
 \defined('_JEXEC') or die;
 
 /**
- * Plans the removal of one account from a group and every group below it (children, grandchildren…).
+ * Plans the removal of one account from the groups the operator unticked. With the recursive option,
+ * removing a group also removes the account from every group below it (children, grandchildren…).
  * Pure logic: the model loads the data and the applier writes through Joomla's User API.
  *
  * Rules:
@@ -20,14 +21,18 @@ final class GroupRemoval
     /**
      * @param  array<int, object> $groups      UserDirectory::groups(): id, parent_id, lft, rgt, title, superUser, backend
      * @param  list<int>          $direct      groups the account is assigned to
+     * @param  list<int>          $selected    groups chosen for removal (ids the account is not in are ignored)
+     * @param  bool               $recursive   also remove the account from every group below a chosen one
      * @param  int                $otherSupers active Super Users other than this account
-     * @return array{remove: list<int>, keep: list<int>, added: int, result: list<int>, reason: string, losesSuper: bool, losesBackend: bool}
-     *         reason is a language key when the change is not allowed, '' otherwise
+     * @return array{remove: list<int>, keep: list<int>, added: int, result: list<int>, reason: string, losesSuper: bool, losesBackend: bool, cascaded: array<int, int>}
+     *         reason is a language key when the change is not allowed, '' otherwise; cascaded maps a group
+     *         removed only because of the recursive option to the chosen group above it
      */
     public static function plan(
         array $groups,
         array $direct,
-        int $groupId,
+        array $selected,
+        bool $recursive,
         int $defaultGroup,
         Operator $operator,
         int $accountId,
@@ -35,21 +40,32 @@ final class GroupRemoval
         bool $isBackend,
         int $otherSupers,
     ): array {
-        $direct  = array_values(array_unique(array_map('intval', $direct)));
-        $subtree = array_fill_keys(self::subtree($groups, $groupId), true);
-        $remove  = $keep = [];
+        $direct   = array_values(array_unique(array_map('intval', $direct)));
+        $chosen   = array_fill_keys(array_intersect(array_map('intval', $selected), $direct), true);
+        $cascaded = [];
+        if ($recursive) {
+            foreach (array_keys($chosen) as $root) {
+                foreach (self::subtree($groups, $root) as $below) {
+                    if ($below !== $root && !isset($chosen[$below]) && \in_array($below, $direct, true) && !isset($cascaded[$below])) {
+                        $cascaded[$below] = $root;
+                    }
+                }
+            }
+        }
+        $remove = $keep = [];
         foreach (self::treeOrder($groups, $direct) as $id) {
-            if (isset($subtree[$id])) {
+            if (isset($chosen[$id]) || isset($cascaded[$id])) {
                 $remove[] = $id;
             } else {
                 $keep[] = $id;
             }
         }
+        $removed = array_fill_keys($remove, true);
         $added  = 0;
         $result = $keep;
         $reason = '';
         if (!$keep && $remove) {
-            if (isset($subtree[$defaultGroup]) || !isset($groups[$defaultGroup])) {
+            if (isset($removed[$defaultGroup]) || !isset($groups[$defaultGroup])) {
                 $reason = 'COM_USERTOOLS_UNGROUP_REASON_DEFAULT_REMOVED';
             } else {
                 $added  = $defaultGroup;
@@ -68,7 +84,7 @@ final class GroupRemoval
         } elseif ($losesSuper && $otherSupers < 1) {
             $reason = 'COM_USERTOOLS_UNGROUP_REASON_LAST_SUPER';
         } elseif (!$remove) {
-            $reason = 'COM_USERTOOLS_UNGROUP_REASON_NOT_MEMBER';
+            $reason = 'COM_USERTOOLS_UNGROUP_REASON_NOTHING';
         }
 
         return [
@@ -79,7 +95,29 @@ final class GroupRemoval
             'reason'       => $reason,
             'losesSuper'   => $losesSuper,
             'losesBackend' => $losesBackend,
+            'cascaded'     => $cascaded,
         ];
+    }
+
+    /**
+     * Ancestors of each group (nearest last), for the selection screen.
+     *
+     * @param  array<int, object> $groups
+     * @return list<int>
+     */
+    public static function ancestors(array $groups, int $groupId): array
+    {
+        if (!isset($groups[$groupId])) {
+            return [];
+        }
+        $target = $groups[$groupId];
+        $result = [];
+        foreach ($groups as $group) {
+            if ((int) $group->id !== $groupId && (int) $group->lft < (int) $target->lft && (int) $group->rgt > (int) $target->rgt) {
+                $result[] = (int) $group->id;
+            }
+        }
+        return $result;
     }
 
     /**
