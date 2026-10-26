@@ -40,6 +40,7 @@ Las flechas indican llamadas o dependencias principales, no una secuencia tempor
 | Navegador | [media/js/admin.js](../media/js/admin.js) filtra tablas, mantiene selecciones y serializa campos. Sus comprobaciones no sustituyen las del servidor. |
 | Tarea programada | [Usertools](../plugins/task/usertools/src/Extension/Usertools.php) clasifica cuentas, aplica el límite, simula o bloquea y guarda informes. |
 | Evidencias | [ActionLogger](../admin/src/Service/ActionLogger.php) escribe en Joomla; [ReportStore](../admin/src/Service/ReportStore.php) conserva informes de tareas; [CsvExport](../admin/src/Service/CsvExport.php) prepara exportaciones. |
+| Grupos y niveles de acceso | [AccessModel](../admin/src/Model/AccessModel.php) lee grupos, niveles y cuentas activas por grupo con [UserDirectory](../admin/src/Service/UserDirectory.php); [AccessMatrix](../admin/src/Service/AccessMatrix.php) decide, con las reglas de `Access::getAuthorisedViewLevels()`, si cada grupo tiene cada nivel asignado, heredado o siempre (Público). Solo lectura. |
 | Módulo de grupos del sitio | [Dispatcher](../modules/mod_usertools_groups/src/Dispatcher/Dispatcher.php) elige el modo; [MembershipHelper](../modules/mod_usertools_groups/src/Helper/MembershipHelper.php) lee pertenencias y miembros con un número fijo de consultas, sin escribir nada; [GroupTree](../modules/mod_usertools_groups/src/Service/GroupTree.php) contiene las reglas puras del árbol de grupos (herencia, subgrupos, grupos con acceso a la administración y forma de mostrar a cada miembro). No depende del componente. |
 
 ## 2. Seguir una operación manual
@@ -125,6 +126,7 @@ Estos son límites de la implementación actual, no garantías de auditoría com
 | Altas, informes o CSV | Registration, AccountMailer, ReportStore, CsvExport | [RecordsTest](../tests/Unit/RecordsTest.php) e integración |
 | Permisos, rutas o previsualizaciones | Controladores y ToolStateTrait | MvcRegressionTest, que ejecuta [tests/regression/mvc.php](../tests/regression/mvc.php), e integración |
 | Filtros, selección y confirmación | admin.js, plantillas y layouts | [tests/js/admin.test.js](../tests/js/admin.test.js); comprobar además en navegador teclado, filtros y cuentas seleccionadas ocultas |
+| Grupos y niveles de acceso | AccessMatrix, AccessModel, UserDirectory, plantilla access | [AccessMatrixTest](../tests/Unit/AccessMatrixTest.php), MvcRegressionTest y la sección «Groups and access levels» de la integración |
 | Módulo de grupos del sitio | mod_usertools_groups (GroupTree, MembershipHelper, plantilla) | [GroupTreeTest](../tests/Unit/GroupTreeTest.php) y la sección «Groups module on the site» de la integración |
 | Empaquetado e instalación | Manifiestos, package y scripts/build.php | [tests/verify-build.php](../tests/verify-build.php) e instalación del paquete en Joomla |
 

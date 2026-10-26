@@ -25,4 +25,10 @@
 .ut-instructions p{margin:.35rem 0 .6rem}
 .ut-secret{user-select:all;overflow-wrap:anywhere}
 .ut-confirm{border-color:var(--bs-danger-border-subtle,var(--bs-border-color,#dee2e6))}
+.ut-app.ut-wide{max-width:none}
+.ut-access-scroll{max-height:40rem;overflow:auto}
+.ut-access thead th{position:sticky;top:0;z-index:2;background:var(--body-bg,var(--bs-body-bg,#fff));white-space:nowrap}
+.ut-access .ut-access-group{position:sticky;left:0;z-index:1;background:var(--body-bg,var(--bs-body-bg,#fff));min-width:14rem}
+.ut-access thead .ut-access-group{z-index:3}
+.ut-access-legend li{margin:.25rem 0}
 @media (max-width:575.98px){.ut-steps{flex-direction:column;gap:.25rem}}

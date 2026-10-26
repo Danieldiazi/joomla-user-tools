@@ -22,6 +22,7 @@ class DisplayController extends BaseController
         'schedule' => 'core.manage',
         'reports'  => 'usertools.reports',
         'report'   => 'usertools.reports',
+        'access'   => 'usertools.access',
     ];
 
     /**
