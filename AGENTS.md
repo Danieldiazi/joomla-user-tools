@@ -60,6 +60,20 @@ Si una petición choca con alguna de estas reglas, se señala el conflicto antes
 - **Panel**: todo lo que cambie cuentas u Opciones llama a `Toolkit::clearDashboardCache()`. Las cifras del módulo deben usar las mismas reglas que la herramienta a la que enlazan.
 - **Herramienta nueva**: añade su permiso en `access.xml`, la vista en `DisplayController::PERMISSIONS`, su pestaña en `config.xml`, la tarjeta en la portada, el controlador en `tests/regression/mvc.php`, una sección en `tests/integration/run.php` y la documentación en README y FAQ.
 
+## Documentación bilingüe
+
+- El español sigue siendo el idioma predeterminado del repositorio. Mantén estas parejas completas y sincronizadas en la misma rama y pull request:
+  - `README.md` ↔ `README.en.md`.
+  - `FAQ.md` ↔ `FAQ.en.md`.
+  - `docs/arquitectura.md` ↔ `docs/architecture.en.md`.
+  - `docs/capturas.md` ↔ `docs/screenshots.en.md`.
+- Todo cambio de instrucciones, comportamiento, requisitos, ejemplos, límites o capturas en uno de estos documentos debe reflejarse en su pareja antes de dar el trabajo por terminado. Una traducción debe conservar el contenido completo, las advertencias y los ejemplos; no sustituirlos por un resumen.
+- Inmediatamente después del título principal, ambas versiones llevan un selector **Español · English**: el idioma actual se destaca y el otro enlaza al documento equivalente mediante una ruta relativa.
+- Los enlaces entre documentos deben mantenerse en el idioma que se está leyendo, incluidos los fragmentos de sección. Los enlaces al código y a documentación externa conservan su destino. Si un documento solo existe en español, indícalo al enlazarlo desde inglés.
+- Las capturas se pueden compartir entre idiomas. Traduce sus textos alternativos y pies, e indica en la versión inglesa que muestran la interfaz en español; no inventes capturas de una interfaz inglesa.
+- Al crear documentación nueva destinada a usuarios o colaboradores, añade ambas versiones y sus selectores, y registra la pareja aquí. Los archivos de instrucciones para agentes (`AGENTS.md`, `CLAUDE.md`) no necesitan una copia traducida.
+- Al verificar un cambio documental, comprueba en ambas versiones los enlaces relativos, los fragmentos del índice, los selectores recíprocos, las rutas de imágenes y la coherencia de versiones, cifras y comandos. Mantén también las reglas generales de pruebas y CI de esta guía.
+
 ## Versiones
 
 - La numeración es **año.mes.revisión**, sin cero inicial en el mes: 2026.10.5; el mes siguiente empieza en 2026.11.0.
