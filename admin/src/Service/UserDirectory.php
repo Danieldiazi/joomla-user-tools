@@ -189,6 +189,33 @@ final class UserDirectory
         return (int) $db->setQuery($query, 0, 1)->loadResult();
     }
 
+    /**
+     * Accounts whose username, name or email contains the text (case-insensitive on every database),
+     * exact usernames first.
+     *
+     * @return list<array{username: string, name: string, email: string, blocked: bool}>
+     */
+    public function search(string $text, int $limit): array
+    {
+        $db      = $this->db;
+        $escaped = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($text)) . '%';
+        $exact   = mb_strtolower($text);
+        $query   = $db->createQuery()
+            ->select($db->quoteName(['username', 'name', 'email', 'block']))
+            ->from($db->quoteName('#__users'))
+            ->where('(LOWER(' . $db->quoteName('username') . ') LIKE :u OR LOWER(' . $db->quoteName('name') . ') LIKE :n OR LOWER(' . $db->quoteName('email') . ') LIKE :e)')
+            ->bind(':u', $escaped)
+            ->bind(':n', $escaped)
+            ->bind(':e', $escaped)
+            ->order('CASE WHEN LOWER(' . $db->quoteName('username') . ') = ' . $db->quote($exact) . ' THEN 0 ELSE 1 END')
+            ->order($db->quoteName('username'));
+        $rows = [];
+        foreach ($db->setQuery($query, 0, max(1, $limit))->loadObjectList() as $row) {
+            $rows[] = ['username' => (string) $row->username, 'name' => (string) $row->name, 'email' => (string) $row->email, 'blocked' => (int) $row->block === 1];
+        }
+        return $rows;
+    }
+
     /** Active Super Users other than the given account (members of a group with core.admin, or the root user). */
     public function otherActiveSuperUsers(int $exceptId): int
     {

@@ -31,60 +31,77 @@ final class GroupRemovalTest extends TestCase
         return $groups;
     }
 
-    /** @param list<int> $direct */
-    private function plan(array $direct, int $group, ?Operator $operator = null, int $account = 50, bool $super = false, bool $backend = false, int $others = 1, int $default = 2): array
+    /**
+     * @param list<int> $direct
+     * @param list<int> $selected
+     */
+    private function plan(array $direct, array $selected, bool $recursive = false, ?Operator $operator = null, int $account = 50, bool $super = false, bool $backend = false, int $others = 1, int $default = 2): array
     {
-        return GroupRemoval::plan($this->tree(), $direct, $group, $default, $operator ?? new Operator(1, true, 'admin'), $account, $super, $backend, $others);
+        return GroupRemoval::plan($this->tree(), $direct, $selected, $recursive, $default, $operator ?? new Operator(1, true, 'admin'), $account, $super, $backend, $others);
     }
 
-    public function testRemovesTheGroupAndEveryLevelBelow(): void
+    public function testRemovesOnlyTheUntickedGroups(): void
     {
-        $plan = $this->plan([2, 10, 12, 4], 10);
-        $this->assertSame([10, 12], $plan['remove'], 'Socios and its grandchild Presidencia');
-        $this->assertSame([2, 4], $plan['keep'], 'parents and siblings stay');
+        $plan = $this->plan([2, 10, 12, 4], [10]);
+        $this->assertSame([10], $plan['remove'], 'without the recursive option only Socios goes');
+        $this->assertSame([2, 4, 12], $plan['keep']);
+        $this->assertSame([], $plan['cascaded']);
         $this->assertSame('', $plan['reason']);
-        $this->assertSame(0, $plan['added']);
+        $this->assertSame([4, 10], $this->plan([2, 4, 10], [10, 4, 99])['remove'], 'several groups, in tree order; groups it is not in are ignored');
+    }
+
+    public function testRecursiveRemovesEverythingBelow(): void
+    {
+        $plan = $this->plan([2, 10, 12, 4], [10], true);
+        $this->assertSame([10, 12], $plan['remove'], 'Socios and its grandchild Presidencia (Junta itself is not a membership)');
+        $this->assertSame([12 => 10], $plan['cascaded']);
+        $this->assertSame([2, 4], $plan['keep'], 'parents and siblings stay');
+        $all = $this->plan([2, 4, 5, 10, 11, 9], [2], true);
+        $this->assertSame([2, 4, 5, 10, 11], $all['remove'], 'everything under Registered, at any depth');
+        $this->assertSame([9], $all['keep']);
         $this->assertSame([3, 4, 5], GroupRemoval::subtree($this->tree(), 3));
-        $this->assertSame([4, 5], $this->plan([4, 5, 2], 3)['remove'], 'Editor and Publisher are below Author');
+        $this->assertSame([1, 2, 3], GroupRemoval::ancestors($this->tree(), 4));
     }
 
     public function testAccountLeftWithoutGroupsGetsTheDefaultGroup(): void
     {
-        $plan = $this->plan([11, 12], 10);
+        $plan = $this->plan([11, 12], [11], true);
         $this->assertSame([11, 12], $plan['remove']);
         $this->assertSame(2, $plan['added']);
         $this->assertSame([2], $plan['result']);
 
-        $blocked = $this->plan([3, 10], 2);
+        $below = $this->plan([2], [2], true, default: 3);
+        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_DEFAULT_REMOVED', $below['reason'], 'a default group below a removed one would give its permissions back');
+        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_DEFAULT_REMOVED', $this->plan([10], [10], false, default: 12)['reason'], 'also without the recursive option');
+        $this->assertSame(9, $this->plan([10], [10], true, default: 9)['added'], 'a default group elsewhere in the tree is fine');
+
+        $blocked = $this->plan([2, 10], [2], true);
         $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_DEFAULT_REMOVED', $blocked['reason'], 'the default group (Registered) is being removed');
         $this->assertSame(0, $blocked['added']);
     }
 
     public function testNothingToRemove(): void
     {
-        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_NOT_MEMBER', $this->plan([2, 3], 10)['reason']);
-        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_NOT_MEMBER', $this->plan([4], 4 + 100)['reason'], 'unknown group');
+        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_NOTHING', $this->plan([2, 3], [])['reason']);
+        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_NOTHING', $this->plan([2, 3], [10], true)['reason'], 'not a member of the chosen group');
     }
 
     public function testSafetyRules(): void
     {
-        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_SELF', $this->plan([2, 10], 10, new Operator(50, true), 50)['reason'], 'never your own account');
+        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_SELF', $this->plan([2, 10], [10], false, new Operator(50, true), 50)['reason'], 'never your own account');
         $delegate = new Operator(60, false, 'delegate');
-        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_BACKEND', $this->plan([6, 10], 10, $delegate, backend: true)['reason'], 'non Super Users never touch backend accounts');
-        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_BACKEND', $this->plan([8, 10], 10, $delegate, super: true, backend: true)['reason']);
-        $this->assertSame('', $this->plan([2, 10], 10, $delegate)['reason'], 'a delegate can change ordinary accounts');
+        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_BACKEND', $this->plan([6, 10], [10], false, $delegate, backend: true)['reason'], 'non Super Users never touch backend accounts');
+        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_BACKEND', $this->plan([8, 10], [10], false, $delegate, super: true, backend: true)['reason']);
+        $this->assertSame('', $this->plan([2, 10], [10], false, $delegate)['reason'], 'a delegate can change ordinary accounts');
 
-        $lastSuper = $this->plan([8, 2], 8, super: true, backend: true, others: 0);
+        $lastSuper = $this->plan([8, 2], [8], super: true, backend: true, others: 0);
         $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_LAST_SUPER', $lastSuper['reason']);
         $this->assertTrue($lastSuper['losesSuper']);
-        $ok = $this->plan([8, 2], 8, super: true, backend: true, others: 1);
+        $ok = $this->plan([8, 2], [8], super: true, backend: true, others: 1);
         $this->assertSame('', $ok['reason']);
         $this->assertTrue($ok['losesSuper'] && $ok['losesBackend']);
-        $stillAdmin = $this->plan([8, 7], 8, super: true, backend: true, others: 0);
-        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_LAST_SUPER', $stillAdmin['reason']);
-        $keepsBackend = $this->plan([7, 10], 10, backend: true);
-        $this->assertFalse($keepsBackend['losesBackend'], 'Administrator still gives backend access');
-        $this->assertTrue($this->plan([7, 2], 6, backend: true)['losesBackend']);
+        $this->assertFalse($this->plan([7, 10], [10], backend: true)['losesBackend'], 'Administrator still gives backend access');
+        $this->assertTrue($this->plan([6, 7, 2], [6], true, backend: true)['losesBackend'], 'Manager and, recursively, Administrator');
     }
 
     public function testRegrouperRevalidatesSavesClosesSessionsAndLogs(): void

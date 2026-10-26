@@ -9,11 +9,10 @@ use Joomla\CMS\Router\Route;
 
 /** @var \Danieldiazi\Component\Usertools\Administrator\View\Ungroup\HtmlView $this */
 $layouts = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
-$steps   = ['setup' => 'COM_USERTOOLS_UNGROUP_STEP_CHOOSE', 'review' => 'COM_USERTOOLS_UNGROUP_STEP_REVIEW', 'result' => 'COM_USERTOOLS_STEP_RESULT'];
 $result  = $this->result;
 ?>
 <div class="ut-app ut-narrow">
-  <?= LayoutHelper::render('usertools.steps', ['steps' => $steps, 'current' => 'result', 'label' => 'COM_USERTOOLS_UNGROUP_PROGRESS'], $layouts) ?>
+  <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'result', 'label' => 'COM_USERTOOLS_UNGROUP_PROGRESS'], $layouts) ?>
   <div class="alert alert-success" data-ut-ungroup-done><?= Text::sprintf('COM_USERTOOLS_UNGROUP_DONE', $this->escape($result['username']), $this->escape(implode(', ', $result['removed']))) ?></div>
   <?php if (($result['sessions'] ?? '') === 'open') : ?>
   <div class="alert alert-danger" data-ut-sessions="open">

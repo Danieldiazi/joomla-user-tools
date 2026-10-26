@@ -4,7 +4,7 @@
 
 Dudas habituales sobre **Joomla User Tools**. Para la descripción completa de cada herramienta, consulta el [README](README.md).
 
-**Índice:** [General](#general) · [Comparación de listas](#comparación-de-listas) · [Altas y contraseñas](#altas-y-contraseñas) · [Inactividad y tarea programada](#inactividad-y-tarea-programada) · [Resultados e informes](#resultados-e-informes) · [Módulo de grupos en el sitio](#módulo-de-grupos-en-el-sitio) · [Quitar de un grupo](#quitar-de-un-grupo) · [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso) · [Instalación y actualización](#instalación-y-actualización)
+**Índice:** [General](#general) · [Comparación de listas](#comparación-de-listas) · [Altas y contraseñas](#altas-y-contraseñas) · [Inactividad y tarea programada](#inactividad-y-tarea-programada) · [Resultados e informes](#resultados-e-informes) · [Módulo de grupos en el sitio](#módulo-de-grupos-en-el-sitio) · [Quitar de grupos](#quitar-de-grupos) · [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso) · [Instalación y actualización](#instalación-y-actualización)
 
 ## General
 
@@ -184,19 +184,23 @@ Puede ser una cuenta bloqueada, que nunca se lista, o una cuenta con acceso a la
 
 Muestra nombres o nombres de usuario, nunca correos. Decide quién lo ve con el campo **Acceso** del módulo (por ejemplo, *Registrado*) y mantén ocultas las cuentas con acceso a la administración salvo que tengas un motivo para mostrarlas.
 
-## Quitar de un grupo
+## Quitar de grupos
 
 ### ¿En qué se diferencia del lote «Quitar del grupo» de Joomla?
 
-El lote de Joomla quita solo el grupo exacto que eliges. **Quitar de un grupo** quita también todos los grupos que cuelgan de él (hijos, nietos…), enseña antes qué grupos pierde la cuenta y cierra sus sesiones al aplicar. Los detalles están en el [README](README.md#quitar-de-un-grupo).
+El lote de Joomla quita solo el grupo exacto que eliges, sin enseñarte antes los grupos de la cuenta. **Quitar de grupos** te muestra solo los grupos que tiene, te deja desmarcar varios y, con la opción recursiva, quita también todos los que cuelgan de ellos (hijos, nietos…). Antes de aplicar enseña qué pierde la cuenta y, al aplicar, cierra sus sesiones. Los detalles están en el [README](README.md#quitar-de-grupos).
+
+### ¿Qué hace exactamente la opción recursiva?
+
+Al desmarcar un grupo, la cuenta sale también de todos los grupos que cuelgan de él y a los que pertenece, aunque estén varios niveles por debajo. Los grupos padre no se tocan. Sin la opción, solo sale de los grupos que desmarcas.
 
 ### ¿Qué pasa si la cuenta se queda sin grupos?
 
-Se le asigna el grupo de los usuarios nuevos de las Opciones de Usuarios. Si ese grupo es uno de los que se quitan, no se cambia nada: asígnale antes otro grupo en el gestor de usuarios.
+Se le asigna el grupo de los usuarios nuevos de las Opciones de Usuarios. Si ese grupo es uno de los que se quitan, o cuelga de uno de ellos (heredaría sus permisos), no se cambia nada: deja marcado algún grupo o asígnale antes otro en el gestor de usuarios.
 
-### ¿Por qué no puedo aplicar el cambio a una cuenta?
+### ¿Por qué no puedo elegir una cuenta o aplicar el cambio?
 
-La revisión explica el motivo: es tu propia cuenta; tiene acceso a la administración y no eres superusuario; es el último superusuario activo; o no está en ese grupo ni en sus subgrupos.
+La herramienta explica el motivo: es tu propia cuenta; tiene acceso a la administración y no eres superusuario; es el último superusuario activo; o no has desmarcado ningún grupo.
 
 ### ¿Puedo quitar varias cuentas a la vez?
 

@@ -99,3 +99,69 @@ test('table filter shows a message when nothing matches', async () => {
   input(filter);
   assert.equal(doc.querySelector('[data-ut-filter-empty]').hidden, false);
 });
+
+test('remove from groups: recursive option unticks and locks the groups below an unticked one', async () => {
+  // Registered(2) > Author(3) > Editor(4); Registered > Socios(10); Manager(6)
+  const box = (id, parents, title) => `<div data-ut-ungroup-row><input type="checkbox" name="keep[]" value="${id}" data-ut-keep="${id}" data-ut-parents="${parents}" checked>
+    <label>${title}</label><small data-ut-cascade-note hidden></small></div>`;
+  const doc = await load(`<form data-ut-ungroup-groups>${box(6, '1', 'Manager')}${box(2, '1', 'Registered')}${box(3, '1,2', 'Author')}${box(4, '1,2,3', 'Editor')}${box(10, '1,2', 'Socios')}
+    <input type="checkbox" data-ut-recursive><p data-ut-ungroup-count></p><button data-ut-ungroup-next>Next</button></form>`);
+  const get = (id) => doc.querySelector(`[data-ut-keep="${id}"]`);
+  const next = doc.querySelector('[data-ut-ungroup-next]');
+  const recursive = doc.querySelector('[data-ut-recursive]');
+  assert.equal(next.disabled, true, 'nothing unticked, nothing to review');
+
+  get(3).checked = false;
+  change(get(3));
+  assert.equal(get(4).checked, true, 'without the option, children stay');
+  assert.match(doc.querySelector('[data-ut-ungroup-count]').textContent, /1/);
+  assert.equal(next.disabled, false);
+
+  recursive.checked = true;
+  change(recursive);
+  assert.equal(get(4).checked, false);
+  assert.equal(get(4).disabled, true, 'a cascaded group is locked and not submitted');
+  assert.match(get(4).parentElement.querySelector('[data-ut-cascade-note]').textContent, /Author/);
+  assert.equal(get(10).checked, true, 'siblings are not touched');
+
+  get(2).checked = false;
+  change(get(2));
+  assert.deepEqual([3, 4, 10].map((id) => get(id).checked), [false, false, false], 'everything below Registered');
+  assert.equal(get(6).checked, true);
+  assert.match(get(3).parentElement.querySelector('[data-ut-cascade-note]').textContent, /Registered/);
+
+  get(2).checked = true;
+  change(get(2));
+  assert.deepEqual([3, 4, 10].map((id) => [get(id).checked, get(id).disabled]), [[false, false], [false, true], [true, false]],
+    'ticking the parent again gives back each group its own tick');
+
+  recursive.checked = false;
+  change(recursive);
+  assert.deepEqual([3, 4].map((id) => [get(id).checked, get(id).disabled]), [[false, false], [true, false]], 'turning the option off undoes the cascade');
+
+  recursive.checked = true;
+  change(recursive);
+  assert.equal(get(4).disabled, true);
+  const form = doc.querySelector('[data-ut-ungroup-groups]');
+  form.dispatchEvent(new doc.defaultView.Event('submit', { cancelable: true }));
+  const sent = [...form.querySelectorAll('[data-ut-keep]')].filter((box) => box.checked && !box.disabled).map((box) => Number(box.value));
+  assert.deepEqual(sent, [6, 2, 4, 10], 'the operator\'s own ticks are sent (Editor stays ticked); the server applies the cascade');
+});
+
+test('remove from groups: account suggestions fill the list while typing', async () => {
+  const doc = await load('<input data-ut-account-search="index.php?option=com_usertools&task=ungroup.suggest&abc=1" list="ut-list"><datalist id="ut-list"></datalist>');
+  const win = doc.defaultView;
+  const asked = [];
+  win.fetch = async (url) => { asked.push(String(url)); return { ok: true, json: async () => [{ username: 'ana', name: 'Ana Pérez', email: 'ana@example.test' }, { username: 'anabel', name: '', email: 'b@example.test' }] }; };
+  const field = doc.querySelector('[data-ut-account-search]');
+  field.value = 'a';
+  input(field);
+  field.value = 'an';
+  input(field);
+  await new Promise((resolve) => setTimeout(resolve, 400));
+  assert.equal(asked.length, 1, 'one request after the pause, none for a single letter');
+  assert.match(asked[0], /task=ungroup\.suggest/);
+  assert.match(asked[0], /q=an/);
+  const options = [...doc.querySelectorAll('#ut-list option')];
+  assert.deepEqual(options.map((o) => [o.value, o.label]), [['ana', 'Ana Pérez · ana@example.test'], ['anabel', 'b@example.test']]);
+});

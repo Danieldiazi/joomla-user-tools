@@ -9,15 +9,14 @@ use Joomla\CMS\Router\Route;
 
 /** @var \Danieldiazi\Component\Usertools\Administrator\View\Ungroup\HtmlView $this */
 $layouts = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
-$steps   = ['setup' => 'COM_USERTOOLS_UNGROUP_STEP_CHOOSE', 'review' => 'COM_USERTOOLS_UNGROUP_STEP_REVIEW', 'result' => 'COM_USERTOOLS_STEP_RESULT'];
 /** @var \Danieldiazi\Component\Usertools\Administrator\Service\UserRecord $account */
 $account = $this->review['account'];
 $plan    = $this->review['plan'];
 $remove  = array_flip($plan['remove']);
 ?>
 <div class="ut-app ut-narrow">
-  <?= LayoutHelper::render('usertools.steps', ['steps' => $steps, 'current' => 'review', 'label' => 'COM_USERTOOLS_UNGROUP_PROGRESS'], $layouts) ?>
-  <h2 class="h3"><?= Text::sprintf('COM_USERTOOLS_UNGROUP_REVIEW_HEADING', $this->escape($this->groupTitle($this->review['group']))) ?></h2>
+  <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'review', 'label' => 'COM_USERTOOLS_UNGROUP_PROGRESS'], $layouts) ?>
+  <h2 class="h3"><?= Text::sprintf('COM_USERTOOLS_UNGROUP_REVIEW_HEADING', $this->escape($account->username)) ?></h2>
 
   <section class="card ut-card"><div class="card-body">
     <dl class="row mb-0">
@@ -33,10 +32,12 @@ $remove  = array_flip($plan['remove']);
     <table class="table table-sm mb-0" id="ut-ungroup-table">
       <thead><tr><th scope="col"><?= Text::_('COM_USERTOOLS_UNGROUP_CURRENT_GROUP') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_UNGROUP_CHANGE') ?></th></tr></thead>
       <tbody>
-      <?php foreach (array_merge($plan['remove'], $plan['keep']) as $id) : ?>
+      <?php foreach ($this->treeOrder(array_merge($plan['remove'], $plan['keep'])) as $id) : ?>
         <tr data-ut-change="<?= isset($remove[$id]) ? 'remove' : 'keep' ?>">
           <td><?= $this->escape($this->groupTitle($id)) ?></td>
-          <td><?php if (isset($remove[$id])) : ?><span class="badge bg-danger"><?= Text::_('COM_USERTOOLS_UNGROUP_REMOVED') ?></span><?php else : ?><span class="badge bg-success"><?= Text::_('COM_USERTOOLS_UNGROUP_KEPT') ?></span><?php endif; ?></td>
+          <td><?php if (isset($remove[$id])) : ?><span class="badge bg-danger"><?= Text::_('COM_USERTOOLS_UNGROUP_REMOVED') ?></span>
+            <?php if (isset($plan['cascaded'][$id])) : ?><small class="d-block text-body-secondary" data-ut-cascaded><?= Text::sprintf('COM_USERTOOLS_UNGROUP_CASCADED', $this->escape($this->groupTitle((int) $plan['cascaded'][$id]))) ?></small><?php endif; ?>
+            <?php else : ?><span class="badge bg-success"><?= Text::_('COM_USERTOOLS_UNGROUP_KEPT') ?></span><?php endif; ?></td>
         </tr>
       <?php endforeach; ?>
       <?php if ($plan['added']) : ?>
@@ -48,11 +49,11 @@ $remove  = array_flip($plan['remove']);
   </div></section>
 
   <?php if ($plan['reason'] !== '') : ?>
-    <div class="alert alert-<?= $plan['reason'] === 'COM_USERTOOLS_UNGROUP_REASON_NOT_MEMBER' ? 'info' : 'warning' ?>" data-ut-reason="<?= $this->escape($plan['reason']) ?>">
-      <?= Text::sprintf($plan['reason'], $this->escape($this->groupTitle($this->review['group'])), $this->escape($this->groupTitle((int) $this->review['defaultGroup']))) ?>
+    <div class="alert alert-<?= $plan['reason'] === 'COM_USERTOOLS_UNGROUP_REASON_NOTHING' ? 'info' : 'warning' ?>" data-ut-reason="<?= $this->escape($plan['reason']) ?>">
+      <?= Text::sprintf($plan['reason'], $this->escape($this->groupTitle((int) $this->review['defaultGroup']))) ?>
     </div>
     <div class="ut-actions">
-      <a class="btn btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools&view=ungroup') ?>"><?= Text::_('COM_USERTOOLS_BACK_EDIT') ?></a>
+      <a class="btn btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools&view=ungroup&layout=groups') ?>"><?= Text::_('COM_USERTOOLS_BACK_EDIT') ?></a>
     </div>
   <?php else : ?>
     <?php if ($plan['losesSuper']) : ?><div class="alert alert-danger"><?= Text::_('COM_USERTOOLS_UNGROUP_LOSES_SUPER') ?></div>
@@ -62,7 +63,7 @@ $remove  = array_flip($plan['remove']);
       <?= LayoutHelper::render('usertools.confirm', ['label' => 'COM_USERTOOLS_UNGROUP_CONFIRM', 'count' => 1, 'threshold' => 0], $layouts) ?>
       <input type="hidden" name="preview" value="<?= $this->escape($this->review['nonce']) ?>">
       <div class="ut-actions">
-        <a class="btn btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools&view=ungroup') ?>"><?= Text::_('COM_USERTOOLS_BACK_EDIT') ?></a>
+        <a class="btn btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools&view=ungroup&layout=groups') ?>"><?= Text::_('COM_USERTOOLS_BACK_EDIT') ?></a>
         <button class="btn btn-danger" name="task" value="ungroup.apply"><?= Text::_('COM_USERTOOLS_UNGROUP_APPLY') ?></button>
       </div>
       <?= HTMLHelper::_('form.token') ?>
