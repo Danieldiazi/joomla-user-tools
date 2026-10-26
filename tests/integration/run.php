@@ -456,5 +456,54 @@ Test::check(!str_contains($delegate->get($dashboardUrl), 'mod-usertools'), 'the 
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_users'", [$usersRules]);
 
+Test::section('Groups module on the site');
+foreach ($site->q("SELECT id FROM #__modules WHERE title LIKE 'UT groups%'") as $row) {
+    $site->q('DELETE FROM #__modules_menu WHERE moduleid = ?', [$row['id']]);
+    $site->q('DELETE FROM #__modules WHERE id = ?', [$row['id']]);
+}
+$site->addUser('gm_author', 'Author');
+$site->addUser('gm_editor', 'Editor');
+$site->addUser('gm_mgr', 'Manager,Author');
+$site->addUser('gm_blocked', 'Author');
+$site->q('UPDATE #__users SET block = 1 WHERE username = ?', ['gm_blocked']);
+$site->q('UPDATE #__users SET name = ? WHERE username = ?', ['<b>Gm</b> Author', 'gm_author']);
+$author = (int) $site->q("SELECT id FROM #__usergroups WHERE title = 'Author'")[0]['id'];
+$guest  = (int) $site->q("SELECT id FROM #__usergroups WHERE title = 'Guest'")[0]['id'];
+$public = (int) $site->q("SELECT id FROM #__usergroups WHERE title = 'Public'")[0]['id'];
+$groupModules = [
+    'UT groups members' => ['mode' => 'members', 'group_id' => $author, 'subgroups' => 1, 'display' => 'both', 'limit' => 50],
+    'UT groups admins'  => ['mode' => 'members', 'group_id' => $author, 'subgroups' => 0, 'display' => 'username', 'hide_backend' => 0],
+    'UT groups limited' => ['mode' => 'members', 'group_id' => $author, 'subgroups' => 1, 'display' => 'username', 'limit' => 1],
+    'UT groups empty'   => ['mode' => 'members', 'group_id' => $guest, 'show_empty' => 0],
+    'UT groups mine'    => ['mode' => 'user', 'user_source' => 'current'],
+    'UT groups editor'  => ['mode' => 'user', 'user_source' => 'specific', 'user_id' => $site->userId('gm_editor'), 'inherited' => 1, 'hidden_groups' => [$public]],
+];
+foreach ($groupModules as $title => $params) {
+    $site->q("INSERT INTO #__modules (title, note, content, ordering, position, published, module, access, showtitle, params, client_id, language) VALUES (?, '', '', 0, 'sidebar-right', 1, 'mod_usertools_groups', 1, 1, ?, 0, '*')",
+        [$title, json_encode($params)]);
+    $site->q('INSERT INTO #__modules_menu (moduleid, menuid) SELECT id, 0 FROM #__modules WHERE title = ?', [$title]);
+}
+$page = (string) file_get_contents($url . '/index.php');
+Test::noPhpErrors($page, 'site home');
+$block = function (string $title) use ($page): ?string {
+    $start = strpos($page, '>' . $title . '<');
+    if ($start === false) {
+        return null;
+    }
+    $next = strpos($page, 'card-header', $start + 1);
+    return substr($page, $start, ($next === false ? strlen($page) : $next) - $start);
+};
+$members = (string) $block('UT groups members');
+Test::check(str_contains($members, '&lt;b&gt;Gm&lt;/b&gt; Author (gm_author)') && str_contains($members, 'Gm_editor (gm_editor)'), 'members of a group and its subgroups are listed, escaped');
+Test::check(!str_contains($members, 'gm_mgr') && !str_contains($members, 'gm_blocked') && !str_contains($members, '@example.test'), 'administrator accounts, blocked accounts and emails are never listed by default');
+$admins = (string) $block('UT groups admins');
+Test::check(str_contains($admins, 'gm_mgr') && !str_contains($admins, 'gm_editor'), 'administrator accounts can be shown on request; subgroups only when asked');
+$limited = (string) $block('UT groups limited');
+Test::check(substr_count($limited, '<li') === 1 && str_contains($limited, 'and 1 more'), 'the limit is applied and the rest is counted');
+Test::check($block('UT groups empty') === null, 'an empty list is hidden when asked');
+Test::check($block('UT groups mine') === null, 'guests do not see a list of their own groups');
+$editor = (string) $block('UT groups editor');
+Test::check(str_contains($editor, 'Editor') && str_contains($editor, 'class="text-body-secondary">Author') && !str_contains($editor, '>Public<'), 'a chosen user shows inherited groups dimmed, without hidden ones');
+
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);

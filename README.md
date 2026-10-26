@@ -11,6 +11,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Eliminar usuarios inactivos | Permite seleccionar y borrar definitivamente cuentas inactivas. Por defecto lista solo las ya bloqueadas. Disponible desde 2026.10.5. |
 | Tarea programada | Bloquea cuentas por inactividad; empieza en modo simulación y genera informes. |
 | Resumen en el panel | Muestra en el panel de Usuarios las cuentas pendientes, el estado de las tareas y avisos. Disponible desde 2026.10.6. |
+| Grupos de usuarios en el sitio | Módulo del sitio que lista los grupos de un usuario o los miembros de un grupo. Solo lee. Disponible desde 2026.10.7. |
 
 **Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
 
@@ -26,6 +27,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 - [Eliminar usuarios inactivos](#eliminar-usuarios-inactivos)
 - [Tarea programada e informes](#tarea-programada-por-inactividad)
 - [Resumen en el panel de Usuarios](#resumen-en-el-panel-de-usuarios)
+- [Módulo de grupos de usuarios en el sitio](#módulo-de-grupos-de-usuarios-en-el-sitio)
 - [Seguridad](#seguridad)
 - [Opciones](#opciones)
 - [Capturas de las herramientas](#capturas-de-las-herramientas)
@@ -37,7 +39,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 
 ## Instalación y actualizaciones
 
-Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) el fichero **pkg_usertools-VERSIÓN.zip** e instálalo desde Sistema → Instalar → Extensiones. El paquete instala el componente, el plugin de tareas y el módulo de administración «User Tools». En una instalación nueva habilita el plugin «Tarea - User Tools», y la primera vez que se instala el módulo lo publica en el panel de Usuarios. Las tareas que crees empiezan siempre en modo simulación.
+Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) el fichero **pkg_usertools-VERSIÓN.zip** e instálalo desde Sistema → Instalar → Extensiones. El paquete instala el componente, el plugin de tareas, el módulo de administración «User Tools» y el módulo del sitio «User Tools - Grupos de usuarios». En una instalación nueva habilita el plugin «Tarea - User Tools», y la primera vez que se instala el módulo lo publica en el panel de Usuarios. Las tareas que crees empiezan siempre en modo simulación.
 
 A partir de la 2026.10.3, Joomla avisa de las versiones nuevas en Sistema → Actualizar → Extensiones, como con cualquier otra extensión: el paquete declara un servidor de actualizaciones que apunta a la última release de GitHub. Para actualizar, instala el paquete nuevo encima; no desinstales el componente. Al actualizar desde versiones anteriores, las exclusiones guardadas se migran solas.
 
@@ -127,6 +129,28 @@ El módulo respeta los permisos: solo lo ve quien puede acceder a User Tools, la
 
 ![Módulo User Tools en el panel de Usuarios](docs/screenshots/13-panel-usuarios.jpg)
 
+## Módulo de grupos de usuarios en el sitio
+
+Desde la 2026.10.7, el paquete incluye el módulo del sitio **«User Tools - Grupos de usuarios»**. Joomla no trae ningún módulo que muestre en el sitio a qué grupos pertenece alguien ni quién está en un grupo; este lo hace en dos modos. El instalador no lo publica: créalo en Contenido → Módulos del sitio → Nuevo.
+
+**Grupos de un usuario.** Muestra los grupos del *visitante identificado* (cada persona ve los suyos; a los invitados no se les muestra nada) o de *un usuario concreto* elegido en la configuración. Opciones:
+
+- *Incluir grupos heredados*: añade los grupos padre de los que hereda permisos, atenuados. Por ejemplo, un miembro de «Autor» verá también «Registrado».
+- *Grupos que no se muestran*: grupos que nunca aparecen, como «Público».
+
+**Miembros de un grupo.** Lista las cuentas activas de un grupo, en orden alfabético. Opciones:
+
+- *Incluir subgrupos*: lista también a quien está en los grupos que cuelgan del elegido.
+- *Mostrar cada miembro como*: nombre, nombre de usuario o los dos.
+- *Ocultar cuentas con acceso a la administración* (activada por defecto): no lista a nadie que esté en un grupo con acceso a la administración o de superusuarios, para no exponer en el sitio las cuentas más sensibles.
+- *Máximo de miembros* (50 por defecto, hasta 1000) y *Mostrar el total de miembros*. Si hay más miembros que el máximo, el módulo indica cuántos faltan.
+
+En los dos modos, *Mostrar si la lista está vacía* decide si el módulo se ve cuando no hay nada que listar.
+
+**Privacidad.** El módulo nunca muestra correos electrónicos ni cuentas bloqueadas, y no cambia cuentas ni grupos. Aun así, los nombres de los miembros son datos personales: usa el campo **Acceso** del módulo para decidir quién lo ve (por ejemplo, *Registrado*) en lugar de dejarlo en *Público*. Para los invitados, la lista de miembros sigue la caché de módulos de Joomla; a los usuarios identificados se les calcula siempre al momento.
+
+La lista se obtiene con un número fijo de consultas, sea cual sea el tamaño del grupo. Las cuentas con acceso a la administración se deciden por grupo, con los permisos globales de Joomla, como en el resto de User Tools.
+
 ## Seguridad
 
 - **Los superusuarios están siempre protegidos**, en todas las herramientas y aunque se desactive «Excluir administradores». User Tools no bloquea ni elimina cuentas de superusuario.
@@ -138,6 +162,7 @@ El módulo respeta los permisos: solo lo ve quien puede acceder a User Tools, la
   - Quien no es superusuario nunca puede bloquear ni eliminar cuentas con acceso a la administración.
 - **Confirmación reforzada configurable**: a partir de N cuentas (10 por defecto) hay que escribir el número exacto de cuentas afectadas, además de marcar la casilla.
 - **El borrado exige siempre escribir el número de cuentas**, aunque solo se elimine una; el umbral configurable no desactiva esta confirmación.
+- **El módulo de grupos del sitio solo lee**: nunca muestra correos ni cuentas bloqueadas, y por defecto oculta las cuentas con acceso a la administración (ver [módulo de grupos](#módulo-de-grupos-de-usuarios-en-el-sitio)).
 - **Límite de seguridad en las tareas programadas** contra bloqueos masivos (ver [límite de seguridad](#límite-de-seguridad-contra-bloqueos-masivos)).
 - Previsualizaciones de un solo uso que caducan a los 15 minutos, revalidación de cada cuenta justo antes de guardarla, protección CSRF y páginas que no se guardan en caché.
 
@@ -176,6 +201,7 @@ Estructura:
 - `media/`: CSS y JS cargados con el gestor de recursos web (`joomla.asset.json`).
 - `plugins/task/usertools/`: plugin de tareas.
 - `modules/mod_usertools/`: módulo de resumen del panel de Usuarios.
+- `modules/mod_usertools_groups/`: módulo del sitio que lista grupos y miembros.
 - `package/`: manifiesto del paquete, script de instalación e idiomas.
 
 Pruebas:
@@ -187,7 +213,7 @@ npm test                              # comportamiento del JavaScript (jsdom)
 JOOMLA_PATH=/ruta/a/joomla-6 vendor/bin/phpstan analyse   # análisis estático, nivel 6
 ~~~
 
-La prueba de extremo a extremo `tests/integration/run.php` recorre todos los flujos contra un Joomla 6 real y desechable: comparación, altas por correo hasta elegir la contraseña y entrar, contraseñas temporales, permisos delegados, revisión y eliminación de inactivos, tarea con límite de seguridad, informes, CSV y registro de acciones. Instrucciones de uso en la cabecera del fichero; usa `tests/integration/smtp-sink.php` como servidor de correo de pruebas.
+La prueba de extremo a extremo `tests/integration/run.php` recorre todos los flujos contra un Joomla 6 real y desechable: comparación, altas por correo hasta elegir la contraseña y entrar, contraseñas temporales, permisos delegados, revisión y eliminación de inactivos, tarea con límite de seguridad, informes, CSV, registro de acciones y el módulo de grupos del sitio. Instrucciones de uso en la cabecera del fichero; usa `tests/integration/smtp-sink.php` como servidor de correo de pruebas.
 
 GitHub Actions ejecuta en cada push y pull request las pruebas unitarias (PHP 8.3 y 8.4), JavaScript, PHPStan y la prueba de extremo a extremo con PostgreSQL y con MySQL.
 
@@ -201,7 +227,7 @@ php scripts/build.php --version=v2026.10.5 --output=dist
 php tests/verify-build.php 2026.10.5 dist
 ~~~
 
-Genera los cuatro ZIP instalables (`pkg_usertools`, `com_usertools`, `plg_task_usertools` y `mod_usertools`), `SHA256SUMS.txt` y `updates.xml`. En Windows también vale `scripts\build.ps1`, que llama al mismo script.
+Genera los cinco ZIP instalables (`pkg_usertools`, `com_usertools`, `plg_task_usertools`, `mod_usertools` y `mod_usertools_groups`), `SHA256SUMS.txt` y `updates.xml`. En Windows también vale `scripts\build.ps1`, que llama al mismo script.
 
 Para publicar, crea una release en GitHub con una etiqueta **vAAAA.M.REVISIÓN** sobre `main` (Releases → Draft a new release → Choose a tag → Publish release). GitHub Actions pasa las pruebas, genera los paquetes con esa versión en los manifiestos y los adjunta a la release junto con `SHA256SUMS.txt` y `updates.xml`. Las instalaciones existentes ven la actualización a través del servidor de actualizaciones. No se admiten sufijos de preversión.
 

@@ -4,7 +4,7 @@
 
 Dudas habituales sobre **Joomla User Tools**. Para la descripción completa de cada herramienta, consulta el [README](README.md).
 
-**Índice:** [General](#general) · [Comparación de listas](#comparación-de-listas) · [Altas y contraseñas](#altas-y-contraseñas) · [Inactividad y tarea programada](#inactividad-y-tarea-programada) · [Resultados e informes](#resultados-e-informes) · [Instalación y actualización](#instalación-y-actualización)
+**Índice:** [General](#general) · [Comparación de listas](#comparación-de-listas) · [Altas y contraseñas](#altas-y-contraseñas) · [Inactividad y tarea programada](#inactividad-y-tarea-programada) · [Resultados e informes](#resultados-e-informes) · [Módulo de grupos en el sitio](#módulo-de-grupos-en-el-sitio) · [Instalación y actualización](#instalación-y-actualización)
 
 ## General
 
@@ -166,6 +166,24 @@ El módulo solo muestra lo que su permiso permite: las cifras requieren *Revisar
 
 La ejecución se interrumpió a mitad. El informe se guarda al empezar, cada 50 usuarios y al terminar, así que refleja lo que se llegó a procesar; los bloqueos ya aplicados permanecen.
 
+## Módulo de grupos en el sitio
+
+### ¿Cómo muestro en el sitio los grupos de un usuario o los miembros de un grupo?
+
+Con el módulo «User Tools - Grupos de usuarios», incluido desde la 2026.10.7. El instalador no lo publica: créalo en Contenido → Módulos del sitio → Nuevo y elige en «Qué mostrar» entre *Grupos de un usuario* y *Miembros de un grupo*. Los detalles están en el [README](README.md#módulo-de-grupos-de-usuarios-en-el-sitio).
+
+### ¿Por qué un invitado no ve el módulo?
+
+En el modo *Grupos de un usuario* con *Visitante identificado*, el módulo muestra a cada persona sus propios grupos; quien no ha iniciado sesión no tiene grupos que ver, así que no aparece. Para mostrar siempre los de una misma cuenta, elige *Un usuario concreto*.
+
+### ¿Por qué falta alguien en la lista de miembros?
+
+Puede ser una cuenta bloqueada, que nunca se lista, o una cuenta con acceso a la administración, que se oculta mientras esté activada *Ocultar cuentas con acceso a la administración*. Si pertenece a un subgrupo, activa *Incluir subgrupos*. Y si el grupo supera el *Máximo de miembros*, el módulo indica cuántos faltan.
+
+### ¿Expone datos personales?
+
+Muestra nombres o nombres de usuario, nunca correos. Decide quién lo ve con el campo **Acceso** del módulo (por ejemplo, *Registrado*) y mantén ocultas las cuentas con acceso a la administración salvo que tengas un motivo para mostrarlas.
+
 ## Instalación y actualización
 
 ### ¿Qué versión de Joomla necesito?
@@ -174,7 +192,7 @@ Joomla 6. Las capturas de la documentación se han tomado en Joomla 6.2.0.
 
 ### ¿Qué fichero instalo?
 
-**pkg_usertools-VERSIÓN.zip** de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest). Instala o actualiza el componente, el plugin y el módulo del panel a la vez. Los ZIP sueltos `com_usertools`, `plg_task_usertools` y `mod_usertools` son para instalaciones separadas; deben corresponder a la misma versión.
+**pkg_usertools-VERSIÓN.zip** de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest). Instala o actualiza el componente, el plugin, el módulo del panel y el módulo de grupos del sitio a la vez. Los ZIP sueltos `com_usertools`, `plg_task_usertools`, `mod_usertools` y `mod_usertools_groups` son para instalaciones separadas; deben corresponder a la misma versión.
 
 ### ¿Cómo actualizo sin perder la configuración?
 

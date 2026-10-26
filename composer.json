@@ -15,6 +15,7 @@
             "Danieldiazi\\Component\\Usertools\\Administrator\\": "admin/src/",
             "Danieldiazi\\Plugin\\Task\\Usertools\\": "plugins/task/usertools/src/",
             "Danieldiazi\\Module\\Usertools\\Administrator\\": "modules/mod_usertools/src/",
+            "Danieldiazi\\Module\\UsertoolsGroups\\Site\\": "modules/mod_usertools_groups/src/",
             "Danieldiazi\\Tests\\": "tests/Unit/"
         }
     },

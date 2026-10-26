@@ -47,7 +47,7 @@ jobs:
         run: |
           composer install --no-interaction --no-progress
           npm ci --no-audit --no-fund
-          find admin plugins package scripts tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
+          find admin plugins modules package scripts tests -name '*.php' -print0 | xargs -0 -n1 php -l > /dev/null
           vendor/bin/phpunit
           npm test
 
@@ -62,7 +62,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           version="${GITHUB_REF_NAME#v}"
-          assets=("dist/pkg_usertools-$version.zip" "dist/com_usertools-$version.zip" "dist/plg_task_usertools-$version.zip" "dist/mod_usertools-$version.zip" dist/SHA256SUMS.txt dist/updates.xml)
+          assets=("dist/pkg_usertools-$version.zip" "dist/com_usertools-$version.zip" "dist/plg_task_usertools-$version.zip" "dist/mod_usertools-$version.zip" "dist/mod_usertools_groups-$version.zip" dist/SHA256SUMS.txt dist/updates.xml)
           if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" "${assets[@]}" --clobber
           else

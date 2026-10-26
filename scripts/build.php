@@ -3,7 +3,8 @@
 /**
  * Builds the installable packages:
  *   php scripts/build.php [--version=v2026.10.3] [--output=dist]
- * Creates com_usertools-VERSION.zip, plg_task_usertools-VERSION.zip, pkg_usertools-VERSION.zip,
+ * Creates com_usertools-VERSION.zip, plg_task_usertools-VERSION.zip, mod_usertools-VERSION.zip,
+ * mod_usertools_groups-VERSION.zip, pkg_usertools-VERSION.zip,
  * SHA256SUMS.txt and updates.xml (Joomla update server). The version is stamped only inside the
  * archives; tracked sources are not modified.
  */
@@ -65,7 +66,7 @@ function zip(string $target, array $entries, string $version): void
     }
     ksort($entries);
     foreach ($entries as $name => $source) {
-        $isManifest = in_array($name, ['com_usertools.xml', 'usertools.xml', 'mod_usertools.xml', 'pkg_usertools.xml', 'media/joomla.asset.json'], true);
+        $isManifest = in_array($name, ['com_usertools.xml', 'usertools.xml', 'mod_usertools.xml', 'mod_usertools_groups.xml', 'pkg_usertools.xml', 'media/joomla.asset.json'], true);
         if ($isManifest) {
             $zip->addFromString($name, stamp($source, $version));
         } else {
@@ -80,21 +81,25 @@ function zip(string $target, array $entries, string $version): void
 $component = ['com_usertools.xml' => $root . '/com_usertools.xml'] + collect($root . '/admin', 'admin/') + collect($root . '/media', 'media/');
 $plugin    = collect($root . '/plugins/task/usertools');
 $module    = collect($root . '/modules/mod_usertools');
+$groups    = collect($root . '/modules/mod_usertools_groups');
 $files     = [
     'com'  => $output . "/com_usertools-$version.zip",
     'plg'  => $output . "/plg_task_usertools-$version.zip",
     'mod'  => $output . "/mod_usertools-$version.zip",
+    'grp'  => $output . "/mod_usertools_groups-$version.zip",
     'pkg'  => $output . "/pkg_usertools-$version.zip",
 ];
 zip($files['com'], $component, $version);
 zip($files['plg'], $plugin, $version);
 zip($files['mod'], $module, $version);
+zip($files['grp'], $groups, $version);
 zip($files['pkg'], [
     'pkg_usertools.xml'               => $root . '/package/pkg_usertools.xml',
     'script.php'                      => $root . '/package/script.php',
     'packages/com_usertools.zip'      => $files['com'],
     'packages/plg_task_usertools.zip' => $files['plg'],
     'packages/mod_usertools.zip'      => $files['mod'],
+    'packages/mod_usertools_groups.zip' => $files['grp'],
 ] + collect($root . '/package/language', 'language/'), $version);
 
 $sums = '';
