@@ -173,6 +173,48 @@ final class UserDirectory
         return $counts;
     }
 
+    /** Account id by username or email (case-insensitive on every database), or 0. */
+    public function findId(string $login): int
+    {
+        $login = trim($login);
+        if ($login === '') {
+            return 0;
+        }
+        $db    = $this->db;
+        $query = $db->createQuery()->select($db->quoteName('id'))->from($db->quoteName('#__users'))
+            ->where('(LOWER(' . $db->quoteName('username') . ') = LOWER(:login) OR LOWER(' . $db->quoteName('email') . ') = LOWER(:email))')
+            ->bind(':login', $login)
+            ->bind(':email', $login)
+            ->order($db->quoteName('id'));
+        return (int) $db->setQuery($query, 0, 1)->loadResult();
+    }
+
+    /** Active Super Users other than the given account (members of a group with core.admin, or the root user). */
+    public function otherActiveSuperUsers(int $exceptId): int
+    {
+        $superGroups = array_keys(array_filter($this->groups(), fn (object $g) => $g->superUser));
+        $db          = $this->db;
+        $ids         = [];
+        if ($superGroups) {
+            $query = $db->createQuery()
+                ->select('DISTINCT ' . $db->quoteName('m.user_id'))
+                ->from($db->quoteName('#__user_usergroup_map', 'm'))
+                ->join('INNER', $db->quoteName('#__users', 'u'), $db->quoteName('u.id') . ' = ' . $db->quoteName('m.user_id'))
+                ->whereIn($db->quoteName('m.group_id'), $superGroups)
+                ->where($db->quoteName('u.block') . ' = 0');
+            $ids = array_map('intval', $db->setQuery($query)->loadColumn());
+        }
+        if ($this->rootUser !== '') {
+            $root = is_numeric($this->rootUser) ? (int) $this->rootUser : $this->findId($this->rootUser);
+            foreach ($root > 0 ? $this->users([$root]) : [] as $user) {
+                if ($user->block === 0) {
+                    $ids[] = $user->id;
+                }
+            }
+        }
+        return \count(array_diff(array_unique($ids), [$exceptId]));
+    }
+
     /** Number of accounts that are not blocked. */
     public function activeCount(): int
     {

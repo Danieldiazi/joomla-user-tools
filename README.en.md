@@ -12,6 +12,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Scheduled task | Blocks accounts for inactivity; starts in dry-run mode and generates reports. |
 | Dashboard summary | Shows pending accounts, task status and notices on the Users dashboard. Available since 2026.10.6. |
 | User groups on the site | Site module that lists the groups of a user or the members of a group. Read only. Available since 2026.10.7. |
+| Remove from a group | Removes an account from a group and all its subgroups, after a review and a confirmation. Available since 2026.10.8. |
 | Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.8. |
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
@@ -29,6 +30,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 - [Scheduled inactivity task and reports](#scheduled-inactivity-task)
 - [Users dashboard summary](#users-dashboard-summary)
 - [User groups module on the site](#user-groups-module-on-the-site)
+- [Remove from a group](#remove-from-a-group)
 - [Groups and access levels](#groups-and-access-levels)
 - [Security](#security)
 - [Options](#options)
@@ -155,6 +157,25 @@ In both modes, *Show when the list is empty* decides whether the module appears 
 
 The list is read with a fixed number of queries, whatever the size of the group. Accounts with administrator access are decided per group, with Joomla's global permissions, as in the rest of User Tools.
 
+## Remove from a group
+
+Since 2026.10.8, **Remove from a group** takes an account out of a group and every group below it: children, grandchildren and so on. Joomla's batch (“Remove from group” in Users) only removes the exact group you choose. Parent groups are not touched.
+
+1. **Account and group**: type the username or email (not case-sensitive) and choose the group.
+2. **Review**: each current group of the account is shown as “Removed” or “Kept”. Nothing changes until you confirm. The review is single-use and expires after 15 minutes.
+3. **Result**: the groups the account keeps, with links to its user record and the action log.
+
+Rules:
+
+- **If the account is left without groups**, it is assigned the group for new users from the Users Options (usually “Registered”). If that group is one of those being removed, nothing changes and the reason is shown.
+- **It never changes your own account.**
+- **Non-Super Users never change accounts with administrator access** or Super Users.
+- **A Super User can lose that status** only if at least one other active Super User remains; the review warns when the account loses that status or administrator access.
+- Right before saving, the account's groups are checked against the reviewed ones; if they changed, nothing is applied.
+- The change goes through Joomla's user API, **closes the account's open sessions** so the new permissions apply at once, and is written to the **User Actions Log** with the groups removed and, if any, the group added.
+
+It requires its own permission, *Remove from a group*: Super Users have it; grant it to others in Options → Permissions. It works on one account at a time.
+
 ## Groups and access levels
 
 Since 2026.10.8, **Groups and access levels** shows in a single table which viewing access levels each user group has. Joomla only shows this relation from the levels side (Users → Access Levels, groups column), without inheritance and without a per-group view. This screen is read only: it never changes groups, levels or accounts.
@@ -175,11 +196,11 @@ A search box filters the groups. Group and level titles link to their edit scree
 
 - **Super Users are always protected**, in every tool, even when “Exclude administrators” is disabled. User Tools does not block or delete Super User accounts.
 - **The account performing a manual operation is always protected.**
-- **Each block closes the account's open sessions**, as Joomla's user manager does (requires “Session Metadata”, enabled by default).
-- **Creations, blocks and deletions are written to the User Actions Log** (Users → User Actions Log): who changed each account and which tool or scheduled task performed it.
+- **Each block or group change closes the account's open sessions**, as Joomla's user manager does (requires “Session Metadata”, enabled by default).
+- **Creations, blocks, deletions and group changes are written to the User Actions Log** (Users → User Actions Log): who changed each account and which tool or scheduled task performed it.
 - **Separate permissions**, delegable without granting Super User access (Options → Permissions):
-  - *Compare list and block*, *Create accounts*, *Review inactive users*, *Delete inactive users*, *View task results* and *View groups and access levels*.
-  - Non-Super Users can never block or delete accounts with administrator access.
+  - *Compare list and block*, *Create accounts*, *Review inactive users*, *Delete inactive users*, *View task results*, *Remove from a group* and *View groups and access levels*.
+  - Non-Super Users can never block, delete or remove from groups accounts with administrator access.
 - **Configurable reinforced confirmation**: from N accounts (10 by default), the exact number must be typed in addition to ticking the box.
 - **Deletion always requires typing the number of accounts**, even for one; the configurable threshold does not disable this confirmation.
 - **The site groups module is read only**: it never shows email addresses or blocked accounts, and by default it hides accounts with administrator access (see [groups module](#user-groups-module-on-the-site)).

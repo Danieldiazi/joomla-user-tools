@@ -46,6 +46,15 @@ final class ActionLogger
         $this->write('COM_USERTOOLS_ACTION_LOG_DELETED', 'delete', $account, $operator, 'COM_USERTOOLS_TOOL_DELETE', ['name' => (string) ($account->name ?? '')]);
     }
 
+    /**
+     * @param list<string> $removed titles of the groups removed
+     */
+    public function ungrouped(object $account, Operator $operator, array $removed, string $added): void
+    {
+        $this->write($added !== '' ? 'COM_USERTOOLS_ACTION_LOG_UNGROUPED_DEFAULT' : 'COM_USERTOOLS_ACTION_LOG_UNGROUPED', 'update', $account, $operator, 'COM_USERTOOLS_TOOL_UNGROUP',
+            ['groups' => implode(', ', $removed), 'added' => $added]);
+    }
+
     public function created(object $account, Operator $operator, string $mode): void
     {
         $this->write($mode === Registration::MODE_PASSWORD ? 'COM_USERTOOLS_ACTION_LOG_CREATED_PASSWORD' : 'COM_USERTOOLS_ACTION_LOG_CREATED_EMAIL', 'create', $account, $operator, '');

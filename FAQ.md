@@ -4,7 +4,7 @@
 
 Dudas habituales sobre **Joomla User Tools**. Para la descripción completa de cada herramienta, consulta el [README](README.md).
 
-**Índice:** [General](#general) · [Comparación de listas](#comparación-de-listas) · [Altas y contraseñas](#altas-y-contraseñas) · [Inactividad y tarea programada](#inactividad-y-tarea-programada) · [Resultados e informes](#resultados-e-informes) · [Módulo de grupos en el sitio](#módulo-de-grupos-en-el-sitio) · [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso) · [Instalación y actualización](#instalación-y-actualización)
+**Índice:** [General](#general) · [Comparación de listas](#comparación-de-listas) · [Altas y contraseñas](#altas-y-contraseñas) · [Inactividad y tarea programada](#inactividad-y-tarea-programada) · [Resultados e informes](#resultados-e-informes) · [Módulo de grupos en el sitio](#módulo-de-grupos-en-el-sitio) · [Quitar de un grupo](#quitar-de-un-grupo) · [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso) · [Instalación y actualización](#instalación-y-actualización)
 
 ## General
 
@@ -183,6 +183,24 @@ Puede ser una cuenta bloqueada, que nunca se lista, o una cuenta con acceso a la
 ### ¿Expone datos personales?
 
 Muestra nombres o nombres de usuario, nunca correos. Decide quién lo ve con el campo **Acceso** del módulo (por ejemplo, *Registrado*) y mantén ocultas las cuentas con acceso a la administración salvo que tengas un motivo para mostrarlas.
+
+## Quitar de un grupo
+
+### ¿En qué se diferencia del lote «Quitar del grupo» de Joomla?
+
+El lote de Joomla quita solo el grupo exacto que eliges. **Quitar de un grupo** quita también todos los grupos que cuelgan de él (hijos, nietos…), enseña antes qué grupos pierde la cuenta y cierra sus sesiones al aplicar. Los detalles están en el [README](README.md#quitar-de-un-grupo).
+
+### ¿Qué pasa si la cuenta se queda sin grupos?
+
+Se le asigna el grupo de los usuarios nuevos de las Opciones de Usuarios. Si ese grupo es uno de los que se quitan, no se cambia nada: asígnale antes otro grupo en el gestor de usuarios.
+
+### ¿Por qué no puedo aplicar el cambio a una cuenta?
+
+La revisión explica el motivo: es tu propia cuenta; tiene acceso a la administración y no eres superusuario; es el último superusuario activo; o no está en ese grupo ni en sus subgrupos.
+
+### ¿Puedo quitar varias cuentas a la vez?
+
+No: la herramienta trabaja con una cuenta cada vez, para que cada cambio de permisos se revise por separado.
 
 ## Grupos y niveles de acceso
 
