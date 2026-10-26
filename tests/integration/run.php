@@ -403,5 +403,58 @@ $listed = $rows($review);
 Test::check(in_array($id('old2'), $listed, true) && !in_array($id('mgr'), $listed, true) && !in_array($id('delegate'), $listed, true), 'a delegate can delete registered accounts but never backend accounts or itself');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
+Test::section('Dashboard module on the Users dashboard');
+$dashboardUrl = 'index.php?option=com_cpanel&view=cpanel&dashboard=users';
+$moduleCount = function (string $html, string $name): ?int {
+    return preg_match('/data-ut-count="' . $name . '">(\d+)</', $html, $m) ? (int) $m[1] : null;
+};
+$dashboard = $admin->get($dashboardUrl);
+Test::check(str_contains($dashboard, 'mod-usertools') && str_contains($dashboard, 'Inactive accounts not blocked'), 'the summary module is published on the Users dashboard');
+Test::check(str_contains($dashboard, 'UT integration'), 'the module lists the User Tools tasks');
+// Figures match what the tools list with the same options.
+$review = $admin->submit('index.php?option=com_usertools&view=inactive', ['task' => 'inactive.search', 'days' => 365, 'include_never' => 0, 'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+preg_match_all('/data-ut-suspend-id="\d+"/', $review, $inactiveRows);
+$review = $search($admin, ['status' => 'blocked', 'protect_admins' => 1, 'days' => 365]);
+$pendingRows = count($rows($review));
+$dashboard = $admin->get($dashboardUrl);
+Test::check($moduleCount($dashboard, 'inactive') === count($inactiveRows[0]), 'inactive count matches the inactivity review (' . $moduleCount($dashboard, 'inactive') . ' / ' . count($inactiveRows[0]) . ')');
+Test::check($moduleCount($dashboard, 'pending') === $pendingRows, 'pending deletion count matches the deletion review with "Only blocked" (' . $moduleCount($dashboard, 'pending') . ' / ' . $pendingRows . ')');
+Test::check(str_contains($dashboard, 'view=delete&amp;status=blocked') || str_contains($dashboard, 'view=delete&status=blocked'), 'the pending deletion figure opens the deletion tool with "Only blocked"');
+$deleteFromDashboard = $admin->get('index.php?option=com_usertools&view=delete&status=blocked');
+Test::check((bool) preg_match('/id="ut-status-blocked"[^>]* checked/', $deleteFromDashboard), 'the link preselects "Only blocked"');
+// A change made with a tool refreshes the figures immediately.
+$before = $moduleCount($dashboard, 'inactive');
+$firstInactive = (int) ($inactiveRows[0] ? preg_replace('/\D/', '', $inactiveRows[0][0]) : 0);
+if ($before > 0) {
+    $admin->submit('index.php?option=com_usertools&view=inactive', ['task' => 'inactive.search', 'days' => 365, 'include_never' => 0, 'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+    $admin->submit('index.php?option=com_usertools&view=inactive&layout=review', ['task' => 'inactive.suspend', 'selection_ready' => 1, 'confirm' => 1, 'confirm_count' => '1', 'selected' => json_encode([$firstInactive])], 'data-ut-suspension-form');
+    Test::check($moduleCount($admin->get($dashboardUrl), 'inactive') === $before - 1, 'the dashboard is refreshed after a tool changes accounts');
+}
+// A task stopped by the safety limit is reported.
+$guardParams = ['dry_run' => 0, 'days' => 1, 'include_never' => 1, 'protect_admins' => 1, 'excluded_names' => '', 'excluded_groups' => [], 'guard_percent' => 1, 'guard_minimum' => 1];
+$site->q("DELETE FROM #__scheduler_tasks WHERE title = 'UT guard'");
+$site->q('INSERT INTO #__scheduler_tasks (asset_id, title, type, execution_rules, cron_rules, state, last_exit_code, times_executed, times_failed, locked, priority, ordering, params, note, created, created_by) VALUES (0, ?, ?, ?, ?, 1, 0, 0, 0, NULL, 0, 0, ?, ?, ?, ?)',
+    ['UT guard', 'usertools.block_inactive', json_encode(['rule-type' => 'manual']), json_encode(['type' => 'manual']), json_encode($guardParams), '', gmdate('Y-m-d H:i:s'), $site->userId('admin')]);
+$guardId = (int) $site->q("SELECT id FROM #__scheduler_tasks WHERE title = 'UT guard'")[0]['id'];
+// Two inactive active accounts out of the active ones exceed the 1 % limit.
+$site->q('UPDATE #__users SET "lastvisitDate" = ?, block = 0 WHERE username IN (?, ?)', [$old, 'ana', 'luis']);
+$site->cli('scheduler:run --id=' . $guardId);
+Test::check(!$site->blocked('ana') && !$site->blocked('luis'), 'the stopped run blocked nobody');
+$dashboard = $admin->get($dashboardUrl);
+Test::check(str_contains($dashboard, 'The task «UT guard» was stopped by the safety limit'), 'a task stopped for safety raises a danger alert');
+Test::check(str_contains($dashboard, 'Stopped for safety'), 'the task table shows the result of the last run');
+$site->q('UPDATE #__scheduler_tasks SET state = 0 WHERE id = ?', [$guardId]);
+// Permissions: each figure only for users allowed to use its tool.
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.compare' => ['6' => 1]])]);
+$usersRules = (string) $site->q("SELECT rules FROM #__assets WHERE name = 'com_users'")[0]['rules'];
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_users'", [json_encode((json_decode($usersRules, true) ?: []) + ['core.manage' => ['6' => 1]])]);
+$delegateDashboard = $delegate->get($dashboardUrl);
+Test::check(str_contains($delegateDashboard, 'mod-usertools') && $moduleCount($delegateDashboard, 'inactive') === null && $moduleCount($delegateDashboard, 'pending') === null && !str_contains($delegateDashboard, 'UT integration'),
+    'a user without the inactivity, deletion or results permissions sees no figures or tasks');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['usertools.compare' => ['6' => 1]])]);
+Test::check(!str_contains($delegate->get($dashboardUrl), 'mod-usertools'), 'the module is hidden from users who cannot manage User Tools');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_users'", [$usersRules]);
+
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);

@@ -65,7 +65,7 @@ function zip(string $target, array $entries, string $version): void
     }
     ksort($entries);
     foreach ($entries as $name => $source) {
-        $isManifest = in_array($name, ['com_usertools.xml', 'usertools.xml', 'pkg_usertools.xml', 'media/joomla.asset.json'], true);
+        $isManifest = in_array($name, ['com_usertools.xml', 'usertools.xml', 'mod_usertools.xml', 'pkg_usertools.xml', 'media/joomla.asset.json'], true);
         if ($isManifest) {
             $zip->addFromString($name, stamp($source, $version));
         } else {
@@ -79,18 +79,22 @@ function zip(string $target, array $entries, string $version): void
 
 $component = ['com_usertools.xml' => $root . '/com_usertools.xml'] + collect($root . '/admin', 'admin/') + collect($root . '/media', 'media/');
 $plugin    = collect($root . '/plugins/task/usertools');
+$module    = collect($root . '/modules/mod_usertools');
 $files     = [
     'com'  => $output . "/com_usertools-$version.zip",
     'plg'  => $output . "/plg_task_usertools-$version.zip",
+    'mod'  => $output . "/mod_usertools-$version.zip",
     'pkg'  => $output . "/pkg_usertools-$version.zip",
 ];
 zip($files['com'], $component, $version);
 zip($files['plg'], $plugin, $version);
+zip($files['mod'], $module, $version);
 zip($files['pkg'], [
     'pkg_usertools.xml'               => $root . '/package/pkg_usertools.xml',
     'script.php'                      => $root . '/package/script.php',
     'packages/com_usertools.zip'      => $files['com'],
     'packages/plg_task_usertools.zip' => $files['plg'],
+    'packages/mod_usertools.zip'      => $files['mod'],
 ] + collect($root . '/package/language', 'language/'), $version);
 
 $sums = '';

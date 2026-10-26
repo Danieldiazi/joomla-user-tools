@@ -27,3 +27,5 @@ Las capturas se tomaron en Joomla 6.2.0. Las de eliminación se incorporaron con
 ![Listado de resultados de tareas](screenshots/09-resultados-tareas.jpg)
 
 ![Detalle de un informe de tarea](screenshots/10-informe-tarea.jpg)
+
+![Módulo User Tools en el panel de Usuarios (2026.10.6)](screenshots/13-panel-usuarios.jpg)

@@ -114,6 +114,34 @@ final class ReportStore
         return ['items' => \array_slice($items, ($page - 1) * $size, $size), 'total' => \count($items), 'tasks' => $tasks];
     }
 
+    /**
+     * Newest report of each task, reading reports from newest to oldest until every task is found.
+     *
+     * @param  list<int>                        $taskIds
+     * @return array<int, array<string, mixed>> without per-user rows
+     */
+    public function latestByTask(array $taskIds): array
+    {
+        $wanted = array_fill_keys(array_map('intval', $taskIds), true);
+        $latest = [];
+        foreach ($this->ids() as $id) {
+            if (\count($latest) === \count($wanted)) {
+                break;
+            }
+            try {
+                $report = $this->get($id);
+            } catch (\Throwable) {
+                continue;
+            }
+            $taskId = (int) ($report['task_id'] ?? 0);
+            if ($report !== null && isset($wanted[$taskId]) && !isset($latest[$taskId])) {
+                unset($report['users']);
+                $latest[$taskId] = $report;
+            }
+        }
+        return $latest;
+    }
+
     /** Delete reports older than the given number of days (0 keeps everything). Returns how many were deleted. */
     public function prune(int $days, ?\DateTimeImmutable $now = null): int
     {

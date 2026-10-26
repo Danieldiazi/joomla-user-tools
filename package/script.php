@@ -52,6 +52,7 @@ class Pkg_UsertoolsInstallerScript extends InstallerScript
         $this->migrateOptions($db);
         $this->registerActionLog($db);
         $this->createMailTemplate();
+        $this->publishDashboardModule($db);
         if ($type !== 'update') {
             $this->enablePlugin($db);
         }
@@ -158,6 +159,60 @@ class Pkg_UsertoolsInstallerScript extends InstallerScript
             throw new \RuntimeException('com_mails is not available.');
         }
         return $model;
+    }
+
+    /**
+     * Places one instance of the summary module on the Users dashboard, once. If the administrator
+     * later unpublishes, moves or deletes it, updates leave it as it is.
+     */
+    private function publishDashboardModule(DatabaseInterface $db): void
+    {
+        try {
+            $placed = (int) $db->setQuery($db->createQuery()->select('COUNT(*)')->from($db->quoteName('#__extensions'))
+                ->where($db->quoteName('element') . ' = ' . $db->quote('pkg_usertools'))
+                ->where($db->quoteName('custom_data') . ' LIKE ' . $db->quote('%dashboard_module_placed%')))->loadResult();
+            if ($placed) {
+                return;
+            }
+            $instances = $db->setQuery($db->createQuery()->select($db->quoteName(['id', 'position']))->from($db->quoteName('#__modules'))
+                ->where($db->quoteName('module') . ' = ' . $db->quote('mod_usertools'))
+                ->where($db->quoteName('client_id') . ' = 1')
+                ->order($db->quoteName('id')))->loadObjectList();
+            $positioned = array_filter($instances, fn ($m) => (string) $m->position !== '');
+            if (!$positioned) {
+                // Joomla's module installer leaves an unpublished instance without position: place it.
+                $table = new \Joomla\CMS\Table\Module($db);
+                if ($instances) {
+                    $table->load((int) $instances[0]->id);
+                }
+                $table->bind([
+                    'title'     => 'User Tools',
+                    'module'    => 'mod_usertools',
+                    'position'  => 'cpanel-users',
+                    'client_id' => 1,
+                    'published' => 1,
+                    'access'    => 1,
+                    'showtitle' => 1,
+                    'ordering'  => 3,
+                    'language'  => '*',
+                    'params'    => json_encode(['bootstrap_size' => '12', 'header_tag' => 'h2', 'module_tag' => 'div']),
+                ]);
+                if (!$table->check() || !$table->store()) {
+                    return;
+                }
+                $id = (int) $table->id;
+                $db->setQuery($db->createQuery()->delete($db->quoteName('#__modules_menu'))->where($db->quoteName('moduleid') . ' = ' . $id))->execute();
+                $assignment = (object) ['moduleid' => $id, 'menuid' => 0];
+                $db->insertObject('#__modules_menu', $assignment);
+            }
+            // Remember it, so a module the administrator moved or deleted stays that way after updates.
+            $db->setQuery($db->createQuery()->update($db->quoteName('#__extensions'))
+                ->set($db->quoteName('custom_data') . ' = ' . $db->quote('{"dashboard_module_placed":true}'))
+                ->where($db->quoteName('element') . ' = ' . $db->quote('pkg_usertools'))
+                ->where($db->quoteName('type') . ' = ' . $db->quote('package')))->execute();
+        } catch (\Throwable) {
+            // The module can always be published by hand in Content > Administrator Modules.
+        }
     }
 
     private function enablePlugin(DatabaseInterface $db): void

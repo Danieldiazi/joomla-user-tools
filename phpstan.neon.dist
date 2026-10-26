@@ -4,6 +4,7 @@ parameters:
   paths:
     - admin/src
     - plugins/task/usertools/src
+    - modules/mod_usertools/src
     - package/script.php
     - scripts/build.php
   bootstrapFiles:

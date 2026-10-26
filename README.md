@@ -8,6 +8,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Revisar usuarios inactivos | Busca cuentas inactivas para que selecciones cuáles bloquear. |
 | Eliminar usuarios inactivos | Permite seleccionar y borrar definitivamente cuentas inactivas. Por defecto lista solo las ya bloqueadas. Disponible desde 2026.10.5. |
 | Tarea programada | Bloquea cuentas por inactividad; empieza en modo simulación y genera informes. |
+| Resumen en el panel | Muestra en el panel de Usuarios las cuentas pendientes, el estado de las tareas y avisos. Disponible desde 2026.10.6. |
 
 **Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
 
@@ -22,6 +23,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 - [Revisar usuarios inactivos](#revisar-usuarios-inactivos)
 - [Eliminar usuarios inactivos](#eliminar-usuarios-inactivos)
 - [Tarea programada e informes](#tarea-programada-por-inactividad)
+- [Resumen en el panel de Usuarios](#resumen-en-el-panel-de-usuarios)
 - [Seguridad](#seguridad)
 - [Opciones](#opciones)
 - [Capturas de las herramientas](#capturas-de-las-herramientas)
@@ -33,7 +35,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 
 ## Instalación y actualizaciones
 
-Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) el fichero **pkg_usertools-VERSIÓN.zip** e instálalo desde Sistema → Instalar → Extensiones. El paquete instala el componente y el plugin de tareas, y en una instalación nueva habilita el plugin «Tarea - User Tools». Las tareas que crees empiezan siempre en modo simulación.
+Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) el fichero **pkg_usertools-VERSIÓN.zip** e instálalo desde Sistema → Instalar → Extensiones. El paquete instala el componente, el plugin de tareas y el módulo de administración «User Tools». En una instalación nueva habilita el plugin «Tarea - User Tools», y la primera vez que se instala el módulo lo publica en el panel de Usuarios. Las tareas que crees empiezan siempre en modo simulación.
 
 A partir de la 2026.10.3, Joomla avisa de las versiones nuevas en Sistema → Actualizar → Extensiones, como con cualquier otra extensión: el paquete declara un servidor de actualizaciones que apunta a la última release de GitHub. Para actualizar, instala el paquete nuevo encima; no desinstales el componente. Al actualizar desde versiones anteriores, las exclusiones guardadas se migran solas.
 
@@ -107,6 +109,21 @@ Para ejecutar las tareas aunque no haya visitas, configura el cron del alojamien
 Componentes → User Tools → Resultados de tareas muestra cada ejecución con fecha UTC, tarea, modo, estado y cantidades, con filtros por tarea, modo y estado. El detalle lista las cuentas bloqueadas, simuladas, protegidas (con su motivo) o con error, y resume las omitidas por motivo. Cada informe se puede **exportar a CSV** (UTF-8, separado por punto y coma, protegido contra fórmulas al abrirlo en una hoja de cálculo).
 
 Los informes se guardan en la subcarpeta usertools-reports de la carpeta de registros de Joomla, con una cabecera PHP que impide leerlos desde la web. Se borran al terminar cada ejecución según los días configurados en Opciones.
+
+## Resumen en el panel de Usuarios
+
+Desde la 2026.10.6, el panel **Usuarios** de la administración (el icono de panel junto a «Usuarios» en el menú lateral) muestra un módulo «User Tools» con:
+
+- **Cuentas inactivas sin bloquear**, con el plazo y las exclusiones de «Revisar usuarios inactivos». La cifra enlaza con esa herramienta.
+- **Cuentas bloqueadas pendientes de eliminar**: las que ofrecería «Eliminar usuarios inactivos» con «Solo bloqueadas», su plazo y sus exclusiones. La cifra abre la herramienta con esa opción ya elegida.
+- **Tareas programadas de User Tools**, con modo (simulación o real), última ejecución, resultado (enlazado con su informe) y próxima ejecución.
+- **Avisos**: plugin de tareas deshabilitado o no instalado, ninguna tarea habilitada, una tarea detenida por el límite de seguridad, fallida o con un informe sin finalizar desde hace más de una hora, y una tarea que sigue en simulación más de 14 días después de crearla.
+
+Las cifras usan exactamente las mismas reglas que las herramientas, así que coinciden con lo que verás al abrirlas. Se calculan como mucho cada **10 minutos** y se recalculan en cuanto una herramienta o una tarea cambia cuentas, o se guardan las Opciones.
+
+El módulo respeta los permisos: solo lo ve quien puede acceder a User Tools, las cifras solo aparecen a quien tiene permiso de revisar o eliminar inactivos, y las tareas solo a quien puede ver sus resultados. Se configura como cualquier módulo de administración (Contenido → Módulos del sitio de administración, «User Tools»): puedes moverlo a otro panel, cambiarle el título o despublicarlo. Las actualizaciones no vuelven a colocarlo si lo has movido o despublicado.
+
+![Módulo User Tools en el panel de Usuarios](docs/screenshots/13-panel-usuarios.jpg)
 
 ## Seguridad
 

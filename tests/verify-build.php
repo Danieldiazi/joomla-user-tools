@@ -37,8 +37,9 @@ $names = function (string $zipFile): array {
 
 $com = "$dir/com_usertools-$version.zip";
 $plg = "$dir/plg_task_usertools-$version.zip";
+$mod = "$dir/mod_usertools-$version.zip";
 $pkg = "$dir/pkg_usertools-$version.zip";
-foreach ([$com, $plg, $pkg, "$dir/SHA256SUMS.txt", "$dir/updates.xml"] as $file) {
+foreach ([$com, $plg, $mod, $pkg, "$dir/SHA256SUMS.txt", "$dir/updates.xml"] as $file) {
     $check(is_file($file), "missing $file");
 }
 if ($errors) {
@@ -46,7 +47,7 @@ if ($errors) {
     exit(1);
 }
 
-foreach ([[$com, 'com_usertools.xml'], [$plg, 'usertools.xml'], [$pkg, 'pkg_usertools.xml']] as [$zip, $manifest]) {
+foreach ([[$com, 'com_usertools.xml'], [$plg, 'usertools.xml'], [$mod, 'mod_usertools.xml'], [$pkg, 'pkg_usertools.xml']] as [$zip, $manifest]) {
     $xml = simplexml_load_string((string) $read($zip, $manifest));
     $check($xml !== false && (string) $xml->version === $version, "$manifest has version $version");
 }
@@ -87,7 +88,11 @@ foreach (['es-ES', 'en-GB'] as $tag) {
 }
 
 $pkgFiles = $names($pkg);
-foreach (['script.php', 'packages/com_usertools.zip', 'packages/plg_task_usertools.zip', 'language/es-ES/pkg_usertools.sys.ini'] as $file) {
+$modFiles = $names($mod);
+foreach (['mod_usertools.xml', 'services/provider.php', 'src/Dispatcher/Dispatcher.php', 'tmpl/default.php', 'language/es-ES/mod_usertools.ini', 'language/en-GB/mod_usertools.sys.ini'] as $file) {
+    $check(in_array($file, $modFiles, true), "module contains $file");
+}
+foreach (['script.php', 'packages/com_usertools.zip', 'packages/plg_task_usertools.zip', 'packages/mod_usertools.zip', 'language/es-ES/pkg_usertools.sys.ini'] as $file) {
     $check(in_array($file, $pkgFiles, true), "package contains $file");
 }
 $pkgXml = simplexml_load_string((string) $read($pkg, 'pkg_usertools.xml'));

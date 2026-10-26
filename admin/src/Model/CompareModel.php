@@ -174,6 +174,7 @@ class CompareModel extends BaseDatabaseModel
         }
         $result['mode'] = $mode;
         $this->storeResult(self::RESULT, $result);
+        Toolkit::clearDashboardCache();
         $this->session()->set(self::DRAFT, []);
         return $result;
     }

@@ -186,6 +186,7 @@ final class Usertools extends CMSPlugin implements SubscriberInterface
                     $store->save($reportId, $report);
                     $retention = isset($services['settings']) ? $services['settings']->retentionDays() : 0;
                     $store->prune($retention);
+                    Toolkit::clearDashboardCache();
                 } catch (\Throwable) {
                     $this->logTask('The report could not be updated. It may appear as unfinished.', 'error');
                     $exit = Status::KNOCKOUT;
