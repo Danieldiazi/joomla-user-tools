@@ -1,5 +1,7 @@
 # Joomla User Tools
 
+**Español** · [English](README.en.md)
+
 Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usuarios vigentes, crear cuentas nuevas, revisar la inactividad y programar bloqueos con informes.
 
 | Herramienta | Qué hace |
@@ -173,6 +175,7 @@ Estructura:
 - `admin/src/Service/`: lógica de dominio compartida con el plugin.
 - `media/`: CSS y JS cargados con el gestor de recursos web (`joomla.asset.json`).
 - `plugins/task/usertools/`: plugin de tareas.
+- `modules/mod_usertools/`: módulo de resumen del panel de Usuarios.
 - `package/`: manifiesto del paquete, script de instalación e idiomas.
 
 Pruebas:
@@ -198,7 +201,7 @@ php scripts/build.php --version=v2026.10.5 --output=dist
 php tests/verify-build.php 2026.10.5 dist
 ~~~
 
-Genera los tres ZIP instalables (`pkg_usertools`, `com_usertools` y `plg_task_usertools`), `SHA256SUMS.txt` y `updates.xml`. En Windows también vale `scripts\build.ps1`, que llama al mismo script.
+Genera los cuatro ZIP instalables (`pkg_usertools`, `com_usertools`, `plg_task_usertools` y `mod_usertools`), `SHA256SUMS.txt` y `updates.xml`. En Windows también vale `scripts\build.ps1`, que llama al mismo script.
 
 Para publicar, crea una release en GitHub con una etiqueta **vAAAA.M.REVISIÓN** sobre `main` (Releases → Draft a new release → Choose a tag → Publish release). GitHub Actions pasa las pruebas, genera los paquetes con esa versión en los manifiestos y los adjunta a la release junto con `SHA256SUMS.txt` y `updates.xml`. Las instalaciones existentes ven la actualización a través del servidor de actualizaciones. No se admiten sufijos de preversión.
 
