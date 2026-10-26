@@ -38,6 +38,9 @@ class HtmlView extends BaseHtmlView
         $this->draft  = $model->getDraft();
         $this->groups = $model->getGroups();
         $layout       = $this->getLayout();
+        // Where to go when a step cannot be shown: the groups step needs a valid account, so its
+        // failure goes back to choosing one (with the draft cleared), never to itself.
+        $fallback = $layout === 'groups' || !$this->draft['account'] ? 'view=ungroup' : 'view=ungroup&layout=groups';
         try {
             if ($layout === 'groups') {
                 $this->selection = $model->getSelection();
@@ -53,7 +56,10 @@ class HtmlView extends BaseHtmlView
                 $this->setLayout('default');
             }
         } catch (UserFacingException $e) {
-            $this->leave($e, $this->draft['account'] ? 'view=ungroup&layout=groups' : 'view=ungroup');
+            if ($fallback === 'view=ungroup') {
+                $model->resetDraft();
+            }
+            $this->leave($e, $fallback);
             return;
         }
         $this->prepareDocument('COM_USERTOOLS_UNGROUP_TITLE');

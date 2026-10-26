@@ -39,6 +39,13 @@ class UngroupModel extends BaseDatabaseModel
         ];
     }
 
+    /** Forgets the chosen account and selection (for example when the account no longer exists). */
+    public function resetDraft(): void
+    {
+        $this->session()->set(self::DRAFT, []);
+        $this->session()->set(self::PREVIEW, []);
+    }
+
     /**
      * Accounts whose username, name or email contains the text, for the account field.
      *

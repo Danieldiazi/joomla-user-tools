@@ -70,6 +70,11 @@ final class GroupRemovalTest extends TestCase
         $this->assertSame(2, $plan['added']);
         $this->assertSame([2], $plan['result']);
 
+        $below = $this->plan([2], [2], true, default: 3);
+        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_DEFAULT_REMOVED', $below['reason'], 'a default group below a removed one would give its permissions back');
+        $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_DEFAULT_REMOVED', $this->plan([10], [10], false, default: 12)['reason'], 'also without the recursive option');
+        $this->assertSame(9, $this->plan([10], [10], true, default: 9)['added'], 'a default group elsewhere in the tree is fine');
+
         $blocked = $this->plan([2, 10], [2], true);
         $this->assertSame('COM_USERTOOLS_UNGROUP_REASON_DEFAULT_REMOVED', $blocked['reason'], 'the default group (Registered) is being removed');
         $this->assertSame(0, $blocked['added']);

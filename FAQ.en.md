@@ -196,7 +196,7 @@ When you untick a group, the account also leaves every group below it that it be
 
 ### What happens if the account is left without groups?
 
-It is assigned the group for new users from the Users Options. If that group is one of those being removed, nothing changes: keep a group ticked or assign it another one in the user manager first.
+It is assigned the group for new users from the Users Options. If that group is one of those being removed, or sits below one of them (it would inherit its permissions), nothing changes: keep a group ticked or assign it another one in the user manager first.
 
 ### Why can't I choose an account or apply the change?
 

@@ -138,6 +138,14 @@ test('remove from groups: recursive option unticks and locks the groups below an
   recursive.checked = false;
   change(recursive);
   assert.deepEqual([3, 4].map((id) => [get(id).checked, get(id).disabled]), [[false, false], [true, false]], 'turning the option off undoes the cascade');
+
+  recursive.checked = true;
+  change(recursive);
+  assert.equal(get(4).disabled, true);
+  const form = doc.querySelector('[data-ut-ungroup-groups]');
+  form.dispatchEvent(new doc.defaultView.Event('submit', { cancelable: true }));
+  const sent = [...form.querySelectorAll('[data-ut-keep]')].filter((box) => box.checked && !box.disabled).map((box) => Number(box.value));
+  assert.deepEqual(sent, [6, 2, 4, 10], 'the operator\'s own ticks are sent (Editor stays ticked); the server applies the cascade');
 });
 
 test('remove from groups: account suggestions fill the list while typing', async () => {

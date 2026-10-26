@@ -14,7 +14,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service;
  * - Non Super Users never change accounts with administrator access (or Super Users).
  * - A Super User may lose that status only if another active Super User remains.
  * - An account left without groups gets the default group for new users; if that group is one of
- *   those being removed, nothing is changed.
+ *   those being removed or lies below one of them (it would inherit its permissions), nothing is changed.
  */
 final class GroupRemoval
 {
@@ -60,12 +60,19 @@ final class GroupRemoval
                 $keep[] = $id;
             }
         }
-        $removed = array_fill_keys($remove, true);
+        // A group below a removed one inherits its permissions, so the default group cannot be one of
+        // those either: adding it would give back what is being taken away (recursive or not).
+        $removedTrees = [];
+        foreach ($remove as $id) {
+            foreach (self::subtree($groups, $id) as $below) {
+                $removedTrees[$below] = true;
+            }
+        }
         $added  = 0;
         $result = $keep;
         $reason = '';
         if (!$keep && $remove) {
-            if (isset($removed[$defaultGroup]) || !isset($groups[$defaultGroup])) {
+            if (isset($removedTrees[$defaultGroup]) || !isset($groups[$defaultGroup])) {
                 $reason = 'COM_USERTOOLS_UNGROUP_REASON_DEFAULT_REMOVED';
             } else {
                 $added  = $defaultGroup;

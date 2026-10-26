@@ -170,7 +170,7 @@ Desde la 2026.10.8, **Quitar de grupos** saca una cuenta de los grupos que elija
 
 Reglas:
 
-- **Si la cuenta se queda sin grupos**, se le asigna el grupo de los usuarios nuevos de las Opciones de Usuarios (normalmente «Registrado»). Si ese grupo es uno de los que se quitan, no se cambia nada y se explica por qué.
+- **Si la cuenta se queda sin grupos**, se le asigna el grupo de los usuarios nuevos de las Opciones de Usuarios (normalmente «Registrado»). Si ese grupo es uno de los que se quitan, o cuelga de uno de ellos (heredaría sus permisos), no se cambia nada y se explica por qué.
 - **Nunca cambia tu propia cuenta**: no se puede elegir en el primer paso.
 - **Quien no es superusuario nunca cambia cuentas con acceso a la administración** ni superusuarios: tampoco se pueden elegir.
 - **Un superusuario puede dejar de serlo** solo si queda al menos otro superusuario activo; la revisión avisa cuando la cuenta pierde ese estado o el acceso a la administración.

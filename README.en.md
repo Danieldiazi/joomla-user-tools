@@ -172,7 +172,7 @@ Since 2026.10.8, **Remove from groups** takes an account out of the groups you c
 
 Rules:
 
-- **If the account is left without groups**, it is assigned the group for new users from the Users Options (usually “Registered”). If that group is one of those being removed, nothing changes and the reason is shown.
+- **If the account is left without groups**, it is assigned the group for new users from the Users Options (usually “Registered”). If that group is one of those being removed, or sits below one of them (it would inherit its permissions), nothing changes and the reason is shown.
 - **It never changes your own account**: it cannot be chosen in the first step.
 - **Non-Super Users never change accounts with administrator access** or Super Users: they cannot be chosen either.
 - **A Super User can lose that status** only if at least one other active Super User remains; the review warns when the account loses that status or administrator access.

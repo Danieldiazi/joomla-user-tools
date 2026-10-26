@@ -196,7 +196,7 @@ Al desmarcar un grupo, la cuenta sale también de todos los grupos que cuelgan d
 
 ### ¿Qué pasa si la cuenta se queda sin grupos?
 
-Se le asigna el grupo de los usuarios nuevos de las Opciones de Usuarios. Si ese grupo es uno de los que se quitan, no se cambia nada: deja marcado algún grupo o asígnale antes otro en el gestor de usuarios.
+Se le asigna el grupo de los usuarios nuevos de las Opciones de Usuarios. Si ese grupo es uno de los que se quitan, o cuelga de uno de ellos (heredaría sus permisos), no se cambia nada: deja marcado algún grupo o asígnale antes otro en el gestor de usuarios.
 
 ### ¿Por qué no puedo elegir una cuenta o aplicar el cambio?
 

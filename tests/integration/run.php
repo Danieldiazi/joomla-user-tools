@@ -601,6 +601,13 @@ $review = $select($admin, [], true);
 Test::check(str_contains($review, 'data-ut-reason="COM_USERTOOLS_UNGROUP_REASON_DEFAULT_REMOVED"') && !str_contains($review, 'data-ut-ungroup-form'), 'removing the group for new users from its last member is refused');
 $back = $select($admin, ['Registered']);
 Test::check(str_contains($back, 'data-ut-ungroup-groups') && str_contains($back, 'nothing to remove'), 'nothing unticked is explained on the groups step');
+// An account deleted between steps sends the operator back to choosing one, without a redirect loop.
+$site->addUser('ug_gone', 'Author');
+$choose($admin, 'ug_gone');
+$site->cli('user:delete --username=ug_gone');
+[$code, $gone] = $admin->request($ungroupUrl . '&layout=groups');
+Test::check($code === 200 && str_contains($gone, 'data-ut-ungroup-choose') && !str_contains($gone, 'data-ut-keep='), 'a vanished account goes back to the account step (got ' . $code . ')');
+Test::check(str_contains($admin->get($ungroupUrl . '&layout=groups'), 'data-ut-ungroup-choose'), 'and the draft is cleared, so it does not happen again');
 $self = $choose($admin, getenv('UT_ADMIN_USER') ?: 'admin');
 Test::check(str_contains($self, 'own account') && str_contains($self, 'data-ut-ungroup-choose'), 'the operator cannot choose its own account');
 

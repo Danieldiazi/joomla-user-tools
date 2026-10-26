@@ -174,6 +174,12 @@
       };
       boxes.forEach((box) => box.addEventListener('change', () => { box.dataset.utOwn = box.checked ? '1' : '0'; sync(); }));
       if (recursive) recursive.addEventListener('change', sync);
+      // Send the operator's own ticks, not the cascade shown on screen: the server applies the
+      // cascade itself and can tell the review which group caused each removal. It also keeps the
+      // operator's choices intact when coming back to edit.
+      form.addEventListener('submit', () => {
+        boxes.forEach((box) => { box.disabled = false; box.checked = box.dataset.utOwn === '1'; });
+      });
       sync();
     });
 
