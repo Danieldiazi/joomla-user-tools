@@ -9,6 +9,7 @@ use Joomla\CMS\Router\Route;
 $levels = $this->matrix['levels'];
 $rows   = $this->matrix['rows'];
 $canUsers = $this->canUsers();
+$canEdit  = $this->canEditGroups();
 ?>
 <div class="ut-app ut-wide">
   <p class="lead"><?= Text::_('COM_USERTOOLS_ACCESS_INTRO') ?></p>
@@ -38,7 +39,7 @@ $canUsers = $this->canUsers();
         <th scope="col" class="text-end"><?= Text::_('COM_USERTOOLS_ACCESS_MEMBERS') ?></th>
         <?php foreach ($levels as $level) : ?>
         <th scope="col" class="text-center">
-          <?php if ($canUsers) : ?><a href="<?= Route::_('index.php?option=com_users&task=level.edit&id=' . (int) $level['id']) ?>"><?= $this->escape($level['title']) ?></a><?php else : ?><?= $this->escape($level['title']) ?><?php endif; ?>
+          <?php if ($canEdit) : ?><a href="<?= Route::_('index.php?option=com_users&task=level.edit&id=' . (int) $level['id']) ?>"><?= $this->escape($level['title']) ?></a><?php else : ?><?= $this->escape($level['title']) ?><?php endif; ?>
         </th>
         <?php endforeach; ?>
       </tr></thead>
@@ -47,7 +48,7 @@ $canUsers = $this->canUsers();
         <tr data-ut-group="<?= (int) $row['id'] ?>">
           <th scope="row" class="ut-access-group">
             <span class="ut-group-option" style="--ut-level: <?= (int) $row['level'] ?>">
-              <?php if ($canUsers) : ?><a href="<?= Route::_('index.php?option=com_users&task=group.edit&id=' . (int) $row['id']) ?>"><?= $this->escape($row['title']) ?></a><?php else : ?><?= $this->escape($row['title']) ?><?php endif; ?>
+              <?php if ($canEdit) : ?><a href="<?= Route::_('index.php?option=com_users&task=group.edit&id=' . (int) $row['id']) ?>"><?= $this->escape($row['title']) ?></a><?php else : ?><?= $this->escape($row['title']) ?><?php endif; ?>
             </span>
             <?php if ($row['superUser']) : ?><span class="badge bg-danger"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_SUPER') ?></span>
             <?php elseif ($row['backend']) : ?><span class="badge bg-warning text-dark"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_BACKEND') ?></span><?php endif; ?>

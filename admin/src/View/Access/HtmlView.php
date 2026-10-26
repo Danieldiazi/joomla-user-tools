@@ -31,10 +31,16 @@ class HtmlView extends BaseHtmlView
         parent::display($tpl);
     }
 
-    /** Links to Joomla's group, level and user screens only for users who can open them. */
+    /** Links to the user manager only for users who can open it. */
     public function canUsers(): bool
     {
         return Factory::getApplication()->getIdentity()->authorise('core.manage', 'com_users');
+    }
+
+    /** Joomla opens the group and level screens only with core.admin on com_users (Users DisplayController::canView()). */
+    public function canEditGroups(): bool
+    {
+        return Factory::getApplication()->getIdentity()->authorise('core.admin', 'com_users');
     }
 
     /** Title of a group by id, for "inherited from" notes. */

@@ -529,7 +529,15 @@ $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_en
 [$code] = $delegate->request('index.php?option=com_usertools&view=access');
 Test::check($code === 403 && !str_contains($delegate->get('index.php?option=com_usertools'), 'view=access'), 'the view needs its own permission (got ' . $code . ')');
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.access' => ['6' => 1]])]);
-Test::check(str_contains($delegate->get('index.php?option=com_usertools&view=access'), 'id="ut-access-table"'), 'a delegate with the permission can open it');
+// The delegate may manage users (user list) but is not Admin of Users (groups and levels screens).
+$usersRules = (string) $site->q("SELECT rules FROM #__assets WHERE name = 'com_users'")[0]['rules'];
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_users'", [json_encode((json_decode($usersRules, true) ?: []) + ['core.manage' => ['6' => 1]])]);
+$delegateAccess = $delegate->get('index.php?option=com_usertools&view=access');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_users'", [$usersRules]);
+Test::check(str_contains($delegateAccess, 'id="ut-access-table"'), 'a delegate with the permission can open it');
+Test::check(!str_contains($delegateAccess, 'task=group.edit') && !str_contains($delegateAccess, 'task=level.edit') && str_contains($delegateAccess, 'filter[group_id]='),
+    'without core.admin on Users, group and level titles are not links (Joomla would refuse them); member counts still link');
+Test::check(str_contains($accessPage, 'task=group.edit') && str_contains($accessPage, 'task=level.edit'), 'a Super User gets the edit links');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 $site->q("DELETE FROM #__viewlevels WHERE title LIKE 'UT level%'");
 
