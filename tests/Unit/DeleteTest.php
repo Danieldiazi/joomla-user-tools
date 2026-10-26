@@ -34,14 +34,15 @@ final class DeleteTest extends TestCase
     public function testDeleteSettings(): void
     {
         $defaults = new Settings([]);
-        $this->assertSame([730, false, 'all'], [$defaults->deleteDays(), $defaults->deleteIncludeNever(), $defaults->deleteStatus()]);
+        $this->assertSame([730, false, 'blocked'], [$defaults->deleteDays(), $defaults->deleteIncludeNever(), $defaults->deleteStatus()]);
         $this->assertTrue($defaults->exclusions(Settings::DELETE)->protectAdmins);
         $legacy = new Settings(['excluded_names' => 'servicio', 'manual_inactivity' => ['excluded_names' => 'luis']]);
         $this->assertSame([], $legacy->exclusions(Settings::DELETE)->names, 'deletion never inherits the exclusions of other tools');
         $saved = new Settings(['delete_days' => 400, 'delete_include_never' => 1, 'delete_status' => 'blocked', 'delete_excluded_names' => "a\nB", 'delete_protect_admins' => 0]);
         $this->assertSame([400, true, 'blocked'], [$saved->deleteDays(), $saved->deleteIncludeNever(), $saved->deleteStatus()]);
         $this->assertSame(['a', 'B'], $saved->exclusions(Settings::DELETE)->names);
-        $this->assertSame('all', (new Settings(['delete_status' => 'nope']))->deleteStatus());
+        $this->assertSame('blocked', (new Settings(['delete_status' => 'nope']))->deleteStatus(), 'unknown values fall back to only blocked');
+        $this->assertSame('all', (new Settings(['delete_status' => 'all']))->deleteStatus());
     }
 
     public function testDeleterRevalidatesProtectsAndLogs(): void

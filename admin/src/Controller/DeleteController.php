@@ -18,7 +18,7 @@ class DeleteController extends DisplayController
     {
         $this->guard(self::PERMISSION);
         try {
-            $this->model()->search($this->postData() + ['status' => $this->input->post->getCmd('status', 'all')]);
+            $this->model()->search($this->postData() + ['status' => $this->input->post->getCmd('status', '')]);
             $this->go('view=delete&layout=review');
         } catch (UserFacingException $e) {
             $this->warn($e);

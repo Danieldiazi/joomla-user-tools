@@ -340,7 +340,9 @@ $recent = gmdate('Y-m-d H:i:s');
 $site->q('UPDATE #__users SET "lastvisitDate" = ?, block = 0 WHERE username IN (?, ?)', [$old, 'super2', 'mgr']);
 // The scheduled task above blocked old2; it is the active inactive account of this section.
 $site->q('UPDATE #__users SET "lastvisitDate" = ?, block = 0 WHERE username = ?', [$old, 'old2']);
+$site->options(['delete_status' => null]);
 $deletePage = $admin->get('index.php?option=com_usertools&view=delete');
+Test::check((bool) preg_match('/id="ut-status-blocked"[^>]* checked/', $deletePage) && !preg_match('/id="ut-status-all"[^>]* checked/', $deletePage), '"Only blocked" is selected by default');
 Test::check(str_contains($deletePage, 'Deletion is permanent'), 'the deletion screen warns that it cannot be undone');
 $search = fn (Client $c, array $extra) => $c->submit('index.php?option=com_usertools&view=delete', $extra + ['task' => 'delete.search', 'days' => 365, 'include_never' => 0, 'protect_admins' => 0, 'excluded' => '', 'excluded_groups' => []]);
 $rows = function (string $html): array {

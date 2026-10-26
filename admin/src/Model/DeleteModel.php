@@ -46,7 +46,7 @@ class DeleteModel extends BaseDatabaseModel
     {
         $days         = (int) ($input['days'] ?? 730);
         $includeNever = (int) ($input['include_never'] ?? 0) === 1;
-        $status       = \in_array($input['status'] ?? '', Settings::STATUSES, true) ? (string) $input['status'] : 'all';
+        $status       = \in_array($input['status'] ?? '', Settings::STATUSES, true) ? (string) $input['status'] : Settings::DEFAULT_STATUS;
         $exclusions   = $this->exclusionsFromInput($input);
         $this->session()->set(self::DRAFT, ['days' => $days, 'includeNever' => $includeNever, 'status' => $status, 'exclusions' => $exclusions->toArray()]);
         $cutoff = InactivityPolicy::cutoff($days, new \DateTimeImmutable('now', new \DateTimeZone('UTC')));

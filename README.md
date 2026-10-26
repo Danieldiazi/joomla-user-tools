@@ -6,7 +6,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 |---|---|
 | Comparar una lista | Propone bloquear las cuentas ausentes de la lista completa, salvo las protegidas, y permite crear los usuarios nuevos que selecciones. |
 | Revisar usuarios inactivos | Busca cuentas inactivas para que selecciones cuáles bloquear. |
-| Eliminar usuarios inactivos | Permite seleccionar y borrar definitivamente cuentas inactivas, activas o bloqueadas. Disponible desde 2026.10.5. |
+| Eliminar usuarios inactivos | Permite seleccionar y borrar definitivamente cuentas inactivas. Por defecto lista solo las ya bloqueadas. Disponible desde 2026.10.5. |
 | Tarea programada | Bloquea cuentas por inactividad; empieza en modo simulación y genera informes. |
 
 **Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
@@ -68,7 +68,7 @@ En la portada, «Revisar cuentas inactivas». Elige el plazo en días, si se inc
 
 En la portada, «Revisar cuentas para eliminar». Es la única herramienta que **borra** cuentas, y el borrado no se puede deshacer; para impedir el acceso sin borrar, usa la revisión de inactivos.
 
-1. Elige el plazo en días (730 por defecto), si se incluyen quienes nunca accedieron y qué cuentas se listan: **activas y bloqueadas**, **solo bloqueadas** (las que ya bloqueó la revisión de inactivos o la tarea programada) o **solo activas**.
+1. Elige el plazo en días (730 por defecto), si se incluyen quienes nunca accedieron y qué cuentas se listan: **solo bloqueadas** (opción por defecto desde 2026.10.6; las que ya bloqueó la revisión de inactivos o la tarea programada), **activas y bloqueadas** o **solo activas**.
 2. Configura sus exclusiones, que son propias e iguales que en el resto de herramientas: excluir administradores, nombres de usuario y grupos (con sus subgrupos). Los superusuarios y tu propia cuenta nunca se listan.
 3. En la revisión verás nombre, correo, estado, último acceso, fecha de registro y grupos de cada cuenta, con un filtro si la lista es larga. Ninguna cuenta viene marcada.
 4. Marca las que quieras eliminar, confirma la casilla y **escribe el número de cuentas**. En esta herramienta se pide siempre, aunque sea una.
@@ -130,7 +130,7 @@ Componentes → User Tools → **Opciones** (botón de la barra de herramientas)
 | Seguridad | Confirmación reforzada a partir de N cuentas (0 la desactiva); modo de alta por defecto (enlace por correo o contraseña temporal); días que se conservan los informes (90 por defecto, 0 = siempre) |
 | Comparación | Excluir administradores, nombres excluidos y grupos excluidos de la comparación manual |
 | Revisión de inactivos | Plazo, incluir quien nunca accedió y exclusiones de la revisión manual |
-| Eliminación de inactivos | Plazo, cuentas que se listan (activas, bloqueadas o ambas), incluir quien nunca accedió y exclusiones de la eliminación |
+| Eliminación de inactivos | Plazo, cuentas que se listan (solo bloqueadas por defecto, ambas o solo activas), incluir quien nunca accedió y exclusiones de la eliminación |
 | Permisos | Permisos de cada herramienta |
 
 Las exclusiones de las herramientas manuales también se guardan al usarlas. Cada tarea programada tiene las suyas en su propia configuración.

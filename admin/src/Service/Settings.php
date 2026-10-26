@@ -14,8 +14,9 @@ final class Settings
     public const INACTIVE = 'inactive_';
     public const DELETE   = 'delete_';
 
-    /** Which accounts the deletion tool lists: active and blocked, only blocked or only active. */
-    public const STATUSES = ['all', 'blocked', 'active'];
+    /** Which accounts the deletion tool lists: only blocked (default), active and blocked, or only active. */
+    public const STATUSES = ['blocked', 'all', 'active'];
+    public const DEFAULT_STATUS = 'blocked';
 
     /** @param array<string, mixed> $params */
     public function __construct(private array $params)
@@ -47,8 +48,8 @@ final class Settings
 
     public function deleteStatus(): string
     {
-        $status = (string) ($this->toolValues(self::DELETE)[self::DELETE . 'status'] ?? 'all');
-        return \in_array($status, self::STATUSES, true) ? $status : 'all';
+        $status = (string) ($this->toolValues(self::DELETE)[self::DELETE . 'status'] ?? self::DEFAULT_STATUS);
+        return \in_array($status, self::STATUSES, true) ? $status : self::DEFAULT_STATUS;
     }
 
     public function inactiveIncludeNever(): bool
