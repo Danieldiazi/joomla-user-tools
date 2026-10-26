@@ -47,6 +47,16 @@ $states = [
       </div></section>
     </div>
     <?php endif; ?>
+    <?php if ($this->can('usertools.ungroup')) : ?>
+    <div class="col-lg-6">
+      <section class="card h-100"><div class="card-body d-flex flex-column">
+        <span class="badge bg-primary align-self-start mb-2"><?= Text::_('COM_USERTOOLS_MANUAL') ?></span>
+        <h2 class="h4"><?= Text::_('COM_USERTOOLS_UNGROUP_TITLE') ?></h2>
+        <p><?= Text::_('COM_USERTOOLS_UNGROUP_HOME_DESC') ?></p>
+        <a class="btn btn-outline-primary mt-auto align-self-start" href="<?= Route::_('index.php?option=com_usertools&view=ungroup') ?>"><?= Text::_('COM_USERTOOLS_UNGROUP_START') ?></a>
+      </div></section>
+    </div>
+    <?php endif; ?>
     <div class="col-lg-6">
       <section class="card h-100"><div class="card-body d-flex flex-column">
         <span class="badge bg-secondary align-self-start mb-2"><?= Text::_('COM_USERTOOLS_SCHEDULED') ?></span>

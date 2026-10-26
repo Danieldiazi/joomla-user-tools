@@ -55,6 +55,11 @@ final class Toolkit
         return new AccountBlocker(self::users(), new ActionLogger());
     }
 
+    public static function regrouper(): AccountRegrouper
+    {
+        return new AccountRegrouper(self::users(), new ActionLogger());
+    }
+
     public static function deleter(): AccountDeleter
     {
         return new AccountDeleter(self::users(), new ActionLogger());

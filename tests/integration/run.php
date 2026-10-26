@@ -541,5 +541,60 @@ Test::check(str_contains($accessPage, 'task=group.edit') && str_contains($access
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 $site->q("DELETE FROM #__viewlevels WHERE title LIKE 'UT level%'");
 
+Test::section('Remove from a group');
+$gid = fn (string $title): int => (int) $site->q('SELECT id FROM #__usergroups WHERE title = ?', [$title])[0]['id'];
+$groupsOf = function (string $username) use ($site): array {
+    $rows = $site->q('SELECT g.title FROM #__user_usergroup_map m JOIN #__usergroups g ON g.id = m.group_id WHERE m.user_id = ? ORDER BY g.lft', [$site->userId($username)]);
+    return array_column($rows, 'title');
+};
+$site->addUser('ug_one', 'Registered,Author,Editor');
+$site->addUser('ug_two', 'Editor');
+$site->addUser('ug_three', 'Author');
+$site->addUser('ug_back', 'Manager,Author');
+$ungroupUrl = 'index.php?option=com_usertools&view=ungroup';
+$reviewUrl  = $ungroupUrl . '&layout=review';
+$preview = fn (Client $client, string $login, string $group): string => $client->submit($ungroupUrl, ['task' => 'ungroup.preview', 'login' => $login, 'group' => $gid($group)], 'data-ut-ungroup-choose');
+$apply   = fn (Client $client): string => $client->submit($reviewUrl, ['task' => 'ungroup.apply', 'confirm' => 1], 'data-ut-ungroup-form');
+
+$review = $preview($admin, 'UG_ONE', 'Author');
+Test::check(substr_count($review, 'data-ut-change="remove"') === 2 && substr_count($review, 'data-ut-change="keep"') === 1 && str_contains($review, 'data-ut-ungroup-form'),
+    'the review removes the group and its subgroup and keeps the parent (login is case-insensitive)');
+Test::check($groupsOf('ug_one') === ['Registered', 'Author', 'Editor'], 'nothing changes before confirming');
+$site->fakeSession($site->userId('ug_one'));
+$done = $apply($admin);
+Test::check(str_contains($done, 'data-ut-ungroup-done'), 'the change is applied after confirming');
+Test::check($groupsOf('ug_one') === ['Registered'], 'the account left Author and Editor');
+Test::check($site->sessions($site->userId('ug_one')) === 0 && !str_contains($done, 'data-ut-sessions='), 'the open sessions of the account are closed');
+$site->fakeSession($site->userId('ug_one'));
+$resultPage = $admin->get($ungroupUrl . '&layout=result');
+$retried = $admin->request('index.php?option=com_usertools', ['task' => 'ungroup.sessions', 'account' => $site->userId('ug_one'), Client::token($resultPage) => 1])[1];
+Test::check($site->sessions($site->userId('ug_one')) === 0 && str_contains($retried, 'sessions were closed'), 'the result screen can close the sessions again');
+Test::check(count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_UNGROUPED' AND item_id = ?", [$site->userId('ug_one')])) === 1, 'the change is in the User Actions Log');
+$replay = $admin->request('index.php?option=com_usertools', ['task' => 'ungroup.apply', 'confirm' => 1, 'preview' => 'stale'])[1];
+Test::check($groupsOf('ug_one') === ['Registered'], 'a replayed confirmation changes nothing');
+
+$preview($admin, 'ug_two', 'Author');
+$done = $apply($admin);
+Test::check($groupsOf('ug_two') === ['Registered'] && str_contains($done, 'Registered'), 'an account left without groups gets the group for new users');
+Test::check(count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_UNGROUPED_DEFAULT' AND item_id = ?", [$site->userId('ug_two')])) === 1, 'the log says the default group was added');
+
+$review = $preview($admin, 'ug_three', 'Registered');
+Test::check(str_contains($review, 'data-ut-reason="COM_USERTOOLS_UNGROUP_REASON_DEFAULT_REMOVED"') && !str_contains($review, 'data-ut-ungroup-form'), 'removing the group for new users from its last member is refused');
+$review = $preview($admin, 'ug_one', 'Author');
+Test::check(str_contains($review, 'data-ut-reason="COM_USERTOOLS_UNGROUP_REASON_NOT_MEMBER"'), 'nothing to remove is explained');
+$review = $preview($admin, getenv('UT_ADMIN_USER') ?: 'admin', 'Super Users');
+Test::check(str_contains($review, 'data-ut-reason="COM_USERTOOLS_UNGROUP_REASON_SELF"'), 'the operator cannot change its own account');
+
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
+[$code] = $delegate->request($ungroupUrl);
+Test::check($code === 403, 'the tool needs its own permission (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.ungroup' => ['6' => 1]])]);
+$review = $preview($delegate, 'ug_back', 'Author');
+Test::check(str_contains($review, 'data-ut-reason="COM_USERTOOLS_UNGROUP_REASON_BACKEND"') && !str_contains($review, 'data-ut-ungroup-form'), 'a non Super User cannot change accounts with administrator access');
+$review = $preview($delegate, 'ug_three', 'Author');
+Test::check(str_contains($review, 'data-ut-ungroup-form'), 'a delegate can change ordinary accounts');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+Test::check($groupsOf('ug_back') === ['Manager', 'Registered', 'Author'] || $groupsOf('ug_back') === ['Manager', 'Author'], 'refused changes leave the groups untouched');
+
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);

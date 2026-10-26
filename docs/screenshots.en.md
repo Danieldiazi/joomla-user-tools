@@ -4,9 +4,9 @@
 
 [Back to the README](../README.en.md)
 
-These shared screenshots show the Spanish interface on Joomla 6.2.0. Deletion screenshots were added in 2026.10.5, the Users dashboard screenshot in 2026.10.6, and the groups and access levels screenshot in 2026.10.8. The other screenshots show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
+These shared screenshots show the Spanish interface on Joomla 6.2.0. Deletion screenshots were added in 2026.10.5, the Users dashboard screenshot in 2026.10.6, and the home screen, groups and access levels, and remove from a group screenshots in 2026.10.8. The other screenshots show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
-![User Tools home screen](screenshots/01-portada.jpg)
+![User Tools home screen (2026.10.8)](screenshots/01-portada.jpg)
 
 ![Comparison: list and exclusions](screenshots/02-comparacion-lista.jpg)
 
@@ -23,6 +23,10 @@ These shared screenshots show the Spanish interface on Joomla 6.2.0. Deletion sc
 ![Delete inactive users: period, status and exclusions](screenshots/11-eliminar-plazo.jpg)
 
 ![Delete inactive users: selection and confirmation](screenshots/12-eliminar-seleccion.jpg)
+
+![Remove from a group: account and group (2026.10.8)](screenshots/15-quitar-grupo-cuenta.jpg)
+
+![Remove from a group: review of the groups removed and kept (2026.10.8)](screenshots/16-quitar-grupo-revision.jpg)
 
 ![Scheduled-task configuration](screenshots/08-tarea-programada.jpg)
 
