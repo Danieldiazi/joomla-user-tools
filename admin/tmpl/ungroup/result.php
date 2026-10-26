@@ -2,6 +2,7 @@
 
 \defined('_JEXEC') or die;
 
+use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
@@ -14,6 +15,18 @@ $result  = $this->result;
 <div class="ut-app ut-narrow">
   <?= LayoutHelper::render('usertools.steps', ['steps' => $steps, 'current' => 'result', 'label' => 'COM_USERTOOLS_UNGROUP_PROGRESS'], $layouts) ?>
   <div class="alert alert-success" data-ut-ungroup-done><?= Text::sprintf('COM_USERTOOLS_UNGROUP_DONE', $this->escape($result['username']), $this->escape(implode(', ', $result['removed']))) ?></div>
+  <?php if (($result['sessions'] ?? '') === 'open') : ?>
+  <div class="alert alert-danger" data-ut-sessions="open">
+    <p><?= Text::_('COM_USERTOOLS_UNGROUP_SESSIONS_OPEN') ?></p>
+    <form method="post" action="<?= Route::_('index.php?option=com_usertools&view=ungroup') ?>" class="mb-0">
+      <input type="hidden" name="account" value="<?= (int) $result['id'] ?>">
+      <button class="btn btn-danger" name="task" value="ungroup.sessions"><?= Text::_('COM_USERTOOLS_UNGROUP_SESSIONS_RETRY') ?></button>
+      <?= HTMLHelper::_('form.token') ?>
+    </form>
+  </div>
+  <?php elseif (($result['sessions'] ?? '') === 'unknown') : ?>
+  <div class="alert alert-warning" data-ut-sessions="unknown"><?= Text::_('COM_USERTOOLS_UNGROUP_SESSIONS_UNKNOWN') ?></div>
+  <?php endif; ?>
   <section class="card ut-card"><div class="card-body">
     <dl class="row mb-0">
       <dt class="col-sm-4"><?= Text::_('COM_USERTOOLS_UNGROUP_NOW_IN') ?></dt><dd class="col-sm-8" data-ut-now-in><?= $this->escape(implode(', ', $result['groups'])) ?></dd>

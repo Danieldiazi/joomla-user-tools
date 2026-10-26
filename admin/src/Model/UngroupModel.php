@@ -125,11 +125,29 @@ class UngroupModel extends BaseDatabaseModel
             'removed'  => $removed,
             'added'    => $added,
             'groups'   => array_map($title, $plan['result']),
+            'sessions' => $outcome['sessions'],
         ];
         $this->storeResult(self::RESULT, $result);
         $this->session()->set(self::DRAFT, []);
         Toolkit::clearDashboardCache();
         return $result;
+    }
+
+    /**
+     * Tries again to close the sessions of the account just changed (from the result screen).
+     *
+     * @param array<string, mixed> $input
+     */
+    public function retrySessions(array $input): string
+    {
+        $result = $this->getResult();
+        if (!$result || (int) ($input['account'] ?? 0) !== (int) $result['id']) {
+            throw new UserFacingException('COM_USERTOOLS_ERROR_PREVIEW_EXPIRED');
+        }
+        $result['sessions'] = Toolkit::regrouper()->closeSessions((int) $result['id']);
+        unset($result['actor'], $result['expires']);
+        $this->storeResult(self::RESULT, $result);
+        return $result['sessions'];
     }
 
     /** @return array<string, mixed>|null */

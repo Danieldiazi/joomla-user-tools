@@ -6,6 +6,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Controller;
 
 use Danieldiazi\Component\Usertools\Administrator\Model\UngroupModel;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
+use Joomla\CMS\Language\Text;
 
 /** POST actions of "Remove from a group". */
 class UngroupController extends DisplayController
@@ -36,6 +37,21 @@ class UngroupController extends DisplayController
         } catch (UserFacingException $e) {
             $this->warn($e);
             $this->go($model->getPreview() ? 'view=ungroup&layout=review' : 'view=ungroup');
+        }
+    }
+
+    public function sessions(): void
+    {
+        $this->guard(self::PERMISSION);
+        try {
+            $state = $this->model()->retrySessions(['account' => $this->input->post->getInt('account', 0)]);
+            if ($state === 'closed') {
+                $this->app->enqueueMessage(Text::_('COM_USERTOOLS_UNGROUP_SESSIONS_CLOSED_NOW'), 'success');
+            }
+            $this->go('view=ungroup&layout=result');
+        } catch (UserFacingException $e) {
+            $this->warn($e);
+            $this->go('view=ungroup');
         }
     }
 

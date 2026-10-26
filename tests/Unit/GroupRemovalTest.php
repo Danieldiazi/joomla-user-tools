@@ -124,8 +124,11 @@ final class GroupRemovalTest extends TestCase
         $logger   = new ActionLogger(function (array $messages, string $key) use (&$logged) {
             $logged[] = [$key, $messages[0]['groups'], $messages[0]['added']];
         });
+        $left      = 0;
         $regrouper = new AccountRegrouper($factory, $logger, function (int $id) use (&$sessions) {
             $sessions[] = $id;
+        }, function () use (&$left) {
+            return $left;
         });
         $operator = new Operator(1, true, 'admin');
 
@@ -135,6 +138,7 @@ final class GroupRemovalTest extends TestCase
 
         $done = $regrouper->regroup(50, [12, 2, 10], [2], $operator, ['Socios', 'Presidencia'], '');
         $this->assertSame(AccountRegrouper::SAVED, $done['status']);
+        $this->assertSame(AccountRegrouper::SESSIONS_CLOSED, $done['sessions']);
         $this->assertSame([2 => 2], $user->groups);
         $this->assertTrue($user->updateOnly);
         $this->assertSame([50], $sessions);
@@ -144,5 +148,52 @@ final class GroupRemovalTest extends TestCase
         $regrouper->regroup(50, [11], [2], $operator, ['Junta'], 'Registered');
         $this->assertSame('COM_USERTOOLS_ACTION_LOG_UNGROUPED_DEFAULT', $logged[1][0]);
         $this->assertSame('Registered', $logged[1][2]);
+    }
+
+    public function testSurvivingSessionsAreReported(): void
+    {
+        $user = new class {
+            public int $id = 50;
+            public string $username = 'ana';
+            /** @var array<int, int> */
+            public array $groups = [2 => 2, 10 => 10];
+
+            public function save(bool $updateOnly = false): bool
+            {
+                return true;
+            }
+        };
+        $factory = new class ($user) implements UserFactoryInterface {
+            public function __construct(private object $user)
+            {
+            }
+
+            public function loadUserById(int $id)
+            {
+                return $this->user;
+            }
+
+            public function loadUserByUsername(string $username)
+            {
+                return $this->user;
+            }
+        };
+        $logged  = 0;
+        $logger  = new ActionLogger(function () use (&$logged) {
+            $logged++;
+        });
+        $failing = new AccountRegrouper($factory, $logger, function () {
+            throw new \RuntimeException('session backend down');
+        }, fn () => 1);
+        $outcome = $failing->regroup(50, [2, 10], [2], new Operator(1, true), ['Socios'], '');
+        $this->assertSame(AccountRegrouper::SAVED, $outcome['status'], 'the saved groups are not undone');
+        $this->assertSame(AccountRegrouper::SESSIONS_OPEN, $outcome['sessions'], 'a surviving session is reported, not hidden');
+        $this->assertSame(1, $logged, 'the saved change is still logged');
+
+        $this->assertSame(AccountRegrouper::SESSIONS_OPEN, (new AccountRegrouper($factory, $logger, fn () => null, function () {
+            throw new \RuntimeException('db down');
+        }))->closeSessions(50), 'an unverifiable count counts as open');
+        $this->assertSame(AccountRegrouper::SESSIONS_UNKNOWN, (new AccountRegrouper($factory, $logger, fn () => null, fn () => null))->closeSessions(50), 'session metadata off');
+        $this->assertSame(AccountRegrouper::SESSIONS_CLOSED, (new AccountRegrouper($factory, $logger, fn () => null, fn () => 0))->closeSessions(50));
     }
 }
