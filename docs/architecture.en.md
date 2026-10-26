@@ -1,0 +1,131 @@
+# Joomla User Tools architecture
+
+[Español](arquitectura.md) · **English**
+
+[Back to the README](../README.en.md#development)
+
+This guide describes the 2026.10.5 implementation. It is intended for anyone locating a rule, following a request or modifying a tool. Update this guide whenever flows, persistence or guarantees change. Usage instructions are in the [README](../README.en.md) and [FAQ](../FAQ.en.md).
+
+## 1. Responsibility map
+
+```mermaid
+flowchart TD
+    J["Joomla: administrator request"] --> C["Controller: permissions, CSRF and input"]
+    C --> M["Model: draft, review and application"]
+    M --> S["Service: rules and account operations"]
+    S --> U["Joomla User API and database"]
+    S --> A["ActionLogger: action logging"]
+    C --> V["View: prepares screen data"]
+    V --> M
+    V --> T["tmpl and layouts: translated HTML"]
+    T --> JS["admin.js: filters, selection and JSON fields"]
+    P["Joomla scheduler"] --> TASK["Task plugin"]
+    TASK --> S
+    TASK --> R["ReportStore: persistent reports"]
+```
+
+Arrows represent main calls or dependencies, not a complete timeline. The plugin reuses services but does not use screen models.
+
+| Part | Responsibility and starting point |
+|---|---|
+| Component registration | [admin/services/provider.php](../admin/services/provider.php) registers MVC factories and the component in Joomla's container. |
+| Controllers | [DisplayController](../admin/src/Controller/DisplayController.php) authorizes views. [ToolControllerTrait](../admin/src/Controller/ToolControllerTrait.php) shares CSRF checks, permissions, POST input and notices. Each tool's controller selects its model and next screen. |
+| Models | [CompareModel](../admin/src/Model/CompareModel.php), [InactiveModel](../admin/src/Model/InactiveModel.php) and [DeleteModel](../admin/src/Model/DeleteModel.php) coordinate validation, preview, revalidation and application. |
+| Manual state | [ToolStateTrait](../admin/src/Model/ToolStateTrait.php) manages identity, expiry, settings signatures, typed confirmation and session results. |
+| Shared rules | [Comparison](../admin/src/Service/Comparison.php), [InactivityPolicy](../admin/src/Service/InactivityPolicy.php), [Exclusions](../admin/src/Service/Exclusions.php) and [MassBlockGuard](../admin/src/Service/MassBlockGuard.php) determine matching, eligibility, protection and limits. |
+| Reading Joomla data | [UserDirectory](../admin/src/Service/UserDirectory.php) queries accounts, groups and sessions; [UserRecord](../admin/src/Service/UserRecord.php) represents loaded accounts. |
+| Account changes | [AccountBlocker](../admin/src/Service/AccountBlocker.php), [AccountDeleter](../admin/src/Service/AccountDeleter.php) and [Registration](../admin/src/Service/Registration.php) use Joomla's User API. [AccountMailer](../admin/src/Service/AccountMailer.php) sends password links. |
+| Services and settings | [Toolkit](../admin/src/Service/Toolkit.php) builds services with Joomla dependencies. [Settings](../admin/src/Service/Settings.php) interprets options; [SettingsStore](../admin/src/Service/SettingsStore.php) saves them. |
+| Presentation | Classes under admin/src/View prepare data; [ViewTrait](../admin/src/View/ViewTrait.php) shares toolbar, assets and helpers. admin/tmpl contains screens; admin/layouts contains reusable fragments. |
+| Browser | [media/js/admin.js](../media/js/admin.js) filters tables, maintains selections and serializes fields. Its checks do not replace server validation. |
+| Scheduled task | [Usertools](../plugins/task/usertools/src/Extension/Usertools.php) classifies accounts, applies the limit, simulates or blocks, and saves reports. |
+| Evidence | [ActionLogger](../admin/src/Service/ActionLogger.php) writes to Joomla; [ReportStore](../admin/src/Service/ReportStore.php) stores task reports; [CsvExport](../admin/src/Service/CsvExport.php) prepares exports. |
+
+## 2. Following a manual operation
+
+### Example: deleting inactive accounts
+
+1. Joomla displays the delete view. DisplayController requires the view permission; [Delete/HtmlView](../admin/src/View/Delete/HtmlView.php) obtains the draft and groups from the model and prepares the template.
+2. On search, [DeleteController::search()](../admin/src/Controller/DeleteController.php) checks the token and usertools.delete permission. DeleteModel::search() validates the period, saves options and calculates candidates using InactivityPolicy, Exclusions and recent sessions.
+3. The model stores a session preview: offered IDs, UTC cutoff, exclusions, status filter, settings signature, identity, nonce and expiry. It redirects to review.
+4. DeleteModel::getReview() queries candidates again and only shows accounts offered in the preview. It does not add accounts that have since become eligible.
+5. The browser submits selected IDs as JSON. DeleteController::delete() checks token and permission again. The model validates the preview, membership of the IDs, confirmation checkbox and typed count, required even for one account.
+6. The model consumes the preview before writing. It recalculates eligibility; AccountDeleter reloads each account, checks protection and criteria, and calls User::delete(). Joomla dispatches its user-plugin events.
+7. Each successful deletion is passed to ActionLogger. The model collects deleted accounts, errors and the skipped count, stores the temporary result and the controller redirects to the result screen.
+
+### Differences in other tools
+
+- **Comparison:** CompareModel calculates missing and unknown usernames. A changed set offered for blocking requires a new review. It validates the entire account-creation selection before blocking or creating; creation also requires usertools.create.
+- **Account creation:** CompareModel temporarily disables the Joomla user plugin's email and restores its configuration in finally. Registration creates accounts in Registered; AccountMailer sends the link, or a temporary password is returned.
+- **Temporary passwords:** [CompareController::apply()](../admin/src/Controller/CompareController.php) renders the result directly in the application response when passwords are present. The session copy is redacted and cannot recover them on reload.
+- **Inactivity review:** InactiveModel uses explicit account selection and AccountBlocker. It skips blocked accounts and recent sessions. Accounts no longer meeting criteria are not replaced by others.
+
+## 3. Following the scheduled task
+
+The plugin's blockInactive() method receives parameters and task identity from the scheduler:
+
+1. Loads the component and builds services. Creates a report before changing accounts; blocking does not start if the report cannot be written.
+2. Uses Operator::system(): a visitor triggering the scheduler does not become the operation's actor.
+3. Classifies enabled accounts, protections and omission reasons. Removes candidates with recent sessions.
+4. MassBlockGuard compares candidates with enabled accounts. Exceeding the limit blocks nothing in real mode; dry-run mode reports the excess.
+5. Simulates or calls AccountBlocker to revalidate and block each account. Saves progress every 50 processed accounts in the real-operation loop.
+6. Finalizes the report and applies retention. Returns success or failure to the scheduler. A report-update error also causes failure.
+
+Reports and the action log are separate evidence sources. A dry run does not create real blocking actions in the log.
+
+## 4. Where data lives
+
+| Data | Location and lifetime |
+|---|---|
+| Manual draft | Session, under tool-specific keys. Preserves input for editing; it does not have the preview's separate 15-minute expiry. |
+| Preview | Session; 900 seconds, tied to the actor and a nonce. Relevant settings are checked through a signature. Consumed before application. |
+| Manual result | Session; 900 seconds, tied to the actor. Temporary passwords are removed from the stored copy. This is not persistent history. |
+| Manual options | Component parameters in #__extensions, through SettingsStore. Shared across the site, with separate keys per tool. Searching can also save options. |
+| Scheduled parameters | Each Joomla task's configuration; exclusions are independent of manual tools. |
+| Accounts | Joomla user tables and API; blocks, creations and deletions use the API to run events. |
+| Action log | Joomla's log, through ActionLogger. Contains no passwords. Writing may fail without stopping the account change. |
+| Scheduled reports | usertools-reports subfolder of the logs directory. PHP files with a denial header and JSON body. Retention is configured in Options and applied when tasks finish. |
+| Temporary password | Generated in memory and shown in the creation response. Joomla retains the authentication hash, not the clear-text password. |
+
+ReportStore validates file IDs and writes through a temporary file followed by a rename. The report's version property identifies its format; it is not the extension version.
+
+## 5. Rules every change must preserve
+
+- Check permissions per view and action, and CSRF tokens for change requests. Component access requires core.manage; tool permissions are in [admin/access.xml](../admin/access.xml).
+- Preserve Super User and manual-operator protection. Non-Super Users cannot block or delete accounts with administrator access.
+- Revalidate each account before changing it. A preview does not guarantee that its state remains unchanged.
+- Apply only accounts offered and selected according to the flow. Never silently expand a review.
+- Consume the preview before writes. This prevents reuse; it does not make the whole operation transactional.
+- Keep dates in UTC and use a strictly earlier-than-cutoff comparison; use registration dates when including never-logged-in accounts.
+- Use Joomla's API for changes and preserve plugin events.
+- Do not persist or log clear-text passwords, or return plugin diagnostics that could contain them.
+- Preserve template escaping, translatable text and non-cacheable sensitive responses.
+- Preserve initial dry-run mode, the scheduled safety limit and mandatory typed confirmation for deletion.
+
+## 6. Partial failures and current limits
+
+Operations are not atomic: changes already applied remain if a later account fails. Services turn certain failures into per-account results; an unexpected interruption may prevent the manual summary from being saved.
+
+ActionLogger discards exceptions so audit failures do not stop an operation. A changed account therefore does not guarantee a corresponding log entry. Task reports have checkpoints and may also remain incomplete if execution stops between saves.
+
+Manual results retain only the skipped count, not a persistent per-account explanation. Scheduled reports retain actions and protections in detail, and summarize omissions by reason. There is currently no common ID connecting all manual actions in a batch.
+
+These are limits of the current implementation, not guarantees of complete auditing or automatic recovery. A future persistent history must explicitly address these cases.
+
+## 7. Where to make changes and what to check
+
+| Change | Main files | Related tests |
+|---|---|---|
+| Normalization and comparison | Comparison, CompareModel | [ComparisonTest](../tests/Unit/ComparisonTest.php), [MvcRegressionTest](../tests/Unit/MvcRegressionTest.php) and integration |
+| Protection and groups | Exclusions, UserDirectory, Operator | [ExclusionsTest](../tests/Unit/ExclusionsTest.php), SafetyTest, DeleteTest and delegated-permission integration |
+| Dates, inactivity and selection | InactivityPolicy, InactiveSelection, manual models and plugin | [PolicyTest](../tests/Unit/PolicyTest.php), DeleteTest and integration |
+| Blocking, passwords and limits | AccountBlocker, PasswordGenerator, MassBlockGuard | [SafetyTest](../tests/Unit/SafetyTest.php) and integration |
+| Deletion | DeleteModel, AccountDeleter, delete templates | [DeleteTest](../tests/Unit/DeleteTest.php), MvcRegressionTest and integration |
+| Creation, reports or CSV | Registration, AccountMailer, ReportStore, CsvExport | [RecordsTest](../tests/Unit/RecordsTest.php) and integration |
+| Permissions, routes or previews | Controllers and ToolStateTrait | MvcRegressionTest, which runs [tests/regression/mvc.php](../tests/regression/mvc.php), and integration |
+| Filters, selection and confirmation | admin.js, templates and layouts | [tests/js/admin.test.js](../tests/js/admin.test.js); also check keyboard interaction, filters and hidden selected accounts in a browser |
+| Packaging and installation | Manifests, package and scripts/build.php | [tests/verify-build.php](../tests/verify-build.php) and package installation in Joomla |
+
+Commands are in [Development](../README.en.md#development) and [Building and publishing](../README.en.md#building-and-publishing). The header of [tests/integration/run.php](../tests/integration/run.php) explains how to test against a disposable Joomla site: these tests create, block and delete accounts.
+
+[CI](../.github/workflows/ci.yml) combines PHPUnit on PHP 8.3/8.4, JavaScript with jsdom, PHPStan and HTTP flows against Joomla with MySQL/PostgreSQL. Those HTTP flows do not run a browser or replace visual checks.

@@ -1,5 +1,7 @@
 # Preguntas frecuentes
 
+**Español** · [English](FAQ.en.md)
+
 Dudas habituales sobre **Joomla User Tools**. Para la descripción completa de cada herramienta, consulta el [README](README.md).
 
 **Índice:** [General](#general) · [Comparación de listas](#comparación-de-listas) · [Altas y contraseñas](#altas-y-contraseñas) · [Inactividad y tarea programada](#inactividad-y-tarea-programada) · [Resultados e informes](#resultados-e-informes) · [Instalación y actualización](#instalación-y-actualización)
