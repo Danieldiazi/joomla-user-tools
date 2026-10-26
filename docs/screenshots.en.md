@@ -4,7 +4,7 @@
 
 [Back to the README](../README.en.md)
 
-These shared screenshots show the Spanish interface on Joomla 6.2.0. Deletion screenshots were added in 2026.10.5, and the Users dashboard screenshot in 2026.10.6. The other screenshots show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
+These shared screenshots show the Spanish interface on Joomla 6.2.0. Deletion screenshots were added in 2026.10.5, the Users dashboard screenshot in 2026.10.6, and the groups and access levels screenshot in 2026.10.8. The other screenshots show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
 ![User Tools home screen](screenshots/01-portada.jpg)
 
@@ -31,3 +31,5 @@ These shared screenshots show the Spanish interface on Joomla 6.2.0. Deletion sc
 ![Task report details](screenshots/10-informe-tarea.jpg)
 
 ![User Tools module on the Users dashboard (2026.10.6)](screenshots/13-panel-usuarios.jpg)
+
+![Groups and access levels: groups by level matrix and summary by level (2026.10.8)](screenshots/14-grupos-niveles.jpg)

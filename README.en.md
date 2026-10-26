@@ -167,6 +167,8 @@ Since 2026.10.8, **Groups and access levels** shows in a single table which view
   - **—**: the group does not have the level.
 - **Summary by level**: assigned groups, how many groups have the level in total and how many accounts are assigned individually. A level with no groups or accounts is marked “No groups”, because nobody has it.
 
+![Groups and access levels (Spanish interface)](docs/screenshots/14-grupos-niveles.jpg)
+
 A search box filters the groups. Group and level titles link to their edit screens in Joomla for users with the Admin permission on Users (the same one Joomla requires for those screens), and account counts link to the user manager for users who can manage users. The screen requires its own permission, *View groups and access levels*: Super Users have it; grant it to others in Options → Permissions.
 
 ## Security

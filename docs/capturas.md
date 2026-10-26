@@ -4,7 +4,7 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Las de eliminación se incorporaron con 2026.10.5 y la del panel de Usuarios con 2026.10.6; las demás corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Las de eliminación se incorporaron con 2026.10.5 la del panel de Usuarios con 2026.10.6 y la de grupos y niveles de acceso con 2026.10.8; las demás corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
 ![Portada de User Tools](screenshots/01-portada.jpg)
 
@@ -31,3 +31,5 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Las
 ![Detalle de un informe de tarea](screenshots/10-informe-tarea.jpg)
 
 ![Módulo User Tools en el panel de Usuarios (2026.10.6)](screenshots/13-panel-usuarios.jpg)
+
+![Grupos y niveles de acceso: matriz de grupos por nivel y resumen por nivel (2026.10.8)](screenshots/14-grupos-niveles.jpg)

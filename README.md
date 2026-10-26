@@ -165,6 +165,8 @@ Desde la 2026.10.8, **Grupos y niveles de acceso** muestra en una sola tabla qu�
   - **—**: el grupo no tiene el nivel.
 - **Resumen por nivel**: grupos asignados, cuántos grupos tienen el nivel en total y cuántas cuentas están asignadas una a una. Un nivel sin grupos ni cuentas se marca «Sin grupos», porque no lo tiene nadie.
 
+![Grupos y niveles de acceso](docs/screenshots/14-grupos-niveles.jpg)
+
 Un cuadro de búsqueda filtra los grupos. Los títulos de grupos y niveles enlazan con su edición en Joomla para quien tiene el permiso de administrar Usuarios (el mismo que exige Joomla para esas pantallas), y las cifras de cuentas enlazan con el gestor de usuarios para quien puede gestionar usuarios. La pantalla requiere el permiso propio *Ver grupos y niveles de acceso*: los superusuarios lo tienen; a los demás hay que concedérselo en Opciones → Permisos.
 
 ## Seguridad
