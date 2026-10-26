@@ -173,6 +173,7 @@ Rules:
 - **A Super User can lose that status** only if at least one other active Super User remains; the review warns when the account loses that status or administrator access.
 - Right before saving, the account's groups are checked against the reviewed ones; if they changed, nothing is applied.
 - The change goes through Joomla's user API, **closes the account's open sessions** so the new permissions apply at once, and is written to the **User Actions Log** with the groups removed and, if any, the group added.
+- **It checks that no session is left open.** If one survives, the group change is kept, but the result warns in red and offers to close them again, because the account keeps its old permissions while it stays open. With “Session Metadata” off this cannot be checked, and that is also reported.
 
 It requires its own permission, *Remove from a group*: Super Users have it; grant it to others in Options → Permissions. It works on one account at a time.
 

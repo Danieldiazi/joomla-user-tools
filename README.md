@@ -171,6 +171,7 @@ Reglas:
 - **Un superusuario puede dejar de serlo** solo si queda al menos otro superusuario activo; la revisión avisa cuando la cuenta pierde ese estado o el acceso a la administración.
 - Justo antes de guardar se comprueba que los grupos de la cuenta siguen siendo los revisados; si han cambiado, no se aplica nada.
 - El cambio pasa por la API de usuarios de Joomla, **cierra las sesiones abiertas** de la cuenta para que los permisos nuevos se apliquen enseguida y queda en el **registro de acciones de usuarios** con los grupos quitados y, si lo hubo, el grupo añadido.
+- **Se comprueba que no quede ninguna sesión abierta.** Si alguna sobrevive, el cambio de grupos se mantiene, pero el resultado lo avisa en rojo y ofrece cerrarlas de nuevo, porque mientras siga abierta la cuenta conserva los permisos antiguos. Con «Metadatos de sesión» desactivado no se puede comprobar, y también se avisa.
 
 Requiere el permiso propio *Quitar de un grupo*: los superusuarios lo tienen; a los demás hay que concedérselo en Opciones → Permisos. Se aplica a una cuenta cada vez.
 
