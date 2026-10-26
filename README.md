@@ -6,7 +6,7 @@ La numeración sigue **año.mes.revisión**, sin cero inicial en el mes: 2026.10
 
 Requisitos: Joomla 6 y PHP 8.3 o posterior. Funciona con MySQL/MariaDB y PostgreSQL.
 
-¿Dudas concretas? Consulta las [preguntas frecuentes](FAQ.md).
+¿Dudas concretas? Consulta las [preguntas frecuentes](FAQ.md). Si vas a contribuir, o a trabajar con un agente de código, lee [AGENTS.md](AGENTS.md).
 
 ## Instalación y actualizaciones
 
