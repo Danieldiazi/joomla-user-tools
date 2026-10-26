@@ -4,7 +4,7 @@
 
 Dudas habituales sobre **Joomla User Tools**. Para la descripción completa de cada herramienta, consulta el [README](README.md).
 
-**Índice:** [General](#general) · [Comparación de listas](#comparación-de-listas) · [Altas y contraseñas](#altas-y-contraseñas) · [Inactividad y tarea programada](#inactividad-y-tarea-programada) · [Resultados e informes](#resultados-e-informes) · [Módulo de grupos en el sitio](#módulo-de-grupos-en-el-sitio) · [Instalación y actualización](#instalación-y-actualización)
+**Índice:** [General](#general) · [Comparación de listas](#comparación-de-listas) · [Altas y contraseñas](#altas-y-contraseñas) · [Inactividad y tarea programada](#inactividad-y-tarea-programada) · [Resultados e informes](#resultados-e-informes) · [Módulo de grupos en el sitio](#módulo-de-grupos-en-el-sitio) · [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso) · [Instalación y actualización](#instalación-y-actualización)
 
 ## General
 
@@ -183,6 +183,20 @@ Puede ser una cuenta bloqueada, que nunca se lista, o una cuenta con acceso a la
 ### ¿Expone datos personales?
 
 Muestra nombres o nombres de usuario, nunca correos. Decide quién lo ve con el campo **Acceso** del módulo (por ejemplo, *Registrado*) y mantén ocultas las cuentas con acceso a la administración salvo que tengas un motivo para mostrarlas.
+
+## Grupos y niveles de acceso
+
+### ¿Cómo veo qué niveles de acceso tiene cada grupo?
+
+Con **Grupos y niveles de acceso**, desde la 2026.10.8. Muestra una tabla con los grupos en filas y los niveles en columnas. Los detalles están en el [README](README.md#grupos-y-niveles-de-acceso).
+
+### ¿Por qué un grupo aparece con «Heredado» si no lo he asignado al nivel?
+
+Porque Joomla concede el nivel a todos los grupos que cuelgan de uno asignado. La celda indica de qué grupo padre viene. Para quitárselo hay que sacar del nivel a ese grupo padre o mover el grupo en el árbol; la pantalla de User Tools no cambia nada.
+
+### ¿Por qué no veo la pantalla?
+
+Requiere el permiso *Ver grupos y niveles de acceso*. Los superusuarios lo tienen; para los demás, concédelo en Componentes → User Tools → Opciones → Permisos.
 
 ## Instalación y actualización
 

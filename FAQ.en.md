@@ -4,7 +4,7 @@
 
 Common questions about **Joomla User Tools**. For a complete description of each tool, see the [README](README.en.md).
 
-**Contents:** [General](#general) · [List comparison](#list-comparison) · [Accounts and passwords](#accounts-and-passwords) · [Inactivity and scheduled tasks](#inactivity-and-scheduled-tasks) · [Results and reports](#results-and-reports) · [Groups module on the site](#groups-module-on-the-site) · [Installation and updates](#installation-and-updates)
+**Contents:** [General](#general) · [List comparison](#list-comparison) · [Accounts and passwords](#accounts-and-passwords) · [Inactivity and scheduled tasks](#inactivity-and-scheduled-tasks) · [Results and reports](#results-and-reports) · [Groups module on the site](#groups-module-on-the-site) · [Groups and access levels](#groups-and-access-levels) · [Installation and updates](#installation-and-updates)
 
 ## General
 
@@ -183,6 +183,20 @@ It may be a blocked account, which is never listed, or an account with administr
 ### Does it expose personal data?
 
 It shows names or usernames, never email addresses. Decide who sees it with the module's **Access** field (for example, *Registered*) and keep accounts with administrator access hidden unless you have a reason to show them.
+
+## Groups and access levels
+
+### How do I see which access levels each group has?
+
+With **Groups and access levels**, since 2026.10.8. It shows a table with groups as rows and levels as columns. Details are in the [README](README.en.md#groups-and-access-levels).
+
+### Why does a group show “Inherited” if I did not assign it to the level?
+
+Because Joomla grants the level to every group below an assigned one. The cell names the parent group it comes from. To remove it, take that parent group out of the level or move the group in the tree; the User Tools screen changes nothing.
+
+### Why can't I see the screen?
+
+It requires the *View groups and access levels* permission. Super Users have it; for others, grant it in Components → User Tools → Options → Permissions.
 
 ## Installation and updates
 

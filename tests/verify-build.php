@@ -58,7 +58,7 @@ $check(($assets['version'] ?? '') === $version, 'joomla.asset.json has the versi
 $comFiles = $names($com);
 foreach (['admin/access.xml', 'admin/config.xml', 'admin/services/provider.php', 'admin/language/es-ES/com_usertools.ini', 'admin/language/en-GB/com_usertools.ini',
     'admin/language/es-ES/com_usertools.sys.ini', 'admin/language/en-GB/com_usertools.sys.ini', 'admin/layouts/usertools/exclusions.php',
-    'admin/tmpl/compare/review.php', 'media/css/admin.css', 'media/js/admin.js'] as $file) {
+    'admin/tmpl/compare/review.php', 'admin/tmpl/access/default.php', 'media/css/admin.css', 'media/js/admin.js'] as $file) {
     $check(in_array($file, $comFiles, true), "component contains $file");
 }
 foreach ($comFiles as $file) {

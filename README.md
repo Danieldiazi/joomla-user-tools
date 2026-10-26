@@ -12,6 +12,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Tarea programada | Bloquea cuentas por inactividad; empieza en modo simulación y genera informes. |
 | Resumen en el panel | Muestra en el panel de Usuarios las cuentas pendientes, el estado de las tareas y avisos. Disponible desde 2026.10.6. |
 | Grupos de usuarios en el sitio | Módulo del sitio que lista los grupos de un usuario o los miembros de un grupo. Solo lee. Disponible desde 2026.10.7. |
+| Grupos y niveles de acceso | Tabla de solo lectura con los niveles de acceso que tiene cada grupo, asignados o heredados. Disponible desde 2026.10.8. |
 
 **Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
 
@@ -28,6 +29,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 - [Tarea programada e informes](#tarea-programada-por-inactividad)
 - [Resumen en el panel de Usuarios](#resumen-en-el-panel-de-usuarios)
 - [Módulo de grupos de usuarios en el sitio](#módulo-de-grupos-de-usuarios-en-el-sitio)
+- [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso)
 - [Seguridad](#seguridad)
 - [Opciones](#opciones)
 - [Capturas de las herramientas](#capturas-de-las-herramientas)
@@ -151,6 +153,22 @@ En los dos modos, *Mostrar si la lista está vacía* decide si el módulo se ve 
 
 La lista se obtiene con un número fijo de consultas, sea cual sea el tamaño del grupo. Las cuentas con acceso a la administración se deciden por grupo, con los permisos globales de Joomla, como en el resto de User Tools.
 
+## Grupos y niveles de acceso
+
+Desde la 2026.10.8, **Grupos y niveles de acceso** muestra en una sola tabla qué niveles de acceso de visualización tiene cada grupo de usuarios. Joomla solo enseña esta relación desde los niveles (Usuarios → Niveles de acceso, columna de grupos), sin la herencia y sin una vista por grupo. Esta pantalla solo lee: no cambia grupos, niveles ni cuentas.
+
+- **Filas**: los grupos, en su árbol, con el número de cuentas activas asignadas directamente (enlazado con el gestor de usuarios filtrado por ese grupo) y etiquetas para superusuarios, grupos con acceso a la administración y el grupo de invitados configurado en las Opciones de Usuarios.
+- **Columnas**: los niveles, en su orden. Cada celda dice si el grupo tiene el nivel:
+  - **Asignado**: el grupo está asignado al nivel.
+  - **Heredado**: lo está uno de sus grupos padre, que se indica. Joomla concede el nivel a todos los grupos que cuelgan de un grupo asignado; por ejemplo, «Editor» tiene el nivel *Registrado* porque cuelga de «Registrado».
+  - **Siempre**: el nivel *Público*, que Joomla concede a todos aunque nadie esté asignado.
+  - **—**: el grupo no tiene el nivel.
+- **Resumen por nivel**: grupos asignados, cuántos grupos tienen el nivel en total y cuántas cuentas están asignadas una a una. Un nivel sin grupos ni cuentas se marca «Sin grupos», porque no lo tiene nadie.
+
+![Grupos y niveles de acceso](docs/screenshots/14-grupos-niveles.jpg)
+
+Un cuadro de búsqueda filtra los grupos. Los títulos de grupos y niveles enlazan con su edición en Joomla para quien tiene el permiso de administrar Usuarios (el mismo que exige Joomla para esas pantallas), y las cifras de cuentas enlazan con el gestor de usuarios para quien puede gestionar usuarios. La pantalla requiere el permiso propio *Ver grupos y niveles de acceso*: los superusuarios lo tienen; a los demás hay que concedérselo en Opciones → Permisos.
+
 ## Seguridad
 
 - **Los superusuarios están siempre protegidos**, en todas las herramientas y aunque se desactive «Excluir administradores». User Tools no bloquea ni elimina cuentas de superusuario.
@@ -158,7 +176,7 @@ La lista se obtiene con un número fijo de consultas, sea cual sea el tamaño de
 - **Cada bloqueo cierra las sesiones abiertas** de la cuenta, como hace el gestor de usuarios de Joomla (requiere «Metadatos de sesión», activado por defecto).
 - **Las altas, los bloqueos y las eliminaciones quedan en el registro de acciones de usuarios** (Usuarios → Registro de acciones de usuarios): quién bloqueó, creó o eliminó cada cuenta y con qué herramienta, o qué tarea programada lo hizo.
 - **Permisos propios**, delegables sin dar superusuario (Opciones → Permisos):
-  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos*, *Eliminar usuarios inactivos* y *Ver resultados de tareas*.
+  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos*, *Eliminar usuarios inactivos*, *Ver resultados de tareas* y *Ver grupos y niveles de acceso*.
   - Quien no es superusuario nunca puede bloquear ni eliminar cuentas con acceso a la administración.
 - **Confirmación reforzada configurable**: a partir de N cuentas (10 por defecto) hay que escribir el número exacto de cuentas afectadas, además de marcar la casilla.
 - **El borrado exige siempre escribir el número de cuentas**, aunque solo se elimine una; el umbral configurable no desactiva esta confirmación.

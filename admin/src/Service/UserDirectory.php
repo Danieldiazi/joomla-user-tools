@@ -133,6 +133,46 @@ final class UserDirectory
         return $users;
     }
 
+    /**
+     * Viewing access levels in their configured order.
+     *
+     * @return list<array{id: int, title: string, rules: list<int>}>
+     */
+    public function viewLevels(): array
+    {
+        $db     = $this->db;
+        $query  = $db->createQuery()
+            ->select($db->quoteName(['id', 'title', 'rules']))
+            ->from($db->quoteName('#__viewlevels'))
+            ->order([$db->quoteName('ordering'), $db->quoteName('title')]);
+        $levels = [];
+        foreach ($db->setQuery($query)->loadObjectList() as $row) {
+            $levels[] = ['id' => (int) $row->id, 'title' => (string) $row->title, 'rules' => AccessMatrix::rules($row->rules)];
+        }
+        return $levels;
+    }
+
+    /**
+     * Accounts that are not blocked, per group they are directly assigned to.
+     *
+     * @return array<int, int>
+     */
+    public function activeMembersPerGroup(): array
+    {
+        $db    = $this->db;
+        $query = $db->createQuery()
+            ->select([$db->quoteName('m.group_id'), 'COUNT(*) AS ' . $db->quoteName('total')])
+            ->from($db->quoteName('#__user_usergroup_map', 'm'))
+            ->join('INNER', $db->quoteName('#__users', 'u'), $db->quoteName('u.id') . ' = ' . $db->quoteName('m.user_id'))
+            ->where($db->quoteName('u.block') . ' = 0')
+            ->group($db->quoteName('m.group_id'));
+        $counts = [];
+        foreach ($db->setQuery($query)->loadObjectList() as $row) {
+            $counts[(int) $row->group_id] = (int) $row->total;
+        }
+        return $counts;
+    }
+
     /** Number of accounts that are not blocked. */
     public function activeCount(): int
     {

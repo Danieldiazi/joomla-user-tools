@@ -12,6 +12,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Scheduled task | Blocks accounts for inactivity; starts in dry-run mode and generates reports. |
 | Dashboard summary | Shows pending accounts, task status and notices on the Users dashboard. Available since 2026.10.6. |
 | User groups on the site | Site module that lists the groups of a user or the members of a group. Read only. Available since 2026.10.7. |
+| Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.8. |
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
 
@@ -28,6 +29,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 - [Scheduled inactivity task and reports](#scheduled-inactivity-task)
 - [Users dashboard summary](#users-dashboard-summary)
 - [User groups module on the site](#user-groups-module-on-the-site)
+- [Groups and access levels](#groups-and-access-levels)
 - [Security](#security)
 - [Options](#options)
 - [Tool screenshots](#tool-screenshots)
@@ -153,6 +155,22 @@ In both modes, *Show when the list is empty* decides whether the module appears 
 
 The list is read with a fixed number of queries, whatever the size of the group. Accounts with administrator access are decided per group, with Joomla's global permissions, as in the rest of User Tools.
 
+## Groups and access levels
+
+Since 2026.10.8, **Groups and access levels** shows in a single table which viewing access levels each user group has. Joomla only shows this relation from the levels side (Users → Access Levels, groups column), without inheritance and without a per-group view. This screen is read only: it never changes groups, levels or accounts.
+
+- **Rows**: the groups, in their tree, with the number of active accounts assigned directly (linked to the user manager filtered by that group) and labels for Super Users, groups with administrator access and the guest group set in the Users Options.
+- **Columns**: the levels, in their order. Each cell says whether the group has the level:
+  - **Assigned**: the group is assigned to the level.
+  - **Inherited**: one of its parent groups is, and it is named. Joomla grants the level to every group below an assigned group; for example, “Editor” has the *Registered* level because it sits below “Registered”.
+  - **Always**: the *Public* level, which Joomla grants to everyone even when nobody is assigned.
+  - **—**: the group does not have the level.
+- **Summary by level**: assigned groups, how many groups have the level in total and how many accounts are assigned individually. A level with no groups or accounts is marked “No groups”, because nobody has it.
+
+![Groups and access levels (Spanish interface)](docs/screenshots/14-grupos-niveles.jpg)
+
+A search box filters the groups. Group and level titles link to their edit screens in Joomla for users with the Admin permission on Users (the same one Joomla requires for those screens), and account counts link to the user manager for users who can manage users. The screen requires its own permission, *View groups and access levels*: Super Users have it; grant it to others in Options → Permissions.
+
 ## Security
 
 - **Super Users are always protected**, in every tool, even when “Exclude administrators” is disabled. User Tools does not block or delete Super User accounts.
@@ -160,7 +178,7 @@ The list is read with a fixed number of queries, whatever the size of the group.
 - **Each block closes the account's open sessions**, as Joomla's user manager does (requires “Session Metadata”, enabled by default).
 - **Creations, blocks and deletions are written to the User Actions Log** (Users → User Actions Log): who changed each account and which tool or scheduled task performed it.
 - **Separate permissions**, delegable without granting Super User access (Options → Permissions):
-  - *Compare list and block*, *Create accounts*, *Review inactive users*, *Delete inactive users* and *View task results*.
+  - *Compare list and block*, *Create accounts*, *Review inactive users*, *Delete inactive users*, *View task results* and *View groups and access levels*.
   - Non-Super Users can never block or delete accounts with administrator access.
 - **Configurable reinforced confirmation**: from N accounts (10 by default), the exact number must be typed in addition to ticking the box.
 - **Deletion always requires typing the number of accounts**, even for one; the configurable threshold does not disable this confirmation.

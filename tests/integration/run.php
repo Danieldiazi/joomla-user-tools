@@ -505,5 +505,41 @@ Test::check($block('UT groups mine') === null, 'guests do not see a list of thei
 $editor = (string) $block('UT groups editor');
 Test::check(str_contains($editor, 'Editor') && str_contains($editor, 'class="text-body-secondary">Author') && !str_contains($editor, '>Public<'), 'a chosen user shows inherited groups dimmed, without hidden ones');
 
+Test::section('Groups and access levels');
+$site->q("DELETE FROM #__viewlevels WHERE title LIKE 'UT level%'");
+$registeredId = (int) $site->q("SELECT id FROM #__usergroups WHERE title = 'Registered'")[0]['id'];
+$editorId     = (int) $site->q("SELECT id FROM #__usergroups WHERE title = 'Editor'")[0]['id'];
+$site->q("INSERT INTO #__viewlevels (title, ordering, rules) VALUES ('UT level empty', 90, '[]')");
+$site->q('INSERT INTO #__viewlevels (title, ordering, rules) VALUES (?, 91, ?)', ['UT level authors', json_encode([$author, -$site->userId('gm_mgr')])]);
+$accessPage = $admin->get('index.php?option=com_usertools&view=access');
+$row = function (string $html, string $attribute, int $id): string {
+    $start = strpos($html, $attribute . '="' . $id . '"');
+    return $start === false ? '' : substr($html, $start, (int) strpos($html, '</tr>', $start) - $start);
+};
+$editorRow = $row($accessPage, 'data-ut-group', $editorId);
+Test::check(substr_count($editorRow, 'data-ut-cell="inherited"') >= 2 && str_contains($editorRow, 'from «Author»'), 'Editor inherits Special and the new level from its parent Author');
+Test::check(str_contains($row($accessPage, 'data-ut-group', $registeredId), 'data-ut-cell="direct"'), 'Registered is assigned directly to the Registered level');
+Test::check(str_contains($row($accessPage, 'data-ut-group', $guest), 'Guests'), 'the guest group is marked');
+$emptyLevel   = (int) $site->q("SELECT id FROM #__viewlevels WHERE title = 'UT level empty'")[0]['id'];
+$authorsLevel = (int) $site->q("SELECT id FROM #__viewlevels WHERE title = 'UT level authors'")[0]['id'];
+Test::check(str_contains($row($accessPage, 'data-ut-level', $emptyLevel), 'No groups'), 'a level with no groups or accounts is flagged');
+$authorsRow = $row($accessPage, 'data-ut-level', $authorsLevel);
+Test::check(str_contains($authorsRow, '>1</td>') && !str_contains($authorsRow, 'No groups'), 'accounts assigned individually are counted');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
+[$code] = $delegate->request('index.php?option=com_usertools&view=access');
+Test::check($code === 403 && !str_contains($delegate->get('index.php?option=com_usertools'), 'view=access'), 'the view needs its own permission (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.access' => ['6' => 1]])]);
+// The delegate may manage users (user list) but is not Admin of Users (groups and levels screens).
+$usersRules = (string) $site->q("SELECT rules FROM #__assets WHERE name = 'com_users'")[0]['rules'];
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_users'", [json_encode((json_decode($usersRules, true) ?: []) + ['core.manage' => ['6' => 1]])]);
+$delegateAccess = $delegate->get('index.php?option=com_usertools&view=access');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_users'", [$usersRules]);
+Test::check(str_contains($delegateAccess, 'id="ut-access-table"'), 'a delegate with the permission can open it');
+Test::check(!str_contains($delegateAccess, 'task=group.edit') && !str_contains($delegateAccess, 'task=level.edit') && str_contains($delegateAccess, 'filter[group_id]='),
+    'without core.admin on Users, group and level titles are not links (Joomla would refuse them); member counts still link');
+Test::check(str_contains($accessPage, 'task=group.edit') && str_contains($accessPage, 'task=level.edit'), 'a Super User gets the edit links');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+$site->q("DELETE FROM #__viewlevels WHERE title LIKE 'UT level%'");
+
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);
