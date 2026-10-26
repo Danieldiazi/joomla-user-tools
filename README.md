@@ -11,9 +11,9 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Eliminar usuarios inactivos | Permite seleccionar y borrar definitivamente cuentas inactivas. Por defecto lista solo las ya bloqueadas. Disponible desde 2026.10.5. |
 | Tarea programada | Bloquea cuentas por inactividad; empieza en modo simulación y genera informes. |
 | Resumen en el panel | Muestra en el panel de Usuarios las cuentas pendientes, el estado de las tareas y avisos. Disponible desde 2026.10.6. |
-| Grupos de usuarios en el sitio | Módulo del sitio que lista los grupos de un usuario o los miembros de un grupo. Solo lee. Disponible desde 2026.10.7. |
-| Quitar de grupos | Elige una cuenta, desmarca los grupos de los que debe salir y, si quieres, quítala también de todos sus subgrupos. Con revisión previa y confirmación. Disponible desde 2026.10.8. |
-| Grupos y niveles de acceso | Tabla de solo lectura con los niveles de acceso que tiene cada grupo, asignados o heredados. Disponible desde 2026.10.8. |
+| Grupos de usuarios en el sitio | Módulo del sitio que lista los grupos de un usuario o los miembros de un grupo. Solo lee. Disponible desde 2026.10.9. |
+| Quitar de grupos | Elige una cuenta, desmarca los grupos de los que debe salir y, si quieres, quítala también de todos sus subgrupos. Con revisión previa y confirmación. Disponible desde 2026.10.9. |
+| Grupos y niveles de acceso | Tabla de solo lectura con los niveles de acceso que tiene cada grupo, asignados o heredados. Disponible desde 2026.10.9. |
 
 **Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
 
@@ -135,7 +135,7 @@ El módulo respeta los permisos: solo lo ve quien puede acceder a User Tools, la
 
 ## Módulo de grupos de usuarios en el sitio
 
-Desde la 2026.10.7, el paquete incluye el módulo del sitio **«User Tools - Grupos de usuarios»**. Joomla no trae ningún módulo que muestre en el sitio a qué grupos pertenece alguien ni quién está en un grupo; este lo hace en dos modos. El instalador no lo publica: créalo en Contenido → Módulos del sitio → Nuevo.
+Desde la 2026.10.9, el paquete incluye el módulo del sitio **«User Tools - Grupos de usuarios»**. Joomla no trae ningún módulo que muestre en el sitio a qué grupos pertenece alguien ni quién está en un grupo; este lo hace en dos modos. El instalador no lo publica: créalo en Contenido → Módulos del sitio → Nuevo.
 
 **Grupos de un usuario.** Muestra los grupos del *visitante identificado* (cada persona ve los suyos; a los invitados no se les muestra nada) o de *un usuario concreto* elegido en la configuración. Opciones:
 
@@ -157,7 +157,7 @@ La lista se obtiene con un número fijo de consultas, sea cual sea el tamaño de
 
 ## Quitar de grupos
 
-Desde la 2026.10.8, **Quitar de grupos** saca una cuenta de los grupos que elijas y, si lo pides, también de todos los grupos que cuelgan de ellos: hijos, nietos y siguientes. El lote de Joomla («Quitar del grupo» en Usuarios) solo quita del grupo exacto que eliges y no enseña antes los grupos de la cuenta.
+Desde la 2026.10.9, **Quitar de grupos** saca una cuenta de los grupos que elijas y, si lo pides, también de todos los grupos que cuelgan de ellos: hijos, nietos y siguientes. El lote de Joomla («Quitar del grupo» en Usuarios) solo quita del grupo exacto que eliges y no enseña antes los grupos de la cuenta.
 
 1. **Cuenta**: escribe parte del usuario, el nombre o el correo y elige la cuenta en la lista que aparece mientras escribes. También vale el usuario o el correo completos, sin distinguir mayúsculas.
 2. **Grupos**: aparecen solo los grupos a los que pertenece la cuenta, todos marcados y en su árbol. Desmarca los que debe dejar. Con **«Quitar también de los subgrupos (recursivo)»**, al desmarcar un grupo se desmarcan solos los que cuelgan de él y se indica por qué; si lo vuelves a marcar, recuperan su estado. Los grupos padre no se tocan nunca.
@@ -184,7 +184,7 @@ Requiere el permiso propio *Quitar de grupos*: los superusuarios lo tienen; a lo
 
 ## Grupos y niveles de acceso
 
-Desde la 2026.10.8, **Grupos y niveles de acceso** muestra en una sola tabla qué niveles de acceso de visualización tiene cada grupo de usuarios. Joomla solo enseña esta relación desde los niveles (Usuarios → Niveles de acceso, columna de grupos), sin la herencia y sin una vista por grupo. Esta pantalla solo lee: no cambia grupos, niveles ni cuentas.
+Desde la 2026.10.9, **Grupos y niveles de acceso** muestra en una sola tabla qué niveles de acceso de visualización tiene cada grupo de usuarios. Joomla solo enseña esta relación desde los niveles (Usuarios → Niveles de acceso, columna de grupos), sin la herencia y sin una vista por grupo. Esta pantalla solo lee: no cambia grupos, niveles ni cuentas.
 
 - **Filas**: los grupos, en su árbol, con el número de cuentas activas asignadas directamente (enlazado con el gestor de usuarios filtrado por ese grupo) y etiquetas para superusuarios, grupos con acceso a la administración y el grupo de invitados configurado en las Opciones de Usuarios.
 - **Columnas**: los niveles, en su orden. Cada celda dice si el grupo tiene el nivel:

@@ -4,9 +4,9 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Las de eliminación se incorporaron con 2026.10.5 la del panel de Usuarios con 2026.10.6 y la portada, la de grupos y niveles de acceso y las de quitar de grupos con 2026.10.8; las demás corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Las de eliminación se incorporaron con 2026.10.5, la del panel de Usuarios con 2026.10.6, y la portada, la de grupos y niveles de acceso y las de quitar de grupos con 2026.10.9; las demás corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
-![Portada de User Tools (2026.10.8)](screenshots/01-portada.jpg)
+![Portada de User Tools (2026.10.9)](screenshots/01-portada.jpg)
 
 ![Comparación: lista y exclusiones](screenshots/02-comparacion-lista.jpg)
 
@@ -24,11 +24,11 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Las
 
 ![Eliminar inactivos: selección de cuentas y confirmación](screenshots/12-eliminar-seleccion.jpg)
 
-![Quitar de grupos: elegir la cuenta (2026.10.8)](screenshots/15-quitar-grupos-cuenta.jpg)
+![Quitar de grupos: elegir la cuenta (2026.10.9)](screenshots/15-quitar-grupos-cuenta.jpg)
 
-![Quitar de grupos: grupos de la cuenta en su árbol, con la opción recursiva (2026.10.8)](screenshots/16-quitar-grupos-seleccion.jpg)
+![Quitar de grupos: grupos de la cuenta en su árbol, con la opción recursiva (2026.10.9)](screenshots/16-quitar-grupos-seleccion.jpg)
 
-![Quitar de grupos: revisión, con el grupo que provoca cada baja en cascada (2026.10.8)](screenshots/17-quitar-grupos-revision.jpg)
+![Quitar de grupos: revisión, con el grupo que provoca cada baja en cascada (2026.10.9)](screenshots/17-quitar-grupos-revision.jpg)
 
 ![Configuración de una tarea programada](screenshots/08-tarea-programada.jpg)
 
@@ -38,4 +38,4 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Las
 
 ![Módulo User Tools en el panel de Usuarios (2026.10.6)](screenshots/13-panel-usuarios.jpg)
 
-![Grupos y niveles de acceso: matriz de grupos por nivel y resumen por nivel (2026.10.8)](screenshots/14-grupos-niveles.jpg)
+![Grupos y niveles de acceso: matriz de grupos por nivel y resumen por nivel (2026.10.9)](screenshots/14-grupos-niveles.jpg)

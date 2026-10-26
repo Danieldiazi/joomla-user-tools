@@ -170,7 +170,7 @@ The run was interrupted. Reports are saved at the start, every 50 users and at t
 
 ### How do I show on the site the groups of a user or the members of a group?
 
-With the “User Tools - User Groups” module, included since 2026.10.7. The installer does not publish it: create it in Content → Site Modules → New and choose *Groups of a user* or *Members of a group* in “What to show”. Details are in the [README](README.en.md#user-groups-module-on-the-site).
+With the “User Tools - User Groups” module, included since 2026.10.9. The installer does not publish it: create it in Content → Site Modules → New and choose *Groups of a user* or *Members of a group* in “What to show”. Details are in the [README](README.en.md#user-groups-module-on-the-site).
 
 ### Why don't guests see the module?
 
@@ -210,7 +210,7 @@ No: the tool works with one account at a time, so every permission change is rev
 
 ### How do I see which access levels each group has?
 
-With **Groups and access levels**, since 2026.10.8. It shows a table with groups as rows and levels as columns. Details are in the [README](README.en.md#groups-and-access-levels).
+With **Groups and access levels**, since 2026.10.9. It shows a table with groups as rows and levels as columns. Details are in the [README](README.en.md#groups-and-access-levels).
 
 ### Why does a group show “Inherited” if I did not assign it to the level?
 
