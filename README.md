@@ -26,6 +26,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 - [Opciones](#opciones)
 - [Capturas de las herramientas](#capturas-de-las-herramientas)
 - [Desarrollo](#desarrollo)
+- [Mapa de arquitectura](docs/arquitectura.md)
 - [Construcción y publicación](#construcción-y-publicación)
 
 ¿Dudas concretas? Consulta las [preguntas frecuentes](FAQ.md). Si vas a contribuir, o a trabajar con un agente de código, lee [AGENTS.md](AGENTS.md).
@@ -146,6 +147,8 @@ Estas dos capturas se incorporaron con la herramienta de eliminación en 2026.10
 Consulta la [galería completa](docs/capturas.md) para recorrer las demás herramientas; incluye capturas de versiones anteriores.
 
 ## Desarrollo
+
+Consulta el [mapa de arquitectura](docs/arquitectura.md) para seguir los flujos, localizar responsabilidades, entender la persistencia y elegir las pruebas relacionadas con cada cambio.
 
 Estructura:
 
