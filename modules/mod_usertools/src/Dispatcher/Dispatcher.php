@@ -1,0 +1,42 @@
+<?php
+
+namespace Danieldiazi\Module\Usertools\Administrator\Dispatcher;
+
+\defined('_JEXEC') or die;
+
+use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
+use Joomla\CMS\Component\ComponentHelper;
+use Joomla\CMS\Dispatcher\AbstractModuleDispatcher;
+
+/**
+ * Dashboard summary of User Tools. It is shown only to users who can manage the component, and each
+ * figure only to users allowed to use the matching tool.
+ */
+class Dispatcher extends AbstractModuleDispatcher
+{
+    public function dispatch()
+    {
+        $app  = $this->getApplication();
+        $user = $app->getIdentity();
+        if (!$user || !ComponentHelper::isEnabled('com_usertools') || !$user->authorise('core.manage', 'com_usertools')) {
+            return;
+        }
+        // Registers the component namespace so its services can be used here.
+        $app->bootComponent('com_usertools');
+        parent::dispatch();
+    }
+
+    /** @return array<string, mixed> */
+    protected function getLayoutData()
+    {
+        $data = parent::getLayoutData();
+        $user = $this->getApplication()->getIdentity();
+        try {
+            $data['summary'] = Toolkit::dashboard($user);
+        } catch (\Throwable) {
+            $data['summary'] = null;
+        }
+        $data['canDelete'] = $user->authorise('usertools.delete', 'com_usertools');
+        return $data;
+    }
+}

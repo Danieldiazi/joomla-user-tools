@@ -32,6 +32,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service {
         public static function directory() { return self::$directory; }
         public static function settings() { return self::$options; }
         public static function settingsStore() { return self::$store; }
+        public static function clearDashboardCache(): void {}
         public static function blocker() {
             return new class {
                 public function block($id, ...$args) {

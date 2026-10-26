@@ -32,6 +32,8 @@ final class SettingsStore
         if (!$table->check() || !$table->store()) {
             throw new \RuntimeException('Cannot save the component options.');
         }
+        // The dashboard figures depend on these options.
+        Toolkit::clearDashboardCache();
         // Keep the cached options of this request in sync.
         foreach ($values as $key => $value) {
             $component->getParams()->set($key, $value);

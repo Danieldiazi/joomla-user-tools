@@ -14,6 +14,7 @@
         "psr-4": {
             "Danieldiazi\\Component\\Usertools\\Administrator\\": "admin/src/",
             "Danieldiazi\\Plugin\\Task\\Usertools\\": "plugins/task/usertools/src/",
+            "Danieldiazi\\Module\\Usertools\\Administrator\\": "modules/mod_usertools/src/",
             "Danieldiazi\\Tests\\": "tests/Unit/"
         }
     },

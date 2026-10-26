@@ -5,6 +5,8 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service;
 \defined('_JEXEC') or die;
 
 use Joomla\CMS\Application\CMSApplication;
+use Joomla\CMS\Cache\CacheControllerFactoryInterface;
+use Joomla\CMS\Cache\Controller\OutputController;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\User\UserFactoryInterface;
@@ -73,6 +75,86 @@ final class Toolkit
     public static function sessionWindow(): int
     {
         return max(1, (int) Factory::getApplication()->get('lifetime', 15)) * 60;
+    }
+
+    /** Cache group of the dashboard module. */
+    public const DASHBOARD_CACHE = 'mod_usertools';
+
+    /** Minutes the dashboard figures are kept when nothing changes. */
+    public const DASHBOARD_MINUTES = 10;
+
+    /**
+     * Dashboard figures for one user, cached for a few minutes. Each part is only computed when the
+     * user may use the matching tool.
+     *
+     * @return array{inactive: ?int, pendingDeletion: ?int, tasks: ?list<array<string, mixed>>, alerts: list<array<string, mixed>>, generated: string}
+     */
+    public static function dashboard(\Joomla\CMS\User\User $user): array
+    {
+        $can = [
+            'inactive' => $user->authorise('usertools.inactive', 'com_usertools'),
+            'delete'   => $user->authorise('usertools.delete', 'com_usertools'),
+            'reports'  => $user->authorise('usertools.reports', 'com_usertools'),
+        ];
+        $key   = 'dashboard-' . (int) $user->id . '-' . implode('', array_map('intval', $can));
+        $cache = self::dashboardCache();
+        $json  = $cache->get($key);
+        if (\is_string($json) && \is_array($data = json_decode($json, true))) {
+            return $data;
+        }
+        $now  = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
+        $data = ['inactive' => null, 'pendingDeletion' => null, 'tasks' => null, 'alerts' => [], 'generated' => $now->format('Y-m-d H:i:s')];
+        if ($can['inactive'] || $can['delete']) {
+            $directory = self::directory();
+            $counts    = DashboardSummary::counts($directory->users(), self::settings(), Operator::fromUser($user),
+                fn (array $ids) => $directory->withRecentSession($ids, time() - self::sessionWindow()), $now);
+            $data['inactive']        = $can['inactive'] ? $counts['inactive'] : null;
+            $data['pendingDeletion'] = $can['delete'] ? $counts['pendingDeletion'] : null;
+        }
+        $pluginState = self::pluginState();
+        if ($can['reports']) {
+            $db    = self::db();
+            $query = $db->createQuery()
+                ->select($db->quoteName(['id', 'title', 'state', 'last_execution', 'next_execution', 'last_exit_code', 'params', 'created']))
+                ->from($db->quoteName('#__scheduler_tasks'))
+                ->where($db->quoteName('type') . ' = ' . $db->quote('usertools.block_inactive'))
+                ->where($db->quoteName('state') . ' IN (0, 1)')
+                ->order($db->quoteName('id'));
+            $rows = $db->setQuery($query)->loadAssocList();
+            try {
+                $latest = self::reports()->latestByTask(array_map(fn ($r) => (int) $r['id'], $rows));
+            } catch (\Throwable) {
+                $latest = [];
+            }
+            $data['tasks']  = DashboardSummary::tasks($rows, $latest);
+            $data['alerts'] = DashboardSummary::alerts($pluginState, $data['tasks'], $now);
+        } elseif ($pluginState !== 'enabled') {
+            $data['alerts'] = DashboardSummary::alerts($pluginState, [], $now);
+        }
+        $cache->store((string) json_encode($data), $key);
+        return $data;
+    }
+
+    /** Called after any change to accounts or tasks, so the dashboard never shows stale figures. */
+    public static function clearDashboardCache(): void
+    {
+        try {
+            self::dashboardCache()->cache->clean(self::DASHBOARD_CACHE);
+        } catch (\Throwable) {
+        }
+    }
+
+    private static function dashboardCache(): OutputController
+    {
+        /** @var OutputController $controller */
+        $controller = Factory::getContainer()->get(CacheControllerFactoryInterface::class)->createCacheController('output', [
+            'defaultgroup' => self::DASHBOARD_CACHE,
+            // Same folder for the administrator, the site (lazy scheduler) and the CLI.
+            'cachebase'    => JPATH_ADMINISTRATOR . '/cache',
+            'caching'      => true,
+            'lifetime'     => self::DASHBOARD_MINUTES,
+        ]);
+        return $controller;
     }
 
     /** Status of the task plugin for the home and schedule screens. */

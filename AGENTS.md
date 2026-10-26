@@ -11,7 +11,9 @@ User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y Postgre
 - **Eliminar usuarios inactivos**: borra las cuentas seleccionadas.
 - **Tarea programada**: bloquea por inactividad.
 
-Se distribuye como un paquete con el componente `com_usertools` y el plugin `plg_task_usertools`.
+Además, un módulo de administración resume en el panel de Usuarios las cuentas pendientes, el estado de las tareas y los avisos.
+
+Se distribuye como un paquete con el componente `com_usertools`, el plugin `plg_task_usertools` y el módulo de administración `mod_usertools`.
 
 ## Estructura
 
@@ -25,7 +27,8 @@ Se distribuye como un paquete con el componente `com_usertools` y el plugin `plg
 | `admin/language/{es-ES,en-GB}/` | Idiomas del componente. |
 | `media/` | CSS y JS, registrados en `joomla.asset.json`. |
 | `plugins/task/usertools/` | Plugin de tarea programada. |
-| `package/` | Manifiesto del paquete, `script.php` de instalación (comprobaciones, migración de opciones, registro de acciones, plantilla de correo) e idiomas. |
+| `modules/mod_usertools/` | Módulo del panel de Usuarios. Solo presenta datos: las cifras y avisos los calculan `DashboardSummary` y `Toolkit::dashboard()`, con caché que se limpia con `Toolkit::clearDashboardCache()` cuando cambian cuentas u Opciones. |
+| `package/` | Manifiesto del paquete, `script.php` de instalación (comprobaciones, migración de opciones, registro de acciones, plantilla de correo, colocación inicial del módulo) e idiomas. |
 | `scripts/build.php` | Construye los ZIP, `SHA256SUMS.txt` y `updates.xml`. |
 | `tests/` | `Unit/` (PHPUnit), `regression/` (controladores y modelos con sustitutos de Joomla), `js/` (jsdom), `integration/` (Joomla real), `verify-build.php`. |
 
@@ -49,19 +52,21 @@ Si una petición choca con alguna de estas reglas, se señala el conflicto antes
 ## Convenciones
 
 - **Idioma**: el código, los comentarios, los mensajes de commit y los nombres en inglés. La documentación de usuario (README, FAQ) y los textos de la interfaz en español, con su traducción al inglés.
-- **Textos de la interfaz**: siempre con claves de idioma (`COM_USERTOOLS_…`, `PLG_TASK_USERTOOLS_…`), nunca escritos en el código. Cada clave existe **en es-ES y en-GB a la vez**, sin duplicados. Los servicios lanzan `UserFacingException` con una clave y sus argumentos, y la traducción se hace en controladores y vistas.
+- **Textos de la interfaz**: siempre con claves de idioma (`COM_USERTOOLS_…`, `PLG_TASK_USERTOOLS_…`, `MOD_USERTOOLS_…`), nunca escritos en el código. Cada clave existe **en es-ES y en-GB a la vez**, sin duplicados. Los servicios lanzan `UserFacingException` con una clave y sus argumentos, y la traducción se hace en controladores y vistas.
 - **Salida HTML**: todo valor variable se escapa (`$this->escape()` en las plantillas).
 - **Estilos**: clases de Bootstrap y Atum (`card`, `alert`, `btn`, `table`) y variables CSS de la plantilla, sin colores fijos, para que el modo oscuro funcione. El CSS propio es solo de maquetación.
 - **Base de datos**: consultas con el query builder de Joomla y parámetros enlazados, compatibles con MySQL y PostgreSQL. Nada de consultas por cuenta dentro de bucles grandes: se usa `UserDirectory`.
 - **Exclusiones**: cada herramienta tiene las suyas, guardadas en Opciones con su prefijo (`compare_`, `inactive_`, `delete_`). Cada tarea programada guarda las suyas en sus parámetros.
+- **Panel**: todo lo que cambie cuentas u Opciones llama a `Toolkit::clearDashboardCache()`. Las cifras del módulo deben usar las mismas reglas que la herramienta a la que enlazan.
 - **Herramienta nueva**: añade su permiso en `access.xml`, la vista en `DisplayController::PERMISSIONS`, su pestaña en `config.xml`, la tarjeta en la portada, el controlador en `tests/regression/mvc.php`, una sección en `tests/integration/run.php` y la documentación en README y FAQ.
 
 ## Versiones
 
 - La numeración es **año.mes.revisión**, sin cero inicial en el mes: 2026.10.5; el mes siguiente empieza en 2026.11.0.
-- Cada versión nueva cambia el número en **cuatro sitios**:
+- Cada versión nueva cambia el número en **cinco sitios**:
   - `com_usertools.xml`
   - `plugins/task/usertools/usertools.xml`
+  - `modules/mod_usertools/mod_usertools.xml`
   - `package/pkg_usertools.xml`
   - `media/joomla.asset.json`
 - No se reutiliza un número que ya tenga release.

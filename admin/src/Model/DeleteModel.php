@@ -152,6 +152,7 @@ class DeleteModel extends BaseDatabaseModel
         }
         $result['skipped'] = \count($selected) - \count($result['deleted']) - \count($result['errors']);
         $this->storeResult(self::RESULT, $result);
+        Toolkit::clearDashboardCache();
         return $result;
     }
 

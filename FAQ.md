@@ -144,6 +144,22 @@ En la subcarpeta `usertools-reports` del directorio de registros de Joomla, prot
 
 Los resultados se registran desde la versión que añadió esta funcionalidad; las ejecuciones anteriores no se importan. Para esas, consulta **Sistema → Tareas programadas → Historial de ejecución** o el registro individual de la tarea, si lo tenías activado.
 
+### ¿Hay un resumen sin entrar en el componente?
+
+Sí, desde la 2026.10.6. El panel **Usuarios** de la administración muestra el módulo «User Tools» con las cuentas inactivas sin bloquear, las bloqueadas pendientes de eliminar, el estado de las tareas programadas y avisos (plugin deshabilitado, tarea detenida por seguridad o fallida, tarea en simulación más de 14 días…). Cada cifra y aviso enlaza con la herramienta o el informe correspondiente.
+
+### ¿Cada cuánto se actualiza el resumen del panel?
+
+Se guarda en caché un máximo de 10 minutos. Se recalcula antes si una herramienta o una tarea cambia cuentas, o si guardas las Opciones. La hora de los datos aparece al pie del módulo.
+
+### ¿Cómo muevo o quito el módulo del panel?
+
+En **Contenido → Módulos del sitio de administración**, busca «User Tools». Puedes cambiar su posición (por ejemplo, al panel principal), su título o despublicarlo. Al actualizar el paquete no se vuelve a colocar.
+
+### ¿Por qué un usuario ve el módulo sin cifras?
+
+El módulo solo muestra lo que su permiso permite: las cifras requieren *Revisar usuarios inactivos* o *Eliminar usuarios inactivos*, y las tareas, *Ver resultados de tareas*. Quien no puede acceder a User Tools no ve el módulo.
+
 ### Un informe aparece «sin finalizar»
 
 La ejecución se interrumpió a mitad. El informe se guarda al empezar, cada 50 usuarios y al terminar, así que refleja lo que se llegó a procesar; los bloqueos ya aplicados permanecen.
@@ -156,7 +172,7 @@ Joomla 6. Las capturas de la documentación se han tomado en Joomla 6.2.0.
 
 ### ¿Qué fichero instalo?
 
-**pkg_usertools-VERSIÓN.zip** de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest). Instala o actualiza el componente y el plugin a la vez. Los ZIP sueltos `com_usertools` y `plg_task_usertools` son para instalaciones separadas; deben corresponder a la misma versión del componente y del plugin.
+**pkg_usertools-VERSIÓN.zip** de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest). Instala o actualiza el componente, el plugin y el módulo del panel a la vez. Los ZIP sueltos `com_usertools`, `plg_task_usertools` y `mod_usertools` son para instalaciones separadas; deben corresponder a la misma versión.
 
 ### ¿Cómo actualizo sin perder la configuración?
 

@@ -5,6 +5,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\View\Delete;
 \defined('_JEXEC') or die;
 
 use Danieldiazi\Component\Usertools\Administrator\Model\DeleteModel;
+use Danieldiazi\Component\Usertools\Administrator\Service\Settings;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Danieldiazi\Component\Usertools\Administrator\View\ViewTrait;
@@ -29,6 +30,11 @@ class HtmlView extends BaseHtmlView
         /** @var DeleteModel $model */
         $model        = $this->getModel();
         $this->draft  = $model->getDraft();
+        // Links such as the dashboard's "pending deletion" preselect the account filter.
+        $status = Toolkit::app()->getInput()->getCmd('status', '');
+        if (\in_array($status, Settings::STATUSES, true)) {
+            $this->draft['status'] = $status;
+        }
         $this->groups = $model->getGroups();
         $layout       = $this->getLayout();
         if ($layout === 'review') {
