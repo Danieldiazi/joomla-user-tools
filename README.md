@@ -26,6 +26,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 - [Opciones](#opciones)
 - [Capturas de las herramientas](#capturas-de-las-herramientas)
 - [Desarrollo](#desarrollo)
+- [Mapa de arquitectura](docs/arquitectura.md)
 - [Construcción y publicación](#construcción-y-publicación)
 
 ¿Dudas concretas? Consulta las [preguntas frecuentes](FAQ.md).
