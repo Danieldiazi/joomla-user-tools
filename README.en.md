@@ -162,11 +162,11 @@ The list is read with a fixed number of queries, whatever the size of the group.
 Since 2026.10.9, **Remove from groups** takes an account out of the groups you choose and, if you ask, also out of every group below them: children, grandchildren and so on. Joomla's batch (“Remove from group” in Users) only removes the exact group you choose and does not show the account's groups first.
 
 1. **Account**: type part of the username, name or email and pick the account from the list that appears while you type. The full username or email also works, not case-sensitive.
-2. **Groups**: only the groups the account belongs to are shown, all ticked and in their tree. Untick those it should leave. With **“Also remove from subgroups (recursive)”**, unticking a group unticks the groups below it and says why; tick it again and they get their state back. Parent groups are never touched.
-3. **Review**: each group of the account as “Removed” or “Kept”, and which group causes a removal through the recursive option. Nothing changes until you confirm. The review is single-use and expires after 15 minutes.
+2. **Groups**: only the groups the account belongs to are shown, all ticked and in their tree. Untick those it should leave. When you untick a group that has subgroups, **“and its subgroups”** appears next to it: tick it and the groups below it are unticked, with the reason shown. Each group is decided on its own, so you can do it with several groups without one undoing another; untick “and its subgroups” or tick the group again and its subgroups get their state back. Parent groups are never touched.
+3. **Review**: each group of the account as “Removed” or “Kept”, and which group causes a removal through “and its subgroups”. Nothing changes until you confirm. The review is single-use and expires after 15 minutes.
 4. **Result**: the groups the account keeps, with links to its user record and the action log.
 
-![Remove from groups: the account's groups with the recursive option (Spanish interface)](docs/screenshots/16-quitar-grupos-seleccion.jpg)
+![Remove from groups: the account's groups in their tree (Spanish interface)](docs/screenshots/16-quitar-grupos-seleccion.jpg)
 
 ![Remove from groups: review (Spanish interface)](docs/screenshots/17-quitar-grupos-revision.jpg)
 
@@ -176,7 +176,7 @@ Rules:
 - **It never changes your own account**: it cannot be chosen in the first step.
 - **Non-Super Users never change accounts with administrator access** or Super Users: they cannot be chosen either.
 - **A Super User can lose that status** only if at least one other active Super User remains; the review warns when the account loses that status or administrator access.
-- The server applies the recursive option too: even without JavaScript, a ticked group below an unticked one is removed, and the review shows it.
+- The server applies “and its subgroups” too: even without JavaScript, a ticked group below one unticked with that option is removed, and the review shows it.
 - Right before saving, the account's groups are checked against the reviewed ones; if they changed, nothing is applied.
 - The change goes through Joomla's user API, **closes the account's open sessions** so the new permissions apply at once, and is written to the **User Actions Log** with the groups removed and, if any, the group added.
 - **It checks that no session is left open.** If one survives, the group change is kept, but the result warns in red and offers to close them again, because the account keeps its old permissions while it stays open. With “Session Metadata” off this cannot be checked, and that is also reported.

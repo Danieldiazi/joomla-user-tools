@@ -11,7 +11,8 @@ use Joomla\CMS\Router\Route;
 $layouts = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
 /** @var \Danieldiazi\Component\Usertools\Administrator\Service\UserRecord $account */
 $account = $this->selection['account'];
-$removed = array_flip($this->selection['removed']);
+$removed   = array_flip($this->selection['removed']);
+$recursive = array_flip($this->selection['recursive']);
 $minLevel = $this->selection['groups'] ? min(array_column($this->selection['groups'], 'level')) : 0;
 ?>
 <div class="ut-app ut-narrow">
@@ -32,15 +33,17 @@ $minLevel = $this->selection['groups'] ? min(array_column($this->selection['grou
           <label class="form-check-label" for="ut-keep-<?= (int) $group['id'] ?>"><?php if ($depth > 0) : ?><span class="ut-tree-branch" aria-hidden="true">└</span><?php endif; ?><?= $this->escape($group['title']) ?>
             <?php if ($group['superUser']) : ?><span class="badge bg-danger"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_SUPER') ?></span>
             <?php elseif ($group['backend']) : ?><span class="badge bg-warning text-dark"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_BACKEND') ?></span><?php endif; ?></label>
+          <?php if ($group['hasChildren']) : ?>
+          <div class="form-check form-check-inline ms-2 ut-subgroups" data-ut-subgroups-wrap>
+            <input class="form-check-input" type="checkbox" name="recursive[]" value="<?= (int) $group['id'] ?>" id="ut-sub-<?= (int) $group['id'] ?>" data-ut-subgroups="<?= (int) $group['id'] ?>"<?= isset($recursive[$group['id']]) ? ' checked' : '' ?>>
+            <label class="form-check-label small" for="ut-sub-<?= (int) $group['id'] ?>"><?= Text::_('COM_USERTOOLS_UNGROUP_AND_SUBGROUPS') ?></label>
+          </div>
+          <?php endif; ?>
           <small class="d-block text-body-secondary" data-ut-cascade-note hidden></small>
         </div>
         <?php endforeach; ?>
       </fieldset>
-      <div class="form-check form-switch">
-        <input class="form-check-input" type="checkbox" role="switch" name="recursive" value="1" id="ut-ungroup-recursive" data-ut-recursive<?= $this->selection['recursive'] ? ' checked' : '' ?>>
-        <label class="form-check-label" for="ut-ungroup-recursive"><?= Text::_('COM_USERTOOLS_UNGROUP_RECURSIVE') ?></label>
-        <div class="form-text"><?= Text::_('COM_USERTOOLS_UNGROUP_RECURSIVE_HELP') ?></div>
-      </div>
+      <p class="form-text mb-0"><?= Text::_('COM_USERTOOLS_UNGROUP_RECURSIVE_HELP') ?></p>
       <p class="mt-3 mb-0 fw-bold" data-ut-ungroup-count aria-live="polite"></p>
     </div></section>
     <div class="ut-actions">

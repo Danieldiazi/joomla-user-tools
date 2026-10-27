@@ -35,8 +35,10 @@ final class GroupRemovalTest extends TestCase
      * @param list<int> $direct
      * @param list<int> $selected
      */
-    private function plan(array $direct, array $selected, bool $recursive = false, ?Operator $operator = null, int $account = 50, bool $super = false, bool $backend = false, int $others = 1, int $default = 2): array
+    private function plan(array $direct, array $selected, bool|array $recursive = false, ?Operator $operator = null, int $account = 50, bool $super = false, bool $backend = false, int $others = 1, int $default = 2): array
     {
+        // true: "and its subgroups" ticked on every chosen group; a list: only on those groups.
+        $recursive = $recursive === true ? $selected : ($recursive ?: []);
         return GroupRemoval::plan($this->tree(), $direct, $selected, $recursive, $default, $operator ?? new Operator(1, true, 'admin'), $account, $super, $backend, $others);
     }
 
@@ -61,6 +63,23 @@ final class GroupRemovalTest extends TestCase
         $this->assertSame([9], $all['keep']);
         $this->assertSame([3, 4, 5], GroupRemoval::subtree($this->tree(), 3));
         $this->assertSame([1, 2, 3], GroupRemoval::ancestors($this->tree(), 4));
+    }
+
+    public function testSubgroupsAreDecidedPerGroup(): void
+    {
+        // Registered > Author > Editor > Publisher; Registered > Socios > Junta > Presidencia
+        $plan = $this->plan([2, 3, 4, 5, 10, 11, 12], [10, 3], [10]);
+        $this->assertSame([3, 10, 11, 12], $plan['remove'], 'Socios with its subgroups, Author alone');
+        $this->assertSame([11 => 10, 12 => 10], $plan['cascaded']);
+        $this->assertSame([2, 4, 5], $plan['keep'], 'Editor and Publisher stay: Author was removed without its subgroups');
+
+        $both = $this->plan([2, 3, 4, 5, 10, 11, 12], [10, 3], [3, 10]);
+        $this->assertSame([3, 4, 5, 10, 11, 12], $both['remove'], 'a second group with its subgroups does not undo the first');
+        $this->assertSame([4 => 3, 5 => 3, 11 => 10, 12 => 10], $both['cascaded']);
+
+        $this->assertSame([10], $this->plan([2, 10, 11], [10], [3])['remove'], '"and its subgroups" on a group that is not removed is ignored');
+        $nested = $this->plan([2, 3, 4, 5], [3, 4], [4, 3]);
+        $this->assertSame([5 => 3], $nested['cascaded'], 'a group below two chosen ones is attributed to the higher one');
     }
 
     public function testAccountLeftWithoutGroupsGetsTheDefaultGroup(): void

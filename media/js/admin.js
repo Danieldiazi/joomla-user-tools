@@ -139,28 +139,42 @@
       });
     });
 
-    // Remove from groups: with the recursive option, unticking a group also unticks the groups below it.
+    // Remove from groups: each unticked group with subgroups offers "and its subgroups"; when ticked,
+    // the groups below it are unticked and locked. Every group decides on its own.
     document.querySelectorAll('[data-ut-ungroup-groups]').forEach((form) => {
       const boxes = [...form.querySelectorAll('[data-ut-keep]')];
-      const recursive = form.querySelector('[data-ut-recursive]');
       const counter = form.querySelector('[data-ut-ungroup-count]');
       const next = form.querySelector('[data-ut-ungroup-next]');
       const byId = new Map(boxes.map((box) => [box.dataset.utKeep, box]));
-      const title = (box) => [...box.parentElement.querySelector('label').childNodes]
+      const subgroups = new Map([...form.querySelectorAll('[data-ut-subgroups]')].map((box) => [box.dataset.utSubgroups, box]));
+      const row = (box) => box.closest('[data-ut-ungroup-row]');
+      const title = (box) => [...row(box).querySelector('label').childNodes]
         .find((node) => node.nodeType === 3 && node.textContent.trim()).textContent.trim();
-      // utOwn keeps the operator's own tick, so a group unticked only by the cascade comes back
-      // ticked when its parent is ticked again or the option is turned off.
+      // utOwn keeps the operator's own tick, so a group unticked only by a cascade comes back
+      // ticked when its parent is ticked again or "and its subgroups" is unticked.
       boxes.forEach((box) => { box.dataset.utOwn = box.checked ? '1' : '0'; });
+      const cascades = (id) => {
+        const box = byId.get(id);
+        const sub = subgroups.get(id);
+        return !!(box && sub && box.dataset.utOwn === '0' && !box.disabled && sub.checked);
+      };
       const sync = () => {
         let removed = 0;
+        // Rows are in tree order, so a parent is settled before its children.
         boxes.forEach((box) => {
-          const parent = recursive && recursive.checked
-            ? (box.dataset.utParents || '').split(',').map((id) => byId.get(id)).find((p) => p && p.dataset.utOwn === '0')
-            : undefined;
-          // A box disabled by the cascade is not submitted, so the server removes that group too.
+          const parentId = (box.dataset.utParents || '').split(',').filter(Boolean).find((id) => cascades(id));
+          const parent = parentId ? byId.get(parentId) : undefined;
+          // A box disabled by a cascade is not submitted, so the server removes that group too.
           box.disabled = !!parent;
           box.checked = parent ? false : box.dataset.utOwn === '1';
-          const note = box.parentElement.querySelector('[data-ut-cascade-note]');
+          const sub = subgroups.get(box.dataset.utKeep);
+          if (sub) {
+            // "And its subgroups" only makes sense for a group the operator unticked.
+            const offer = !parent && box.dataset.utOwn === '0';
+            sub.closest('[data-ut-subgroups-wrap]').hidden = !offer;
+            sub.disabled = !offer;
+          }
+          const note = row(box).querySelector('[data-ut-cascade-note]');
           if (note) {
             note.hidden = !parent;
             note.textContent = parent ? sprintf(text('COM_USERTOOLS_JS_UNGROUP_CASCADED', 'Removed because it is inside «%s».'), title(parent)) : '';
@@ -174,10 +188,9 @@
         if (next) next.disabled = !removed;
       };
       boxes.forEach((box) => box.addEventListener('change', () => { box.dataset.utOwn = box.checked ? '1' : '0'; sync(); }));
-      if (recursive) recursive.addEventListener('change', sync);
-      // Send the operator's own ticks, not the cascade shown on screen: the server applies the
-      // cascade itself and can tell the review which group caused each removal. It also keeps the
-      // operator's choices intact when coming back to edit.
+      subgroups.forEach((sub) => sub.addEventListener('change', sync));
+      // Send the operator's own ticks, not the cascades shown on screen: the server applies them
+      // itself and can tell the review which group caused each removal.
       form.addEventListener('submit', () => {
         boxes.forEach((box) => { box.disabled = false; box.checked = box.dataset.utOwn === '1'; });
       });

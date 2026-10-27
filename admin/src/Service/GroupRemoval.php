@@ -5,8 +5,9 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service;
 \defined('_JEXEC') or die;
 
 /**
- * Plans the removal of one account from the groups the operator unticked. With the recursive option,
- * removing a group also removes the account from every group below it (children, grandchildren…).
+ * Plans the removal of one account from the groups the operator unticked. For each unticked group the
+ * operator can also choose "and its subgroups": the account then leaves every group below that one too
+ * (children, grandchildren…).
  * Pure logic: the model loads the data and the applier writes through Joomla's User API.
  *
  * Rules:
@@ -22,17 +23,17 @@ final class GroupRemoval
      * @param  array<int, object> $groups      UserDirectory::groups(): id, parent_id, lft, rgt, title, superUser, backend
      * @param  list<int>          $direct      groups the account is assigned to
      * @param  list<int>          $selected    groups chosen for removal (ids the account is not in are ignored)
-     * @param  bool               $recursive   also remove the account from every group below a chosen one
+     * @param  list<int>          $recursive   chosen groups whose subgroups go too (others are ignored)
      * @param  int                $otherSupers active Super Users other than this account
      * @return array{remove: list<int>, keep: list<int>, added: int, result: list<int>, reason: string, losesSuper: bool, losesBackend: bool, cascaded: array<int, int>}
      *         reason is a language key when the change is not allowed, '' otherwise; cascaded maps a group
-     *         removed only because of the recursive option to the chosen group above it
+     *         removed only because of "and its subgroups" to the chosen group above it
      */
     public static function plan(
         array $groups,
         array $direct,
         array $selected,
-        bool $recursive,
+        array $recursive,
         int $defaultGroup,
         Operator $operator,
         int $accountId,
@@ -43,8 +44,9 @@ final class GroupRemoval
         $direct   = array_values(array_unique(array_map('intval', $direct)));
         $chosen   = array_fill_keys(array_intersect(array_map('intval', $selected), $direct), true);
         $cascaded = [];
-        if ($recursive) {
-            foreach (array_keys($chosen) as $root) {
+        // In tree order, so a group below two chosen ones is attributed to the higher one.
+        foreach (self::treeOrder($groups, array_values(array_unique(array_map('intval', $recursive)))) as $root) {
+            if (isset($chosen[$root])) {
                 foreach (self::subtree($groups, $root) as $below) {
                     if ($below !== $root && !isset($chosen[$below]) && \in_array($below, $direct, true) && !isset($cascaded[$below])) {
                         $cascaded[$below] = $root;

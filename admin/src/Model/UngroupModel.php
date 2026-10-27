@@ -27,7 +27,7 @@ class UngroupModel extends BaseDatabaseModel
     /** Accounts offered while typing. */
     public const SUGGESTIONS = 10;
 
-    /** @return array{login: string, account: int, removed: list<int>, recursive: bool} */
+    /** @return array{login: string, account: int, removed: list<int>, recursive: list<int>} */
     public function getDraft(): array
     {
         $draft = (array) $this->session()->get(self::DRAFT, []);
@@ -35,7 +35,7 @@ class UngroupModel extends BaseDatabaseModel
             'login'     => (string) ($draft['login'] ?? ''),
             'account'   => (int) ($draft['account'] ?? 0),
             'removed'   => array_map('intval', (array) ($draft['removed'] ?? [])),
-            'recursive' => (bool) ($draft['recursive'] ?? false),
+            'recursive' => array_map('intval', (array) ($draft['recursive'] ?? [])),
         ];
     }
 
@@ -91,7 +91,7 @@ class UngroupModel extends BaseDatabaseModel
      * Step 2: the account's groups, in tree order, with their parents so the screen can apply the
      * recursive option while ticking.
      *
-     * @return array{account: UserRecord, groups: list<array{id: int, title: string, level: int, parents: list<int>, superUser: bool, backend: bool}>, removed: list<int>, recursive: bool, all: array<int, object>}
+     * @return array{account: UserRecord, groups: list<array{id: int, title: string, level: int, parents: list<int>, superUser: bool, backend: bool, hasChildren: bool}>, removed: list<int>, recursive: list<int>, all: array<int, object>}
      */
     public function getSelection(): array
     {
@@ -105,13 +105,16 @@ class UngroupModel extends BaseDatabaseModel
         $rows = [];
         foreach ($all as $group) {
             if (isset($mine[(int) $group->id])) {
+                $below = array_diff(GroupRemoval::subtree($all, (int) $group->id), [(int) $group->id]);
                 $rows[] = [
-                    'id'        => (int) $group->id,
-                    'title'     => (string) $group->title,
-                    'level'     => (int) $group->level,
-                    'parents'   => GroupRemoval::ancestors($all, (int) $group->id),
-                    'superUser' => (bool) $group->superUser,
-                    'backend'   => (bool) $group->backend,
+                    'id'          => (int) $group->id,
+                    'title'       => (string) $group->title,
+                    'level'       => (int) $group->level,
+                    'parents'     => GroupRemoval::ancestors($all, (int) $group->id),
+                    'superUser'   => (bool) $group->superUser,
+                    'backend'     => (bool) $group->backend,
+                    // Only groups with subgroups the account belongs to get "and its subgroups".
+                    'hasChildren' => (bool) array_intersect($below, $account->groups),
                 ];
             }
         }
@@ -129,7 +132,8 @@ class UngroupModel extends BaseDatabaseModel
         $account   = $selection['account'];
         $keep      = array_map('intval', (array) ($input['keep'] ?? []));
         $removed   = array_values(array_diff($account->groups, $keep));
-        $recursive = (int) ($input['recursive'] ?? 0) === 1;
+        // "And its subgroups" only counts for groups that are actually unticked.
+        $recursive = array_values(array_intersect(array_map('intval', (array) ($input['recursive'] ?? [])), $removed));
         $draft     = $this->getDraft();
         $this->session()->set(self::DRAFT, ['login' => $draft['login'], 'account' => $account->id, 'removed' => $removed, 'recursive' => $recursive]);
         if (!$removed) {
@@ -153,7 +157,7 @@ class UngroupModel extends BaseDatabaseModel
     /**
      * Step 3: the review, recomputed now so it never shows stale data.
      *
-     * @return array{account: UserRecord, plan: array<string, mixed>, groups: array<int, object>, defaultGroup: int, recursive: bool, nonce: string}
+     * @return array{account: UserRecord, plan: array<string, mixed>, groups: array<int, object>, defaultGroup: int, recursive: list<int>, nonce: string}
      */
     public function getReview(): array
     {
@@ -162,13 +166,13 @@ class UngroupModel extends BaseDatabaseModel
         if (!$preview || $account === null) {
             throw new UserFacingException('COM_USERTOOLS_ERROR_PREVIEW_EXPIRED');
         }
-        $plan = $this->plan($account, $preview['selected'], (bool) $preview['recursive']);
+        $plan = $this->plan($account, $preview['selected'], (array) $preview['recursive']);
         if (!$this->same($account->groups, $preview['before']) || $plan !== $preview['plan']) {
             $this->session()->set(self::PREVIEW, []);
             throw new UserFacingException('COM_USERTOOLS_UNGROUP_ERROR_CHANGED');
         }
         return ['account' => $account, 'plan' => $plan, 'groups' => Toolkit::directory()->groups(), 'defaultGroup' => $this->defaultGroup(),
-            'recursive' => (bool) $preview['recursive'], 'nonce' => (string) $preview['nonce']];
+            'recursive' => array_map('intval', (array) $preview['recursive']), 'nonce' => (string) $preview['nonce']];
     }
 
     /**
@@ -190,7 +194,7 @@ class UngroupModel extends BaseDatabaseModel
         if ($account === null || !$this->same($account->groups, $preview['before'])) {
             throw new UserFacingException('COM_USERTOOLS_UNGROUP_ERROR_CHANGED');
         }
-        $plan = $this->plan($account, $preview['selected'], (bool) $preview['recursive']);
+        $plan = $this->plan($account, $preview['selected'], (array) $preview['recursive']);
         if ($plan !== $preview['plan']) {
             throw new UserFacingException('COM_USERTOOLS_UNGROUP_ERROR_CHANGED');
         }
@@ -264,16 +268,17 @@ class UngroupModel extends BaseDatabaseModel
 
     /**
      * @param  array<int, mixed> $selected
+     * @param  array<int, mixed> $recursive
      * @return array{remove: list<int>, keep: list<int>, added: int, result: list<int>, reason: string, losesSuper: bool, losesBackend: bool, cascaded: array<int, int>}
      */
-    private function plan(UserRecord $account, array $selected, bool $recursive): array
+    private function plan(UserRecord $account, array $selected, array $recursive): array
     {
         $directory = Toolkit::directory();
         return GroupRemoval::plan(
             $directory->groups(),
             $account->groups,
             array_values(array_map('intval', $selected)),
-            $recursive,
+            array_values(array_map('intval', $recursive)),
             $this->defaultGroup(),
             $this->operator(),
             $account->id,

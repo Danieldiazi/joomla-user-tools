@@ -16,8 +16,8 @@ class HtmlView extends BaseHtmlView
 {
     use ViewTrait;
 
-    /** @var array{login: string, account: int, removed: list<int>, recursive: bool} */
-    public array $draft = ['login' => '', 'account' => 0, 'removed' => [], 'recursive' => false];
+    /** @var array{login: string, account: int, removed: list<int>, recursive: list<int>} */
+    public array $draft = ['login' => '', 'account' => 0, 'removed' => [], 'recursive' => []];
     /** @var array<string, mixed> */
     public array $selection = [];
     /** @var array<string, mixed> */

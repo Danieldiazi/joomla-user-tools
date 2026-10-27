@@ -553,9 +553,10 @@ $site->addUser('ug_three', 'Author');
 $site->addUser('ug_back', 'Manager,Author');
 $ungroupUrl = 'index.php?option=com_usertools&view=ungroup';
 $choose = fn (Client $client, string $login): string => $client->submit($ungroupUrl, ['task' => 'ungroup.choose', 'login' => $login], 'data-ut-ungroup-choose');
-// $keep: titles left ticked; groups disabled by the recursive option are simply not sent, as in a browser.
-$select = fn (Client $client, array $keep, bool $recursive = false): string => $client->submit($ungroupUrl . '&layout=groups',
-    ['task' => 'ungroup.select', 'keep' => array_map($gid, $keep)] + ($recursive ? ['recursive' => 1] : []), 'data-ut-ungroup-groups');
+// $keep: titles left ticked (the operator's own ticks, as the browser sends them); $subgroups: unticked
+// groups with "and its subgroups" ticked.
+$select = fn (Client $client, array $keep, array $subgroups = []): string => $client->submit($ungroupUrl . '&layout=groups',
+    ['task' => 'ungroup.select', 'keep' => array_map($gid, $keep), 'recursive' => array_map($gid, $subgroups)], 'data-ut-ungroup-groups');
 $apply = fn (Client $client): string => $client->submit($ungroupUrl . '&layout=review', ['task' => 'ungroup.apply', 'confirm' => 1], 'data-ut-ungroup-form');
 
 // Suggestions while typing: token and permission required, no change.
@@ -570,12 +571,12 @@ Test::check(!in_array(getenv('UT_ADMIN_USER') ?: 'admin', array_column((array) j
 Test::check($code === 403, 'suggestions need the form token (got ' . $code . ')');
 
 $groupsPage = $choose($admin, 'UG_ONE');
-Test::check(substr_count($groupsPage, 'data-ut-keep=') === 3 && str_contains($groupsPage, 'data-ut-recursive'), 'the second step lists only the groups of the account (login is case-insensitive)');
+Test::check(substr_count($groupsPage, 'data-ut-keep=') === 3 && str_contains($groupsPage, 'data-ut-subgroups="' . $gid('Author') . '"') && !str_contains($groupsPage, 'data-ut-subgroups="' . $gid('Editor') . '"'), 'the second step lists only the groups of the account, with "and its subgroups" only where there are subgroups (login is case-insensitive)');
 $review = $select($admin, ['Registered', 'Editor']);
 Test::check(substr_count($review, 'data-ut-change="remove"') === 1 && substr_count($review, 'data-ut-change="keep"') === 2, 'without the recursive option only the unticked group is removed');
 $groupsPage = $admin->get($ungroupUrl . '&layout=groups');
 // Editor stays ticked: the server still removes it because it is below the unticked Author.
-$review = $select($admin, ['Registered', 'Editor'], true);
+$review = $select($admin, ['Registered', 'Editor'], ['Author']);
 Test::check(substr_count($review, 'data-ut-change="remove"') === 2 && str_contains($review, 'data-ut-cascaded') && substr_count($review, 'data-ut-change="keep"') === 1,
     'with the recursive option the groups below an unticked one go too, and the review says why');
 Test::check($groupsOf('ug_one') === ['Registered', 'Author', 'Editor'], 'nothing changes before confirming');
@@ -599,7 +600,7 @@ Test::check($groupsOf('ug_two') === ['Registered'] && str_contains($done, 'Regis
 Test::check(count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_UNGROUPED_DEFAULT' AND item_id = ?", [$site->userId('ug_two')])) === 1, 'the log says the default group was added');
 
 $choose($admin, 'ug_one');
-$review = $select($admin, [], true);
+$review = $select($admin, [], ['Registered']);
 Test::check(str_contains($review, 'data-ut-reason="COM_USERTOOLS_UNGROUP_REASON_DEFAULT_REMOVED"') && !str_contains($review, 'data-ut-ungroup-form'), 'removing the group for new users from its last member is refused');
 $back = $select($admin, ['Registered']);
 Test::check(str_contains($back, 'data-ut-ungroup-groups') && str_contains($back, 'nothing to remove'), 'nothing unticked is explained on the groups step');

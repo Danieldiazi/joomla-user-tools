@@ -26,7 +26,7 @@ These shared screenshots show the Spanish interface on Joomla 6.2.0. Deletion sc
 
 ![Remove from groups: choose the account (2026.10.9)](screenshots/15-quitar-grupos-cuenta.jpg)
 
-![Remove from groups: the account's groups in their tree, with the recursive option (2026.10.9)](screenshots/16-quitar-grupos-seleccion.jpg)
+![Remove from groups: the account's groups in their tree, with “and its subgroups” (2026.10.9)](screenshots/16-quitar-grupos-seleccion.jpg)
 
 ![Remove from groups: review, with the group that causes each cascaded removal (2026.10.9)](screenshots/17-quitar-grupos-revision.jpg)
 

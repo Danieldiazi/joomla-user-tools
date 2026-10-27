@@ -49,7 +49,7 @@ class UngroupController extends DisplayController
         try {
             $this->model()->select([
                 'keep'      => $this->input->post->get('keep', [], 'ARRAY'),
-                'recursive' => $this->input->post->getInt('recursive', 0),
+                'recursive' => $this->input->post->get('recursive', [], 'ARRAY'),
             ]);
             $this->go('view=ungroup&layout=review');
         } catch (UserFacingException $e) {
