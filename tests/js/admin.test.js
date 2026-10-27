@@ -141,11 +141,15 @@ test('remove from groups: "and its subgroups" is decided per group and cascades 
   click(get(2));
   assert.deepEqual([get(3).checked, get(4).disabled], [false, true], 'Author keeps its own choice and its cascade');
 
+  // A child's own choice hidden under its parent's cascade is still sent.
+  click(get(2));
+  click(sub(2));
+  assert.equal(get(3).disabled, true);
   const form = doc.querySelector('[data-ut-ungroup-groups]');
   form.dispatchEvent(new doc.defaultView.Event('submit', { cancelable: true }));
   const sent = (sel) => [...form.querySelectorAll(sel)].filter((box) => box.checked && !box.disabled).map((box) => Number(box.value));
-  assert.deepEqual(sent('[data-ut-keep]'), [6, 7, 2, 4, 11], 'the operator\'s own ticks are sent; the server applies the cascades');
-  assert.deepEqual(sent('[data-ut-subgroups]'), [3]);
+  assert.deepEqual(sent('[data-ut-keep]'), [6, 7, 4, 11], 'the operator\'s own ticks are sent; the server applies the cascades');
+  assert.deepEqual(sent('[data-ut-subgroups]'), [2, 3], 'Author keeps "and its subgroups" although Registered\'s cascade covers it');
 });
 
 test('remove from groups: account suggestions fill the list while typing', async () => {

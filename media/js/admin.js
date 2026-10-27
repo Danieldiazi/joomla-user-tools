@@ -193,6 +193,9 @@
       // itself and can tell the review which group caused each removal.
       form.addEventListener('submit', () => {
         boxes.forEach((box) => { box.disabled = false; box.checked = box.dataset.utOwn === '1'; });
+        // Also keep "and its subgroups" on groups the operator unticked even when a parent's cascade
+        // currently covers them, so the choice survives "Back to edit" and undoing the parent's cascade.
+        subgroups.forEach((sub, id) => { sub.disabled = !(byId.get(id) && byId.get(id).dataset.utOwn === '0'); });
       });
       sync();
     });
