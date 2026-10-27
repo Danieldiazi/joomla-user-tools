@@ -32,5 +32,6 @@
 .ut-access thead .ut-access-group{z-index:3}
 .ut-access-legend li{margin:.25rem 0}
 .ut-tree-row{margin-inline-start:calc(var(--ut-level,0) * 1.5rem)}
+.ut-subgroups[hidden]{display:none}
 .ut-tree-branch{display:inline-block;margin-inline-end:.35rem;color:var(--bs-secondary-color,#6c757d)}
 @media (max-width:575.98px){.ut-steps{flex-direction:column;gap:.25rem}}

@@ -188,11 +188,11 @@ It shows names or usernames, never email addresses. Decide who sees it with the 
 
 ### How is it different from Joomla's “Remove from group” batch?
 
-Joomla's batch removes only the exact group you choose, without showing the account's groups first. **Remove from groups** shows only the groups it has, lets you untick several and, with the recursive option, also removes every group below them (children, grandchildren…). Before applying it shows what the account loses and, when applied, it closes its sessions. Details are in the [README](README.en.md#remove-from-groups).
+Joomla's batch removes only the exact group you choose, without showing the account's groups first. **Remove from groups** shows only the groups it has, lets you untick several and, with “and its subgroups”, also removes every group below them (children, grandchildren…). Before applying it shows what the account loses and, when applied, it closes its sessions. Details are in the [README](README.en.md#remove-from-groups).
 
-### What exactly does the recursive option do?
+### What exactly does “and its subgroups” do?
 
-When you untick a group, the account also leaves every group below it that it belongs to, however many levels down. Parent groups are not touched. Without the option, it only leaves the groups you untick.
+It appears when you untick a group that has subgroups. If you tick it, the account also leaves every group below that one that it belongs to, however many levels down. It is decided group by group: you can use it on several groups and each keeps its own choice. Parent groups are not touched. Without it, the account only leaves the group you untick.
 
 ### What happens if the account is left without groups?
 

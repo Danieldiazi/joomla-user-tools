@@ -26,7 +26,7 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Las
 
 ![Quitar de grupos: elegir la cuenta (2026.10.9)](screenshots/15-quitar-grupos-cuenta.jpg)
 
-![Quitar de grupos: grupos de la cuenta en su árbol, con la opción recursiva (2026.10.9)](screenshots/16-quitar-grupos-seleccion.jpg)
+![Quitar de grupos: grupos de la cuenta en su árbol, con «y sus subgrupos» en dos grupos (2026.10.10)](screenshots/16-quitar-grupos-seleccion.jpg)
 
 ![Quitar de grupos: revisión, con el grupo que provoca cada baja en cascada (2026.10.9)](screenshots/17-quitar-grupos-revision.jpg)
 

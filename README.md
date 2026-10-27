@@ -160,11 +160,11 @@ La lista se obtiene con un número fijo de consultas, sea cual sea el tamaño de
 Desde la 2026.10.9, **Quitar de grupos** saca una cuenta de los grupos que elijas y, si lo pides, también de todos los grupos que cuelgan de ellos: hijos, nietos y siguientes. El lote de Joomla («Quitar del grupo» en Usuarios) solo quita del grupo exacto que eliges y no enseña antes los grupos de la cuenta.
 
 1. **Cuenta**: escribe parte del usuario, el nombre o el correo y elige la cuenta en la lista que aparece mientras escribes. También vale el usuario o el correo completos, sin distinguir mayúsculas.
-2. **Grupos**: aparecen solo los grupos a los que pertenece la cuenta, todos marcados y en su árbol. Desmarca los que debe dejar. Con **«Quitar también de los subgrupos (recursivo)»**, al desmarcar un grupo se desmarcan solos los que cuelgan de él y se indica por qué; si lo vuelves a marcar, recuperan su estado. Los grupos padre no se tocan nunca.
-3. **Revisar**: cada grupo de la cuenta con «Se quita» o «Se mantiene», y por qué grupo se quita uno por la opción recursiva. No se cambia nada hasta confirmar. La revisión es de un solo uso y caduca a los 15 minutos.
+2. **Grupos**: aparecen solo los grupos a los que pertenece la cuenta, todos marcados y en su árbol. Desmarca los que debe dejar. Al desmarcar un grupo que tiene subgrupos aparece a su lado **«y sus subgrupos»**: si lo marcas, se desmarcan solos los que cuelgan de él y se indica por qué. Cada grupo se decide por separado, así que puedes hacerlo con varios sin que se deshagan entre sí; si desmarcas «y sus subgrupos» o vuelves a marcar el grupo, sus subgrupos recuperan su estado. Los grupos padre no se tocan nunca.
+3. **Revisar**: cada grupo de la cuenta con «Se quita» o «Se mantiene», y por qué grupo se quita uno por «y sus subgrupos». No se cambia nada hasta confirmar. La revisión es de un solo uso y caduca a los 15 minutos.
 4. **Resultado**: los grupos que conserva la cuenta y enlaces a su ficha y al registro de acciones.
 
-![Quitar de grupos: grupos de la cuenta con la opción recursiva](docs/screenshots/16-quitar-grupos-seleccion.jpg)
+![Quitar de grupos: grupos de la cuenta en su árbol](docs/screenshots/16-quitar-grupos-seleccion.jpg)
 
 ![Quitar de grupos: revisión](docs/screenshots/17-quitar-grupos-revision.jpg)
 
@@ -174,7 +174,7 @@ Reglas:
 - **Nunca cambia tu propia cuenta**: no se puede elegir en el primer paso.
 - **Quien no es superusuario nunca cambia cuentas con acceso a la administración** ni superusuarios: tampoco se pueden elegir.
 - **Un superusuario puede dejar de serlo** solo si queda al menos otro superusuario activo; la revisión avisa cuando la cuenta pierde ese estado o el acceso a la administración.
-- La opción recursiva la aplica también el servidor: aunque el navegador no tenga JavaScript, un grupo marcado que cuelga de uno desmarcado se quita igualmente, y la revisión lo enseña.
+- «Y sus subgrupos» lo aplica también el servidor: aunque el navegador no tenga JavaScript, un grupo marcado que cuelga de uno desmarcado con esa opción se quita igualmente, y la revisión lo enseña.
 - Justo antes de guardar se comprueba que los grupos de la cuenta siguen siendo los revisados; si han cambiado, no se aplica nada.
 - El cambio pasa por la API de usuarios de Joomla, **cierra las sesiones abiertas** de la cuenta para que los permisos nuevos se apliquen enseguida y queda en el **registro de acciones de usuarios** con los grupos quitados y, si lo hubo, el grupo añadido.
 - **Se comprueba que no quede ninguna sesión abierta.** Si alguna sobrevive, el cambio de grupos se mantiene, pero el resultado lo avisa en rojo y ofrece cerrarlas de nuevo, porque mientras siga abierta la cuenta conserva los permisos antiguos. Con «Metadatos de sesión» desactivado no se puede comprobar, y también se avisa.

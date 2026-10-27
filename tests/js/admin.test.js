@@ -100,52 +100,56 @@ test('table filter shows a message when nothing matches', async () => {
   assert.equal(doc.querySelector('[data-ut-filter-empty]').hidden, false);
 });
 
-test('remove from groups: recursive option unticks and locks the groups below an unticked one', async () => {
-  // Registered(2) > Author(3) > Editor(4); Registered > Socios(10); Manager(6)
-  const box = (id, parents, title) => `<div data-ut-ungroup-row><input type="checkbox" name="keep[]" value="${id}" data-ut-keep="${id}" data-ut-parents="${parents}" checked>
-    <label>${title}</label><small data-ut-cascade-note hidden></small></div>`;
-  const doc = await load(`<form data-ut-ungroup-groups>${box(6, '1', 'Manager')}${box(2, '1', 'Registered')}${box(3, '1,2', 'Author')}${box(4, '1,2,3', 'Editor')}${box(10, '1,2', 'Socios')}
-    <input type="checkbox" data-ut-recursive><p data-ut-ungroup-count></p><button data-ut-ungroup-next>Next</button></form>`);
+test('remove from groups: "and its subgroups" is decided per group and cascades do not undo each other', async () => {
+  // Manager(6) > Administrator(7); Registered(2) > Author(3) > Editor(4); Registered > Socios(10) > Junta(11)
+  const rows = [[6, '1', 'Manager', true], [7, '1,6', 'Administrator'], [2, '1', 'Registered', true], [3, '1,2', 'Author', true], [4, '1,2,3', 'Editor'], [10, '1,2', 'Socios', true], [11, '1,2,10', 'Junta']];
+  const html = rows.map(([id, parents, title, children]) => `<div data-ut-ungroup-row><input type="checkbox" name="keep[]" value="${id}" data-ut-keep="${id}" data-ut-parents="${parents}" checked>
+    <label>${parents.includes(',') ? '<span>└</span>' : ''}${title}</label>
+    ${children ? `<div data-ut-subgroups-wrap><input type="checkbox" name="recursive[]" value="${id}" data-ut-subgroups="${id}"><label>and its subgroups</label></div>` : ''}
+    <small data-ut-cascade-note hidden></small></div>`).join('');
+  const doc = await load(`<form data-ut-ungroup-groups>${html}<p data-ut-ungroup-count></p><button data-ut-ungroup-next>Next</button></form>`);
   const get = (id) => doc.querySelector(`[data-ut-keep="${id}"]`);
+  const sub = (id) => doc.querySelector(`[data-ut-subgroups="${id}"]`);
+  const offered = (id) => !sub(id).closest('[data-ut-subgroups-wrap]').hidden && !sub(id).disabled;
   const next = doc.querySelector('[data-ut-ungroup-next]');
-  const recursive = doc.querySelector('[data-ut-recursive]');
+  const click = (el) => { el.checked = !el.checked; change(el); };
+
   assert.equal(next.disabled, true, 'nothing unticked, nothing to review');
+  assert.equal(offered(10), false, '"and its subgroups" only appears for an unticked group');
 
-  get(3).checked = false;
-  change(get(3));
-  assert.equal(get(4).checked, true, 'without the option, children stay');
-  assert.match(doc.querySelector('[data-ut-ungroup-count]').textContent, /1/);
-  assert.equal(next.disabled, false);
+  click(get(10));
+  assert.equal(offered(10), true);
+  assert.equal(get(11).checked, true, 'without "and its subgroups", children stay');
+  click(sub(10));
+  assert.deepEqual([get(11).checked, get(11).disabled], [false, true], 'Junta is unticked and locked');
+  assert.match(get(11).closest('[data-ut-ungroup-row]').querySelector('[data-ut-cascade-note]').textContent, /Socios/);
 
-  recursive.checked = true;
-  change(recursive);
-  assert.equal(get(4).checked, false);
-  assert.equal(get(4).disabled, true, 'a cascaded group is locked and not submitted');
-  assert.match(get(4).parentElement.querySelector('[data-ut-cascade-note]').textContent, /Author/);
-  assert.equal(get(10).checked, true, 'siblings are not touched');
+  click(get(3));
+  click(sub(3));
+  assert.deepEqual([get(4).checked, get(4).disabled], [false, true], 'the second cascade works');
+  assert.deepEqual([get(11).checked, get(11).disabled], [false, true], 'and the first one is still there');
+  assert.match(doc.querySelector('[data-ut-ungroup-count]').textContent, /4/);
 
-  get(2).checked = false;
-  change(get(2));
-  assert.deepEqual([3, 4, 10].map((id) => get(id).checked), [false, false, false], 'everything below Registered');
-  assert.equal(get(6).checked, true);
-  assert.match(get(3).parentElement.querySelector('[data-ut-cascade-note]').textContent, /Registered/);
+  click(sub(10));
+  assert.deepEqual([get(11).checked, get(11).disabled], [true, false], 'unticking "and its subgroups" gives the children back');
+  assert.deepEqual([get(4).checked, get(4).disabled], [false, true], 'without touching the other group');
 
-  get(2).checked = true;
-  change(get(2));
-  assert.deepEqual([3, 4, 10].map((id) => [get(id).checked, get(id).disabled]), [[false, false], [false, true], [true, false]],
-    'ticking the parent again gives back each group its own tick');
+  click(get(2));
+  click(sub(2));
+  assert.equal(offered(3), false, 'a group locked by a cascade does not offer its own option');
+  click(sub(2));
+  click(get(2));
+  assert.deepEqual([get(3).checked, get(4).disabled], [false, true], 'Author keeps its own choice and its cascade');
 
-  recursive.checked = false;
-  change(recursive);
-  assert.deepEqual([3, 4].map((id) => [get(id).checked, get(id).disabled]), [[false, false], [true, false]], 'turning the option off undoes the cascade');
-
-  recursive.checked = true;
-  change(recursive);
-  assert.equal(get(4).disabled, true);
+  // A child's own choice hidden under its parent's cascade is still sent.
+  click(get(2));
+  click(sub(2));
+  assert.equal(get(3).disabled, true);
   const form = doc.querySelector('[data-ut-ungroup-groups]');
   form.dispatchEvent(new doc.defaultView.Event('submit', { cancelable: true }));
-  const sent = [...form.querySelectorAll('[data-ut-keep]')].filter((box) => box.checked && !box.disabled).map((box) => Number(box.value));
-  assert.deepEqual(sent, [6, 2, 4, 10], 'the operator\'s own ticks are sent (Editor stays ticked); the server applies the cascade');
+  const sent = (sel) => [...form.querySelectorAll(sel)].filter((box) => box.checked && !box.disabled).map((box) => Number(box.value));
+  assert.deepEqual(sent('[data-ut-keep]'), [6, 7, 4, 11], 'the operator\'s own ticks are sent; the server applies the cascades');
+  assert.deepEqual(sent('[data-ut-subgroups]'), [2, 3], 'Author keeps "and its subgroups" although Registered\'s cascade covers it');
 });
 
 test('remove from groups: account suggestions fill the list while typing', async () => {

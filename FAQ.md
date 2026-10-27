@@ -188,11 +188,11 @@ Muestra nombres o nombres de usuario, nunca correos. Decide quién lo ve con el 
 
 ### ¿En qué se diferencia del lote «Quitar del grupo» de Joomla?
 
-El lote de Joomla quita solo el grupo exacto que eliges, sin enseñarte antes los grupos de la cuenta. **Quitar de grupos** te muestra solo los grupos que tiene, te deja desmarcar varios y, con la opción recursiva, quita también todos los que cuelgan de ellos (hijos, nietos…). Antes de aplicar enseña qué pierde la cuenta y, al aplicar, cierra sus sesiones. Los detalles están en el [README](README.md#quitar-de-grupos).
+El lote de Joomla quita solo el grupo exacto que eliges, sin enseñarte antes los grupos de la cuenta. **Quitar de grupos** te muestra solo los grupos que tiene, te deja desmarcar varios y, con «y sus subgrupos», quita también todos los que cuelgan de ellos (hijos, nietos…). Antes de aplicar enseña qué pierde la cuenta y, al aplicar, cierra sus sesiones. Los detalles están en el [README](README.md#quitar-de-grupos).
 
-### ¿Qué hace exactamente la opción recursiva?
+### ¿Qué hace exactamente «y sus subgrupos»?
 
-Al desmarcar un grupo, la cuenta sale también de todos los grupos que cuelgan de él y a los que pertenece, aunque estén varios niveles por debajo. Los grupos padre no se tocan. Sin la opción, solo sale de los grupos que desmarcas.
+Aparece al desmarcar un grupo que tiene subgrupos. Si lo marcas, la cuenta sale también de todos los grupos que cuelgan de ese y a los que pertenece, aunque estén varios niveles por debajo. Se decide grupo a grupo: puedes usarlo en varios grupos y cada uno conserva su elección. Los grupos padre no se tocan. Sin marcarlo, la cuenta solo sale del grupo que desmarcas.
 
 ### ¿Qué pasa si la cuenta se queda sin grupos?
 
