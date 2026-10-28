@@ -14,6 +14,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Grupos de usuarios en el sitio | Módulo del sitio que lista los grupos de un usuario o los miembros de un grupo. Solo lee. Disponible desde 2026.10.9. |
 | Quitar de grupos | Elige una cuenta, desmarca los grupos de los que debe salir y, si quieres, quítala también de todos sus subgrupos. Con revisión previa y confirmación. Disponible desde 2026.10.9. |
 | Grupos y niveles de acceso | Tabla de solo lectura con los niveles de acceso que tiene cada grupo, asignados o heredados. Disponible desde 2026.10.9. |
+| Contenido por nivel de acceso | Cuántos artículos, categorías, menús, módulos, campos y demás elementos usan cada nivel, con enlace a cada listado filtrado. Solo lee. Disponible desde 2026.10.12. |
 
 **Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
 
@@ -32,6 +33,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 - [Módulo de grupos de usuarios en el sitio](#módulo-de-grupos-de-usuarios-en-el-sitio)
 - [Quitar de grupos](#quitar-de-grupos)
 - [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso)
+- [Contenido por nivel de acceso](#contenido-por-nivel-de-acceso)
 - [Seguridad](#seguridad)
 - [Opciones](#opciones)
 - [Capturas de las herramientas](#capturas-de-las-herramientas)
@@ -212,7 +214,25 @@ Un cuadro de búsqueda filtra los grupos. Junto a él, dos botones descargan la 
 
 Los dos ficheros están en UTF-8 con BOM y separados por punto y coma, para que Excel los abra con las tildes bien, y están protegidos contra fórmulas. Siempre incluyen todos los grupos, aunque haya un filtro escrito. Los textos van en el idioma de la administración. La descarga requiere el mismo permiso que la pantalla y el token del formulario.
 
-Los títulos de grupos y niveles enlazan con su edición en Joomla para quien tiene el permiso de administrar Usuarios (el mismo que exige Joomla para esas pantallas), y las cifras de cuentas enlazan con el gestor de usuarios para quien puede gestionar usuarios. La pantalla requiere el permiso propio *Ver grupos y niveles de acceso*: los superusuarios lo tienen; a los demás hay que concedérselo en Opciones → Permisos.
+Los títulos de grupos y niveles enlazan con su edición en Joomla para quien tiene el permiso de administrar Usuarios (el mismo que exige Joomla para esas pantallas), y las cifras de cuentas enlazan con el gestor de usuarios para quien puede gestionar usuarios. La pantalla requiere el permiso propio *Ver grupos, niveles y contenido por nivel*: los superusuarios lo tienen; a los demás hay que concedérselo en Opciones → Permisos.
+
+## Contenido por nivel de acceso
+
+Desde la 2026.10.12, **Contenido por nivel de acceso** cuenta qué elementos usa cada nivel de acceso. Joomla solo permite verlo listado a listado, con el filtro «Acceso» de cada uno, o intentando borrar el nivel, que dice en qué tablas se usa pero no qué elementos ni cuántos. Esta pantalla solo lee.
+
+- **Filas**: los tipos de elemento que tienen algún nivel asignado:
+  - artículos;
+  - categorías de cada componente;
+  - campos y grupos de campos de cada contexto;
+  - elementos de menú del sitio;
+  - módulos del sitio y de la administración;
+  - plugins, contactos, canales de noticias, etiquetas, idiomas de contenido y visitas guiadas.
+- **Columnas**: los niveles, en su orden, con el total de cada uno.
+- **Enlaces**: cada cifra enlaza al listado de Joomla ya filtrado por ese nivel, si puedes gestionar ese componente. Por ejemplo, «Categorías: Artículos» con el nivel *Socios* abre Contenido → Categorías con el filtro de acceso puesto.
+- **Otras extensiones** (adjuntos, galerías…): sus tablas se detectan igual que lo hace Joomla antes de borrar un nivel, por tener una columna `access`. Aparecen como «Tabla #__nombre» y se cuentan enteras y sin enlace, porque User Tools no sabe qué significa cada fila. El índice de Búsqueda inteligente no se cuenta, porque repite los elementos anteriores.
+- **Avisos**: si hay elementos con un nivel que no existe (por ejemplo, borrado directamente en la base de datos), aparecen en una columna «ID n (no existe)» y un aviso pide asignarles un nivel existente, porque nadie los ve en el sitio. Debajo de la tabla se listan los niveles que no usa ningún elemento.
+
+No se cuentan los elementos en la papelera. Los listados de Joomla ocultan además los archivados salvo que cambies su filtro de estado, así que el listado puede mostrar menos elementos que la cifra. El botón **Exportar CSV** descarga la misma tabla (UTF-8 con BOM y punto y coma). Usa el mismo permiso que «Grupos y niveles de acceso», que ahora se llama *Ver grupos, niveles y contenido por nivel*, y se llega desde la portada o con el botón «Ver contenido por nivel» de esa pantalla.
 
 ## Seguridad
 
@@ -221,7 +241,7 @@ Los títulos de grupos y niveles enlazan con su edición en Joomla para quien ti
 - **Cada bloqueo o cambio de grupos cierra las sesiones abiertas** de la cuenta, como hace el gestor de usuarios de Joomla (requiere «Metadatos de sesión», activado por defecto).
 - **Las altas, los bloqueos, las eliminaciones y los cambios de grupo quedan en el registro de acciones de usuarios** (Usuarios → Registro de acciones de usuarios): quién bloqueó, creó o eliminó cada cuenta y con qué herramienta, o qué tarea programada lo hizo.
 - **Permisos propios**, delegables sin dar superusuario (Opciones → Permisos):
-  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos*, *Eliminar usuarios inactivos*, *Ver resultados de tareas*, *Quitar de grupos* y *Ver grupos y niveles de acceso*.
+  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos*, *Eliminar usuarios inactivos*, *Ver resultados de tareas*, *Quitar de grupos* y *Ver grupos, niveles y contenido por nivel*.
   - Quien no es superusuario nunca puede bloquear, eliminar ni quitar de grupos cuentas con acceso a la administración.
 - **Confirmación reforzada configurable**: a partir de N cuentas (10 por defecto) hay que escribir el número exacto de cuentas afectadas, además de marcar la casilla.
 - **El borrado exige siempre escribir el número de cuentas**, aunque solo se elimine una; el umbral configurable no desactiva esta confirmación.
