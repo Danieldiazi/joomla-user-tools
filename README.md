@@ -236,6 +236,8 @@ Desde la 2026.10.12, **Contenido por nivel de acceso** cuenta qué elementos usa
 
 No se cuentan los elementos en la papelera. Los listados de Joomla ocultan además los archivados salvo que cambies su filtro de estado, así que el listado puede mostrar menos elementos que la cifra. El botón **Exportar CSV** descarga la misma tabla, con una fila por nivel y su ID (UTF-8 con BOM y punto y coma). Usa el mismo permiso que «Grupos y niveles de acceso», que ahora se llama *Ver grupos, niveles y contenido por nivel*, y se llega desde la portada o con el botón «Ver contenido por nivel» de esa pantalla.
 
+![Contenido por nivel de acceso](docs/screenshots/18-contenido-por-nivel.jpg)
+
 ## Seguridad
 
 - **Los superusuarios están siempre protegidos**, en todas las herramientas y aunque se desactive «Excluir administradores». User Tools no bloquea ni elimina cuentas de superusuario.

@@ -99,7 +99,7 @@ $draft      = $this->draft;
           <tr data-ut-user="<?= $this->escape($key) ?>" data-ut-name="<?= $this->escape($name) ?>">
             <td><input class="form-check-input" type="checkbox" data-ut-add aria-label="<?= Text::sprintf('COM_USERTOOLS_ADD_USER', $this->escape($name)) ?>"<?= $checked ? ' checked' : '' ?>></td>
             <td><?= $this->escape($name) ?></td>
-            <td><input class="form-control form-control-sm" type="email" data-ut-email aria-label="<?= Text::sprintf('COM_USERTOOLS_EMAIL_OF', $this->escape($name)) ?>" value="<?= $this->escape($draft['emails'][$key] ?? '') ?>" placeholder="nombre@ejemplo.com"<?= $checked ? ' required' : ' disabled' ?>></td>
+            <td><input class="form-control form-control-sm" type="email" data-ut-email aria-label="<?= Text::sprintf('COM_USERTOOLS_EMAIL_OF', $this->escape($name)) ?>" value="<?= $this->escape($draft['emails'][$key] ?? '') ?>" placeholder="<?= Text::_('COM_USERTOOLS_EMAIL_PLACEHOLDER') ?>"<?= $checked ? ' required' : ' disabled' ?>></td>
           </tr>
         <?php endforeach; ?>
         </tbody></table></div>
