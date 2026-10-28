@@ -4,7 +4,7 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Las de eliminación se incorporaron con 2026.10.5, la del panel de Usuarios con 2026.10.6, y la portada, la de grupos y niveles de acceso y las de quitar de grupos con 2026.10.9; las demás corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, la del panel de Usuarios de 2026.10.6, las de quitar de grupos de 2026.10.9 y 2026.10.10, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12 y la portada de 2026.10.13. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
 ![Portada de User Tools agrupada en secciones: revisar cuentas, grupos y niveles, automatización y eliminar cuentas (2026.10.13)](screenshots/01-portada.jpg)
 
@@ -20,9 +20,9 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Las
 
 ![Inactividad manual: selección de cuentas](screenshots/07-inactivos-seleccion.jpg)
 
-![Eliminar inactivos: plazo, cuentas listadas y exclusiones](screenshots/11-eliminar-plazo.jpg)
+![Eliminar inactivos: plazo, cuentas listadas y exclusiones (2026.10.5)](screenshots/11-eliminar-plazo.jpg)
 
-![Eliminar inactivos: selección de cuentas y confirmación](screenshots/12-eliminar-seleccion.jpg)
+![Eliminar inactivos: selección de cuentas y confirmación (2026.10.5)](screenshots/12-eliminar-seleccion.jpg)
 
 ![Quitar de grupos: elegir la cuenta (2026.10.9)](screenshots/15-quitar-grupos-cuenta.jpg)
 
