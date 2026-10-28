@@ -86,6 +86,21 @@ final class RecordsTest extends TestCase
         $this->assertSame([], $failed['created']);
         $this->assertSame('COM_USERTOOLS_ERROR_CREATE_FAILED', $failed['errors'][0]['message']);
         $this->assertStringNotContainsString('password', json_encode($failed['errors']));
+
+        // Each account is logged as soon as it exists, before its email: an interrupted request never leaves it unlogged.
+        $order  = [];
+        $logged = Registration::create($selection, fn () => Fixtures::joomlaUser(), 2, 'email', new PasswordGenerator(), function (object $u) use (&$order) {
+            $order[] = 'mail:' . $u->username;
+            return true;
+        }, function (object $u) use (&$order) {
+            $order[] = 'log:' . $u->username;
+        });
+        $this->assertSame(['log:uno', 'mail:uno', 'log:dos', 'mail:dos'], $order);
+        $this->assertCount(2, $logged['created']);
+        $this->assertCount(1, Registration::create([$selection[0]], fn () => Fixtures::joomlaUser(), 2, 'email', new PasswordGenerator(), fn () => true,
+            fn () => throw new \RuntimeException('log down'))['created'], 'a failing log writer does not hide the created account');
+        $this->assertSame([], Registration::create([$selection[0]], fn () => Fixtures::joomlaUser(0, '', 0, false), 2, 'email', new PasswordGenerator(), fn () => true,
+            fn () => $this->fail('nothing is logged for an account that was not created'))['created']);
     }
 
     public function testReportStoreFiltersPrunesAndProtectsFiles(): void

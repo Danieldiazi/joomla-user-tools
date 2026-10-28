@@ -230,6 +230,8 @@ Test::check(!str_contains($block, '>admin<') && !str_contains($block, '>super2<'
 Test::check(!str_contains($block, '>luis<'), 'LUIS matches luis (case-insensitive)');
 Test::check(str_contains($review, 'baja@example.test') && str_contains($review, 'Registered'), 'review shows email and groups');
 Test::check(str_contains($review, 'name="confirm_count"'), 'typed confirmation is required from the threshold');
+Test::check(str_contains($review, 'data-ut-add-all') && str_contains($review, 'data-ut-email-domain') && str_contains($review, 'data-ut-name="nuevo1"'),
+    'new accounts offer "tick all" and emails built from the username');
 $site->fakeSession($site->userId('baja'));
 $registrations = [];
 foreach (['nuevo1', 'nuevo2'] as $name) {
@@ -284,6 +286,81 @@ $site->q('UPDATE #__users SET block = 0 WHERE username IN (?, ?)', ['baja', 'ser
 $review = $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => 'pepito', 'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
 Test::check(str_contains($review, 'alert-danger') && str_contains($review, 'No name in the list matches a Joomla user'), 'red warning when nothing matches and accounts would be blocked');
 
+Test::section('Comparison in batches: progress, continue, discard, one-time passwords');
+// One account per request, as if each one hit the time budget.
+$site->options(['batch_seconds' => 0]);
+// Every current username except $without, plus new names: only $without can be proposed for blocking.
+$roster   = fn (array $without, array $new): string => implode("\n", array_merge(array_diff(array_column($site->q('SELECT username FROM #__users'), 'username'), $without), $new));
+$registrationsFor = function (array $names): string {
+    $rows = [];
+    foreach ($names as $name) {
+        $rows[hash('sha256', $name)] = ['checked' => true, 'email' => $name . '@example.test'];
+    }
+    return json_encode($rows);
+};
+$step = function (Client $client, string $page): array {
+    [$code, $body] = $client->request('index.php?option=com_usertools', ['task' => 'compare.step', Client::token($page) => 1]);
+    return json_decode($body, true) ?: ['http' => $code, 'body' => substr($body, 0, 200)];
+};
+$logCount = fn (string $key): int => (int) $site->q('SELECT COUNT(*) AS n FROM #__action_logs WHERE message_language_key = ?', [$key])[0]['n'];
+$createdBefore = $logCount('COM_USERTOOLS_ACTION_LOG_CREATED_EMAIL');
+$blockedBefore = $logCount('COM_USERTOOLS_ACTION_LOG_BLOCKED');
+
+$admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster(['baja', 'servicio'], ['lote1', 'lote2', 'lote3']),
+    'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+$progress = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
+    'creation_mode' => 'email', 'registrations' => $registrationsFor(['lote1', 'lote2', 'lote3'])], 'data-ut-review');
+Test::check(str_contains($progress, 'data-ut-progress') && str_contains($progress, '1 of 5 accounts processed'), 'a large job continues on the progress screen after the first batch');
+Test::check($site->blocked('baja') && !$site->blocked('servicio') && $site->userId('lote1') === 0, 'the first batch did one account only');
+[, $noToken] = $admin->request('index.php?option=com_usertools', ['task' => 'compare.step']);
+Test::check(!str_contains($noToken, '"processed"') && !$site->blocked('servicio'), 'a batch without the form token does nothing');
+$data = $step($admin, $progress);
+Test::check(($data['done'] ?? null) === false && ($data['processed'] ?? 0) === 2 && $site->blocked('servicio'), 'each request processes the next account (' . json_encode($data) . ')');
+// The operator leaves: the first screen offers to continue or discard, and nothing else can be applied meanwhile.
+$first = $admin->get('index.php?option=com_usertools&view=compare');
+Test::check(str_contains($first, 'data-ut-job-pending') && str_contains($first, '2 of 5 accounts have been processed'), 'a job left half-way is offered to continue or discard');
+$admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster([], []), 'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+$refused = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
+    'creation_mode' => 'email', 'registrations' => '{}'], 'data-ut-review');
+Test::check(str_contains($refused, 'A comparison is partly applied'), 'another comparison cannot be applied while one is pending');
+$progress = $admin->get('index.php?option=com_usertools&view=compare&layout=progress');
+for ($i = 0, $data = []; $i < 10 && empty($data['done']); $i++) {
+    $data = $step($admin, $progress);
+}
+Test::check(($data['done'] ?? false) === true && ($data['processed'] ?? 0) === 5 && $i === 3, 'continuing finishes the job, one account per request');
+Test::check($site->userId('lote1') && $site->userId('lote2') && $site->userId('lote3') && array_key_exists('password', $data['created'][0] ?? []) && $data['created'][0]['password'] === null, 'the three accounts were created; email mode sends no password');
+Test::check($logCount('COM_USERTOOLS_ACTION_LOG_CREATED_EMAIL') === $createdBefore + 3 && $logCount('COM_USERTOOLS_ACTION_LOG_BLOCKED') === $blockedBefore + 2,
+    'every block and creation is in the User Actions Log');
+$summary = $admin->get('index.php?option=com_usertools&view=compare&layout=result');
+Test::check(str_contains($summary, 'Operation finished') && str_contains($summary, 'lote3@example.test') && str_contains($summary, '>baja<'), 'the summary covers every batch');
+Test::check(!str_contains($admin->get('index.php?option=com_usertools&view=compare'), 'data-ut-job-pending'), 'nothing is pending afterwards');
+
+// Discarding keeps what was done and leaves the rest untouched.
+$admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster(['baja', 'servicio', 'lote1', 'lote2'], ['lote3', 'lote4', 'lote5']),
+    'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+$admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
+    'creation_mode' => 'email', 'registrations' => $registrationsFor(['lote4', 'lote5'])], 'data-ut-review');
+$discarded = $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.discard'], 'data-ut-job-pending');
+Test::check($site->blocked('lote1') && !$site->blocked('lote2') && $site->userId('lote4') === 0 && str_contains($discarded, '3 pending accounts were neither blocked nor created'),
+    'discarding keeps the first account and leaves the other three untouched');
+
+// Password mode: each batch shows the passwords it created, and none is stored.
+$admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster(['baja', 'servicio', 'lote1'], ['lote6', 'lote7']),
+    'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+$progress = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
+    'creation_mode' => 'password', 'registrations' => $registrationsFor(['lote6', 'lote7'])], 'data-ut-review');
+preg_match('#<script type="application/json" data-ut-progress-initial>(.*?)</script>#s', $progress, $initial);
+$firstRows = json_decode($initial[1] ?? '[]', true) ?: [];
+$data = $step($admin, $progress);
+$passwords = array_filter([$firstRows[0]['password'] ?? '', $data['created'][0]['password'] ?? '']);
+Test::check(count($passwords) === 2 && ($firstRows[0]['username'] ?? '') === 'lote6' && ($data['done'] ?? false) === true, 'each batch returns the passwords it created, once');
+$stored = implode('', array_column($site->q('SELECT data FROM #__session'), 'data'));
+Test::check(!array_filter($passwords, fn ($p) => str_contains($stored, $p)), 'no batch password is stored in any session');
+$summary = $admin->get('index.php?option=com_usertools&view=compare&layout=result');
+Test::check(!array_filter($passwords, fn ($p) => str_contains($summary, $p)) && str_contains($summary, 'Already shown'), 'the summary never shows them again');
+$site->options(['batch_seconds' => 8]);
+$site->q('UPDATE #__users SET block = 0 WHERE username IN (?, ?)', ['baja', 'servicio']);
+
 Test::section('Delegated permission: no Super User, no backend accounts');
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.compare' => ['6' => 1]])]);
 $site->q('UPDATE #__users SET block = 0 WHERE username = ?', ['mgr']);
@@ -298,6 +375,19 @@ $block = substr($review, (int) strpos($review, 'id="ut-block-table"'));
 $block = substr($block, 0, (int) strpos($block, '</table>'));
 Test::check(!str_contains($block, '>mgr<') && !str_contains($block, '>delegate<') && str_contains($block, '>baja<'), 'a non Super User cannot block backend accounts or itself');
 Test::check(str_contains($review, 'you are not allowed to create accounts') || !str_contains($review, 'data-ut-add'), 'a delegate without "Create accounts" cannot create users');
+// "Create accounts" withdrawn while a job is paused: continuing creates nothing more.
+$site->options(['batch_seconds' => 0]);
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.compare' => ['6' => 1], 'usertools.create' => ['6' => 1]])]);
+$delegate->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster([], ['permiso1', 'permiso2']),
+    'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+$progress = $delegate->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
+    'creation_mode' => 'email', 'registrations' => $registrationsFor(['permiso1', 'permiso2'])], 'data-ut-review');
+Test::check(str_contains($progress, '1 of 2 accounts processed') && $site->userId('permiso1') > 0, 'the delegate starts a job that creates accounts');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.compare' => ['6' => 1]])]);
+$data = $step($delegate, $progress);
+Test::check(str_contains($data['error'] ?? '', 'no longer allowed to create accounts') && $site->userId('permiso2') === 0, 'without "Create accounts" the rest is not created (' . json_encode($data) . ')');
+$delegate->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.discard'], 'data-ut-job-pending');
+$site->options(['batch_seconds' => 8]);
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
 Test::section('Inactivity review');
@@ -517,7 +607,7 @@ $row = function (string $html, string $attribute, int $id): string {
     return $start === false ? '' : substr($html, $start, (int) strpos($html, '</tr>', $start) - $start);
 };
 $editorRow = $row($accessPage, 'data-ut-group', $editorId);
-Test::check(substr_count($editorRow, 'data-ut-cell="inherited"') >= 2 && str_contains($editorRow, 'from «Author»'), 'Editor inherits Special and the new level from its parent Author');
+Test::check(substr_count($editorRow, 'data-ut-cell="inherited"') >= 2 && str_contains($editorRow, 'from group «Author»'), 'Editor inherits Special and the new level from its parent Author');
 Test::check(str_contains($row($accessPage, 'data-ut-group', $registeredId), 'data-ut-cell="direct"'), 'Registered is assigned directly to the Registered level');
 Test::check(str_contains($row($accessPage, 'data-ut-group', $guest), 'Guests'), 'the guest group is marked');
 $emptyLevel   = (int) $site->q("SELECT id FROM #__viewlevels WHERE title = 'UT level empty'")[0]['id'];
@@ -525,6 +615,23 @@ $authorsLevel = (int) $site->q("SELECT id FROM #__viewlevels WHERE title = 'UT l
 Test::check(str_contains($row($accessPage, 'data-ut-level', $emptyLevel), 'No groups'), 'a level with no groups or accounts is flagged');
 $authorsRow = $row($accessPage, 'data-ut-level', $authorsLevel);
 Test::check(str_contains($authorsRow, '>1</td>') && !str_contains($authorsRow, 'No groups'), 'accounts assigned individually are counted');
+Test::check(str_contains($accessPage, 'Accounts assigned individually'), 'the individual accounts column is shown when some level has one');
+
+// CSV export: the links carry the form token; without it nothing is sent.
+preg_match_all('/href="([^"]*task=access\.export[^"]*)"/', $accessPage, $links);
+Test::check(count($links[1]) === 2, 'two export links (table and one row per level)');
+$exportUrl = fn (string $shape): string => html_entity_decode((string) current(array_filter($links[1], fn ($l) => str_contains($l, 'shape=' . $shape))));
+[$code, $csv, $headers] = $admin->request(preg_replace('#^.*/administrator/#', '', $exportUrl('matrix')));
+Test::check($code === 200 && str_starts_with($headers['content-type'] ?? '', 'text/csv') && str_contains($headers['content-disposition'] ?? '', 'usertools-access-'), 'the table downloads as CSV');
+Test::check(str_starts_with($csv, "\xEF\xBB\xBF") && str_contains($csv, ';"UT level authors"') && str_contains($csv, '"Public / Registered / Author / Editor"'), 'with BOM, a column per level and the group path');
+$editorLine = (string) current(array_filter(explode("\n", $csv), fn ($l) => str_starts_with($l, $editorId . ';')));
+Test::check(str_contains($editorLine, 'Inherited from group «Author»'), 'cells say where an inherited level comes from');
+[$code, $pairs] = $admin->request(preg_replace('#^.*/administrator/#', '', $exportUrl('pairs')));
+Test::check($code === 200 && str_contains($pairs, $editorId . ';Editor;"Public / Registered / Author / Editor";' . $authorsLevel . ';"UT level authors";Inherited;Author'), 'one row per group and level, with the parent it comes from');
+Test::check(!str_contains($pairs, ';"UT level empty";'), 'levels a group does not have are left out');
+$tokenless = preg_replace('/&(amp;)?[0-9a-f]{32}=1/', '', $exportUrl('matrix'));
+[, $refused, $refusedHeaders] = $admin->request(preg_replace('#^.*/administrator/#', '', $tokenless));
+Test::check(!str_starts_with($refusedHeaders['content-type'] ?? '', 'text/csv') && !str_contains($refused, '"UT level authors"'), 'without the token there is no CSV');
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
 [$code] = $delegate->request('index.php?option=com_usertools&view=access');
 Test::check($code === 403 && !str_contains($delegate->get('index.php?option=com_usertools'), 'view=access'), 'the view needs its own permission (got ' . $code . ')');
@@ -538,8 +645,12 @@ Test::check(str_contains($delegateAccess, 'id="ut-access-table"'), 'a delegate w
 Test::check(!str_contains($delegateAccess, 'task=group.edit') && !str_contains($delegateAccess, 'task=level.edit') && str_contains($delegateAccess, 'filter[group_id]='),
     'without core.admin on Users, group and level titles are not links (Joomla would refuse them); member counts still link');
 Test::check(str_contains($accessPage, 'task=group.edit') && str_contains($accessPage, 'task=level.edit'), 'a Super User gets the edit links');
+[$code, $delegateCsv, $delegateHeaders] = $delegate->request('index.php?option=com_usertools&task=access.export&shape=matrix');
+Test::check(!str_starts_with($delegateHeaders['content-type'] ?? '', 'text/csv'), 'a request without the token gets no CSV, even with the permission');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 $site->q("DELETE FROM #__viewlevels WHERE title LIKE 'UT level%'");
+$plainLevels = $admin->get('index.php?option=com_usertools&view=access');
+Test::check(!str_contains($plainLevels, 'Accounts assigned individually'), 'with no level assigned to single accounts, that column is hidden');
 
 Test::section('Remove from groups');
 $gid = fn (string $title): int => (int) $site->q('SELECT id FROM #__usergroups WHERE title = ?', [$title])[0]['id'];

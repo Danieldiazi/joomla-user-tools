@@ -28,6 +28,8 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service {
         public static object $options;
         public static object $store;
         public static int $writes = 0;
+        /** Account id whose block throws, as a request cut off half-way would. */
+        public static int $failOn = 0;
         public static function app() { return self::$application; }
         public static function directory() { return self::$directory; }
         public static function settings() { return self::$options; }
@@ -36,6 +38,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service {
         public static function blocker() {
             return new class {
                 public function block($id, ...$args) {
+                    if ($id === Toolkit::$failOn) { throw new \RuntimeException('time limit'); }
                     Toolkit::$writes++;
                     return ['status' => 'blocked', 'username' => 'user' . $id, 'reason' => ''];
                 }
@@ -78,10 +81,12 @@ namespace {
         public function exclusions($tool) { return new Exclusions(); }
         public function creationMode() { return 'password'; }
         public function confirmThreshold() { return 10; }
+        public int $batch = 8;
+        public function batchSeconds() { return $this->batch; }
     };
     Toolkit::$store = new class { public function save($values) {} };
 
-    foreach (['Compare', 'Inactive', 'Delete', 'Reports', 'Ungroup'] as $controllerName) {
+    foreach (['Compare', 'Inactive', 'Delete', 'Reports', 'Ungroup', 'Access'] as $controllerName) {
         foreach (['compare' => 'usertools.compare', 'inactive' => 'usertools.inactive', 'delete' => 'usertools.delete', 'access' => 'usertools.access', 'ungroup' => 'usertools.ungroup',
                   'reports' => 'usertools.reports', 'report' => 'usertools.reports'] as $view => $permission) {
             $input = new class($view) {
@@ -157,5 +162,47 @@ namespace {
     $result = $model->apply(applyInput($p));
     check(count($result['blocked']) === 10, 'Unchanged review still applies');
     check($model->getPreview() === null, 'Successful preview is consumed');
+    check($result['done'] && $model->getJob() === null && count($model->getResult()['blocked']) === 10, 'A small job ends in the same request');
+
+    // Large jobs run in batches: one account per request when the budget is 0.
+    Toolkit::$options->batch = 0;
+    $writes = Toolkit::$writes;
+    $p = preview($model);
+    $first = $model->apply(applyInput($p));
+    check(!$first['done'] && $first['processed'] === 1 && $first['total'] === 10 && Toolkit::$writes === $writes + 1, 'The first batch processes at least one account');
+    check($model->getPreview() === null && $model->getJob() !== null, 'The preview is consumed and the job is kept');
+    $p2 = preview($model);
+    try { $model->apply(applyInput($p2)); throw new \RuntimeException('A second job was started'); }
+    catch (UserFacingException $e) { check($e->key() === 'COM_USERTOOLS_ERROR_JOB_PENDING', 'Only one job at a time'); }
+    $steps = 1;
+    do { $step = $model->step(); $steps++; } while (!$step['done'] && $steps < 50);
+    check($steps === 10 && Toolkit::$writes === $writes + 10, 'Every account is processed exactly once, one per request');
+    check(count($step['result']['blocked']) === 10 && $step['result']['skipped'] === 0 && $model->getJob() === null, 'The last batch stores the whole result');
+    try { $model->step(); throw new \RuntimeException('Step without a job'); }
+    catch (UserFacingException $e) { check($e->key() === 'COM_USERTOOLS_ERROR_JOB_MISSING', 'No job, nothing to do'); }
+
+    $p = preview($model);
+    $model->apply(applyInput($p));
+    $model->step();
+    $model->discard();
+    $discarded = $model->getResult();
+    check($model->getJob() === null && count($discarded['blocked']) === 2 && $discarded['discarded'] === 8 && $discarded['skipped'] === 0, 'Discarding keeps what was done and counts the rest');
+    $identity->id = 2;
+    $model->apply(applyInput(preview($model)));
+    $identity->id = 1;
+    check($model->getJob() === null, 'A job belongs to the operator who started it');
+
+    // A request cut off half-way keeps what it did: continuing neither repeats nor loses an account.
+    Toolkit::$options->batch = 8;
+    $writes = Toolkit::$writes;
+    $p = preview($model);
+    Toolkit::$failOn = 6;
+    try { $model->apply(applyInput($p)); throw new \RuntimeException('The cut was not simulated'); }
+    catch (\RuntimeException $e) { check($e->getMessage() === 'time limit', 'The batch stops at the sixth account'); }
+    $job = $model->getJob();
+    check($job !== null && $job['processed'] === 4 && count($job['blocked']) === 4 && $job['block'][0] === 6, 'The four accounts done before the cut are saved in the job');
+    Toolkit::$failOn = 0;
+    $step = $model->step();
+    check($step['done'] && Toolkit::$writes === $writes + 10 && count($step['result']['blocked']) === 10, 'Continuing does the other six, once each');
     echo "OK: controller view permissions and changed comparison previews\n";
 }

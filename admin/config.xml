@@ -12,6 +12,8 @@
     </field>
     <field name="report_retention_days" type="number" default="90" min="0" max="36500" filter="integer"
       label="COM_USERTOOLS_CONFIG_RETENTION" description="COM_USERTOOLS_CONFIG_RETENTION_DESC" />
+    <!-- Seconds of work per request when applying a comparison (Settings::batchSeconds()). Not shown. -->
+    <field name="batch_seconds" type="hidden" default="8" filter="integer" />
   </fieldset>
   <fieldset name="compare" label="COM_USERTOOLS_CONFIG_COMPARE" description="COM_USERTOOLS_CONFIG_COMPARE_DESC">
     <field name="compare_protect_admins" type="radio" layout="joomla.form.field.radio.switcher" default="1" filter="integer"

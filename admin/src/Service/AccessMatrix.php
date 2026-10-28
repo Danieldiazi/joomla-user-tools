@@ -108,6 +108,95 @@ final class AccessMatrix
         return ['state' => 'none', 'via' => 0];
     }
 
+    /** Export shapes: one row per group with a column per level, or one row per group and level it has. */
+    public const EXPORT_MATRIX = 'matrix';
+    public const EXPORT_PAIRS  = 'pairs';
+
+    /**
+     * Full path of every row ("Public / Manager / Administrator"), from the tree order and levels.
+     *
+     * @param  list<array{id: int, title: string, level: int}> $rows
+     * @return array<int, string> group id => path
+     */
+    public static function paths(array $rows): array
+    {
+        $stack = [];
+        $paths = [];
+        foreach ($rows as $row) {
+            $level = max(0, (int) $row['level']);
+            $stack = \array_slice($stack, 0, $level);
+            $stack[] = (string) $row['title'];
+            $paths[(int) $row['id']] = implode(' / ', $stack);
+        }
+        return $paths;
+    }
+
+    /**
+     * The matrix as table rows for a CSV file. Texts come through $text so this stays free of Joomla.
+     *
+     * @param  array{levels: list<array<string, mixed>>, rows: list<array<string, mixed>>} $matrix see build()
+     * @param  callable(string, string=): string $text translates a language key, with an optional group title
+     * @return array{header: list<string>, rows: list<list<int|string>>}
+     */
+    public static function export(array $matrix, string $shape, callable $text): array
+    {
+        $paths  = self::paths($matrix['rows']);
+        $titles = array_column($matrix['rows'], 'title', 'id');
+        $state  = fn (array $cell): string => match ($cell['state']) {
+            'direct'    => $text('COM_USERTOOLS_ACCESS_DIRECT'),
+            'inherited' => $text('COM_USERTOOLS_ACCESS_INHERITED'),
+            'public'    => $text('COM_USERTOOLS_ACCESS_ALWAYS'),
+            default     => '',
+        };
+        $via = fn (array $cell): string => $cell['state'] === 'inherited' ? (string) ($titles[$cell['via']] ?? '#' . $cell['via']) : '';
+
+        $rows = [];
+        if ($shape === self::EXPORT_PAIRS) {
+            $header = [$text('COM_USERTOOLS_ACCESS_CSV_GROUP_ID'), $text('COM_USERTOOLS_ACCESS_GROUP'), $text('COM_USERTOOLS_ACCESS_CSV_PATH'),
+                $text('COM_USERTOOLS_ACCESS_CSV_LEVEL_ID'), $text('COM_USERTOOLS_ACCESS_LEVEL'), $text('COM_USERTOOLS_ACCESS_CSV_STATE'),
+                $text('COM_USERTOOLS_ACCESS_CSV_VIA')];
+            foreach ($matrix['rows'] as $row) {
+                foreach ($matrix['levels'] as $level) {
+                    $cell = $row['cells'][$level['id']];
+                    if ($cell['state'] !== 'none') {
+                        $rows[] = [(int) $row['id'], (string) $row['title'], $paths[$row['id']], (int) $level['id'], (string) $level['title'], $state($cell), $via($cell)];
+                    }
+                }
+            }
+            return ['header' => $header, 'rows' => $rows];
+        }
+
+        $header = [$text('COM_USERTOOLS_ACCESS_CSV_GROUP_ID'), $text('COM_USERTOOLS_ACCESS_GROUP'), $text('COM_USERTOOLS_ACCESS_CSV_PATH'),
+            $text('COM_USERTOOLS_ACCESS_MEMBERS')];
+        foreach ($matrix['levels'] as $level) {
+            $header[] = (string) $level['title'];
+        }
+        foreach ($matrix['rows'] as $row) {
+            $line = [(int) $row['id'], (string) $row['title'], $paths[$row['id']], (int) $row['members']];
+            foreach ($matrix['levels'] as $level) {
+                $cell   = $row['cells'][$level['id']];
+                $line[] = $cell['state'] === 'inherited' ? $text('COM_USERTOOLS_ACCESS_CSV_INHERITED_VIA', $via($cell)) : $state($cell);
+            }
+            $rows[] = $line;
+        }
+        return ['header' => $header, 'rows' => $rows];
+    }
+
+    /**
+     * True when some level has accounts assigned one by one (the summary column is shown only then).
+     *
+     * @param list<array<string, mixed>> $levels
+     */
+    public static function hasUserRules(array $levels): bool
+    {
+        foreach ($levels as $level) {
+            if ((int) ($level['users'] ?? 0) > 0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Decodes #__viewlevels.rules ("[1,6,-42]").
      *

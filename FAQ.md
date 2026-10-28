@@ -82,6 +82,10 @@ Si existe en Joomla cuenta como coincidencia y no se toca. Las cuentas que ya es
 
 No. Aparecen **desmarcados** en la revisión; solo se crean los que marques, cada uno con un correo distinto que no exista ya en Joomla.
 
+### Hay muchos nombres nuevos, ¿tengo que marcarlos y escribir los correos uno a uno?
+
+No. Desde la 2026.10.11, la casilla de la cabecera **Añadir** los marca todos, y la opción **Generar el correo a partir del nombre de usuario** rellena cada correo vacío como `usuario@dominio` con el dominio que escribas. Los correos que hayas escrito a mano no se tocan, y los nombres que no sirven como correo (con espacios o tildes) se quedan vacíos para que los completes. Detalles en el [README](README.md#altas-de-cuentas-nuevas).
+
 ### ¿En qué grupo se crean las cuentas nuevas?
 
 En **Registrados** (grupo ID 2). La herramienta comprueba que el grupo exista y que no dé acceso a la administración. El nombre visible inicial es el propio nombre de usuario.
@@ -93,6 +97,14 @@ Hay dos modos de alta. Por defecto se envía un correo con un enlace para elegir
 ### He perdido la contraseña temporal
 
 Las contraseñas se muestran **una sola vez** en la pantalla de resultado y no se guardan ni se registran en logs. Si recargas o sales, ya no se pueden recuperar: usa la recuperación de contraseña de Joomla o asigna una nueva desde **Usuarios → Gestionar**. En cualquier caso, la cuenta deberá cambiarla en su primer acceso.
+
+### He dado de alta cientos de cuentas y ha dado error 500 a mitad
+
+Hasta la 2026.10.10 todo se hacía en una sola petición, y con cientos de altas (cada una guarda la cuenta y envía un correo) se superaba el límite de tiempo del servidor. Las cuentas creadas hasta el corte existen, pero no quedaron anotadas en el registro de acciones. Desde la 2026.10.11 los cambios se aplican por tandas con una barra de progreso y cada alta se anota en cuanto se crea. Para terminar una lista cortada, vuelve a compararla: las cuentas ya creadas coinciden y solo aparecen como nuevas las que faltan. Más detalles en el [README](README.md#comparar-una-lista-de-usuarios).
+
+### Se cerró la pestaña mientras se aplicaban los cambios
+
+Lo hecho hasta entonces se conserva y está anotado. Al abrir «Comparar lista» verás un aviso con cuántas cuentas lleva y los botones **Continuar** y **Detener y descartar lo pendiente**. Al continuar, cada cuenta se vuelve a comprobar antes de cambiarla, se retoma justo donde se quedó (el avance se guarda tras cada cuenta, así que ninguna se repite) y se vuelve a comprobar que sigues teniendo permiso para crear cuentas. En el modo de contraseña temporal, las contraseñas que ya se mostraron no se pueden recuperar: usa la recuperación de contraseña de Joomla para esas cuentas.
 
 ### Una alta ha fallado y otras no, ¿se deshace todo?
 
@@ -215,6 +227,18 @@ Con **Grupos y niveles de acceso**, desde la 2026.10.9. Muestra una tabla con lo
 ### ¿Por qué un grupo aparece con «Heredado» si no lo he asignado al nivel?
 
 Porque Joomla concede el nivel a todos los grupos que cuelgan de uno asignado. La celda indica de qué grupo padre viene. Para quitárselo hay que sacar del nivel a ese grupo padre o mover el grupo en el árbol; la pantalla de User Tools no cambia nada.
+
+### «Heredado» en la columna *Público* de la fila «Administrator», ¿quiere decir que quien tiene el nivel Público ve lo mismo que los administradores?
+
+No, al revés. Cada celda dice qué niveles tienen los miembros del grupo de la fila, es decir, qué contenido pueden ver. Esa celda significa que los administradores pueden ver el contenido *Público*, porque su grupo cuelga del grupo «Public», asignado a ese nivel. El texto de debajo («del grupo «Public»») nombra el **grupo** del que viene la herencia, no el nivel.
+
+### ¿Puedo exportar la tabla?
+
+Sí, desde la 2026.10.11, en CSV y en dos formas: la tabla tal como se ve (una fila por grupo y una columna por nivel) o una fila por cada grupo y nivel que tiene, más cómoda para filtrar o hacer tablas dinámicas. Se abren bien en Excel en español (UTF-8 con BOM, punto y coma). Detalles en el [README](README.md#grupos-y-niveles-de-acceso).
+
+### No veo la columna «Cuentas asignadas una a una»
+
+Solo aparece cuando algún nivel tiene cuentas asignadas directamente, sin grupo. Joomla no ofrece hacerlo desde su pantalla de niveles, así que lo normal es que no haya ninguna.
 
 ### ¿Por qué no veo la pantalla?
 

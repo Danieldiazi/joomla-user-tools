@@ -10,7 +10,7 @@ These shared screenshots show the Spanish interface on Joomla 6.2.0. Deletion sc
 
 ![Comparison: list and exclusions](screenshots/02-comparacion-lista.jpg)
 
-![Comparison: review changes](screenshots/03-comparacion-revision.jpg)
+![Comparison: review changes, with «tick all» and emails built from the username (2026.10.11, Spanish interface)](screenshots/03-comparacion-revision.jpg)
 
 ![Comparison: result with passwords hidden](screenshots/04-comparacion-resultado.jpg)
 
@@ -38,4 +38,4 @@ These shared screenshots show the Spanish interface on Joomla 6.2.0. Deletion sc
 
 ![User Tools module on the Users dashboard (2026.10.6)](screenshots/13-panel-usuarios.jpg)
 
-![Groups and access levels: groups by level matrix and summary by level (2026.10.9)](screenshots/14-grupos-niveles.jpg)
+![Groups and access levels: groups by level matrix, CSV export and summary by level (2026.10.11, Spanish interface)](screenshots/14-grupos-niveles.jpg)

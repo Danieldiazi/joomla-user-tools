@@ -76,15 +76,30 @@ $draft      = $this->draft;
             <div class="form-text"><?= Text::_('COM_USERTOOLS_CREATION_MODE_PASSWORD_HELP') ?></div>
           </div>
         </fieldset>
-        <div class="ut-table-scroll"><table class="table table-sm"><thead><tr><th scope="col"><?= Text::_('COM_USERTOOLS_ADD') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_USERNAME') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_EMAIL') ?></th></tr></thead><tbody>
+        <div class="ut-email-auto mb-3" data-ut-email-auto>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="ut-email-auto" data-ut-email-auto-on>
+            <label class="form-check-label" for="ut-email-auto"><?= Text::_('COM_USERTOOLS_EMAIL_AUTO') ?></label>
+          </div>
+          <div class="input-group input-group-sm ut-email-domain">
+            <span class="input-group-text" aria-hidden="true">@</span>
+            <input class="form-control" type="text" id="ut-email-domain" data-ut-email-domain inputmode="url" autocomplete="off" spellcheck="false"
+              placeholder="<?= Text::_('COM_USERTOOLS_EMAIL_DOMAIN_PLACEHOLDER') ?>" aria-label="<?= Text::_('COM_USERTOOLS_EMAIL_DOMAIN') ?>" aria-describedby="ut-email-auto-help" disabled>
+          </div>
+          <div class="form-text" id="ut-email-auto-help"><?= Text::_('COM_USERTOOLS_EMAIL_AUTO_HELP') ?></div>
+          <div class="form-text text-warning-emphasis" data-ut-email-skipped hidden></div>
+        </div>
+        <div class="ut-table-scroll"><table class="table table-sm"><thead><tr>
+          <th scope="col"><input class="form-check-input me-1" type="checkbox" data-ut-add-all aria-label="<?= Text::_('COM_USERTOOLS_ADD_ALL') ?>" title="<?= Text::_('COM_USERTOOLS_ADD_ALL') ?>"><?= Text::_('COM_USERTOOLS_ADD') ?></th>
+          <th scope="col"><?= Text::_('COM_USERTOOLS_USERNAME') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_EMAIL') ?></th></tr></thead><tbody>
         <?php foreach ($unknown as $name) :
             $key     = Registration::key($name);
             $checked = (string) ($draft['checked'][$key] ?? '0') === '1';
             ?>
-          <tr data-ut-user="<?= $this->escape($key) ?>">
+          <tr data-ut-user="<?= $this->escape($key) ?>" data-ut-name="<?= $this->escape($name) ?>">
             <td><input class="form-check-input" type="checkbox" data-ut-add aria-label="<?= Text::sprintf('COM_USERTOOLS_ADD_USER', $this->escape($name)) ?>"<?= $checked ? ' checked' : '' ?>></td>
             <td><?= $this->escape($name) ?></td>
-            <td><input class="form-control form-control-sm" type="email" data-ut-email aria-label="<?= Text::sprintf('COM_USERTOOLS_EMAIL_OF', $this->escape($name)) ?>" value="<?= $this->escape($draft['emails'][$key] ?? '') ?>" placeholder="nombre@ejemplo.com"<?= $checked ? ' required' : ' disabled' ?>></td>
+            <td><input class="form-control form-control-sm" type="email" data-ut-email aria-label="<?= Text::sprintf('COM_USERTOOLS_EMAIL_OF', $this->escape($name)) ?>" value="<?= $this->escape($draft['emails'][$key] ?? '') ?>" placeholder="<?= Text::_('COM_USERTOOLS_EMAIL_PLACEHOLDER') ?>"<?= $checked ? ' required' : ' disabled' ?>></td>
           </tr>
         <?php endforeach; ?>
         </tbody></table></div>

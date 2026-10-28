@@ -21,6 +21,11 @@
 .ut-group-note[hidden]{display:none}
 .ut-app .form-control.ut-count-input{max-width:12rem}
 .ut-app .form-control.ut-filter{max-width:22rem}
+.ut-access-tools{display:flex;align-items:center;justify-content:flex-end;gap:.5rem;flex-wrap:wrap}
+.ut-app .ut-access-tools .form-control.ut-filter{width:auto;flex:1 1 14rem}
+.ut-access-tools .btn{white-space:nowrap}
+.ut-email-auto .ut-email-domain{max-width:22rem;margin:.35rem 0 0 1.75rem}
+.ut-app input[data-ut-email]{min-width:16rem}
 .ut-instructions li{margin:1.25rem 0}
 .ut-instructions p{margin:.35rem 0 .6rem}
 .ut-secret{user-select:all;overflow-wrap:anywhere}

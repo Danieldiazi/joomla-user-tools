@@ -57,27 +57,78 @@ class CompareController extends DisplayController
         $this->guard(self::PERMISSION);
         $model = $this->model();
         try {
-            $result = $model->apply($this->postData());
+            $step = $model->apply($this->postData());
         } catch (UserFacingException $e) {
             $this->warn($e);
             $this->go($model->getPreview() ? 'view=compare&layout=review' : 'view=compare');
             return;
         }
-        $hasPasswords = (bool) array_filter($result['created'], fn ($row) => isset($row['password']));
+        $hasPasswords = (bool) array_filter($step['created'], fn ($row) => isset($row['password']));
         if (!$hasPasswords) {
-            $this->go('view=compare&layout=result');
+            $this->go($step['done'] ? 'view=compare&layout=result' : 'view=compare&layout=progress');
             return;
         }
         // One-time passwords are rendered in this response and never stored anywhere.
+        $view = $this->view($model, $step['done'] ? 'result' : 'progress');
+        if ($step['done']) {
+            $view->oneTimeResult = $step['result'];
+        } else {
+            $view->oneTimeRows = $step['created'];
+        }
+        $view->display();
+    }
+
+    /** One batch of a comparison being applied, as JSON for the progress screen. */
+    public function step(): void
+    {
+        $this->guard(self::PERMISSION);
+        try {
+            $step = $this->model()->step();
+            $data = [
+                'done'      => $step['done'],
+                'total'     => $step['total'],
+                'processed' => $step['processed'],
+                'blocked'   => \count($step['blocked']),
+                // One-time passwords travel only in the response of the batch that created them.
+                'created'   => array_map(fn ($row) => [
+                    'id' => (int) $row['id'], 'username' => (string) $row['username'], 'email' => (string) $row['email'],
+                    'password' => isset($row['password']) ? (string) $row['password'] : null, 'mailed' => $row['mailed'] ?? null,
+                ], $step['created']),
+                'errors'    => \count($step['errors']),
+            ];
+        } catch (UserFacingException $e) {
+            $data = ['error' => Text::sprintf($e->key(), ...$e->arguments())];
+        }
+        Toolkit::app()->setHeader('Content-Type', 'application/json; charset=utf-8', true);
+        Toolkit::app()->setHeader('X-Content-Type-Options', 'nosniff', true);
+        Toolkit::app()->sendHeaders();
+        echo json_encode($data, JSON_THROW_ON_ERROR | JSON_HEX_TAG | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+        $this->app->close();
+    }
+
+    /** Stops a pending job: what was done stays, the rest is left untouched. */
+    public function discard(): void
+    {
+        $this->guard(self::PERMISSION);
+        try {
+            $this->model()->discard();
+            $this->go('view=compare&layout=result');
+        } catch (UserFacingException $e) {
+            $this->warn($e);
+            $this->go('view=compare');
+        }
+    }
+
+    private function view(CompareModel $model, string $layout): CompareView
+    {
         $view = $this->getView('Compare', 'html', 'Administrator');
         if (!$view instanceof CompareView) {
             throw new \LogicException('Unexpected view.');
         }
         $view->setModel($model, true);
         $view->setDocument(Toolkit::app()->getDocument());
-        $view->setLayout('result');
-        $view->oneTimeResult = $result;
-        $view->display();
+        $view->setLayout($layout);
+        return $view;
     }
 
     private function model(): CompareModel

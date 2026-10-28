@@ -92,21 +92,82 @@
 
     document.querySelectorAll('[data-ut-review]').forEach((form) => {
       const rows = [...form.querySelectorAll('[data-ut-user]')];
+      const all = form.querySelector('[data-ut-add-all]');
       const sync = () => {
         const data = {};
+        let ticked = 0;
         rows.forEach((row) => {
           const add = row.querySelector('[data-ut-add]');
           const email = row.querySelector('[data-ut-email]');
           email.disabled = !add.checked;
           email.required = add.checked;
+          if (add.checked) ticked += 1;
           if (add.checked || email.value.trim()) {
             data[row.dataset.utUser] = { checked: add.checked, email: email.value };
           }
         });
+        if (all) {
+          all.checked = !!rows.length && ticked === rows.length;
+          all.indeterminate = ticked > 0 && ticked < rows.length;
+        }
         form.querySelector('[data-ut-registrations]').value = JSON.stringify(data);
         form.querySelector('[data-ut-ready]').value = '1';
       };
       rows.forEach((row) => row.querySelector('[data-ut-add]').addEventListener('change', sync));
+      if (all) all.addEventListener('change', () => {
+        rows.forEach((row) => { row.querySelector('[data-ut-add]').checked = all.checked; });
+        sync();
+      });
+
+      // Optional: build each email as username@domain. Emails typed by hand are never replaced, and
+      // the ones filled here are cleared again when the option is turned off.
+      const auto = form.querySelector('[data-ut-email-auto]');
+      if (auto) {
+        const on = auto.querySelector('[data-ut-email-auto-on]');
+        const domain = auto.querySelector('[data-ut-email-domain]');
+        const note = auto.querySelector('[data-ut-email-skipped]');
+        const localPart = /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*$/;
+        const validDomain = /^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
+        const fill = () => {
+          domain.disabled = !on.checked;
+          // The "@" is already shown before the field; a pasted "@example.com" works too.
+          if (domain.value.startsWith('@')) domain.value = domain.value.replace(/^@+/, '');
+          const host = domain.value.trim().toLowerCase();
+          const usable = on.checked && validDomain.test(host);
+          domain.classList.toggle('is-invalid', on.checked && host !== '' && !usable);
+          let skipped = 0;
+          rows.forEach((row) => {
+            const email = row.querySelector('[data-ut-email]');
+            const mine = email.dataset.utAuto === '1';
+            if (!mine && email.value.trim()) return;
+            const name = (row.dataset.utName || '').trim();
+            if (usable && name.length <= 64 && localPart.test(name)) {
+              email.value = `${name}@${host}`;
+              email.dataset.utAuto = '1';
+            } else {
+              if (mine) email.value = '';
+              email.dataset.utAuto = '0';
+              if (usable) skipped += 1;
+            }
+          });
+          if (note) {
+            const message = on.checked && host !== '' && !usable
+              ? text('COM_USERTOOLS_JS_EMAIL_DOMAIN_INVALID', 'Type a valid domain, for example example.com.')
+              : (skipped === 1 ? text('COM_USERTOOLS_JS_EMAIL_SKIPPED_1', 'One username cannot be used as an email: type that email yourself.')
+                : (skipped ? sprintf(text('COM_USERTOOLS_JS_EMAIL_SKIPPED', '%d usernames cannot be used as an email: type those emails yourself.'), skipped) : ''));
+            note.textContent = message;
+            note.hidden = !message;
+          }
+          sync();
+        };
+        rows.forEach((row) => {
+          const email = row.querySelector('[data-ut-email]');
+          email.addEventListener('input', () => { email.dataset.utAuto = '0'; sync(); });
+        });
+        on.addEventListener('change', fill);
+        domain.addEventListener('input', fill);
+      }
+      rows.forEach((row) => row.querySelector('[data-ut-email]').addEventListener('change', sync));
       form.addEventListener('submit', sync);
       sync();
     });
@@ -198,6 +259,133 @@
         subgroups.forEach((sub, id) => { sub.disabled = !(byId.get(id) && byId.get(id).dataset.utOwn === '0'); });
       });
       sync();
+    });
+
+    // Applying a comparison: one short request per batch until the job is done. One-time passwords
+    // arrive only in the response of the batch that created them and live only in this page.
+    document.querySelectorAll('[data-ut-progress]').forEach((root) => {
+      const bar = root.querySelector('[data-ut-progress-bar]');
+      const label = root.querySelector('[data-ut-progress-text]');
+      const errorBox = root.querySelector('[data-ut-progress-error]');
+      const errorText = root.querySelector('[data-ut-progress-error-text]');
+      const retry = root.querySelector('[data-ut-progress-retry]');
+      const tbody = root.querySelector('[data-ut-progress-rows]');
+      const finished = root.querySelector('[data-ut-progress-finished]');
+      const copyAll = root.querySelector('[data-ut-progress-copy]');
+      const discard = root.querySelector('[data-ut-progress-discard]');
+      const total = Number(root.dataset.utTotal || 0);
+      let processed = Number(root.dataset.utProcessed || 0);
+      const created = [];
+      let running = null;
+      let stopping = false;
+
+      const show = () => {
+        const percent = total ? Math.floor((processed * 100) / total) : 100;
+        if (bar) {
+          bar.setAttribute('aria-valuenow', String(percent));
+          bar.firstElementChild.style.width = `${percent}%`;
+        }
+        if (label) {
+          label.textContent = text('COM_USERTOOLS_JS_PROGRESS', '%1$d of %2$d accounts processed')
+            .replace('%1$d', processed).replace('%2$d', total);
+        }
+      };
+      const addRows = (rows) => {
+        rows.forEach((row) => {
+          if (!row.password) return;
+          created.push(row);
+          if (!tbody) return;
+          const tr = document.createElement('tr');
+          [row.username, row.email].forEach((value) => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            tr.append(td);
+          });
+          const td = document.createElement('td');
+          const code = document.createElement('code');
+          code.className = 'ut-secret';
+          code.textContent = row.password;
+          td.append(code);
+          tr.append(td);
+          tbody.append(tr);
+        });
+      };
+      const fail = (message) => {
+        if (errorText) errorText.textContent = message;
+        if (errorBox) errorBox.hidden = false;
+      };
+      const request = async () => {
+        const body = new FormData();
+        body.append(root.dataset.utToken, '1');
+        const response = await fetch(root.dataset.utStepUrl, {
+          method: 'POST', body, credentials: 'same-origin', headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      };
+      const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
+      const run = async () => {
+        if (errorBox) errorBox.hidden = true;
+        let attempts = 0;
+        while (!stopping) {
+          let data;
+          try {
+            data = await request();
+            attempts = 0;
+          } catch (e) {
+            attempts += 1;
+            if (attempts > 3) {
+              fail(text('COM_USERTOOLS_JS_PROGRESS_FAILED', 'It could not continue. What was done is kept.'));
+              return;
+            }
+            if (label) label.textContent = text('COM_USERTOOLS_JS_PROGRESS_RETRY', 'Retrying…');
+            await sleep(2000 * attempts);
+            continue;
+          }
+          if (data.error) {
+            fail(data.error);
+            return;
+          }
+          processed = data.processed;
+          addRows(data.created || []);
+          show();
+          if (data.done) {
+            if (created.length && finished) {
+              finished.hidden = false;
+              if (discard) discard.hidden = true;
+              bar.firstElementChild.classList.remove('progress-bar-animated');
+            } else {
+              window.location.assign(root.dataset.utResultUrl);
+            }
+            return;
+          }
+        }
+      };
+      const start = () => { running = run(); };
+
+      try {
+        const initial = root.querySelector('[data-ut-progress-initial]');
+        addRows(initial ? JSON.parse(initial.textContent || '[]') : []);
+      } catch (e) { /* Nothing to show from the first batch. */ }
+      show();
+      if (retry) retry.addEventListener('click', start);
+      if (copyAll) copyAll.addEventListener('click', async () => {
+        const lines = created.map((row) => [row.username, row.email, row.password].join('\t')).join('\n');
+        try {
+          await navigator.clipboard.writeText(lines);
+          copyAll.textContent = text('COM_USERTOOLS_JS_COPIED', 'Copied');
+        } catch (e) { /* Clipboard not available: the table stays selectable. */ }
+      });
+      // Let the batch in flight finish before discarding, so it cannot write the job back afterwards.
+      if (discard) discard.addEventListener('submit', async (event) => {
+        if (discard.dataset.utReady === '1') return;
+        event.preventDefault();
+        stopping = true;
+        try { await running; } catch (e) { /* The request already ended. */ }
+        discard.dataset.utReady = '1';
+        discard.requestSubmit(discard.querySelector('button[name="task"]'));
+      });
+      start();
     });
 
     document.querySelectorAll('[data-ut-copy]').forEach((button) => {

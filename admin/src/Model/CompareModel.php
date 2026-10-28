@@ -8,7 +8,6 @@ use Danieldiazi\Component\Usertools\Administrator\Service\AccountMailer;
 use Danieldiazi\Component\Usertools\Administrator\Service\ActionLogger;
 use Danieldiazi\Component\Usertools\Administrator\Service\Comparison;
 use Danieldiazi\Component\Usertools\Administrator\Service\Exclusions;
-use Danieldiazi\Component\Usertools\Administrator\Service\Operator;
 use Danieldiazi\Component\Usertools\Administrator\Service\Registration;
 use Danieldiazi\Component\Usertools\Administrator\Service\Settings;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
@@ -26,6 +25,7 @@ class CompareModel extends BaseDatabaseModel
     private const DRAFT   = 'com_usertools.compare.draft';
     private const PREVIEW = 'com_usertools.compare.preview';
     private const RESULT  = 'com_usertools.compare.result';
+    private const JOB     = 'com_usertools.compare.job';
     private const REGISTERED_GROUP = 2;
 
     /** @return array{text: string, checked: array<string, string>, emails: array<string, string>, mode: string, exclusions: Exclusions} */
@@ -115,15 +115,18 @@ class CompareModel extends BaseDatabaseModel
     }
 
     /**
-     * Applies the reviewed changes. The returned result may contain one-time passwords:
-     * they are never stored, the session keeps a redacted copy.
+     * Applies the reviewed changes. The preview is consumed and the accounts to block and create
+     * become a job in the session; the first batch runs in this request (see step()).
      *
      * @param  array<string, mixed> $input
-     * @return array<string, mixed>
+     * @return array<string, mixed> see step()
      */
     public function apply(array $input): array
     {
         $preview = $this->requirePreview($input);
+        if ($this->getJob()) {
+            throw new UserFacingException('COM_USERTOOLS_ERROR_JOB_PENDING');
+        }
         $mode    = Registration::mode($input['creation_mode'] ?? null);
         $this->storeDraft(Registration::draft((string) ($input['registrations'] ?? '{}'), $preview['unknown']) + ['mode' => $mode]);
         if ((int) ($input['confirm'] ?? 0) !== 1) {
@@ -152,30 +155,186 @@ class CompareModel extends BaseDatabaseModel
         }
         // Consume the preview before any write: a refresh or replay cannot repeat the batch.
         $this->session()->set(self::PREVIEW, []);
-        $operator   = $this->operator();
         $exclusions = $draft['exclusions'];
-        $result     = ['blocked' => [], 'created' => [], 'errors' => [], 'skipped' => 0];
         $fresh      = $this->calculate($preview['names'], $exclusions);
         $offered    = array_fill_keys($preview['ids'], true);
-        $blocker    = Toolkit::blocker();
+        $block      = [];
         foreach ($fresh['candidates'] as $candidate) {
-            if (!isset($offered[(int) $candidate->id])) {
-                continue;
+            if (isset($offered[(int) $candidate->id])) {
+                $block[] = (int) $candidate->id;
             }
-            $outcome = $blocker->block((int) $candidate->id, $exclusions, $operator,
-                fn (object $user) => !Comparison::contains($preview['names'], (string) $user->username), 'COM_USERTOOLS_TOOL_COMPARE');
-            $this->collect($result, $outcome, (int) $candidate->id);
         }
-        $result['skipped'] = \count($preview['ids']) - \count($result['blocked']) - \count($result['errors']);
-        if ($selection) {
-            $created = $this->create($selection, $mode, $operator);
-            $result['created'] = $created['created'];
-            $result['errors']  = array_merge($result['errors'], $created['errors']);
-        }
-        $result['mode'] = $mode;
-        $this->storeResult(self::RESULT, $result);
-        Toolkit::clearDashboardCache();
+        // Only usernames and emails are kept: no password is ever stored with the job.
+        $this->session()->set(self::JOB, [
+            'actor'      => (int) $this->identity()->id,
+            'mode'       => $mode,
+            'names'      => $preview['names'],
+            'exclusions' => $exclusions->toArray(),
+            'offered'    => \count($preview['ids']),
+            'block'      => $block,
+            'create'     => $selection,
+            'total'      => \count($block) + \count($selection),
+            'processed'  => 0,
+            'blocked'    => [],
+            'created'    => [],
+            'errors'     => [],
+        ]);
         $this->session()->set(self::DRAFT, []);
+        return $this->step();
+    }
+
+    /**
+     * The pending job of this operator, if a comparison is being applied.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function getJob(): ?array
+    {
+        $job = (array) $this->session()->get(self::JOB, []);
+        if (!$job) {
+            return null;
+        }
+        if (($job['actor'] ?? 0) !== (int) $this->identity()->id) {
+            $this->session()->set(self::JOB, []);
+            return null;
+        }
+        return $job;
+    }
+
+    /**
+     * Processes the job for a few seconds (at least one account), so no request runs into PHP's or
+     * the web server's time limit. Each account is revalidated, changed and logged on its own, so an
+     * interrupted request loses nothing already done and the rest can still be continued or discarded.
+     * One-time passwords appear only in the return value of the step that created them.
+     *
+     * @return array{done: bool, total: int, processed: int, blocked: list<array<string, mixed>>, created: list<array<string, mixed>>,
+     *     errors: list<array<string, mixed>>, result: array<string, mixed>|null}
+     */
+    public function step(): array
+    {
+        $job = $this->getJob();
+        if (!$job) {
+            throw new UserFacingException('COM_USERTOOLS_ERROR_JOB_MISSING');
+        }
+        // Counted from the start of the request: in apply() the checks before the first batch use part of it.
+        $deadline   = (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true)) + Toolkit::settings()->batchSeconds();
+        $operator   = $this->operator();
+        $exclusions = Exclusions::fromArray($job['exclusions']);
+        $names      = $job['names'];
+        $step       = ['blocked' => [], 'created' => [], 'errors' => []];
+        $count      = 0;
+
+        if ($job['block']) {
+            $blocker = Toolkit::blocker();
+            while ($job['block'] && $this->more($count, $deadline)) {
+                $id      = (int) $job['block'][0];
+                $outcome = $blocker->block($id, $exclusions, $operator,
+                    fn (object $user) => !Comparison::contains($names, (string) $user->username), 'COM_USERTOOLS_TOOL_COMPARE');
+                $one = ['blocked' => [], 'errors' => []];
+                $this->collect($one, $outcome, $id);
+                array_shift($job['block']);
+                $job['blocked']     = array_merge($job['blocked'], $one['blocked']);
+                $job['errors']      = array_merge($job['errors'], $one['errors']);
+                $job['blockErrors'] = (int) ($job['blockErrors'] ?? 0) + \count($one['errors']);
+                $job['processed']++;
+                $this->checkpoint($job);
+                $step['blocked'] = array_merge($step['blocked'], $one['blocked']);
+                $step['errors']  = array_merge($step['errors'], $one['errors']);
+                $count++;
+            }
+        }
+        if ($job['create'] && $this->more($count, $deadline)) {
+            // The permission may have been withdrawn while the job was paused: what is left waits, or is discarded.
+            if (!$this->identity()->authorise('usertools.create', 'com_usertools')) {
+                throw new UserFacingException('COM_USERTOOLS_ERROR_CREATE_REVOKED');
+            }
+            $factory = Toolkit::users();
+            $mailer  = new AccountMailer();
+            $log     = new ActionLogger();
+            $mode    = (string) $job['mode'];
+            $core    = $this->silenceCoreMail();
+            try {
+                while ($job['create'] && $this->more($count, $deadline)) {
+                    $row     = $job['create'][0];
+                    $created = Registration::create([$row], fn () => $factory->loadUserById(0), self::REGISTERED_GROUP, $mode,
+                        Toolkit::passwords(), fn (object $user) => $mailer->send($user),
+                        function (object $user) use ($log, $operator, $mode, &$job): void {
+                            // The account exists: take it off the queue at once, so a request cut off now
+                            // (a slow mail server, a time limit) never creates it twice when continuing.
+                            array_shift($job['create']);
+                            $job['processed']++;
+                            $job['created'][] = ['username' => (string) $user->username, 'email' => (string) $user->email, 'id' => (int) $user->id,
+                                'mode' => $mode, 'mailed' => false];
+                            $this->checkpoint($job);
+                            $log->created($user, $operator, $mode);
+                        });
+                    if (!$created['created']) {
+                        // Not created: nothing exists to repeat, so it leaves the queue as a failure.
+                        array_shift($job['create']);
+                        $job['processed']++;
+                    } else {
+                        // Now the email outcome is known; the stored row never has the password.
+                        $stored = $created['created'][0];
+                        unset($stored['password']);
+                        $job['created'][\count($job['created']) - 1] = $stored;
+                    }
+                    $job['errors'] = array_merge($job['errors'], $created['errors']);
+                    $this->checkpoint($job);
+                    $step['created'] = array_merge($step['created'], $created['created']);
+                    $step['errors']  = array_merge($step['errors'], $created['errors']);
+                    $count++;
+                }
+            } finally {
+                $core[0]->params->set('mail_to_user', $core[1]);
+            }
+        }
+
+        $done   = !$job['block'] && !$job['create'];
+        $result = null;
+        if ($done) {
+            $result = $this->finish($job, 0);
+            // The response that created them may show this step's passwords; the stored copy never has them.
+            $withPasswords = [];
+            foreach ($step['created'] as $row) {
+                $withPasswords[(int) $row['id']] = $row;
+            }
+            $result['created'] = array_map(fn (array $row) => $withPasswords[(int) $row['id']] ?? $row, $result['created']);
+        }
+        Toolkit::clearDashboardCache();
+        return $step + ['done' => $done, 'total' => (int) $job['total'], 'processed' => (int) $job['processed'], 'result' => $result];
+    }
+
+    /**
+     * Stops a pending job: what was done stays done (and logged); the accounts not reached yet are
+     * left as they are and counted in the result.
+     */
+    public function discard(): void
+    {
+        $job = $this->getJob();
+        if (!$job) {
+            throw new UserFacingException('COM_USERTOOLS_ERROR_JOB_MISSING');
+        }
+        $this->finish($job, \count($job['block']) + \count($job['create']));
+        Toolkit::clearDashboardCache();
+    }
+
+    /**
+     * @param  array<string, mixed> $job
+     * @return array<string, mixed> the result, also stored (without passwords) for the result screen
+     */
+    private function finish(array $job, int $discarded): array
+    {
+        $result = [
+            'blocked'   => $job['blocked'],
+            'created'   => $job['created'],
+            'errors'    => $job['errors'],
+            // Offered accounts that were not blocked nor failed: protected or changed since the review.
+            'skipped'   => max(0, (int) $job['offered'] - \count($job['blocked']) - (int) ($job['blockErrors'] ?? 0) - \count($job['block'])),
+            'discarded' => $discarded,
+            'mode'      => $job['mode'],
+        ];
+        $this->session()->set(self::JOB, []);
+        $this->storeResult(self::RESULT, $result);
         return $result;
     }
 
@@ -209,33 +368,37 @@ class CompareModel extends BaseDatabaseModel
     }
 
     /**
-     * @param  list<array{username: string, email: string}> $selection
-     * @return array{created: list<array<string, mixed>>, errors: list<array{username: string, message: string}>}
+     * Saves the job after each account, so a request that is cut off half-way (a time limit, a slow mail
+     * server) keeps everything done so far and continuing never repeats an account.
+     *
+     * @param array<string, mixed> $job
      */
-    private function create(array $selection, string $mode, Operator $operator): array
+    private function checkpoint(array $job): void
     {
-        $app     = Toolkit::app();
-        $factory = Toolkit::users();
-        $mailer  = new AccountMailer();
-        // The core user plugin would email the generated password; this tool sends its own link instead.
+        $this->session()->set(self::JOB, $job);
+    }
+
+    /** At least one account per request, so a job always moves forward; then until the time budget runs out. */
+    private function more(int $done, float $deadline): bool
+    {
+        return $done === 0 || microtime(true) < $deadline;
+    }
+
+    /**
+     * The core user plugin would email the generated password; this tool sends its own link instead.
+     *
+     * @return array{0: CMSPlugin, 1: mixed} the plugin and its setting, to restore afterwards
+     */
+    private function silenceCoreMail(): array
+    {
         PluginHelper::importPlugin('user');
-        $core = $app->bootPlugin('joomla', 'user');
+        $core = Toolkit::app()->bootPlugin('joomla', 'user');
         if (!$core instanceof CMSPlugin) {
             throw new \LogicException('The core user plugin is not available.');
         }
         $before = $core->params->get('mail_to_user', 1);
         $core->params->set('mail_to_user', 0);
-        try {
-            $result = Registration::create($selection, fn () => $factory->loadUserById(0), self::REGISTERED_GROUP, $mode,
-                Toolkit::passwords(), fn (object $user) => $mailer->send($user));
-        } finally {
-            $core->params->set('mail_to_user', $before);
-        }
-        $log = new ActionLogger();
-        foreach ($result['created'] as $row) {
-            $log->created((object) ['id' => $row['id'], 'username' => $row['username']], $operator, $mode);
-        }
-        return $result;
+        return [$core, $before];
     }
 
     /**

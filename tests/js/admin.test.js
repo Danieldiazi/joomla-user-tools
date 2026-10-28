@@ -169,3 +169,128 @@ test('remove from groups: account suggestions fill the list while typing', async
   const options = [...doc.querySelectorAll('#ut-list option')];
   assert.deepEqual(options.map((o) => [o.value, o.label]), [['ana', 'Ana Pérez · ana@example.test'], ['anabel', 'b@example.test']]);
 });
+
+const newAccounts = (names, extra = '') => `<form data-ut-review><input type="hidden" data-ut-registrations value="{}"><input type="hidden" data-ut-ready value="0">
+  <div data-ut-email-auto><input type="checkbox" data-ut-email-auto-on><input type="text" data-ut-email-domain disabled><div data-ut-email-skipped hidden></div></div>
+  <table><thead><tr><th><input type="checkbox" data-ut-add-all></th></tr></thead><tbody>${names.map((n, i) => `<tr data-ut-user="k${i}" data-ut-name="${n}">
+  <td><input type="checkbox" data-ut-add></td><td><input type="email" data-ut-email value="${i === 0 ? extra : ''}" disabled></td></tr>`).join('')}</tbody></table></form>`;
+
+test('new accounts: one box ticks or unticks them all and reflects partial selections', async () => {
+  const doc = await load(newAccounts(['ana', 'luis', 'eva']));
+  const all = doc.querySelector('[data-ut-add-all]');
+  const adds = [...doc.querySelectorAll('[data-ut-add]')];
+  all.checked = true;
+  change(all);
+  assert.deepEqual(adds.map((a) => a.checked), [true, true, true]);
+  assert.equal(doc.querySelectorAll('[data-ut-email]:not([disabled])').length, 3, 'every email becomes editable and required');
+  assert.equal(Object.values(JSON.parse(doc.querySelector('[data-ut-registrations]').value)).filter((r) => r.checked).length, 3);
+  adds[1].checked = false;
+  change(adds[1]);
+  assert.equal(all.checked, false);
+  assert.equal(all.indeterminate, true, 'partly ticked');
+  all.checked = false;
+  change(all);
+  assert.deepEqual(adds.map((a) => a.checked), [false, false, false]);
+  assert.equal(all.indeterminate, false);
+});
+
+test('new accounts: emails built from the username and domain, never over a typed one', async () => {
+  const doc = await load(newAccounts(['ana', 'luis', 'josé maría'], 'ana.lopez@otro.es'));
+  const on = doc.querySelector('[data-ut-email-auto-on]');
+  const domain = doc.querySelector('[data-ut-email-domain]');
+  const emails = [...doc.querySelectorAll('[data-ut-email]')];
+  const note = doc.querySelector('[data-ut-email-skipped]');
+  on.checked = true;
+  change(on);
+  assert.equal(domain.disabled, false);
+  domain.value = '@Correo.com ';
+  input(domain);
+  assert.deepEqual(emails.map((e) => e.value), ['ana.lopez@otro.es', 'luis@correo.com', ''], 'the typed email stays; a username with spaces or accents is skipped');
+  assert.equal(note.hidden, false);
+  assert.match(note.textContent, /^One username/, 'singular message');
+  assert.equal(domain.value, 'Correo.com ', 'a typed "@" is dropped: the field already shows it');
+  const data = JSON.parse(doc.querySelector('[data-ut-registrations]').value);
+  assert.equal(data.k1.email, 'luis@correo.com', 'filled emails are sent with the registrations');
+
+  domain.value = 'otra.org';
+  input(domain);
+  assert.equal(emails[1].value, 'luis@otra.org', 'changing the domain updates the filled emails');
+  emails[1].value = 'luis.g@otra.org';
+  input(emails[1]);
+  domain.value = 'tercera.net';
+  input(domain);
+  assert.equal(emails[1].value, 'luis.g@otra.org', 'an edited email is no longer touched');
+
+  domain.value = 'no valido';
+  input(domain);
+  assert.equal(domain.classList.contains('is-invalid'), true);
+  assert.equal(note.hidden, false);
+  domain.value = 'correo.com';
+  input(domain);
+  emails[1].value = '';
+  input(emails[1]);
+  domain.value = 'correo.com ';
+  input(domain);
+  assert.equal(emails[1].value, 'luis@correo.com', 'an emptied email is filled again');
+  on.checked = false;
+  change(on);
+  assert.deepEqual(emails.map((e) => e.value), ['ana.lopez@otro.es', '', ''], 'turning it off clears only what it filled');
+  assert.equal(domain.disabled, true);
+  assert.equal(note.hidden, true);
+});
+
+const progressPage = (passwords, initial = []) => `<div data-ut-progress data-ut-step-url="/step" data-ut-result-url="/result" data-ut-token="tok123"
+  data-ut-total="5" data-ut-processed="1" data-ut-passwords="${passwords ? 1 : 0}">
+  <div data-ut-progress-bar aria-valuenow="0"><div style="width:0%"></div></div><p data-ut-progress-text></p>
+  <div data-ut-progress-error hidden><p data-ut-progress-error-text></p><button type="button" data-ut-progress-retry></button></div>
+  ${passwords ? '<button type="button" data-ut-progress-copy></button><table><tbody data-ut-progress-rows></tbody></table><div data-ut-progress-finished hidden></div>' : ''}
+  <script type="application/json" data-ut-progress-initial>${JSON.stringify(initial)}</script>
+  <form data-ut-progress-discard><button name="task" value="compare.discard"></button></form></div>`;
+
+const loadWithFetch = (html, responses) => {
+  const dom = new JSDOM(`<!doctype html><body>${html}</body>`, { runScripts: 'outside-only' });
+  const calls = [];
+  dom.window.Joomla = { Text: { _: (key, fallback) => fallback } };
+  dom.window.fetch = async (url, options) => {
+    calls.push({ url, token: options.body.get('tok123') });
+    const next = responses.shift();
+    if (next instanceof Error) throw next;
+    if (!next) return new Promise(() => {});
+    return { ok: next.status === undefined || next.status === 200, status: next.status || 200, json: async () => next.body };
+  };
+  dom.window.eval(script);
+  return { doc: dom.window.document, calls };
+};
+const settle = () => new Promise((resolve) => { setTimeout(resolve, 20); });
+
+test('progress: batches run one after another and one-time passwords stay on the page', async () => {
+  const row = (n) => ({ id: n, username: `u${n}`, email: `u${n}@x.test`, password: `P${n}` });
+  const { doc, calls } = loadWithFetch(progressPage(true, [row(1)]), [
+    { body: { done: false, total: 5, processed: 3, created: [row(2), row(3)] } },
+    { body: { done: true, total: 5, processed: 5, created: [row(4), row(5)] } },
+  ]);
+  await settle();
+  assert.equal(calls.length, 2, 'it stops when the job is done');
+  assert.ok(calls.every((c) => c.url === '/step' && c.token === '1'), 'every batch carries the form token');
+  const cells = [...doc.querySelectorAll('[data-ut-progress-rows] tr')].map((tr) => tr.lastElementChild.textContent);
+  assert.deepEqual(cells, ['P1', 'P2', 'P3', 'P4', 'P5'], 'passwords of every batch, including the first one rendered by the server');
+  assert.equal(doc.querySelector('[data-ut-progress-finished]').hidden, false, 'the operator stays on the page to copy them');
+  assert.equal(doc.querySelector('[data-ut-progress-bar]').getAttribute('aria-valuenow'), '100');
+  assert.match(doc.querySelector('[data-ut-progress-text]').textContent, /^5 of 5/);
+});
+
+test('progress: an error from the server stops and offers to continue', async () => {
+  const { doc, calls } = loadWithFetch(progressPage(false), [
+    { body: { error: 'There is no comparison waiting to be applied.' } },
+    { body: { done: false, total: 5, processed: 2, created: [] } },
+  ]);
+  await settle();
+  assert.equal(calls.length, 1);
+  const box = doc.querySelector('[data-ut-progress-error]');
+  assert.equal(box.hidden, false);
+  assert.equal(doc.querySelector('[data-ut-progress-error-text]').textContent, 'There is no comparison waiting to be applied.');
+  doc.querySelector('[data-ut-progress-retry]').click();
+  await settle();
+  assert.equal(calls.length, 3, 'continue sends the next batch');
+  assert.equal(box.hidden, true);
+});

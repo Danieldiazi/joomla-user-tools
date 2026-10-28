@@ -21,6 +21,10 @@ $shown   = array_filter($result['created'], fn ($row) => ($row['mode'] ?? '') ==
     <?php endforeach; ?>
   </div>
 
+  <?php if (!empty($result['discarded'])) : ?>
+  <div class="alert alert-warning" role="alert"><?= Text::sprintf('COM_USERTOOLS_RESULT_DISCARDED', (int) $result['discarded']) ?></div>
+  <?php endif; ?>
+
   <?php if ($shown) : ?>
   <section class="card ut-card"><div class="card-body">
     <h3 class="h5"><?= Text::_('COM_USERTOOLS_PASSWORDS_HEADING') ?></h3>
