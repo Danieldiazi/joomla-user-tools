@@ -236,6 +236,8 @@ Since 2026.10.12, **Content by access level** counts which items use each access
 
 Items in the trash are not counted. Joomla lists also hide archived items unless you change their status filter, so the list may show fewer items than the number. The **Export CSV** button downloads the same table, with one row per level and its ID (UTF-8 with BOM, semicolons). It uses the same permission as «Groups and access levels», now called *View groups, levels and content by level*, and is reached from the home screen or with that screen's «See content by level» button.
 
+![Content by access level (Spanish interface)](docs/screenshots/18-contenido-por-nivel.jpg)
+
 ## Security
 
 - **Super Users are always protected**, in every tool, even when “Exclude administrators” is disabled. User Tools does not block or delete Super User accounts.

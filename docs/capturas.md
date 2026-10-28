@@ -39,3 +39,5 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Las
 ![Módulo User Tools en el panel de Usuarios (2026.10.6)](screenshots/13-panel-usuarios.jpg)
 
 ![Grupos y niveles de acceso: matriz de grupos por nivel, exportación CSV y resumen por nivel (2026.10.11)](screenshots/14-grupos-niveles.jpg)
+
+![Contenido por nivel de acceso: una fila por nivel y una columna por tipo de elemento, con la tabla de una extensión de adjuntos (2026.10.12)](screenshots/18-contenido-por-nivel.jpg)
