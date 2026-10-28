@@ -4,7 +4,7 @@ Guía para agentes de código (Copilot, Codex, Claude y similares) y para cualqu
 
 ## Qué es
 
-User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y PostgreSQL) que gestiona cuentas de usuario. Tiene cinco herramientas y dos pantallas de consulta:
+User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y PostgreSQL) que gestiona cuentas de usuario. Tiene cinco herramientas y tres pantallas de consulta:
 
 - **Comparar una lista**: bloquea las cuentas que no están en una lista vigente y da de alta las nuevas.
 - **Revisar usuarios inactivos**: bloquea las cuentas seleccionadas.
@@ -13,6 +13,7 @@ User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y Postgre
 - **Quitar de grupos**: saca una cuenta de los grupos que se desmarquen y, en los que se marque «y sus subgrupos», de todos los que cuelgan de ellos (se decide grupo a grupo). Una cuenta cada vez; la lógica está en `GroupRemoval` y la escritura en `AccountRegrouper`.
 - **Grupos y niveles de acceso** (solo lectura): qué niveles tiene cada grupo, asignados o heredados, con exportación a CSV. La lógica está en `AccessMatrix`.
 - **Contenido por nivel de acceso** (solo lectura): cuántos elementos de cada tipo usan cada nivel, con enlace a los listados filtrados de Joomla. La lógica está en `AccessUsage` y la lectura en `AccessUsageReader`. Comparte el permiso `usertools.access`.
+- **Diagnóstico de accesos** (solo lectura): cuentas con acceso a la administración sin actividad, superusuarios activos, niveles sin grupos ni cuentas, contenido con niveles inexistentes y grupos sin miembros. Cada aviso explica qué, por qué y cómo revisarlo, sin corregir nada. La lógica está en `AccessHealth`; permiso `usertools.diagnose`.
 
 Además, un módulo de administración resume en el panel de Usuarios las cuentas pendientes, el estado de las tareas y los avisos, y un módulo del sitio lista los grupos de un usuario o los miembros de un grupo.
 

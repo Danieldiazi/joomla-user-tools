@@ -15,10 +15,11 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Quitar de grupos | Elige una cuenta, desmarca los grupos de los que debe salir y, si quieres, quítala también de todos sus subgrupos. Con revisión previa y confirmación. Disponible desde 2026.10.9. |
 | Grupos y niveles de acceso | Tabla de solo lectura con los niveles de acceso que tiene cada grupo, asignados o heredados. Disponible desde 2026.10.9. |
 | Contenido por nivel de acceso | Cuántos artículos, categorías, menús, módulos, campos y demás elementos usan cada nivel, con enlace a cada listado filtrado. Solo lee. Disponible desde 2026.10.12. |
+| Diagnóstico de accesos | Señala cuentas con acceso a la administración sin actividad, si queda un solo superusuario, niveles de acceso que no tiene nadie, contenido con niveles que no existen y grupos sin miembros. Explica cada aviso y solo lee. Disponible desde 2026.10.15. |
 
 **Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
 
-La portada agrupa las herramientas en cuatro secciones, con su explicación siempre visible: **Revisar cuentas** (comparar una lista y revisar inactivos), **Grupos y niveles de acceso** (quitar de grupos y las dos pantallas de consulta), **Automatización y seguimiento** (la tarea programada, con el estado de su plugin, y sus resultados) y, al final y aparte, **Eliminar cuentas**, la única marcada como «Permanente». Cada persona ve solo las herramientas que tiene permitidas, y las secciones sin ninguna desaparecen. Desde cualquier otra pantalla, el botón «Inicio de User Tools» de la barra de Joomla vuelve a la portada.
+La portada agrupa las herramientas en cuatro secciones, con su explicación siempre visible: **Revisar cuentas** (comparar una lista y revisar inactivos), **Grupos y niveles de acceso** (quitar de grupos, las dos pantallas de consulta y el diagnóstico de accesos), **Automatización y seguimiento** (la tarea programada, con el estado de su plugin, y sus resultados) y, al final y aparte, **Eliminar cuentas**, la única marcada como «Permanente». Cada persona ve solo las herramientas que tiene permitidas, y las secciones sin ninguna desaparecen. Desde cualquier otra pantalla, el botón «Inicio de User Tools» de la barra de Joomla vuelve a la portada.
 
 **Requisitos:** Joomla 6 y PHP 8.3 o posterior. Compatible con MySQL/MariaDB y PostgreSQL.  
 **Descarga:** [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest), paquete `pkg_usertools-VERSIÓN.zip`.  
@@ -36,6 +37,7 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 - [Quitar de grupos](#quitar-de-grupos)
 - [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso)
 - [Contenido por nivel de acceso](#contenido-por-nivel-de-acceso)
+- [Diagnóstico de accesos](#diagnóstico-de-accesos)
 - [Seguridad](#seguridad)
 - [Opciones](#opciones)
 - [Capturas de las herramientas](#capturas-de-las-herramientas)
@@ -136,7 +138,7 @@ Desde la 2026.10.6, el panel **Usuarios** de la administración (el icono de pan
 - **Cuentas inactivas sin bloquear**, con el plazo y las exclusiones de «Revisar usuarios inactivos». La cifra enlaza con esa herramienta.
 - **Cuentas bloqueadas pendientes de eliminar**: las que ofrecería «Eliminar usuarios inactivos» con «Solo bloqueadas», su plazo y sus exclusiones. La cifra abre la herramienta con esa opción ya elegida.
 - **Tareas programadas de User Tools**, con modo (simulación o real), última ejecución, resultado (enlazado con su informe) y próxima ejecución.
-- **Avisos**: plugin de tareas deshabilitado o no instalado, ninguna tarea habilitada, una tarea detenida por el límite de seguridad, fallida o con un informe sin finalizar desde hace más de una hora, y una tarea que sigue en simulación más de 14 días después de crearla.
+- **Avisos**: plugin de tareas deshabilitado o no instalado, ninguna tarea habilitada, una tarea detenida por el límite de seguridad, fallida o con un informe sin finalizar desde hace más de una hora, una tarea que sigue en simulación más de 14 días después de crearla y, desde la 2026.10.15, las comprobaciones del [diagnóstico de accesos](#diagnóstico-de-accesos) que conviene revisar, solo para quien puede verlo.
 
 Desde la 2026.10.14, las cifras se presentan como «Inactivas para revisar» y «Bloqueadas para revisar»: son cuentas candidatas, no acciones automáticas, y cada tarjeta enlaza con su revisión. Cada tarea muestra su modo, el resultado de la última ejecución con enlace al informe y las fechas con su etiqueta; si no tiene próxima ejecución, se explica por qué. Cuando alguna tarea está en simulación, una nota recuerda que la simulación no modifica cuentas. Al pie aparecen la fecha de actualización y cómo funciona la caché.
 
@@ -240,6 +242,20 @@ No se cuentan los elementos en la papelera. Los listados de Joomla ocultan adem�
 
 ![Contenido por nivel de acceso](docs/screenshots/18-contenido-por-nivel.jpg)
 
+## Diagnóstico de accesos
+
+Desde la 2026.10.15, **Diagnóstico de accesos** reúne en una pantalla las situaciones que conviene revisar en cuentas, grupos y niveles de acceso. Solo lee: no corrige permisos ni cambia cuentas. Cada comprobación aparece siempre, con o sin avisos, y cuando encuentra algo explica qué ha detectado, **por qué importa** y **cómo revisarlo**, con enlaces a la cuenta, el grupo, el nivel o el listado de Joomla correspondiente.
+
+| Comprobación | Tipo | Qué señala |
+|---|---|---|
+| Cuentas con acceso a la administración sin actividad reciente | Revisar | Cuentas activas con acceso a la administración que no han entrado en los últimos N días (90 por defecto, en Opciones → Diagnóstico). Las que nunca han entrado se cuentan desde su alta. Incluye a los superusuarios, aunque las herramientas de bloqueo y eliminación los protejan. |
+| Superusuarios activos | Revisar | Avisa si solo queda un superusuario activo: si esa cuenta se pierde, nadie puede administrar el sitio sin entrar en el servidor. |
+| Niveles de acceso sin grupos ni cuentas | Revisar | Niveles, salvo Public, que no tiene asignados ningún grupo ni ninguna cuenta. Su contenido solo lo ven los superusuarios. Indica cuántos elementos los usan. |
+| Contenido con un nivel de acceso que no existe | Revisar | Elementos cuyo nivel no existe, por tipo, con enlace al listado de Joomla ya filtrado por ese nivel. Nadie los ve en el sitio. Se usan las mismas tablas que en «Contenido por nivel de acceso». |
+| Grupos sin miembros | Información | Grupos sin cuentas, ni directamente ni en sus subgrupos, con sus subgrupos y los niveles que los usan. No suele ser un error: Joomla trae grupos que muchos sitios no usan. Public y el grupo de invitados no se incluyen. |
+
+El tipo aparece siempre escrito («Revisar», «Información» o «Sin avisos»), no solo con color. **Exportar CSV** descarga todos los avisos (UTF-8 con BOM y punto y coma). La pantalla necesita el permiso *Ver el diagnóstico de accesos*, y el módulo del panel de Usuarios avisa, a quien lo tiene, de cuántas comprobaciones conviene revisar.
+
 ## Seguridad
 
 - **Los superusuarios están siempre protegidos**, en todas las herramientas y aunque se desactive «Excluir administradores». User Tools no bloquea ni elimina cuentas de superusuario.
@@ -247,7 +263,7 @@ No se cuentan los elementos en la papelera. Los listados de Joomla ocultan adem�
 - **Cada bloqueo o cambio de grupos cierra las sesiones abiertas** de la cuenta, como hace el gestor de usuarios de Joomla (requiere «Metadatos de sesión», activado por defecto).
 - **Las altas, los bloqueos, las eliminaciones y los cambios de grupo quedan en el registro de acciones de usuarios** (Usuarios → Registro de acciones de usuarios): quién bloqueó, creó o eliminó cada cuenta y con qué herramienta, o qué tarea programada lo hizo.
 - **Permisos propios**, delegables sin dar superusuario (Opciones → Permisos):
-  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos*, *Eliminar usuarios inactivos*, *Ver resultados de tareas*, *Quitar de grupos* y *Ver grupos, niveles y contenido por nivel*.
+  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos*, *Eliminar usuarios inactivos*, *Ver resultados de tareas*, *Quitar de grupos*, *Ver grupos, niveles y contenido por nivel* y *Ver el diagnóstico de accesos*.
   - Quien no es superusuario nunca puede bloquear, eliminar ni quitar de grupos cuentas con acceso a la administración.
 - **Confirmación reforzada configurable**: a partir de N cuentas (10 por defecto) hay que escribir el número exacto de cuentas afectadas, además de marcar la casilla.
 - **El borrado exige siempre escribir el número de cuentas**, aunque solo se elimine una; el umbral configurable no desactiva esta confirmación.
@@ -265,6 +281,7 @@ Componentes → User Tools → **Opciones** (botón de la barra de herramientas)
 | Comparación | Excluir administradores, nombres excluidos y grupos excluidos de la comparación manual |
 | Revisión de inactivos | Plazo, incluir quien nunca accedió y exclusiones de la revisión manual |
 | Eliminación de inactivos | Plazo, cuentas que se listan (solo bloqueadas por defecto, ambas o solo activas), incluir quien nunca accedió y exclusiones de la eliminación |
+| Diagnóstico | Días sin actividad tras los que una cuenta con acceso a la administración aparece en el diagnóstico de accesos (90 por defecto) |
 | Permisos | Permisos de cada herramienta |
 
 Las exclusiones de las herramientas manuales también se guardan al usarlas. Cada tarea programada tiene las suyas en su propia configuración.

@@ -40,7 +40,7 @@ No. List comparison, manual inactivity review, inactivity deletion and **each** 
 
 ### Who can use it?
 
-Super Users and users with the corresponding delegated permissions under **Options → Permissions**. There are separate permissions for comparison and blocking, account creation, inactivity review, inactivity deletion and viewing task results. Deletion is restricted to Super Users until you explicitly grant it to others. Access to the component also requires `core.manage`.
+Super Users and users with the corresponding delegated permissions under **Options → Permissions**. There are separate permissions for comparison and blocking, account creation, inactivity review, inactivity deletion, viewing task results, removing from groups, viewing groups, levels and content by level, and viewing the access diagnosis. Deletion is restricted to Super Users until you explicitly grant it to others. Access to the component also requires `core.manage`.
 
 ### Does it need JavaScript?
 
@@ -259,6 +259,32 @@ Joomla does not let you delete a level used by any item, including those in the 
 ### Why can't I see the screen?
 
 It requires the *View groups, levels and content by level* permission. Super Users have it; for others, grant it in Components → User Tools → Options → Permissions.
+
+## Access diagnosis
+
+### What does the access diagnosis check?
+
+Since 2026.10.15, five things: accounts with administrator access that have not signed in for a while, whether only one active Super User is left, access levels with no group and no account, content with a level that does not exist, and groups with no members. Each notice explains what it found, why it matters and how to review it. Details in the [README](README.en.md#access-diagnosis).
+
+### Does it fix anything?
+
+No. It is read only. Fixes are made in Joomla (Users, Access Levels, Groups or each content list) or with the User Tools tools linked from each notice.
+
+### Why are Super Users listed if User Tools never blocks them?
+
+Because an unused Super User account is exactly the one most worth reviewing. The blocking and deletion tools still protect them; the diagnosis only points them out so you can decide.
+
+### How do I change the diagnosis inactivity period?
+
+In Components → User Tools → Options → **Diagnosis**. It is 90 days by default and does not depend on the «Review inactive users» period.
+
+### Groups such as Publisher are listed. Is that an error?
+
+No. «Groups with no members» is for information: Joomla ships groups that many sites do not use. It helps find groups that are no longer needed. Before deleting one, check that no permission and no access level uses it.
+
+### Why can't I see the diagnosis?
+
+It requires the *View the access diagnosis* permission. Super Users have it; grant it to others in Components → User Tools → Options → Permissions.
 
 ## Installation and updates
 
