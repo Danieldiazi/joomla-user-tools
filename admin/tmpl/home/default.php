@@ -46,7 +46,7 @@ $sections = array_filter($sections, fn (array $section) => (bool) $section[2]);
   <section class="ut-home-section" aria-labelledby="ut-home-<?= $key ?>" data-ut-home-section="<?= $key ?>">
     <h2 class="ut-home-heading" id="ut-home-<?= $key ?>"><?= Text::_($title) ?></h2>
     <p class="ut-home-section-desc"><?= Text::_($description) ?></p>
-    <div class="row row-cols-1 row-cols-md-2<?= count($cards) > 2 ? ' row-cols-xl-3' : '' ?> g-3">
+    <div class="row row-cols-1 row-cols-md-2 g-3">
       <?php foreach ($cards as $card) :
           [, $view, $cardTitle, $cardText, $action] = $card;
           $kind = $card[5] ?? '';
