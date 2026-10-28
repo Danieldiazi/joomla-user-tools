@@ -138,6 +138,8 @@ Since 2026.10.6, the administrator **Users** dashboard (the dashboard icon next 
 - **User Tools scheduled tasks**, including mode (dry run or real), last run, result (linked to its report) and next run.
 - **Notices**: task plugin disabled or missing, no enabled task, a task stopped by the safety limit, a failed task or a report unfinished for more than an hour, and tasks still in dry-run mode more than 14 days after creation.
 
+Since 2026.10.14, the counts are shown as “Inactive accounts to review” and “Blocked accounts to review”: they are candidate accounts, not automatic actions, and each card links to its review. Each task shows its mode, the result of its last run with a link to the report, and labelled dates; if it has no next run, the module says why. When any task is a dry run, a note explains that dry runs do not change accounts. The footer shows the update time and how the cache works.
+
 Counts use the same rules as the tools, so they match what you see when opening them. They are calculated at most every **10 minutes**, and recalculated as soon as a tool or task changes accounts, or Options are saved.
 
 The module respects permissions: only users with access to User Tools can see it; counts require inactivity review or deletion permission, and tasks require task-results permission. Configure it like any administrator module (Content → Administrator Modules, “User Tools”): move it to another dashboard, rename or unpublish it. Updates do not reposition a moved or unpublished module.
