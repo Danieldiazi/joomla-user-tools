@@ -11,89 +11,82 @@ $states = [
     'disabled' => ['warning', 'COM_USERTOOLS_PLUGIN_DISABLED'],
     'missing'  => ['danger', 'COM_USERTOOLS_PLUGIN_MISSING'],
 ];
-[$badge, $stateKey] = $states[$this->pluginState];
+[$stateColour, $stateKey] = $states[$this->pluginState];
+
+// Sections in the order of a typical task; each card is shown only with its permission, and a
+// section with no card is left out. Badges carry text, never colour alone.
+$sections = [
+    'accounts' => ['COM_USERTOOLS_HOME_SECTION_ACCOUNTS', 'COM_USERTOOLS_HOME_SECTION_ACCOUNTS_DESC', [
+        ['usertools.compare', 'compare', 'COM_USERTOOLS_COMPARE_TITLE', 'COM_USERTOOLS_COMPARE_HOME_DESC', 'COM_USERTOOLS_COMPARE_START', '', 'list'],
+        ['usertools.inactive', 'inactive', 'COM_USERTOOLS_INACTIVE_TITLE', 'COM_USERTOOLS_INACTIVE_HOME_DESC', 'COM_USERTOOLS_INACTIVE_START', '', 'clock'],
+    ]],
+    'groups' => ['COM_USERTOOLS_HOME_SECTION_GROUPS', 'COM_USERTOOLS_HOME_SECTION_GROUPS_DESC', [
+        ['usertools.ungroup', 'ungroup', 'COM_USERTOOLS_UNGROUP_TITLE', 'COM_USERTOOLS_UNGROUP_HOME_DESC', 'COM_USERTOOLS_UNGROUP_START', '', 'users-cog'],
+        ['usertools.access', 'access', 'COM_USERTOOLS_ACCESS_TITLE', 'COM_USERTOOLS_ACCESS_HOME_DESC', 'COM_USERTOOLS_ACCESS_START', 'read', 'user-lock'],
+        ['usertools.access', 'usage', 'COM_USERTOOLS_USAGE_TITLE', 'COM_USERTOOLS_USAGE_HOME_DESC', 'COM_USERTOOLS_USAGE_START', 'read', 'file-alt'],
+    ]],
+    'automation' => ['COM_USERTOOLS_HOME_SECTION_AUTOMATION', 'COM_USERTOOLS_HOME_SECTION_AUTOMATION_DESC', [
+        ['core.manage', 'schedule', 'COM_USERTOOLS_SCHEDULE_HOME_TITLE', 'COM_USERTOOLS_SCHEDULE_HOME_DESC', 'COM_USERTOOLS_SCHEDULE_START', 'plugin', 'calendar-check'],
+        ['usertools.reports', 'reports', 'COM_USERTOOLS_REPORTS', 'COM_USERTOOLS_REPORTS_HOME_DESC', 'COM_USERTOOLS_REPORTS_START', '', 'tasks'],
+    ]],
+];
+foreach ($sections as $key => $section) {
+    $sections[$key][2] = array_values(array_filter($section[2], fn (array $card) => $this->can($card[0])));
+}
+$sections = array_filter($sections, fn (array $section) => (bool) $section[2]);
 ?>
-<div class="ut-app">
+<div class="ut-app ut-home">
   <p class="lead"><?= Text::_('COM_USERTOOLS_HOME_INTRO') ?></p>
-  <div class="row g-4">
-    <?php if ($this->can('usertools.compare')) : ?>
-    <div class="col-lg-6">
-      <section class="card h-100"><div class="card-body d-flex flex-column">
-        <span class="badge bg-primary align-self-start mb-2"><?= Text::_('COM_USERTOOLS_MANUAL') ?></span>
-        <h2 class="h4"><?= Text::_('COM_USERTOOLS_COMPARE_TITLE') ?></h2>
-        <p><?= Text::_('COM_USERTOOLS_COMPARE_HOME_DESC') ?></p>
-        <ol class="mb-4"><li><?= Text::_('COM_USERTOOLS_COMPARE_HOME_STEP1') ?></li><li><?= Text::_('COM_USERTOOLS_COMPARE_HOME_STEP2') ?></li><li><?= Text::_('COM_USERTOOLS_COMPARE_HOME_STEP3') ?></li></ol>
-        <a class="btn btn-primary mt-auto align-self-start" href="<?= Route::_('index.php?option=com_usertools&view=compare') ?>"><?= Text::_('COM_USERTOOLS_COMPARE_START') ?></a>
-      </div></section>
-    </div>
-    <?php endif; ?>
-    <?php if ($this->can('usertools.inactive')) : ?>
-    <div class="col-lg-6">
-      <section class="card h-100"><div class="card-body d-flex flex-column">
-        <span class="badge bg-primary align-self-start mb-2"><?= Text::_('COM_USERTOOLS_MANUAL') ?></span>
-        <h2 class="h4"><?= Text::_('COM_USERTOOLS_INACTIVE_TITLE') ?></h2>
-        <p><?= Text::_('COM_USERTOOLS_INACTIVE_HOME_DESC') ?></p>
-        <a class="btn btn-outline-primary mt-auto align-self-start" href="<?= Route::_('index.php?option=com_usertools&view=inactive') ?>"><?= Text::_('COM_USERTOOLS_INACTIVE_START') ?></a>
-      </div></section>
-    </div>
-    <?php endif; ?>
-    <?php if ($this->can('usertools.delete')) : ?>
-    <div class="col-lg-6">
-      <section class="card h-100 border-danger-subtle"><div class="card-body d-flex flex-column">
-        <span class="badge bg-danger align-self-start mb-2"><?= Text::_('COM_USERTOOLS_MANUAL_IRREVERSIBLE') ?></span>
-        <h2 class="h4"><?= Text::_('COM_USERTOOLS_DELETE_TITLE') ?></h2>
-        <p><?= Text::_('COM_USERTOOLS_DELETE_HOME_DESC') ?></p>
-        <a class="btn btn-outline-danger mt-auto align-self-start" href="<?= Route::_('index.php?option=com_usertools&view=delete') ?>"><?= Text::_('COM_USERTOOLS_DELETE_START') ?></a>
-      </div></section>
-    </div>
-    <?php endif; ?>
-    <?php if ($this->can('usertools.ungroup')) : ?>
-    <div class="col-lg-6">
-      <section class="card h-100"><div class="card-body d-flex flex-column">
-        <span class="badge bg-primary align-self-start mb-2"><?= Text::_('COM_USERTOOLS_MANUAL') ?></span>
-        <h2 class="h4"><?= Text::_('COM_USERTOOLS_UNGROUP_TITLE') ?></h2>
-        <p><?= Text::_('COM_USERTOOLS_UNGROUP_HOME_DESC') ?></p>
-        <a class="btn btn-outline-primary mt-auto align-self-start" href="<?= Route::_('index.php?option=com_usertools&view=ungroup') ?>"><?= Text::_('COM_USERTOOLS_UNGROUP_START') ?></a>
-      </div></section>
-    </div>
-    <?php endif; ?>
-    <div class="col-lg-6">
-      <section class="card h-100"><div class="card-body d-flex flex-column">
-        <span class="badge bg-secondary align-self-start mb-2"><?= Text::_('COM_USERTOOLS_SCHEDULED') ?></span>
-        <h2 class="h4"><?= Text::_('COM_USERTOOLS_SCHEDULE_TITLE') ?></h2>
-        <p><?= Text::_('COM_USERTOOLS_SCHEDULE_HOME_DESC') ?></p>
-        <p><span class="badge bg-<?= $badge ?>"><?= Text::_($stateKey) ?></span></p>
-        <a class="btn btn-outline-primary mt-auto align-self-start" href="<?= Route::_('index.php?option=com_usertools&view=schedule') ?>"><?= Text::_('COM_USERTOOLS_SCHEDULE_START') ?></a>
-      </div></section>
-    </div>
-    <?php if ($this->can('usertools.reports')) : ?>
-    <div class="col-lg-6">
-      <section class="card h-100"><div class="card-body d-flex flex-column">
-        <span class="badge bg-secondary align-self-start mb-2"><?= Text::_('COM_USERTOOLS_SCHEDULED') ?></span>
-        <h2 class="h4"><?= Text::_('COM_USERTOOLS_REPORTS') ?></h2>
-        <p><?= Text::_('COM_USERTOOLS_REPORTS_HOME_DESC') ?></p>
-        <a class="btn btn-outline-primary mt-auto align-self-start" href="<?= Route::_('index.php?option=com_usertools&view=reports') ?>"><?= Text::_('COM_USERTOOLS_REPORTS_START') ?></a>
-      </div></section>
-    </div>
-    <?php endif; ?>
-    <?php if ($this->can('usertools.access')) : ?>
-    <div class="col-lg-6">
-      <section class="card h-100"><div class="card-body d-flex flex-column">
-        <span class="badge bg-info align-self-start mb-2"><?= Text::_('COM_USERTOOLS_READ_ONLY') ?></span>
-        <h2 class="h4"><?= Text::_('COM_USERTOOLS_ACCESS_TITLE') ?></h2>
-        <p><?= Text::_('COM_USERTOOLS_ACCESS_HOME_DESC') ?></p>
-        <a class="btn btn-outline-primary mt-auto align-self-start" href="<?= Route::_('index.php?option=com_usertools&view=access') ?>"><?= Text::_('COM_USERTOOLS_ACCESS_START') ?></a>
-      </div></section>
-    </div>
-    <div class="col-lg-6">
-      <section class="card h-100"><div class="card-body d-flex flex-column">
-        <span class="badge bg-info align-self-start mb-2"><?= Text::_('COM_USERTOOLS_READ_ONLY') ?></span>
-        <h2 class="h4"><?= Text::_('COM_USERTOOLS_USAGE_TITLE') ?></h2>
-        <p><?= Text::_('COM_USERTOOLS_USAGE_HOME_DESC') ?></p>
-        <a class="btn btn-outline-primary mt-auto align-self-start" href="<?= Route::_('index.php?option=com_usertools&view=usage') ?>"><?= Text::_('COM_USERTOOLS_USAGE_START') ?></a>
-      </div></section>
-    </div>
-    <?php endif; ?>
+  <div class="alert alert-info d-flex gap-2 ut-home-note">
+    <span class="icon-shield" aria-hidden="true"></span>
+    <div><?= Text::_('COM_USERTOOLS_HOME_NOTE') ?></div>
   </div>
-  <div class="alert alert-info mt-4 mb-0"><?= Text::_('COM_USERTOOLS_HOME_NOTE') ?></div>
+
+  <?php foreach ($sections as $key => [$title, $description, $cards]) : ?>
+  <section class="ut-home-section" aria-labelledby="ut-home-<?= $key ?>" data-ut-home-section="<?= $key ?>">
+    <h2 class="ut-home-heading" id="ut-home-<?= $key ?>"><?= Text::_($title) ?></h2>
+    <p class="ut-home-section-desc"><?= Text::_($description) ?></p>
+    <div class="row row-cols-1 row-cols-md-2 g-3">
+      <?php foreach ($cards as $card) :
+          [, $view, $cardTitle, $cardText, $action] = $card;
+          $kind = $card[5] ?? '';
+          $icon = $card[6] ?? '';
+          ?>
+      <div class="col">
+        <article class="card h-100" data-ut-home-card="<?= $view ?>">
+          <div class="card-body d-flex flex-column">
+            <div class="ut-card-head">
+              <h3 class="card-title ut-card-title" id="ut-card-<?= $view ?>"><span class="icon-<?= $icon ?>" aria-hidden="true"></span> <?= Text::_($cardTitle) ?></h3>
+              <?php if ($kind === 'read') : ?><span class="badge text-bg-secondary"><?= Text::_('COM_USERTOOLS_READ_ONLY') ?></span><?php endif; ?>
+            </div>
+            <p class="card-text"><?= Text::_($cardText) ?></p>
+            <?php if ($kind === 'plugin') : ?>
+            <p class="card-text"><?= Text::_('COM_USERTOOLS_PLUGIN_STATE') ?> <span class="badge text-bg-<?= $stateColour ?>"><?= Text::_($stateKey) ?></span></p>
+            <?php endif; ?>
+            <a class="btn btn-sm btn-primary mt-auto align-self-start" href="<?= Route::_('index.php?option=com_usertools&view=' . $view) ?>" aria-describedby="ut-card-<?= $view ?>"><?= Text::_($action) ?></a>
+          </div>
+        </article>
+      </div>
+      <?php endforeach; ?>
+    </div>
+  </section>
+  <?php endforeach; ?>
+
+  <?php if ($this->can('usertools.delete')) : ?>
+  <section class="ut-home-section" aria-labelledby="ut-home-delete" data-ut-home-section="delete">
+    <h2 class="ut-home-heading" id="ut-home-delete"><?= Text::_('COM_USERTOOLS_HOME_SECTION_DELETE') ?></h2>
+    <p class="ut-home-section-desc"><?= Text::_('COM_USERTOOLS_HOME_SECTION_DELETE_DESC') ?></p>
+    <article class="card border-danger" data-ut-home-card="delete">
+      <div class="card-body">
+        <div class="ut-card-head">
+          <h3 class="card-title ut-card-title" id="ut-card-delete"><span class="icon-trash" aria-hidden="true"></span> <?= Text::_('COM_USERTOOLS_DELETE_TITLE') ?></h3>
+          <span class="badge text-bg-danger"><?= Text::_('COM_USERTOOLS_PERMANENT') ?></span>
+        </div>
+        <p class="card-text"><?= Text::_('COM_USERTOOLS_DELETE_HOME_DESC') ?></p>
+        <p class="card-text fw-semibold ut-home-warning"><?= Text::_('COM_USERTOOLS_DELETE_HOME_WARNING') ?></p>
+        <a class="btn btn-sm btn-outline-danger" href="<?= Route::_('index.php?option=com_usertools&view=delete') ?>" aria-describedby="ut-card-delete"><?= Text::_('COM_USERTOOLS_DELETE_START') ?></a>
+      </div>
+    </article>
+  </section>
+  <?php endif; ?>
 </div>

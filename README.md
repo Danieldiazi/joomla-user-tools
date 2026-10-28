@@ -18,6 +18,8 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 
 **Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
 
+La portada agrupa las herramientas en cuatro secciones, con su explicación siempre visible: **Revisar cuentas** (comparar una lista y revisar inactivos), **Grupos y niveles de acceso** (quitar de grupos y las dos pantallas de consulta), **Automatización y seguimiento** (la tarea programada, con el estado de su plugin, y sus resultados) y, al final y aparte, **Eliminar cuentas**, la única marcada como «Permanente». Cada persona ve solo las herramientas que tiene permitidas, y las secciones sin ninguna desaparecen. Desde cualquier otra pantalla, el botón «Inicio de User Tools» de la barra de Joomla vuelve a la portada.
+
 **Requisitos:** Joomla 6 y PHP 8.3 o posterior. Compatible con MySQL/MariaDB y PostgreSQL.  
 **Descarga:** [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest), paquete `pkg_usertools-VERSIÓN.zip`.  
 **Licencia:** [GPL-2.0-or-later](LICENSE).
@@ -55,7 +57,7 @@ El instalador comprueba las versiones mínimas, registra la extensión en el reg
 
 **Ejemplo:** en Joomla existen las cuentas `ana`, `luis` y `marta`. Si pegas una lista con `ana` y `marta`, se propone bloquear a `luis`, salvo que esté protegido o ya bloqueado. Si añades `pedro` y no existe, podrás seleccionarlo para crear su cuenta; no se crea automáticamente.
 
-1. Abre Componentes → User Tools → «Empezar comparación».
+1. Abre Componentes → User Tools → «Comparar lista».
 2. Pega la lista **completa** de nombres de usuario vigentes, uno por línea, y revisa las exclusiones.
 3. En la revisión verás las cuentas que se bloquearán, con nombre, correo, último acceso y grupos, y un filtro si la lista es larga. También verás los nombres que no existen en Joomla, para darlos de alta si quieres.
 4. Confirma. El resultado enlaza cada cuenta con el gestor de usuarios. Para deshacer un bloqueo, abre la cuenta y cambia su estado a Habilitado.

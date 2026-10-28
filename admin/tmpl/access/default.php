@@ -24,9 +24,9 @@ $export   = fn (string $shape) => Route::_('index.php?option=com_usertools&task=
   <div class="card ut-card"><div class="card-body">
     <h2 class="h5"><?= Text::_('COM_USERTOOLS_ACCESS_LEGEND') ?></h2>
     <ul class="list-unstyled mb-0 ut-access-legend">
-      <li><span class="badge bg-success"><?= Text::_('COM_USERTOOLS_ACCESS_DIRECT') ?></span> <?= Text::_('COM_USERTOOLS_ACCESS_DIRECT_DESC') ?></li>
-      <li><span class="badge bg-info"><?= Text::_('COM_USERTOOLS_ACCESS_INHERITED') ?></span> <?= Text::_('COM_USERTOOLS_ACCESS_INHERITED_DESC') ?></li>
-      <li><span class="badge bg-secondary"><?= Text::_('COM_USERTOOLS_ACCESS_ALWAYS') ?></span> <?= Text::_('COM_USERTOOLS_ACCESS_ALWAYS_DESC') ?></li>
+      <li><span class="badge text-bg-success"><?= Text::_('COM_USERTOOLS_ACCESS_DIRECT') ?></span> <?= Text::_('COM_USERTOOLS_ACCESS_DIRECT_DESC') ?></li>
+      <li><span class="badge text-bg-info"><?= Text::_('COM_USERTOOLS_ACCESS_INHERITED') ?></span> <?= Text::_('COM_USERTOOLS_ACCESS_INHERITED_DESC') ?></li>
+      <li><span class="badge text-bg-secondary"><?= Text::_('COM_USERTOOLS_ACCESS_ALWAYS') ?></span> <?= Text::_('COM_USERTOOLS_ACCESS_ALWAYS_DESC') ?></li>
       <li><span class="text-body-secondary" aria-hidden="true">—</span> <?= Text::_('COM_USERTOOLS_ACCESS_NONE_DESC') ?></li>
     </ul>
   </div></div>
@@ -61,9 +61,9 @@ $export   = fn (string $shape) => Route::_('index.php?option=com_usertools&task=
             <span class="ut-group-option" style="--ut-level: <?= (int) $row['level'] ?>">
               <?php if ($canEdit) : ?><a href="<?= Route::_('index.php?option=com_users&task=group.edit&id=' . (int) $row['id']) ?>"><?= $this->escape($row['title']) ?></a><?php else : ?><?= $this->escape($row['title']) ?><?php endif; ?>
             </span>
-            <?php if ($row['superUser']) : ?><span class="badge bg-danger"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_SUPER') ?></span>
-            <?php elseif ($row['backend']) : ?><span class="badge bg-warning text-dark"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_BACKEND') ?></span><?php endif; ?>
-            <?php if ($row['guest']) : ?><span class="badge bg-secondary"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_GUEST') ?></span><?php endif; ?>
+            <?php if ($row['superUser']) : ?><span class="badge text-bg-danger"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_SUPER') ?></span>
+            <?php elseif ($row['backend']) : ?><span class="badge text-bg-warning"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_BACKEND') ?></span><?php endif; ?>
+            <?php if ($row['guest']) : ?><span class="badge text-bg-secondary"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_GUEST') ?></span><?php endif; ?>
           </th>
           <td class="text-end">
             <?php if ($canUsers && $row['members'] > 0) : ?><a href="<?= Route::_('index.php?option=com_users&view=users&filter[group_id]=' . (int) $row['id']) ?>"><?= (int) $row['members'] ?></a><?php else : ?><?= (int) $row['members'] ?><?php endif; ?>
@@ -72,10 +72,10 @@ $export   = fn (string $shape) => Route::_('index.php?option=com_usertools&task=
               $cell = $row['cells'][$level['id']];
               ?>
           <td class="text-center" data-ut-cell="<?= $this->escape($cell['state']) ?>">
-            <?php if ($cell['state'] === 'direct') : ?><span class="badge bg-success"><?= Text::_('COM_USERTOOLS_ACCESS_DIRECT') ?></span>
-            <?php elseif ($cell['state'] === 'inherited') : ?><span class="badge bg-info"><?= Text::_('COM_USERTOOLS_ACCESS_INHERITED') ?></span>
+            <?php if ($cell['state'] === 'direct') : ?><span class="badge text-bg-success"><?= Text::_('COM_USERTOOLS_ACCESS_DIRECT') ?></span>
+            <?php elseif ($cell['state'] === 'inherited') : ?><span class="badge text-bg-info"><?= Text::_('COM_USERTOOLS_ACCESS_INHERITED') ?></span>
               <small class="d-block text-body-secondary"><?= Text::sprintf('COM_USERTOOLS_ACCESS_VIA', $this->escape($this->groupTitle($cell['via']))) ?></small>
-            <?php elseif ($cell['state'] === 'public') : ?><span class="badge bg-secondary"><?= Text::_('COM_USERTOOLS_ACCESS_ALWAYS') ?></span>
+            <?php elseif ($cell['state'] === 'public') : ?><span class="badge text-bg-secondary"><?= Text::_('COM_USERTOOLS_ACCESS_ALWAYS') ?></span>
             <?php else : ?><span class="text-body-secondary" aria-hidden="true">—</span><span class="visually-hidden"><?= Text::_('COM_USERTOOLS_ACCESS_NONE') ?></span><?php endif; ?>
           </td>
           <?php endforeach; ?>
@@ -100,7 +100,7 @@ $export   = fn (string $shape) => Route::_('index.php?option=com_usertools&task=
       <?php foreach ($levels as $level) : ?>
         <tr data-ut-level="<?= (int) $level['id'] ?>">
           <th scope="row"><?= $this->escape($level['title']) ?>
-            <?php if ($level['empty']) : ?><span class="badge bg-warning text-dark"><?= Text::_('COM_USERTOOLS_ACCESS_EMPTY') ?></span><?php endif; ?></th>
+            <?php if ($level['empty']) : ?><span class="badge text-bg-warning"><?= Text::_('COM_USERTOOLS_ACCESS_EMPTY') ?></span><?php endif; ?></th>
           <td><?php if ($level['groups']) : ?><?= $this->escape(implode(', ', array_map(fn ($id) => $this->groupTitle((int) $id), $level['groups']))) ?>
             <?php elseif ((int) $level['id'] === 1) : ?><span class="text-body-secondary"><?= Text::_('COM_USERTOOLS_ACCESS_ALWAYS_DESC') ?></span>
             <?php else : ?><span class="text-body-secondary">—</span><?php endif; ?></td>

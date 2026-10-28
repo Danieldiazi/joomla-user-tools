@@ -19,7 +19,7 @@ $minLevel = $this->selection['groups'] ? min(array_column($this->selection['grou
   <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'groups', 'label' => 'COM_USERTOOLS_UNGROUP_PROGRESS'], $layouts) ?>
   <h2 class="h3"><?= Text::sprintf('COM_USERTOOLS_UNGROUP_GROUPS_HEADING', $this->escape($account->username)) ?></h2>
   <p class="text-body-secondary"><?= $this->escape($account->name) ?> · <?= $this->escape($account->email) ?>
-    <?php if ($account->block) : ?> · <span class="badge bg-secondary"><?= Text::_('COM_USERTOOLS_UNGROUP_BLOCKED') ?></span><?php endif; ?></p>
+    <?php if ($account->block) : ?> · <span class="badge text-bg-secondary"><?= Text::_('COM_USERTOOLS_UNGROUP_BLOCKED') ?></span><?php endif; ?></p>
   <form method="post" action="<?= Route::_('index.php?option=com_usertools&view=ungroup') ?>" data-ut-ungroup-groups>
     <section class="card ut-card"><div class="card-body">
       <p><?= Text::_('COM_USERTOOLS_UNGROUP_GROUPS_HELP') ?></p>
@@ -31,8 +31,8 @@ $minLevel = $this->selection['groups'] ? min(array_column($this->selection['grou
           <input class="form-check-input" type="checkbox" name="keep[]" value="<?= (int) $group['id'] ?>" id="ut-keep-<?= (int) $group['id'] ?>"
             data-ut-keep="<?= (int) $group['id'] ?>" data-ut-parents="<?= $this->escape(implode(',', $group['parents'])) ?>"<?= isset($removed[$group['id']]) ? '' : ' checked' ?>>
           <label class="form-check-label" for="ut-keep-<?= (int) $group['id'] ?>"><?php if ($depth > 0) : ?><span class="ut-tree-branch" aria-hidden="true">└</span><?php endif; ?><?= $this->escape($group['title']) ?>
-            <?php if ($group['superUser']) : ?><span class="badge bg-danger"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_SUPER') ?></span>
-            <?php elseif ($group['backend']) : ?><span class="badge bg-warning text-dark"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_BACKEND') ?></span><?php endif; ?></label>
+            <?php if ($group['superUser']) : ?><span class="badge text-bg-danger"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_SUPER') ?></span>
+            <?php elseif ($group['backend']) : ?><span class="badge text-bg-warning"><?= Text::_('COM_USERTOOLS_ACCESS_BADGE_BACKEND') ?></span><?php endif; ?></label>
           <?php if ($group['hasChildren']) : ?>
           <div class="form-check form-check-inline ms-2 ut-subgroups" data-ut-subgroups-wrap>
             <input class="form-check-input" type="checkbox" name="recursive[]" value="<?= (int) $group['id'] ?>" id="ut-sub-<?= (int) $group['id'] ?>" data-ut-subgroups="<?= (int) $group['id'] ?>"<?= isset($recursive[$group['id']]) ? ' checked' : '' ?>>

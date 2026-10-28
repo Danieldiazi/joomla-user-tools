@@ -23,7 +23,7 @@ $remove  = array_flip($plan['remove']);
       <dt class="col-sm-4"><?= Text::_('COM_USERTOOLS_USERNAME') ?></dt><dd class="col-sm-8" data-ut-account><?= $this->escape($account->username) ?> (ID <?= (int) $account->id ?>)</dd>
       <dt class="col-sm-4"><?= Text::_('COM_USERTOOLS_NAME') ?></dt><dd class="col-sm-8"><?= $this->escape($account->name) ?></dd>
       <dt class="col-sm-4"><?= Text::_('COM_USERTOOLS_EMAIL') ?></dt><dd class="col-sm-8"><?= $this->escape($account->email) ?></dd>
-      <?php if ($account->block) : ?><dt class="col-sm-4"><?= Text::_('COM_USERTOOLS_UNGROUP_STATE') ?></dt><dd class="col-sm-8"><span class="badge bg-secondary"><?= Text::_('COM_USERTOOLS_UNGROUP_BLOCKED') ?></span></dd><?php endif; ?>
+      <?php if ($account->block) : ?><dt class="col-sm-4"><?= Text::_('COM_USERTOOLS_UNGROUP_STATE') ?></dt><dd class="col-sm-8"><span class="badge text-bg-secondary"><?= Text::_('COM_USERTOOLS_UNGROUP_BLOCKED') ?></span></dd><?php endif; ?>
     </dl>
   </div></section>
 
@@ -35,13 +35,13 @@ $remove  = array_flip($plan['remove']);
       <?php foreach ($this->treeOrder(array_merge($plan['remove'], $plan['keep'])) as $id) : ?>
         <tr data-ut-change="<?= isset($remove[$id]) ? 'remove' : 'keep' ?>">
           <td><?= $this->escape($this->groupTitle($id)) ?></td>
-          <td><?php if (isset($remove[$id])) : ?><span class="badge bg-danger"><?= Text::_('COM_USERTOOLS_UNGROUP_REMOVED') ?></span>
+          <td><?php if (isset($remove[$id])) : ?><span class="badge text-bg-danger"><?= Text::_('COM_USERTOOLS_UNGROUP_REMOVED') ?></span>
             <?php if (isset($plan['cascaded'][$id])) : ?><small class="d-block text-body-secondary" data-ut-cascaded><?= Text::sprintf('COM_USERTOOLS_UNGROUP_CASCADED', $this->escape($this->groupTitle((int) $plan['cascaded'][$id]))) ?></small><?php endif; ?>
-            <?php else : ?><span class="badge bg-success"><?= Text::_('COM_USERTOOLS_UNGROUP_KEPT') ?></span><?php endif; ?></td>
+            <?php else : ?><span class="badge text-bg-success"><?= Text::_('COM_USERTOOLS_UNGROUP_KEPT') ?></span><?php endif; ?></td>
         </tr>
       <?php endforeach; ?>
       <?php if ($plan['added']) : ?>
-        <tr data-ut-change="add"><td><?= $this->escape($this->groupTitle($plan['added'])) ?></td><td><span class="badge bg-info"><?= Text::_('COM_USERTOOLS_UNGROUP_ADDED') ?></span></td></tr>
+        <tr data-ut-change="add"><td><?= $this->escape($this->groupTitle($plan['added'])) ?></td><td><span class="badge text-bg-info"><?= Text::_('COM_USERTOOLS_UNGROUP_ADDED') ?></span></td></tr>
       <?php endif; ?>
       </tbody>
     </table>

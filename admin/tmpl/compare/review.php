@@ -36,7 +36,7 @@ $draft      = $this->draft;
     <input type="hidden" name="review_ready" data-ut-ready value="0">
 
     <section class="card ut-card"><div class="card-body">
-      <div class="ut-section-heading"><h3 class="h5 mb-0"><?= Text::_('COM_USERTOOLS_TO_BLOCK_HEADING') ?></h3><span class="badge bg-danger"><?= count($candidates) ?></span></div>
+      <div class="ut-section-heading"><h3 class="h5 mb-0"><?= Text::_('COM_USERTOOLS_TO_BLOCK_HEADING') ?></h3><span class="badge text-bg-danger"><?= count($candidates) ?></span></div>
       <?php if ($candidates) : ?>
         <?php if (count($candidates) > 8) : ?>
         <input type="search" class="form-control mt-3" placeholder="<?= Text::_('COM_USERTOOLS_FILTER_PLACEHOLDER') ?>" aria-label="<?= Text::_('COM_USERTOOLS_FILTER_PLACEHOLDER') ?>" data-ut-filter="ut-block-table">
@@ -55,7 +55,7 @@ $draft      = $this->draft;
     </div></section>
 
     <section class="card ut-card"><div class="card-body">
-      <div class="ut-section-heading"><h3 class="h5 mb-0"><?= Text::_('COM_USERTOOLS_NEW_USERS_HEADING') ?></h3><span class="badge bg-secondary"><?= count($unknown) ?></span></div>
+      <div class="ut-section-heading"><h3 class="h5 mb-0"><?= Text::_('COM_USERTOOLS_NEW_USERS_HEADING') ?></h3><span class="badge text-bg-secondary"><?= count($unknown) ?></span></div>
       <?php if (!$unknown) : ?>
         <p class="text-muted mt-3 mb-0"><?= Text::_('COM_USERTOOLS_ALL_NAMES_EXIST') ?></p>
       <?php elseif (!$review['canCreate']) : ?>

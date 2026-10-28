@@ -18,6 +18,8 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
 
+The home screen groups the tools into four sections, each with its explanation always visible: **Review accounts** (compare a list and review inactive users), **Groups and access levels** (remove from groups and the two read-only screens), **Automation and follow-up** (the scheduled task, with its plugin status, and its results) and, last and on its own, **Delete accounts**, the only one marked “Permanent”. Each person only sees the tools they are allowed to use, and sections with none are left out. From any other screen, the «User Tools home» button in Joomla's toolbar goes back to the home screen.
+
 **Requirements:** Joomla 6 and PHP 8.3 or later. Compatible with MySQL/MariaDB and PostgreSQL.  
 **Download:** [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest), package `pkg_usertools-VERSION.zip`.  
 **License:** [GPL-2.0-or-later](LICENSE).
@@ -55,7 +57,7 @@ The installer checks minimum versions, registers the extension with the User Act
 
 **Example:** Joomla contains `ana`, `luis` and `marta`. If you paste a list containing `ana` and `marta`, the tool proposes blocking `luis`, unless protected or already blocked. If you add `pedro` and that account does not exist, you can select it for creation; it is not created automatically.
 
-1. Open Components → User Tools → “Start comparison”.
+1. Open Components → User Tools → “Compare list”.
 2. Paste the **complete** list of current usernames, one per line, and review exclusions.
 3. The review shows accounts to block, including name, email, last visit and groups, with a filter for long lists. It also shows usernames not found in Joomla, which you may choose to create.
 4. Confirm. The result links each account to Joomla's user manager. To undo a block, open the account and set its status to Enabled.

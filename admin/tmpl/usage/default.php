@@ -55,7 +55,7 @@ $missing = array_values(array_filter($levels, fn ($level) => $level['missing']))
         <tr data-ut-usage-level="<?= (int) $level['id'] ?>"<?= $level['total'] === 0 ? ' class="text-body-secondary"' : '' ?>>
           <th scope="row" class="ut-access-group">
             <?php if ($level['missing']) : ?>
-              <span class="badge bg-warning text-dark"><?= Text::sprintf('COM_USERTOOLS_USAGE_MISSING_LEVEL', (int) $level['id']) ?></span>
+              <span class="badge text-bg-warning"><?= Text::sprintf('COM_USERTOOLS_USAGE_MISSING_LEVEL', (int) $level['id']) ?></span>
             <?php elseif ($canEdit) : ?>
               <a href="<?= Route::_('index.php?option=com_users&task=level.edit&id=' . (int) $level['id']) ?>"><?= $this->escape($level['title']) ?></a>
             <?php else : ?>
