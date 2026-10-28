@@ -230,6 +230,8 @@ Test::check(!str_contains($block, '>admin<') && !str_contains($block, '>super2<'
 Test::check(!str_contains($block, '>luis<'), 'LUIS matches luis (case-insensitive)');
 Test::check(str_contains($review, 'baja@example.test') && str_contains($review, 'Registered'), 'review shows email and groups');
 Test::check(str_contains($review, 'name="confirm_count"'), 'typed confirmation is required from the threshold');
+Test::check(str_contains($review, 'data-ut-add-all') && str_contains($review, 'data-ut-email-domain') && str_contains($review, 'data-ut-name="nuevo1"'),
+    'new accounts offer "tick all" and emails built from the username');
 $site->fakeSession($site->userId('baja'));
 $registrations = [];
 foreach (['nuevo1', 'nuevo2'] as $name) {
@@ -517,7 +519,7 @@ $row = function (string $html, string $attribute, int $id): string {
     return $start === false ? '' : substr($html, $start, (int) strpos($html, '</tr>', $start) - $start);
 };
 $editorRow = $row($accessPage, 'data-ut-group', $editorId);
-Test::check(substr_count($editorRow, 'data-ut-cell="inherited"') >= 2 && str_contains($editorRow, 'from «Author»'), 'Editor inherits Special and the new level from its parent Author');
+Test::check(substr_count($editorRow, 'data-ut-cell="inherited"') >= 2 && str_contains($editorRow, 'from group «Author»'), 'Editor inherits Special and the new level from its parent Author');
 Test::check(str_contains($row($accessPage, 'data-ut-group', $registeredId), 'data-ut-cell="direct"'), 'Registered is assigned directly to the Registered level');
 Test::check(str_contains($row($accessPage, 'data-ut-group', $guest), 'Guests'), 'the guest group is marked');
 $emptyLevel   = (int) $site->q("SELECT id FROM #__viewlevels WHERE title = 'UT level empty'")[0]['id'];
@@ -525,6 +527,23 @@ $authorsLevel = (int) $site->q("SELECT id FROM #__viewlevels WHERE title = 'UT l
 Test::check(str_contains($row($accessPage, 'data-ut-level', $emptyLevel), 'No groups'), 'a level with no groups or accounts is flagged');
 $authorsRow = $row($accessPage, 'data-ut-level', $authorsLevel);
 Test::check(str_contains($authorsRow, '>1</td>') && !str_contains($authorsRow, 'No groups'), 'accounts assigned individually are counted');
+Test::check(str_contains($accessPage, 'Accounts assigned individually'), 'the individual accounts column is shown when some level has one');
+
+// CSV export: the links carry the form token; without it nothing is sent.
+preg_match_all('/href="([^"]*task=access\.export[^"]*)"/', $accessPage, $links);
+Test::check(count($links[1]) === 2, 'two export links (table and one row per level)');
+$exportUrl = fn (string $shape): string => html_entity_decode((string) current(array_filter($links[1], fn ($l) => str_contains($l, 'shape=' . $shape))));
+[$code, $csv, $headers] = $admin->request(preg_replace('#^.*/administrator/#', '', $exportUrl('matrix')));
+Test::check($code === 200 && str_starts_with($headers['content-type'] ?? '', 'text/csv') && str_contains($headers['content-disposition'] ?? '', 'usertools-access-'), 'the table downloads as CSV');
+Test::check(str_starts_with($csv, "\xEF\xBB\xBF") && str_contains($csv, ';"UT level authors"') && str_contains($csv, '"Public / Registered / Author / Editor"'), 'with BOM, a column per level and the group path');
+$editorLine = (string) current(array_filter(explode("\n", $csv), fn ($l) => str_starts_with($l, $editorId . ';')));
+Test::check(str_contains($editorLine, 'Inherited from group «Author»'), 'cells say where an inherited level comes from');
+[$code, $pairs] = $admin->request(preg_replace('#^.*/administrator/#', '', $exportUrl('pairs')));
+Test::check($code === 200 && str_contains($pairs, $editorId . ';Editor;"Public / Registered / Author / Editor";' . $authorsLevel . ';"UT level authors";Inherited;Author'), 'one row per group and level, with the parent it comes from');
+Test::check(!str_contains($pairs, ';"UT level empty";'), 'levels a group does not have are left out');
+$tokenless = preg_replace('/&(amp;)?[0-9a-f]{32}=1/', '', $exportUrl('matrix'));
+[, $refused, $refusedHeaders] = $admin->request(preg_replace('#^.*/administrator/#', '', $tokenless));
+Test::check(!str_starts_with($refusedHeaders['content-type'] ?? '', 'text/csv') && !str_contains($refused, '"UT level authors"'), 'without the token there is no CSV');
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
 [$code] = $delegate->request('index.php?option=com_usertools&view=access');
 Test::check($code === 403 && !str_contains($delegate->get('index.php?option=com_usertools'), 'view=access'), 'the view needs its own permission (got ' . $code . ')');
@@ -538,8 +557,12 @@ Test::check(str_contains($delegateAccess, 'id="ut-access-table"'), 'a delegate w
 Test::check(!str_contains($delegateAccess, 'task=group.edit') && !str_contains($delegateAccess, 'task=level.edit') && str_contains($delegateAccess, 'filter[group_id]='),
     'without core.admin on Users, group and level titles are not links (Joomla would refuse them); member counts still link');
 Test::check(str_contains($accessPage, 'task=group.edit') && str_contains($accessPage, 'task=level.edit'), 'a Super User gets the edit links');
+[$code, $delegateCsv, $delegateHeaders] = $delegate->request('index.php?option=com_usertools&task=access.export&shape=matrix');
+Test::check(!str_starts_with($delegateHeaders['content-type'] ?? '', 'text/csv'), 'a request without the token gets no CSV, even with the permission');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 $site->q("DELETE FROM #__viewlevels WHERE title LIKE 'UT level%'");
+$plainLevels = $admin->get('index.php?option=com_usertools&view=access');
+Test::check(!str_contains($plainLevels, 'Accounts assigned individually'), 'with no level assigned to single accounts, that column is hidden');
 
 Test::section('Remove from groups');
 $gid = fn (string $title): int => (int) $site->q('SELECT id FROM #__usergroups WHERE title = ?', [$title])[0]['id'];

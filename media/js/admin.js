@@ -92,21 +92,82 @@
 
     document.querySelectorAll('[data-ut-review]').forEach((form) => {
       const rows = [...form.querySelectorAll('[data-ut-user]')];
+      const all = form.querySelector('[data-ut-add-all]');
       const sync = () => {
         const data = {};
+        let ticked = 0;
         rows.forEach((row) => {
           const add = row.querySelector('[data-ut-add]');
           const email = row.querySelector('[data-ut-email]');
           email.disabled = !add.checked;
           email.required = add.checked;
+          if (add.checked) ticked += 1;
           if (add.checked || email.value.trim()) {
             data[row.dataset.utUser] = { checked: add.checked, email: email.value };
           }
         });
+        if (all) {
+          all.checked = !!rows.length && ticked === rows.length;
+          all.indeterminate = ticked > 0 && ticked < rows.length;
+        }
         form.querySelector('[data-ut-registrations]').value = JSON.stringify(data);
         form.querySelector('[data-ut-ready]').value = '1';
       };
       rows.forEach((row) => row.querySelector('[data-ut-add]').addEventListener('change', sync));
+      if (all) all.addEventListener('change', () => {
+        rows.forEach((row) => { row.querySelector('[data-ut-add]').checked = all.checked; });
+        sync();
+      });
+
+      // Optional: build each email as username@domain. Emails typed by hand are never replaced, and
+      // the ones filled here are cleared again when the option is turned off.
+      const auto = form.querySelector('[data-ut-email-auto]');
+      if (auto) {
+        const on = auto.querySelector('[data-ut-email-auto-on]');
+        const domain = auto.querySelector('[data-ut-email-domain]');
+        const note = auto.querySelector('[data-ut-email-skipped]');
+        const localPart = /^[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+(\.[A-Za-z0-9!#$%&'*+/=?^_`{|}~-]+)*$/;
+        const validDomain = /^(?=.{1,253}$)([a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
+        const fill = () => {
+          domain.disabled = !on.checked;
+          // The "@" is already shown before the field; a pasted "@example.com" works too.
+          if (domain.value.startsWith('@')) domain.value = domain.value.replace(/^@+/, '');
+          const host = domain.value.trim().toLowerCase();
+          const usable = on.checked && validDomain.test(host);
+          domain.classList.toggle('is-invalid', on.checked && host !== '' && !usable);
+          let skipped = 0;
+          rows.forEach((row) => {
+            const email = row.querySelector('[data-ut-email]');
+            const mine = email.dataset.utAuto === '1';
+            if (!mine && email.value.trim()) return;
+            const name = (row.dataset.utName || '').trim();
+            if (usable && name.length <= 64 && localPart.test(name)) {
+              email.value = `${name}@${host}`;
+              email.dataset.utAuto = '1';
+            } else {
+              if (mine) email.value = '';
+              email.dataset.utAuto = '0';
+              if (usable) skipped += 1;
+            }
+          });
+          if (note) {
+            const message = on.checked && host !== '' && !usable
+              ? text('COM_USERTOOLS_JS_EMAIL_DOMAIN_INVALID', 'Type a valid domain, for example example.com.')
+              : (skipped === 1 ? text('COM_USERTOOLS_JS_EMAIL_SKIPPED_1', 'One username cannot be used as an email: type that email yourself.')
+                : (skipped ? sprintf(text('COM_USERTOOLS_JS_EMAIL_SKIPPED', '%d usernames cannot be used as an email: type those emails yourself.'), skipped) : ''));
+            note.textContent = message;
+            note.hidden = !message;
+          }
+          sync();
+        };
+        rows.forEach((row) => {
+          const email = row.querySelector('[data-ut-email]');
+          email.addEventListener('input', () => { email.dataset.utAuto = '0'; sync(); });
+        });
+        on.addEventListener('change', fill);
+        domain.addEventListener('input', fill);
+      }
+      rows.forEach((row) => row.querySelector('[data-ut-email]').addEventListener('change', sync));
       form.addEventListener('submit', sync);
       sync();
     });

@@ -169,3 +169,72 @@ test('remove from groups: account suggestions fill the list while typing', async
   const options = [...doc.querySelectorAll('#ut-list option')];
   assert.deepEqual(options.map((o) => [o.value, o.label]), [['ana', 'Ana Pérez · ana@example.test'], ['anabel', 'b@example.test']]);
 });
+
+const newAccounts = (names, extra = '') => `<form data-ut-review><input type="hidden" data-ut-registrations value="{}"><input type="hidden" data-ut-ready value="0">
+  <div data-ut-email-auto><input type="checkbox" data-ut-email-auto-on><input type="text" data-ut-email-domain disabled><div data-ut-email-skipped hidden></div></div>
+  <table><thead><tr><th><input type="checkbox" data-ut-add-all></th></tr></thead><tbody>${names.map((n, i) => `<tr data-ut-user="k${i}" data-ut-name="${n}">
+  <td><input type="checkbox" data-ut-add></td><td><input type="email" data-ut-email value="${i === 0 ? extra : ''}" disabled></td></tr>`).join('')}</tbody></table></form>`;
+
+test('new accounts: one box ticks or unticks them all and reflects partial selections', async () => {
+  const doc = await load(newAccounts(['ana', 'luis', 'eva']));
+  const all = doc.querySelector('[data-ut-add-all]');
+  const adds = [...doc.querySelectorAll('[data-ut-add]')];
+  all.checked = true;
+  change(all);
+  assert.deepEqual(adds.map((a) => a.checked), [true, true, true]);
+  assert.equal(doc.querySelectorAll('[data-ut-email]:not([disabled])').length, 3, 'every email becomes editable and required');
+  assert.equal(Object.values(JSON.parse(doc.querySelector('[data-ut-registrations]').value)).filter((r) => r.checked).length, 3);
+  adds[1].checked = false;
+  change(adds[1]);
+  assert.equal(all.checked, false);
+  assert.equal(all.indeterminate, true, 'partly ticked');
+  all.checked = false;
+  change(all);
+  assert.deepEqual(adds.map((a) => a.checked), [false, false, false]);
+  assert.equal(all.indeterminate, false);
+});
+
+test('new accounts: emails built from the username and domain, never over a typed one', async () => {
+  const doc = await load(newAccounts(['ana', 'luis', 'josé maría'], 'ana.lopez@otro.es'));
+  const on = doc.querySelector('[data-ut-email-auto-on]');
+  const domain = doc.querySelector('[data-ut-email-domain]');
+  const emails = [...doc.querySelectorAll('[data-ut-email]')];
+  const note = doc.querySelector('[data-ut-email-skipped]');
+  on.checked = true;
+  change(on);
+  assert.equal(domain.disabled, false);
+  domain.value = '@Correo.com ';
+  input(domain);
+  assert.deepEqual(emails.map((e) => e.value), ['ana.lopez@otro.es', 'luis@correo.com', ''], 'the typed email stays; a username with spaces or accents is skipped');
+  assert.equal(note.hidden, false);
+  assert.match(note.textContent, /^One username/, 'singular message');
+  assert.equal(domain.value, 'Correo.com ', 'a typed "@" is dropped: the field already shows it');
+  const data = JSON.parse(doc.querySelector('[data-ut-registrations]').value);
+  assert.equal(data.k1.email, 'luis@correo.com', 'filled emails are sent with the registrations');
+
+  domain.value = 'otra.org';
+  input(domain);
+  assert.equal(emails[1].value, 'luis@otra.org', 'changing the domain updates the filled emails');
+  emails[1].value = 'luis.g@otra.org';
+  input(emails[1]);
+  domain.value = 'tercera.net';
+  input(domain);
+  assert.equal(emails[1].value, 'luis.g@otra.org', 'an edited email is no longer touched');
+
+  domain.value = 'no valido';
+  input(domain);
+  assert.equal(domain.classList.contains('is-invalid'), true);
+  assert.equal(note.hidden, false);
+  domain.value = 'correo.com';
+  input(domain);
+  emails[1].value = '';
+  input(emails[1]);
+  domain.value = 'correo.com ';
+  input(domain);
+  assert.equal(emails[1].value, 'luis@correo.com', 'an emptied email is filled again');
+  on.checked = false;
+  change(on);
+  assert.deepEqual(emails.map((e) => e.value), ['ana.lopez@otro.es', '', ''], 'turning it off clears only what it filled');
+  assert.equal(domain.disabled, true);
+  assert.equal(note.hidden, true);
+});

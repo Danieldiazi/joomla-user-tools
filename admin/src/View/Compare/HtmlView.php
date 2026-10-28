@@ -9,6 +9,7 @@ use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Danieldiazi\Component\Usertools\Administrator\View\ViewTrait;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
 
 class HtmlView extends BaseHtmlView
@@ -54,6 +55,9 @@ class HtmlView extends BaseHtmlView
             $this->setLayout('default');
         }
         $this->prepareDocument('COM_USERTOOLS_COMPARE');
+        Text::script('COM_USERTOOLS_JS_EMAIL_SKIPPED');
+        Text::script('COM_USERTOOLS_JS_EMAIL_SKIPPED_1');
+        Text::script('COM_USERTOOLS_JS_EMAIL_DOMAIN_INVALID');
         parent::display($tpl);
     }
 }

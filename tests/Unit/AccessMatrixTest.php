@@ -90,6 +90,52 @@ final class AccessMatrixTest extends TestCase
         $this->assertSame(0, $rows[3]['members']);
     }
 
+    public function testExportAsTable(): void
+    {
+        $m     = AccessMatrix::build($this->groupTree(), $this->levels(), [2 => 5], 9);
+        $text  = fn (string $key, string $group = '') => $group === '' ? $key : "$key($group)";
+        $table = AccessMatrix::export($m, AccessMatrix::EXPORT_MATRIX, $text);
+        $this->assertSame(['COM_USERTOOLS_ACCESS_CSV_GROUP_ID', 'COM_USERTOOLS_ACCESS_GROUP', 'COM_USERTOOLS_ACCESS_CSV_PATH', 'COM_USERTOOLS_ACCESS_MEMBERS',
+            'Public', 'Registered', 'Special', 'Guest', 'Super Users', 'Socios', 'Vacío'], $table['header'], 'one column per level, in display order');
+        $this->assertCount(10, $table['rows'], 'one row per group');
+        $editor = array_column($table['rows'], null, 0)[4];
+        $this->assertSame([4, 'Editor', 'Public / Registered / Author / Editor', 0,
+            'COM_USERTOOLS_ACCESS_CSV_INHERITED_VIA(Public)', 'COM_USERTOOLS_ACCESS_CSV_INHERITED_VIA(Registered)', 'COM_USERTOOLS_ACCESS_CSV_INHERITED_VIA(Author)', '', '', '', ''], $editor);
+        $this->assertSame([2, 'Registered', 'Public / Registered', 5, 'COM_USERTOOLS_ACCESS_CSV_INHERITED_VIA(Public)', 'COM_USERTOOLS_ACCESS_DIRECT', '', '', '', '', ''],
+            array_column($table['rows'], null, 0)[2]);
+
+        $levels = $this->levels();
+        $levels[0]['rules'] = [];
+        $always = AccessMatrix::export(AccessMatrix::build($this->groupTree(), $levels), AccessMatrix::EXPORT_MATRIX, $text);
+        $this->assertSame('COM_USERTOOLS_ACCESS_ALWAYS', $always['rows'][0][4]);
+    }
+
+    public function testExportOneRowPerLevel(): void
+    {
+        $m     = AccessMatrix::build($this->groupTree(), $this->levels(), [], 9);
+        $pairs = AccessMatrix::export($m, AccessMatrix::EXPORT_PAIRS, fn (string $key) => $key);
+        $this->assertSame(['COM_USERTOOLS_ACCESS_CSV_GROUP_ID', 'COM_USERTOOLS_ACCESS_GROUP', 'COM_USERTOOLS_ACCESS_CSV_PATH', 'COM_USERTOOLS_ACCESS_CSV_LEVEL_ID',
+            'COM_USERTOOLS_ACCESS_LEVEL', 'COM_USERTOOLS_ACCESS_CSV_STATE', 'COM_USERTOOLS_ACCESS_CSV_VIA'], $pairs['header']);
+        $junta = array_values(array_filter($pairs['rows'], fn ($r) => $r[0] === 11));
+        $this->assertSame([
+            [11, 'Junta', 'Public / Registered / Socios / Junta', 1, 'Public', 'COM_USERTOOLS_ACCESS_INHERITED', 'Public'],
+            [11, 'Junta', 'Public / Registered / Socios / Junta', 2, 'Registered', 'COM_USERTOOLS_ACCESS_INHERITED', 'Registered'],
+            [11, 'Junta', 'Public / Registered / Socios / Junta', 7, 'Socios', 'COM_USERTOOLS_ACCESS_INHERITED', 'Socios'],
+        ], $junta, 'only the levels the group has, with the parent it comes from');
+        $this->assertSame([], array_filter($pairs['rows'], fn ($r) => $r[3] === 8), 'a level nobody has gives no rows');
+    }
+
+    public function testPathsAndIndividualAccounts(): void
+    {
+        $rows = [['id' => 1, 'title' => 'Public', 'level' => 0], ['id' => 2, 'title' => 'A', 'level' => 1], ['id' => 3, 'title' => 'B', 'level' => 2],
+            ['id' => 4, 'title' => 'C', 'level' => 1]];
+        $this->assertSame([1 => 'Public', 2 => 'Public / A', 3 => 'Public / A / B', 4 => 'Public / C'], AccessMatrix::paths($rows), 'a sibling replaces the previous branch');
+        $this->assertTrue(AccessMatrix::hasUserRules(AccessMatrix::build($this->groupTree(), $this->levels())['levels']));
+        $levels = $this->levels();
+        $levels[5]['rules'] = [10];
+        $this->assertFalse(AccessMatrix::hasUserRules(AccessMatrix::build($this->groupTree(), $levels)['levels']), 'no level assigned to single accounts');
+    }
+
     public function testRulesDecoding(): void
     {
         $this->assertSame([6, 2, -8], AccessMatrix::rules('[6,2,-8]'));
