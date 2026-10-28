@@ -40,7 +40,7 @@ No. List comparison, manual inactivity review, inactivity deletion and **each** 
 
 ### Who can use it?
 
-Super Users and users with the corresponding delegated permissions under **Options → Permissions**. There are separate permissions for comparison and blocking, account creation, inactivity review, inactivity deletion, viewing task results, removing from groups, viewing groups, levels and content by level, and viewing the access diagnosis. Deletion is restricted to Super Users until you explicitly grant it to others. Access to the component also requires `core.manage`.
+Super Users and users with the corresponding delegated permissions under **Options → Permissions**. There are separate permissions for comparison and blocking, account creation, inactivity review, inactivity deletion, viewing task results, removing from groups, viewing groups, levels and content by level, viewing content by age and viewing the access diagnosis. Deletion is restricted to Super Users until you explicitly grant it to others. Access to the component also requires `core.manage`.
 
 ### Does it need JavaScript?
 
@@ -259,6 +259,24 @@ Joomla does not let you delete a level used by any item, including those in the 
 ### Why can't I see the screen?
 
 It requires the *View groups, levels and content by level* permission. Super Users have it; for others, grant it in Components → User Tools → Options → Permissions.
+
+## Content by age
+
+### How do I see the articles nobody has touched for years?
+
+With **Content by age**, since 2026.10.15. It shows a table by year based on the last modification date, and each number opens the list of those articles with a link to edit them. Details in the [README](README.en.md#content-by-age).
+
+### Why the modification date and not the creation date?
+
+Because the point is to find abandoned content: an old article reviewed recently is not abandoned. If an item has no modification date, its creation date is used.
+
+### Are archived and trashed items counted?
+
+Archived ones are, with their status shown in the list, because they are often exactly the ones worth reviewing. Trashed ones are not.
+
+### Why can I see the numbers but not open the list?
+
+The list shows titles, so besides the *View content by age* permission you need to be able to manage articles in Joomla. Counts, lists and CSV exports also respect the authorized viewing levels of the article and its category. Edit-own permission only offers links for articles owned by the current user.
 
 ## Access diagnosis
 

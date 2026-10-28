@@ -15,11 +15,12 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Remove from groups | Choose an account, untick the groups it should leave and, if you want, also remove it from all their subgroups. With a review and a confirmation. Available since 2026.10.9. |
 | Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.9. |
 | Content by access level | How many articles, categories, menu items, modules, fields and other items use each level, with a link to each filtered list. Read only. Available since 2026.10.12. |
+| Content by age | Table by year with how many articles were last modified in each one, filterable by access level; each number opens the list of those articles with a link to edit them. Read only. Available since 2026.10.15. |
 | Access diagnosis | Points out accounts with administrator access and no activity, a single remaining Super User, access levels nobody has, content with levels that do not exist and groups with no members. It explains each notice and is read only. Available since 2026.10.15. |
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
 
-The home screen groups the tools into four sections, each with its explanation always visible: **Review accounts** (compare a list and review inactive users), **Groups and access levels** (remove from groups, the two read-only screens and the access diagnosis), **Automation and follow-up** (the scheduled task, with its plugin status, and its results) and, last and on its own, **Delete accounts**, the only one marked “Permanent”. Each person only sees the tools they are allowed to use, and sections with none are left out. From any other screen, the «User Tools home» button in Joomla's toolbar goes back to the home screen.
+The home screen groups the tools into four sections, each with its explanation always visible: **Review accounts** (compare a list and review inactive users), **Groups and access levels** (remove from groups, the read-only screens about groups, levels and content, and the access diagnosis), **Automation and follow-up** (the scheduled task, with its plugin status, and its results) and, last and on its own, **Delete accounts**, the only one marked “Permanent”. Each person only sees the tools they are allowed to use, and sections with none are left out. From any other screen, the «User Tools home» button in Joomla's toolbar goes back to the home screen.
 
 **Requirements:** Joomla 6 and PHP 8.3 or later. Compatible with MySQL/MariaDB and PostgreSQL.  
 **Download:** [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest), package `pkg_usertools-VERSION.zip`.  
@@ -37,6 +38,7 @@ The home screen groups the tools into four sections, each with its explanation a
 - [Remove from groups](#remove-from-groups)
 - [Groups and access levels](#groups-and-access-levels)
 - [Content by access level](#content-by-access-level)
+- [Content by age](#content-by-age)
 - [Access diagnosis](#access-diagnosis)
 - [Security](#security)
 - [Options](#options)
@@ -244,6 +246,19 @@ Items in the trash are not counted. Joomla lists also hide archived items unless
 
 ![Content by access level (Spanish interface)](docs/screenshots/18-contenido-por-nivel.jpg)
 
+## Content by age
+
+Since 2026.10.15, **Content by age** shows how much content has not been touched for a long time. Joomla's article list cannot be filtered by date, so this screen does that count. It is read only.
+
+- **Rows**: the years in which some item was last modified, from the newest to the oldest, with each year's total at the end and a row of totals.
+- **Columns**: one kind of item each. For now only **articles**; the table is ready for other kinds with a modification date.
+- **Date**: the last modification date (UTC, as Joomla stores it). A 2015 article reviewed last month counts in the current year.
+- **Statuses**: published, unpublished and archived items count; trashed ones do not.
+- **Access level filter**: counts only the items with that level, to see which levels pile up old content.
+- **List of one year**: each number opens the items of that year and kind, from the least recently modified to the most recent, with title, category, access level, author, status and creation and modification dates, 50 per page. The title links to Joomla's edit screen if you can edit it.
+
+**Export CSV** downloads the table or, from a list, all its items (UTF-8 with BOM, semicolons). The screen requires the *View content by age* permission; the list of titles also requires being able to manage articles in Joomla. Filters, counts, totals, lists and CSV exports respect the authorized viewing levels of both articles and their categories, as Joomla’s article list does; global Super Users retain the full audit view. “Edit own” only links articles owned by the current user. Without it, the numbers are shown without a link.
+
 ## Access diagnosis
 
 Since 2026.10.15, **Access diagnosis** brings together on one screen the situations worth reviewing in accounts, groups and access levels. It is read only: it does not fix permissions or change accounts. Every check is always shown, with or without notices, and when it finds something it explains what it found, **why it matters** and **how to review it**, with links to the matching account, group, level or Joomla list.
@@ -265,7 +280,7 @@ The type is always written out («Review», «Information» or «No notices»), 
 - **Each block or group change closes the account's open sessions**, as Joomla's user manager does (requires “Session Metadata”, enabled by default).
 - **Creations, blocks, deletions and group changes are written to the User Actions Log** (Users → User Actions Log): who changed each account and which tool or scheduled task performed it.
 - **Separate permissions**, delegable without granting Super User access (Options → Permissions):
-  - *Compare list and block*, *Create accounts*, *Review inactive users*, *Delete inactive users*, *View task results*, *Remove from groups*, *View groups, levels and content by level* and *View the access diagnosis*.
+  - *Compare list and block*, *Create accounts*, *Review inactive users*, *Delete inactive users*, *View task results*, *Remove from groups*, *View groups, levels and content by level*, *View content by age* and *View the access diagnosis*.
   - Non-Super Users can never block, delete or remove from groups accounts with administrator access.
 - **Configurable reinforced confirmation**: from N accounts (10 by default), the exact number must be typed in addition to ticking the box.
 - **Deletion always requires typing the number of accounts**, even for one; the configurable threshold does not disable this confirmation.
