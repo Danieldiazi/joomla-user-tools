@@ -131,6 +131,8 @@ Los informes se guardan en la subcarpeta usertools-reports de la carpeta de regi
 
 ## Resumen en el panel de Usuarios
 
+Desde 2026.10.14, los contadores distinguen «Inactivas para revisar» y «Bloqueadas para revisar»; son candidatas, no acciones automáticas. Las tareas se muestran en una lista adaptable, con su modo, resultado, enlace al informe y fechas etiquetadas. Si no hay próxima ejecución, se explica en texto en lugar de mostrar un guion. La fecha de actualización y la explicación de la caché aparecen separadas al pie.
+
 Desde la 2026.10.6, el panel **Usuarios** de la administración (el icono de panel junto a «Usuarios» en el menú lateral) muestra un módulo «User Tools» con:
 
 - **Cuentas inactivas sin bloquear**, con el plazo y las exclusiones de «Revisar usuarios inactivos». La cifra enlaza con esa herramienta.

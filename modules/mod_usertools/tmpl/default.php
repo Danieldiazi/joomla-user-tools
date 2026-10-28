@@ -38,25 +38,27 @@ $statusBadge = [
   <?php endif; ?>
 
   <?php if ($summary['inactive'] !== null || $summary['pendingDeletion'] !== null) : ?>
-  <div class="row g-3 mb-3">
+  <div class="row g-3 mb-3" data-ut-dashboard-counts>
     <?php if ($summary['inactive'] !== null) : ?>
-    <div class="col-sm-6">
+    <div class="col-12 col-sm-6">
       <a class="d-block h-100 p-3 border rounded text-decoration-none" href="<?= Route::_('index.php?option=com_usertools&view=inactive') ?>">
         <span class="d-block">
           <strong class="d-block fs-2 lh-1 mb-1" data-ut-count="inactive"><?= (int) $summary['inactive'] ?></strong>
           <span class="d-block"><?= Text::_('MOD_USERTOOLS_INACTIVE') ?></span>
           <small class="d-block text-body-secondary"><?= Text::_('MOD_USERTOOLS_INACTIVE_HELP') ?></small>
+          <span class="d-block small fw-semibold mt-2"><?= Text::_('MOD_USERTOOLS_REVIEW_INACTIVE') ?> <span aria-hidden="true">→</span></span>
         </span>
       </a>
     </div>
     <?php endif; ?>
     <?php if ($summary['pendingDeletion'] !== null) : ?>
-    <div class="col-sm-6">
+    <div class="col-12 col-sm-6">
       <a class="d-block h-100 p-3 border rounded text-decoration-none" href="<?= Route::_('index.php?option=com_usertools&view=delete&status=blocked') ?>">
         <span class="d-block">
           <strong class="d-block fs-2 lh-1 mb-1" data-ut-count="pending"><?= (int) $summary['pendingDeletion'] ?></strong>
           <span class="d-block"><?= Text::_('MOD_USERTOOLS_PENDING_DELETION') ?></span>
           <small class="d-block text-body-secondary"><?= Text::_('MOD_USERTOOLS_PENDING_DELETION_HELP') ?></small>
+          <span class="d-block small fw-semibold mt-2"><?= Text::_('MOD_USERTOOLS_REVIEW_DELETION') ?> <span aria-hidden="true">→</span></span>
         </span>
       </a>
     </div>
@@ -64,40 +66,49 @@ $statusBadge = [
   </div>
   <?php endif; ?>
 
-  <?php if ($summary['tasks'] !== null) : ?>
-    <?php if ($summary['tasks']) : ?>
-    <div class="table-responsive">
-      <table class="table table-sm mb-2">
-        <caption class="visually-hidden"><?= Text::_('MOD_USERTOOLS_TASKS') ?></caption>
-        <thead><tr>
-          <th scope="col"><?= Text::_('MOD_USERTOOLS_TASK') ?></th>
-          <th scope="col"><?= Text::_('MOD_USERTOOLS_MODE') ?></th>
-          <th scope="col"><?= Text::_('MOD_USERTOOLS_LAST_RUN') ?></th>
-          <th scope="col"><?= Text::_('MOD_USERTOOLS_RESULT') ?></th>
-          <th scope="col"><?= Text::_('MOD_USERTOOLS_NEXT_RUN') ?></th>
-        </tr></thead>
-        <tbody>
-        <?php foreach ($summary['tasks'] as $task) :
-            [$badge, $label] = $statusBadge[$task['status']] ?? $statusBadge['unknown'];
-            ?>
-          <tr>
-            <td><a href="<?= Route::_('index.php?option=com_scheduler&task=task.edit&id=' . (int) $task['id']) ?>"><?= $e($task['title']) ?></a>
-              <?php if (!$task['enabled']) : ?><span class="badge text-bg-secondary"><?= Text::_('MOD_USERTOOLS_DISABLED') ?></span><?php endif; ?></td>
-            <td><?= Text::_($task['dryRun'] ? 'MOD_USERTOOLS_MODE_DRY' : 'MOD_USERTOOLS_MODE_REAL') ?></td>
-            <td><?= $date($task['lastRun']) ?></td>
-            <td><?php if ($task['reportId'] !== '') : ?><a href="<?= Route::_('index.php?option=com_usertools&view=report&report_id=' . $e($task['reportId'])) ?>"><?php endif; ?>
-              <span class="badge text-bg-<?= $badge ?>"><?= Text::_($label) ?></span><?php if ($task['reportId'] !== '') : ?></a><?php endif; ?></td>
-            <td><?= $task['enabled'] && $task['nextRun'] ? $date($task['nextRun']) : '—' ?></td>
-          </tr>
-        <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-    <?php endif; ?>
+  <?php if ($summary['tasks'] !== null && $summary['tasks']) : ?>
+  <div class="mb-3" data-ut-dashboard-tasks>
+    <h3 class="fs-6 fw-semibold mb-2"><?= Text::_('MOD_USERTOOLS_TASKS') ?></h3>
+    <ul class="list-unstyled mb-0">
+      <?php foreach ($summary['tasks'] as $task) :
+          [$badge, $label] = $statusBadge[$task['status']] ?? $statusBadge['unknown'];
+          ?>
+      <li class="border rounded p-3 mb-2" data-ut-dashboard-task="<?= (int) $task['id'] ?>">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <a class="fw-semibold text-break" href="<?= Route::_('index.php?option=com_scheduler&task=task.edit&id=' . (int) $task['id']) ?>"><?= $e($task['title']) ?></a>
+          <span class="badge text-bg-<?= $task['dryRun'] ? 'info' : 'secondary' ?>"><?= Text::_($task['dryRun'] ? 'MOD_USERTOOLS_MODE_DRY' : 'MOD_USERTOOLS_MODE_REAL') ?></span>
+          <?php if (!$task['enabled']) : ?><span class="badge text-bg-secondary"><?= Text::_('MOD_USERTOOLS_DISABLED') ?></span><?php endif; ?>
+        </div>
+        <dl class="row g-2 small mb-0">
+          <div class="col-12 col-sm-6">
+            <dt class="text-body-secondary fw-normal"><?= Text::_('MOD_USERTOOLS_LAST_RUN') ?></dt>
+            <dd class="mb-0">
+              <span class="d-block"><?= $task['lastRun'] ? $date($task['lastRun']) : Text::_('MOD_USERTOOLS_NOT_RUN') ?></span>
+              <?php if ($task['lastRun'] || $task['reportId'] !== '') : ?>
+              <span class="badge text-bg-<?= $badge ?> mt-1"><?= Text::_($label) ?></span>
+              <?php endif; ?>
+            </dd>
+          </div>
+          <div class="col-12 col-sm-6">
+            <dt class="text-body-secondary fw-normal"><?= Text::_('MOD_USERTOOLS_NEXT_RUN') ?></dt>
+            <dd class="mb-0"><?= !$task['enabled'] ? Text::_('MOD_USERTOOLS_NEXT_DISABLED') : ($task['nextRun'] ? $date($task['nextRun']) : Text::_('MOD_USERTOOLS_NEXT_NONE')) ?></dd>
+          </div>
+        </dl>
+        <?php if ($task['reportId'] !== '') : ?>
+        <a class="d-inline-block small mt-2" href="<?= Route::_('index.php?option=com_usertools&view=report&report_id=' . $e($task['reportId'])) ?>"><?= Text::sprintf('MOD_USERTOOLS_VIEW_REPORT', $e($task['title'])) ?></a>
+        <?php endif; ?>
+      </li>
+      <?php endforeach; ?>
+    </ul>
+    <p class="small text-body-secondary mt-2 mb-0"><?= Text::_('MOD_USERTOOLS_DRY_HELP') ?></p>
+  </div>
   <?php endif; ?>
 
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
-    <small class="text-body-secondary"><?= Text::sprintf('MOD_USERTOOLS_GENERATED', $date($summary['generated'])) ?></small>
+    <div class="small text-body-secondary">
+      <p class="mb-0"><?= Text::sprintf('MOD_USERTOOLS_UPDATED', $date($summary['generated'])) ?></p>
+      <p class="mb-0"><?= Text::_('MOD_USERTOOLS_REFRESH_HELP') ?></p>
+    </div>
     <a class="btn btn-sm btn-primary" href="<?= Route::_('index.php?option=com_usertools') ?>"><?= Text::_('MOD_USERTOOLS_OPEN') ?></a>
   </div>
 <?php endif; ?>

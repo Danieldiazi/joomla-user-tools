@@ -162,6 +162,14 @@ Los resultados se registran desde la versión que añadió esta funcionalidad; l
 
 Sí, desde la 2026.10.6. El panel **Usuarios** de la administración muestra el módulo «User Tools» con las cuentas inactivas sin bloquear, las bloqueadas pendientes de eliminar, el estado de las tareas programadas y avisos (plugin deshabilitado, tarea detenida por seguridad o fallida, tarea en simulación más de 14 días…). Cada cifra y aviso enlaza con la herramienta o el informe correspondiente.
 
+### ¿Qué significa «Bloqueadas para revisar»?
+
+Son cuentas ya bloqueadas que cumplen el plazo y las exclusiones de la herramienta de eliminación. La cifra abre una revisión: no borra cuentas ni significa que deban eliminarse sin comprobarlas.
+
+### ¿Por qué una tarea no muestra próxima ejecución?
+
+El módulo distingue una tarea deshabilitada de una tarea habilitada sin fecha de próxima ejecución. Consulta su configuración para comprobar la regla de ejecución. El resultado anterior no significa que la tarea siga habilitada.
+
 ### ¿Cada cuánto se actualiza el resumen del panel?
 
 Se guarda en caché un máximo de 10 minutos. Se recalcula antes si una herramienta o una tarea cambia cuentas, o si guardas las Opciones. La hora de los datos aparece al pie del módulo.

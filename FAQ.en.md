@@ -162,6 +162,14 @@ Results are recorded only from the version that introduced reporting; earlier ru
 
 Yes, since 2026.10.6. The administrator **Users** dashboard shows a “User Tools” module with unblocked inactive accounts, blocked accounts pending deletion, scheduled-task status and notices (disabled plugin, task stopped for safety or failed, dry-run mode lasting over 14 days, etc.). Each count or notice links to the corresponding tool or report.
 
+### What does “Blocked accounts to review” mean?
+
+These are blocked accounts meeting the deletion tool’s period and exclusions. The count opens a review: it does not delete accounts or mean that they should be deleted without checking them.
+
+### Why does a task have no next run?
+
+The module distinguishes a disabled task from an enabled task without a next run date. Check its configuration for the execution rule. A previous result does not mean that the task is still enabled.
+
 ### How often does the dashboard summary update?
 
 It is cached for up to 10 minutes. It is recalculated earlier when a tool or task changes accounts, or Options are saved. The data timestamp appears at the bottom of the module.

@@ -525,8 +525,15 @@ $moduleCount = function (string $html, string $name): ?int {
     return preg_match('/data-ut-count="' . $name . '">(\d+)</', $html, $m) ? (int) $m[1] : null;
 };
 $dashboard = $admin->get($dashboardUrl);
-Test::check(str_contains($dashboard, 'mod-usertools') && str_contains($dashboard, 'Inactive accounts not blocked'), 'the summary module is published on the Users dashboard');
+Test::check(str_contains($dashboard, 'mod-usertools') && str_contains($dashboard, 'Inactive accounts to review'), 'the summary module is published on the Users dashboard');
 Test::check(str_contains($dashboard, 'UT integration'), 'the module lists the User Tools tasks');
+Test::check(str_contains($dashboard, 'data-ut-dashboard-tasks') && str_contains($dashboard, '<dl class="row g-2 small mb-0">'),
+    'tasks expose labelled dates without squeezing five table columns');
+Test::check(str_contains($dashboard, 'They are not deleted automatically.') && str_contains($dashboard, 'Review deletion candidates'),
+    'the deletion count describes candidates and leads to a review, not an immediate deletion');
+Test::check(str_contains($dashboard, 'Dry runs do not change accounts.') && str_contains($dashboard, 'Data updated:'),
+    'the module explains dry runs and labels the data timestamp');
+
 // Figures match what the tools list with the same options.
 $review = $admin->submit('index.php?option=com_usertools&view=inactive', ['task' => 'inactive.search', 'days' => 365, 'include_never' => 0, 'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
 preg_match_all('/data-ut-suspend-id="\d+"/', $review, $inactiveRows);
@@ -558,7 +565,7 @@ $site->cli('scheduler:run --id=' . $guardId);
 Test::check(!$site->blocked('ana') && !$site->blocked('luis'), 'the stopped run blocked nobody');
 $dashboard = $admin->get($dashboardUrl);
 Test::check(str_contains($dashboard, 'The task «UT guard» was stopped by the safety limit'), 'a task stopped for safety raises a danger alert');
-Test::check(str_contains($dashboard, 'Stopped for safety'), 'the task table shows the result of the last run');
+Test::check(str_contains($dashboard, 'Stopped for safety'), 'the task list shows the result of the last run');
 $site->q('UPDATE #__scheduler_tasks SET state = 0 WHERE id = ?', [$guardId]);
 // Permissions: each figure only for users allowed to use its tool.
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.compare' => ['6' => 1]])]);

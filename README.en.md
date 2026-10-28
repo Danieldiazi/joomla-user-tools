@@ -131,6 +131,8 @@ Reports are stored in the usertools-reports subfolder of Joomla's logs directory
 
 ## Users dashboard summary
 
+Since 2026.10.14, the counts distinguish “Inactive accounts to review” and “Blocked accounts to review”; these are candidates, not automatic actions. Tasks use a responsive list with their mode, result, report link and labelled dates. If no next run is available, explanatory text replaces the dash. The update timestamp and cache explanation appear separately in the footer.
+
 Since 2026.10.6, the administrator **Users** dashboard (the dashboard icon next to “Users” in the sidebar) includes a “User Tools” module showing:
 
 - **Unblocked inactive accounts**, using the period and exclusions of “Review inactive users”. The count links to that tool.
