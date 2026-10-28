@@ -26,6 +26,7 @@ class DisplayController extends BaseController
         'usage'    => 'usertools.access',
         'ungroup'  => 'usertools.ungroup',
         'diagnose' => 'usertools.diagnose',
+        'age'      => 'usertools.content',
     ];
 
     /**

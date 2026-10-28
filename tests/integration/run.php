@@ -218,11 +218,11 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['compare', 'inactive', 'ungroup', 'access', 'usage', 'diagnose', 'schedule', 'reports', 'delete'], 'every tool has its card, in order');
+Test::check($cards[1] === ['compare', 'inactive', 'ungroup', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 9 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 10 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -812,6 +812,61 @@ $site->q("DELETE FROM #__viewlevels WHERE title LIKE 'UT diag%'");
 foreach (['diag_admin', 'diag_never', 'diag_recent'] as $name) {
     $site->cli('user:delete --username=' . $name);
 }
+
+Test::section('Content by age');
+$ageUrl = 'index.php?option=com_usertools&view=age';
+$site->q("DELETE FROM #__content WHERE alias LIKE 'ut-age-%'");
+$ageCategory = (int) $site->q("SELECT id FROM #__categories WHERE extension = 'com_content' AND parent_id <> 0 ORDER BY id")[0]['id'];
+$addArticle = function (string $alias, string $modified, int $state = 1, int $access = 1) use ($site, $ageCategory): int {
+    $site->q('INSERT INTO #__content (title, alias, introtext, "fulltext", state, catid, created, created_by, modified, images, urls, attribs, access, metadesc, metadata, language)'
+        . " VALUES (?, ?, '', '', ?, ?, ?, ?, ?, '{}', '{}', '{}', ?, '', '{}', '*')",
+        ['UT ' . $alias, 'ut-age-' . $alias, $state, $ageCategory, '2010-05-05 10:00:00', $site->userId(getenv('UT_ADMIN_USER') ?: 'admin'), $modified, $access]);
+    return (int) $site->q('SELECT id FROM #__content WHERE alias = ?', ['ut-age-' . $alias])[0]['id'];
+};
+$a2012 = $addArticle('old-a', '2012-03-01 00:00:00');
+$addArticle('old-b', '2012-12-31 23:59:59', 2);
+$addArticle('old-trash', '2012-06-01 00:00:00', -2);
+$addArticle('old-registered', '2013-01-01 00:00:00', 0, 2);
+$ageCount = function (string $html, int $year): int {
+    return preg_match('/data-ut-age-year="' . $year . '".*?data-ut-age-cell="articles" data-ut-age-count="(\d+)"/s', $html, $m) ? (int) $m[1] : -1;
+};
+$age = $admin->get($ageUrl);
+Test::noPhpErrors($age, 'content by age');
+Test::check($ageCount($age, 2012) === 2 && $ageCount($age, 2013) === 1, 'articles are counted by year of last modification; the trash is not counted, archived ones are');
+preg_match_all('/data-ut-age-year="(\d+)"/', $age, $years);
+$sorted = $years[1];
+rsort($sorted);
+Test::check($years[1] === $sorted, 'years run from the newest to the oldest');
+Test::check(str_contains($age, 'layout=list&amp;kind=articles&amp;year=2012') && str_contains($age, 'data-ut-age-total='), 'each number links to its list and each row has its total');
+$filtered = $admin->get($ageUrl . '&level=2');
+Test::check($ageCount($filtered, 2013) === 1 && !str_contains($filtered, 'data-ut-age-year="2012"'), 'the access level filter counts only that level');
+$list = $admin->get($ageUrl . '&layout=list&kind=articles&year=2012');
+Test::noPhpErrors($list, 'the list of one year');
+Test::check(str_contains($list, 'data-ut-age-list-total="2"') && strpos($list, 'UT old-a') < strpos($list, 'UT old-b') && !str_contains($list, 'UT old-trash'),
+    'the list shows the items of that year, oldest first, without the trash');
+Test::check(str_contains($list, 'option=com_content&amp;task=article.edit&amp;id=' . $a2012) && str_contains($list, 'Archived'), 'each item links to its edit screen and shows its status');
+preg_match('/href="([^"]*task=age\.export[^"]*year=2012[^"]*)"/', $list, $export);
+[$code, $csv, $headers] = $admin->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($export[1] ?? '')));
+Test::check($code === 200 && str_starts_with($headers['content-type'] ?? '', 'text/csv') && str_contains($csv, $a2012 . ';"UT old-a";') && substr_count($csv, "\n") === 3,
+    'the list of one year downloads as CSV');
+preg_match('/href="([^"]*task=age\.export[^"]*)"/', $age, $export);
+[$code, $csv] = $admin->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($export[1] ?? '')));
+Test::check($code === 200 && preg_match('/^2012;2;2\r?$/m', $csv) === 1, 'the table downloads as CSV, one row per year');
+[$code] = $admin->request($ageUrl . '&layout=list&kind=nothing&year=2012');
+Test::check($code === 403, 'an unknown kind is refused (got ' . $code . ')');
+$contentRules = $site->q("SELECT rules FROM #__assets WHERE name = 'com_content'")[0]['rules'];
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
+[$code] = $delegate->request($ageUrl);
+Test::check($code === 403, 'the screen needs the "View content by age" permission (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.content' => ['6' => 1]])]);
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [json_encode(['core.manage' => ['6' => 0]])]);
+[$code, $delegateAge] = $delegate->request($ageUrl);
+[$listCode] = $delegate->request($ageUrl . '&layout=list&kind=articles&year=2012');
+Test::check($code === 200 && $ageCount($delegateAge, 2012) === 2 && !str_contains($delegateAge, 'layout=list') && $listCode === 403,
+    'without managing articles in Joomla, the numbers are shown but the titles are not (got ' . $listCode . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [$contentRules]);
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+$site->q("DELETE FROM #__content WHERE alias LIKE 'ut-age-%'");
 
 Test::section('Remove from groups');
 $gid = fn (string $title): int => (int) $site->q('SELECT id FROM #__usergroups WHERE title = ?', [$title])[0]['id'];

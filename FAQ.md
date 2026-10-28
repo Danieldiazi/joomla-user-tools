@@ -40,7 +40,7 @@ No. La comparación de listas, la revisión manual por inactividad, la eliminaci
 
 ### ¿Quién puede usarlo?
 
-Los superusuarios y los usuarios con los permisos delegados correspondientes en **Opciones → Permisos**. Hay permisos separados para comparar listas y bloquear, crear cuentas, revisar usuarios inactivos, eliminar usuarios inactivos, consultar resultados de tareas, quitar de grupos, ver grupos, niveles y contenido por nivel, y ver el diagnóstico de accesos. El de eliminar no se concede a nadie más que a los superusuarios hasta que lo des expresamente. El acceso al componente también requiere `core.manage`.
+Los superusuarios y los usuarios con los permisos delegados correspondientes en **Opciones → Permisos**. Hay permisos separados para comparar listas y bloquear, crear cuentas, revisar usuarios inactivos, eliminar usuarios inactivos, consultar resultados de tareas, quitar de grupos, ver grupos, niveles y contenido por nivel, ver contenido por antigüedad y ver el diagnóstico de accesos. El de eliminar no se concede a nadie más que a los superusuarios hasta que lo des expresamente. El acceso al componente también requiere `core.manage`.
 
 ### ¿Necesita JavaScript?
 
@@ -259,6 +259,24 @@ Joomla no deja borrar un nivel que use algún elemento, incluidos los de la pape
 ### ¿Por qué no veo la pantalla?
 
 Requiere el permiso *Ver grupos, niveles y contenido por nivel*. Los superusuarios lo tienen; para los demás, concédelo en Componentes → User Tools → Opciones → Permisos.
+
+## Contenido por antigüedad
+
+### ¿Cómo veo los artículos que llevan años sin tocarse?
+
+Con **Contenido por antigüedad**, desde la 2026.10.15. Muestra una tabla por años según la fecha de última modificación, y cada cifra abre la lista de esos artículos con enlace para editarlos. Detalles en el [README](README.md#contenido-por-antigüedad).
+
+### ¿Por qué se usa la fecha de modificación y no la de creación?
+
+Porque lo que interesa es el contenido abandonado: un artículo antiguo que se revisó hace poco no lo está. Si un elemento no tiene fecha de modificación, se usa la de creación.
+
+### ¿Cuentan los archivados y los de la papelera?
+
+Los archivados sí, con su estado visible en la lista, porque suelen ser justo los que se quieren revisar. Los de la papelera no.
+
+### ¿Por qué veo las cifras pero no puedo abrir la lista?
+
+La lista muestra títulos, así que además del permiso *Ver contenido por antigüedad* hace falta poder gestionar los artículos en Joomla.
 
 ## Diagnóstico de accesos
 
