@@ -375,6 +375,19 @@ $block = substr($review, (int) strpos($review, 'id="ut-block-table"'));
 $block = substr($block, 0, (int) strpos($block, '</table>'));
 Test::check(!str_contains($block, '>mgr<') && !str_contains($block, '>delegate<') && str_contains($block, '>baja<'), 'a non Super User cannot block backend accounts or itself');
 Test::check(str_contains($review, 'you are not allowed to create accounts') || !str_contains($review, 'data-ut-add'), 'a delegate without "Create accounts" cannot create users');
+// "Create accounts" withdrawn while a job is paused: continuing creates nothing more.
+$site->options(['batch_seconds' => 0]);
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.compare' => ['6' => 1], 'usertools.create' => ['6' => 1]])]);
+$delegate->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster([], ['permiso1', 'permiso2']),
+    'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+$progress = $delegate->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
+    'creation_mode' => 'email', 'registrations' => $registrationsFor(['permiso1', 'permiso2'])], 'data-ut-review');
+Test::check(str_contains($progress, '1 of 2 accounts processed') && $site->userId('permiso1') > 0, 'the delegate starts a job that creates accounts');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.compare' => ['6' => 1]])]);
+$data = $step($delegate, $progress);
+Test::check(str_contains($data['error'] ?? '', 'no longer allowed to create accounts') && $site->userId('permiso2') === 0, 'without "Create accounts" the rest is not created (' . json_encode($data) . ')');
+$delegate->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.discard'], 'data-ut-job-pending');
+$site->options(['batch_seconds' => 8]);
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
 Test::section('Inactivity review');

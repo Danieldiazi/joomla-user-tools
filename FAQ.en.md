@@ -104,7 +104,7 @@ Up to 2026.10.10 everything ran in one request, and with hundreds of creations (
 
 ### The tab was closed while the changes were being applied
 
-What was done until then is kept and logged. When you open «Compare list» you will see a notice with how many accounts are done and the **Continue** and **Stop and discard the rest** buttons. When continuing, each account is checked again before changing it. In temporary password mode, passwords already shown cannot be recovered: use Joomla's password reset for those accounts.
+What was done until then is kept and logged. When you open «Compare list» you will see a notice with how many accounts are done and the **Continue** and **Stop and discard the rest** buttons. When continuing, each account is checked again before changing it, the job resumes exactly where it stopped (progress is saved after each account, so none is repeated) and it checks again that you are still allowed to create accounts. In temporary password mode, passwords already shown cannot be recovered: use Joomla's password reset for those accounts.
 
 ### One account creation failed. Is everything rolled back?
 
