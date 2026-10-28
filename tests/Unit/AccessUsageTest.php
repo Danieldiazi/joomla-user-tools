@@ -54,9 +54,11 @@ final class AccessUsageTest extends TestCase
         $this->assertSame('', AccessUsage::link('', 7), 'other extensions have no link');
 
         $table = AccessUsage::export(AccessUsage::build($this->levels(), $this->sources()), fn (string $key, string $arg = '') => $arg === '' ? $key : "$key($arg)");
-        $this->assertSame(['COM_USERTOOLS_USAGE_TYPE', 'COM_USERTOOLS_USAGE_TABLE', 'Public', 'Registered', 'Special', 'Socios',
-            'COM_USERTOOLS_USAGE_MISSING_LEVEL(0)', 'COM_USERTOOLS_USAGE_MISSING_LEVEL(9)', 'COM_USERTOOLS_USAGE_TOTAL'], $table['header']);
-        $this->assertSame(['Articles', '#__content', 40, 5, 0, 3, 0, 0, 48], $table['rows'][0]);
-        $this->assertSame(['Table #__attachments', '#__attachments', 0, 8, 0, 0, 1, 0, 9], $table['rows'][3]);
+        $this->assertSame(['COM_USERTOOLS_USAGE_LEVEL_ID', 'COM_USERTOOLS_ACCESS_LEVEL', 'Articles', 'Categories: Articles', 'Site modules', 'Table #__attachments',
+            'COM_USERTOOLS_USAGE_TOTAL'], $table['header'], 'one column per kind of item, as on screen');
+        $this->assertSame([1, 'Public', 40, 6, 12, 0, 58], $table['rows'][0], 'one row per level, with its total');
+        $this->assertSame([3, 'Special', 0, 0, 0, 0, 0], $table['rows'][2], 'unused levels are kept');
+        $this->assertSame([0, 'COM_USERTOOLS_USAGE_MISSING_LEVEL(0)', 0, 0, 0, 1, 1], $table['rows'][4]);
+        $this->assertCount(6, $table['rows']);
     }
 }

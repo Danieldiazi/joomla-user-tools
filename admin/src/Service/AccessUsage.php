@@ -5,8 +5,9 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service;
 \defined('_JEXEC') or die;
 
 /**
- * Which content uses each viewing access level: one row per kind of item (articles, categories of a
- * component, menu items…), one column per level. Pure logic; AccessUsageReader reads the counts.
+ * Which content uses each viewing access level: per kind of item (articles, categories of a component,
+ * menu items…), how many items have each level. The screen shows one row per level and one column per
+ * kind. Pure logic; AccessUsageReader reads the counts.
  */
 final class AccessUsage
 {
@@ -59,7 +60,7 @@ final class AccessUsage
     }
 
     /**
-     * The usage as table rows for a CSV file.
+     * The usage as table rows for a CSV file: one row per level, one column per kind of item, as on screen.
      *
      * @param  array{levels: list<array<string, mixed>>, rows: list<array<string, mixed>>} $usage see build()
      * @param  callable(string, string=): string $text translates a language key, with an optional argument
@@ -67,18 +68,18 @@ final class AccessUsage
      */
     public static function export(array $usage, callable $text): array
     {
-        $header = [$text('COM_USERTOOLS_USAGE_TYPE'), $text('COM_USERTOOLS_USAGE_TABLE')];
-        foreach ($usage['levels'] as $level) {
-            $header[] = $level['missing'] ? $text('COM_USERTOOLS_USAGE_MISSING_LEVEL', (string) $level['id']) : (string) $level['title'];
+        $header = [$text('COM_USERTOOLS_USAGE_LEVEL_ID'), $text('COM_USERTOOLS_ACCESS_LEVEL')];
+        foreach ($usage['rows'] as $row) {
+            $header[] = (string) $row['label'];
         }
         $header[] = $text('COM_USERTOOLS_USAGE_TOTAL');
         $rows     = [];
-        foreach ($usage['rows'] as $row) {
-            $line = [(string) $row['label'], (string) $row['table']];
-            foreach ($usage['levels'] as $level) {
+        foreach ($usage['levels'] as $level) {
+            $line = [(int) $level['id'], $level['missing'] ? $text('COM_USERTOOLS_USAGE_MISSING_LEVEL', (string) $level['id']) : (string) $level['title']];
+            foreach ($usage['rows'] as $row) {
                 $line[] = (int) ($row['counts'][$level['id']] ?? 0);
             }
-            $line[] = (int) $row['total'];
+            $line[] = (int) $level['total'];
             $rows[] = $line;
         }
         return ['header' => $header, 'rows' => $rows];

@@ -220,19 +220,19 @@ Los títulos de grupos y niveles enlazan con su edición en Joomla para quien ti
 
 Desde la 2026.10.12, **Contenido por nivel de acceso** cuenta qué elementos usa cada nivel de acceso. Joomla solo permite verlo listado a listado, con el filtro «Acceso» de cada uno, o intentando borrar el nivel, que dice en qué tablas se usa pero no qué elementos ni cuántos. Esta pantalla solo lee.
 
-- **Filas**: los tipos de elemento que tienen algún nivel asignado:
+- **Filas**: los niveles, en su orden, con el total de elementos de cada uno al final. Un cuadro de búsqueda filtra los niveles, útil si hay muchos.
+- **Columnas**: los tipos de elemento que tienen algún nivel asignado:
   - artículos;
   - categorías de cada componente;
   - campos y grupos de campos de cada contexto;
   - elementos de menú del sitio;
   - módulos del sitio y de la administración;
   - plugins, contactos, canales de noticias, etiquetas, idiomas de contenido y visitas guiadas.
-- **Columnas**: los niveles, en su orden, con el total de cada uno.
 - **Enlaces**: cada cifra enlaza al listado de Joomla ya filtrado por ese nivel, si puedes gestionar ese componente. Por ejemplo, «Categorías: Artículos» con el nivel *Socios* abre Contenido → Categorías con el filtro de acceso puesto.
 - **Otras extensiones** (adjuntos, galerías…): sus tablas se detectan igual que lo hace Joomla antes de borrar un nivel, por tener una columna `access`. Aparecen como «Tabla #__nombre» y se cuentan enteras y sin enlace, porque User Tools no sabe qué significa cada fila. El índice de Búsqueda inteligente no se cuenta, porque repite los elementos anteriores.
-- **Avisos**: si hay elementos con un nivel que no existe (por ejemplo, borrado directamente en la base de datos), aparecen en una columna «ID n (no existe)» y un aviso pide asignarles un nivel existente, porque nadie los ve en el sitio. Debajo de la tabla se listan los niveles que no usa ningún elemento.
+- **Avisos**: si hay elementos con un nivel que no existe (por ejemplo, borrado directamente en la base de datos), aparecen en una fila «ID n (no existe)» y un aviso pide asignarles un nivel existente, porque nadie los ve en el sitio. Los niveles que no usa ningún elemento salen atenuados, con total 0, y se listan también debajo de la tabla.
 
-No se cuentan los elementos en la papelera. Los listados de Joomla ocultan además los archivados salvo que cambies su filtro de estado, así que el listado puede mostrar menos elementos que la cifra. El botón **Exportar CSV** descarga la misma tabla (UTF-8 con BOM y punto y coma). Usa el mismo permiso que «Grupos y niveles de acceso», que ahora se llama *Ver grupos, niveles y contenido por nivel*, y se llega desde la portada o con el botón «Ver contenido por nivel» de esa pantalla.
+No se cuentan los elementos en la papelera. Los listados de Joomla ocultan además los archivados salvo que cambies su filtro de estado, así que el listado puede mostrar menos elementos que la cifra. El botón **Exportar CSV** descarga la misma tabla, con una fila por nivel y su ID (UTF-8 con BOM y punto y coma). Usa el mismo permiso que «Grupos y niveles de acceso», que ahora se llama *Ver grupos, niveles y contenido por nivel*, y se llega desde la portada o con el botón «Ver contenido por nivel» de esa pantalla.
 
 ## Seguridad
 

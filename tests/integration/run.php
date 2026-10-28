@@ -654,27 +654,33 @@ $site->q('UPDATE #__modules SET access = ?, published = -2 WHERE id = ?', [$usag
 $site->db->exec('CREATE TABLE ' . $site->prefix . 'ut_gallery (id INT, access INT)');
 $site->q('INSERT INTO #__ut_gallery (id, access) VALUES (1, ?), (2, ?), (3, ?), (4, 1)', [$usageLevel, $usageLevel, $usageLevel]);
 $usage = $admin->get('index.php?option=com_usertools&view=usage');
-$usageRow = function (string $key) use ($usage): string {
-    $start = strpos($usage, 'data-ut-usage-row="' . $key . '"');
+// One row per level, one column per kind of item.
+$levelRow = function (int $id) use ($usage): string {
+    $start = strpos($usage, 'data-ut-usage-level="' . $id . '"');
     return $start === false ? '' : substr($usage, $start, (int) strpos($usage, '</tr>', $start) - $start);
 };
-$levelIndex = array_search($usageLevel, array_map('intval', (preg_match_all('/data-ut-usage-level="(\d+)"/', $usage, $m) ? $m[1] : [])), true);
-$cells = fn (string $row): array => preg_match_all('/data-ut-usage-count="(\d+)"/', $row, $c) ? array_map('intval', $c[1]) : [];
-$categoryCells = $cells($usageRow('categories:com_content'));
-Test::check($levelIndex !== false && ($categoryCells[$levelIndex] ?? 0) === 1, 'the category moved to the new level is counted under it');
-Test::check(str_contains($usageRow('categories:com_content'), 'option=com_categories&amp;view=categories&amp;extension=com_content&amp;filter[access]=' . $usageLevel),
+$cell = function (int $id, string $kind) use ($levelRow): string {
+    $row   = $levelRow($id);
+    $start = strpos($row, 'data-ut-usage-cell="' . $kind . '"');
+    return $start === false ? '' : substr($row, $start, (int) strpos($row, '</td>', $start) - $start);
+};
+$count = fn (int $id, string $kind): int => preg_match('/data-ut-usage-count="(\d+)"/', $cell($id, $kind), $c) ? (int) $c[1] : -1;
+$hasKind = fn (string $kind): bool => str_contains($usage, 'data-ut-usage-kind="' . $kind . '"');
+Test::check($count($usageLevel, 'categories:com_content') === 1, 'the category moved to the new level is counted in its row');
+Test::check(str_contains($cell($usageLevel, 'categories:com_content'), 'option=com_categories&amp;view=categories&amp;extension=com_content&amp;filter[access]=' . $usageLevel),
     'the count links to the categories list filtered by that level');
-Test::check(($cells($usageRow('modules'))[$levelIndex] ?? 0) === 1, 'a trashed module is not counted');
-Test::check(str_contains($usage, 'data-ut-usage-missing') && str_contains($usage, 'ID 999 (missing)'), 'items with a level that does not exist are flagged');
-$gallery = $usageRow('table:#__ut_gallery');
-Test::check(($cells($gallery)[$levelIndex] ?? 0) === 3 && str_contains($gallery, 'From another extension') && !str_contains($gallery, '<a '),
+Test::check($count($usageLevel, 'modules') === 1, 'a trashed module is not counted');
+Test::check(str_contains($levelRow($usageLevel), 'data-ut-usage-total="5"'), 'each level row ends with its total (1 category, 1 module, 3 gallery rows)');
+Test::check(str_contains($usage, 'data-ut-usage-missing') && str_contains($levelRow(999), 'ID 999 (missing)') && $count(999, 'modules') === 1,
+    'items with a level that does not exist get their own row and a warning');
+Test::check($count($usageLevel, 'table:#__ut_gallery') === 3 && !str_contains($cell($usageLevel, 'table:#__ut_gallery'), '<a ') && str_contains($usage, 'From another extension'),
     'a table of another extension with an access column is counted, without a link');
-Test::check(str_contains($usage, 'Levels with no items: ') && str_contains($usage, 'UT usage empty') && $usageRow('table:#__finder_links') === '',
+Test::check(str_contains($usage, 'Levels with no items: ') && str_contains($usage, 'UT usage empty') && !$hasKind('table:#__finder_links'),
     'unused levels are listed; the Smart Search index is not counted');
-Test::check($usageRow('plugins') !== '' && $usageRow('menu') !== '', 'plugins and site menu items are counted');
+Test::check($hasKind('plugins') && $hasKind('menu') && str_contains($usage, 'data-ut-filter="ut-usage-table"'), 'plugins and site menu items are counted, and levels can be filtered');
 preg_match('/href="([^"]*task=usage\.export[^"]*)"/', $usage, $export);
 [$code, $csv, $headers] = $admin->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($export[1] ?? '')));
-Test::check($code === 200 && str_starts_with($headers['content-type'] ?? '', 'text/csv') && str_contains($csv, '"UT usage level"') && str_contains($csv, '"Table #__ut_gallery";#__ut_gallery;'),
+Test::check($code === 200 && str_starts_with($headers['content-type'] ?? '', 'text/csv') && str_contains($csv, $usageLevel . ';"UT usage level";') && str_contains($csv, ';"Table #__ut_gallery";'),
     'the usage downloads as CSV');
 [, , $tokenless] = $admin->request('index.php?option=com_usertools&task=usage.export');
 Test::check(!str_starts_with($tokenless['content-type'] ?? '', 'text/csv'), 'without the token there is no CSV');

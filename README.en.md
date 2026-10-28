@@ -222,19 +222,19 @@ Group and level titles link to their edit screens in Joomla for users with the A
 
 Since 2026.10.12, **Content by access level** counts which items use each access level. Joomla only shows this list by list, with each one's «Access» filter, or when you try to delete the level, which says in which tables it is used but not which items or how many. This screen only reads.
 
-- **Rows**: the kinds of item that have a level assigned:
+- **Rows**: the levels, in their order, with each one's total number of items at the end. A search box filters the levels, handy when there are many.
+- **Columns**: the kinds of item that have a level assigned:
   - articles;
   - categories of each component;
   - fields and field groups of each context;
   - site menu items;
   - site and administrator modules;
   - plugins, contacts, news feeds, tags, content languages and guided tours.
-- **Columns**: the levels, in their order, with each one's total.
 - **Links**: each number links to Joomla's list already filtered by that level, if you can manage that component. For example, «Categories: Articles» with the *Members* level opens Content → Categories with the access filter set.
 - **Other extensions** (attachments, galleries…): their tables are found the same way Joomla does before deleting a level, by having an `access` column. They appear as «Table #__name» and are counted as a whole and without a link, because User Tools does not know what each row means. The Smart Search index is not counted, because it repeats the items above.
-- **Warnings**: if items have a level that does not exist (for example, deleted directly in the database), they appear in an «ID n (missing)» column and a warning asks to give them an existing level, because nobody sees them on the site. The levels that no item uses are listed below the table.
+- **Warnings**: if items have a level that does not exist (for example, deleted directly in the database), they appear in an «ID n (missing)» row and a warning asks to give them an existing level, because nobody sees them on the site. The levels no item uses are dimmed, with a total of 0, and are also listed below the table.
 
-Items in the trash are not counted. Joomla lists also hide archived items unless you change their status filter, so the list may show fewer items than the number. The **Export CSV** button downloads the same table (UTF-8 with BOM, semicolons). It uses the same permission as «Groups and access levels», now called *View groups, levels and content by level*, and is reached from the home screen or with that screen's «See content by level» button.
+Items in the trash are not counted. Joomla lists also hide archived items unless you change their status filter, so the list may show fewer items than the number. The **Export CSV** button downloads the same table, with one row per level and its ID (UTF-8 with BOM, semicolons). It uses the same permission as «Groups and access levels», now called *View groups, levels and content by level*, and is reached from the home screen or with that screen's «See content by level» button.
 
 ## Security
 
