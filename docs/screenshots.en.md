@@ -6,7 +6,7 @@
 
 These shared screenshots show the Spanish interface on Joomla 6.2.0. Deletion screenshots were added in 2026.10.5, the Users dashboard screenshot in 2026.10.6, and the home screen, groups and access levels, and remove from groups screenshots in 2026.10.9. The other screenshots show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
-![User Tools home screen (2026.10.9)](screenshots/01-portada.jpg)
+![User Tools home screen grouped into sections: review accounts, groups and levels, automation and delete accounts (2026.10.13, Spanish interface)](screenshots/01-portada.jpg)
 
 ![Comparison: list and exclusions](screenshots/02-comparacion-lista.jpg)
 

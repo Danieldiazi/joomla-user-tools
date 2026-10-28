@@ -6,7 +6,7 @@
 
 Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Las de eliminación se incorporaron con 2026.10.5, la del panel de Usuarios con 2026.10.6, y la portada, la de grupos y niveles de acceso y las de quitar de grupos con 2026.10.9; las demás corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
-![Portada de User Tools (2026.10.9)](screenshots/01-portada.jpg)
+![Portada de User Tools agrupada en secciones: revisar cuentas, grupos y niveles, automatización y eliminar cuentas (2026.10.13)](screenshots/01-portada.jpg)
 
 ![Comparación: lista y exclusiones](screenshots/02-comparacion-lista.jpg)
 
