@@ -14,6 +14,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | User groups on the site | Site module that lists the groups of a user or the members of a group. Read only. Available since 2026.10.9. |
 | Remove from groups | Choose an account, untick the groups it should leave and, if you want, also remove it from all their subgroups. With a review and a confirmation. Available since 2026.10.9. |
 | Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.9. |
+| Content by access level | How many articles, categories, menu items, modules, fields and other items use each level, with a link to each filtered list. Read only. Available since 2026.10.12. |
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
 
@@ -32,6 +33,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 - [User groups module on the site](#user-groups-module-on-the-site)
 - [Remove from groups](#remove-from-groups)
 - [Groups and access levels](#groups-and-access-levels)
+- [Content by access level](#content-by-access-level)
 - [Security](#security)
 - [Options](#options)
 - [Tool screenshots](#tool-screenshots)
@@ -214,7 +216,27 @@ A search box filters the groups. Next to it, two buttons download the informatio
 
 Both files are UTF-8 with BOM and semicolon-separated, so Excel opens them with accents intact, and they are protected against formulas. They always include every group, even when a filter is typed. Texts follow the administrator language. The download requires the same permission as the screen and the form token.
 
-Group and level titles link to their edit screens in Joomla for users with the Admin permission on Users (the same one Joomla requires for those screens), and account counts link to the user manager for users who can manage users. The screen requires its own permission, *View groups and access levels*: Super Users have it; grant it to others in Options → Permissions.
+Group and level titles link to their edit screens in Joomla for users with the Admin permission on Users (the same one Joomla requires for those screens), and account counts link to the user manager for users who can manage users. The screen requires its own permission, *View groups, levels and content by level*: Super Users have it; grant it to others in Options → Permissions.
+
+## Content by access level
+
+Since 2026.10.12, **Content by access level** counts which items use each access level. Joomla only shows this list by list, with each one's «Access» filter, or when you try to delete the level, which says in which tables it is used but not which items or how many. This screen only reads.
+
+- **Rows**: the levels, in their order, with each one's total number of items at the end. A search box filters the levels, handy when there are many.
+- **Columns**: the kinds of item that have a level assigned:
+  - articles;
+  - categories of each component;
+  - fields and field groups of each context;
+  - site menu items;
+  - site and administrator modules;
+  - plugins, contacts, news feeds, tags, content languages and guided tours.
+- **Links**: each number links to Joomla's list already filtered by that level, if you can manage that component. For example, «Categories: Articles» with the *Members* level opens Content → Categories with the access filter set.
+- **Other extensions** (attachments, galleries…): their tables are found the same way Joomla does before deleting a level, by having an `access` column. They appear as «Table #__name» and are counted as a whole and without a link, because User Tools does not know what each row means. The Smart Search index is not counted, because it repeats the items above.
+- **Warnings**: if items have a level that does not exist (for example, deleted directly in the database), they appear in an «ID n (missing)» row and a warning asks to give them an existing level, because nobody sees them on the site. The levels no item uses are dimmed, with a total of 0, and are also listed below the table.
+
+Items in the trash are not counted. Joomla lists also hide archived items unless you change their status filter, so the list may show fewer items than the number. The **Export CSV** button downloads the same table, with one row per level and its ID (UTF-8 with BOM, semicolons). It uses the same permission as «Groups and access levels», now called *View groups, levels and content by level*, and is reached from the home screen or with that screen's «See content by level» button.
+
+![Content by access level (Spanish interface)](docs/screenshots/18-contenido-por-nivel.jpg)
 
 ## Security
 
@@ -223,7 +245,7 @@ Group and level titles link to their edit screens in Joomla for users with the A
 - **Each block or group change closes the account's open sessions**, as Joomla's user manager does (requires “Session Metadata”, enabled by default).
 - **Creations, blocks, deletions and group changes are written to the User Actions Log** (Users → User Actions Log): who changed each account and which tool or scheduled task performed it.
 - **Separate permissions**, delegable without granting Super User access (Options → Permissions):
-  - *Compare list and block*, *Create accounts*, *Review inactive users*, *Delete inactive users*, *View task results*, *Remove from groups* and *View groups and access levels*.
+  - *Compare list and block*, *Create accounts*, *Review inactive users*, *Delete inactive users*, *View task results*, *Remove from groups* and *View groups, levels and content by level*.
   - Non-Super Users can never block, delete or remove from groups accounts with administrator access.
 - **Configurable reinforced confirmation**: from N accounts (10 by default), the exact number must be typed in addition to ticking the box.
 - **Deletion always requires typing the number of accounts**, even for one; the configurable threshold does not disable this confirmation.

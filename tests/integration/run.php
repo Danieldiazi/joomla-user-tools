@@ -652,6 +652,63 @@ $site->q("DELETE FROM #__viewlevels WHERE title LIKE 'UT level%'");
 $plainLevels = $admin->get('index.php?option=com_usertools&view=access');
 Test::check(!str_contains($plainLevels, 'Accounts assigned individually'), 'with no level assigned to single accounts, that column is hidden');
 
+Test::section('Content by access level');
+$site->q("DELETE FROM #__viewlevels WHERE title LIKE 'UT usage%'");
+$site->q("INSERT INTO #__viewlevels (title, ordering, rules) VALUES ('UT usage level', 95, '[2]')");
+$site->q("INSERT INTO #__viewlevels (title, ordering, rules) VALUES ('UT usage empty', 96, '[2]')");
+$usageLevel = (int) $site->q("SELECT id FROM #__viewlevels WHERE title = 'UT usage level'")[0]['id'];
+$category   = $site->q("SELECT id, access FROM #__categories WHERE extension = 'com_content' AND parent_id <> 0 ORDER BY id")[0];
+$modules    = $site->q('SELECT id, access FROM #__modules WHERE client_id = 0 ORDER BY id');
+$site->q('UPDATE #__categories SET access = ? WHERE id = ?', [$usageLevel, $category['id']]);
+$site->q('UPDATE #__modules SET access = ? WHERE id = ?', [$usageLevel, $modules[0]['id']]);
+$site->q('UPDATE #__modules SET access = 999 WHERE id = ?', [$modules[1]['id']]);
+$site->q('UPDATE #__modules SET access = ?, published = -2 WHERE id = ?', [$usageLevel, $modules[2]['id']]);
+// A table of another extension with an "access" column, as an attachments extension would have.
+$site->db->exec('CREATE TABLE ' . $site->prefix . 'ut_gallery (id INT, access INT)');
+$site->q('INSERT INTO #__ut_gallery (id, access) VALUES (1, ?), (2, ?), (3, ?), (4, 1)', [$usageLevel, $usageLevel, $usageLevel]);
+$usage = $admin->get('index.php?option=com_usertools&view=usage');
+// One row per level, one column per kind of item.
+$levelRow = function (int $id) use ($usage): string {
+    $start = strpos($usage, 'data-ut-usage-level="' . $id . '"');
+    return $start === false ? '' : substr($usage, $start, (int) strpos($usage, '</tr>', $start) - $start);
+};
+$cell = function (int $id, string $kind) use ($levelRow): string {
+    $row   = $levelRow($id);
+    $start = strpos($row, 'data-ut-usage-cell="' . $kind . '"');
+    return $start === false ? '' : substr($row, $start, (int) strpos($row, '</td>', $start) - $start);
+};
+$count = fn (int $id, string $kind): int => preg_match('/data-ut-usage-count="(\d+)"/', $cell($id, $kind), $c) ? (int) $c[1] : -1;
+$hasKind = fn (string $kind): bool => str_contains($usage, 'data-ut-usage-kind="' . $kind . '"');
+Test::check($count($usageLevel, 'categories:com_content') === 1, 'the category moved to the new level is counted in its row');
+Test::check(str_contains($cell($usageLevel, 'categories:com_content'), 'option=com_categories&amp;view=categories&amp;extension=com_content&amp;filter[access]=' . $usageLevel),
+    'the count links to the categories list filtered by that level');
+Test::check($count($usageLevel, 'modules') === 1, 'a trashed module is not counted');
+Test::check(str_contains($levelRow($usageLevel), 'data-ut-usage-total="5"'), 'each level row ends with its total (1 category, 1 module, 3 gallery rows)');
+Test::check(str_contains($usage, 'data-ut-usage-missing') && str_contains($levelRow(999), 'ID 999 (missing)') && $count(999, 'modules') === 1,
+    'items with a level that does not exist get their own row and a warning');
+Test::check($count($usageLevel, 'table:#__ut_gallery') === 3 && !str_contains($cell($usageLevel, 'table:#__ut_gallery'), '<a ') && str_contains($usage, 'From another extension'),
+    'a table of another extension with an access column is counted, without a link');
+Test::check(str_contains($usage, 'Levels with no items: ') && str_contains($usage, 'UT usage empty') && !$hasKind('table:#__finder_links'),
+    'unused levels are listed; the Smart Search index is not counted');
+Test::check($hasKind('plugins') && $hasKind('menu') && str_contains($usage, 'data-ut-filter="ut-usage-table"'), 'plugins and site menu items are counted, and levels can be filtered');
+preg_match('/href="([^"]*task=usage\.export[^"]*)"/', $usage, $export);
+[$code, $csv, $headers] = $admin->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($export[1] ?? '')));
+Test::check($code === 200 && str_starts_with($headers['content-type'] ?? '', 'text/csv') && str_contains($csv, $usageLevel . ';"UT usage level";') && str_contains($csv, ';"Table #__ut_gallery";'),
+    'the usage downloads as CSV');
+[, , $tokenless] = $admin->request('index.php?option=com_usertools&task=usage.export');
+Test::check(!str_starts_with($tokenless['content-type'] ?? '', 'text/csv'), 'without the token there is no CSV');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
+[$code] = $delegate->request('index.php?option=com_usertools&view=usage');
+Test::check($code === 403, 'the screen needs the "View groups, levels and content by level" permission (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+$site->q('UPDATE #__categories SET access = ? WHERE id = ?', [$category['access'], $category['id']]);
+foreach (array_slice($modules, 0, 3) as $module) {
+    $site->q('UPDATE #__modules SET access = ? WHERE id = ?', [$module['access'], $module['id']]);
+}
+$site->q('UPDATE #__modules SET published = 1 WHERE id = ?', [$modules[2]['id']]);
+$site->db->exec('DROP TABLE ' . $site->prefix . 'ut_gallery');
+$site->q("DELETE FROM #__viewlevels WHERE title LIKE 'UT usage%'");
+
 Test::section('Remove from groups');
 $gid = fn (string $title): int => (int) $site->q('SELECT id FROM #__usergroups WHERE title = ?', [$title])[0]['id'];
 $groupsOf = function (string $username) use ($site): array {

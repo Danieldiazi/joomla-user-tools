@@ -31,10 +31,13 @@
 .ut-secret{user-select:all;overflow-wrap:anywhere}
 .ut-confirm{border-color:var(--bs-danger-border-subtle,var(--bs-border-color,#dee2e6))}
 .ut-app.ut-wide{max-width:none}
-.ut-access-scroll{max-height:40rem;overflow:auto}
+.ut-access-scroll{position:relative;max-height:40rem;overflow:auto;width:0;min-width:100%}
+/* A wide table scrolls inside its box: width:0 + min-width:100% keep it from widening the page, and
+   position:relative clips the visually-hidden cell texts (absolutely positioned) inside the box too. */
 .ut-access thead th{position:sticky;top:0;z-index:2;background:var(--body-bg,var(--bs-body-bg,#fff));white-space:nowrap}
 .ut-access .ut-access-group{position:sticky;left:0;z-index:1;background:var(--body-bg,var(--bs-body-bg,#fff));min-width:14rem}
 .ut-access thead .ut-access-group{z-index:3}
+.ut-usage thead th[data-ut-usage-kind]{white-space:normal;min-width:6.5rem;max-width:9rem;vertical-align:bottom}
 .ut-access-legend li{margin:.25rem 0}
 .ut-tree-row{margin-inline-start:calc(var(--ut-level,0) * 1.5rem)}
 .ut-subgroups[hidden]{display:none}

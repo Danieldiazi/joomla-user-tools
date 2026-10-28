@@ -85,6 +85,14 @@ $states = [
         <a class="btn btn-outline-primary mt-auto align-self-start" href="<?= Route::_('index.php?option=com_usertools&view=access') ?>"><?= Text::_('COM_USERTOOLS_ACCESS_START') ?></a>
       </div></section>
     </div>
+    <div class="col-lg-6">
+      <section class="card h-100"><div class="card-body d-flex flex-column">
+        <span class="badge bg-info align-self-start mb-2"><?= Text::_('COM_USERTOOLS_READ_ONLY') ?></span>
+        <h2 class="h4"><?= Text::_('COM_USERTOOLS_USAGE_TITLE') ?></h2>
+        <p><?= Text::_('COM_USERTOOLS_USAGE_HOME_DESC') ?></p>
+        <a class="btn btn-outline-primary mt-auto align-self-start" href="<?= Route::_('index.php?option=com_usertools&view=usage') ?>"><?= Text::_('COM_USERTOOLS_USAGE_START') ?></a>
+      </div></section>
+    </div>
     <?php endif; ?>
   </div>
   <div class="alert alert-info mt-4 mb-0"><?= Text::_('COM_USERTOOLS_HOME_NOTE') ?></div>

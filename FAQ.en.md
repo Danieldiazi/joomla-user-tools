@@ -240,9 +240,17 @@ Yes, since 2026.10.11, as CSV in two shapes: the table as shown (one row per gro
 
 It only appears when some level has accounts assigned directly, without a group. Joomla's access level screen does not offer that, so normally there are none.
 
+### How do I see which content each access level has?
+
+With **Content by access level**, since 2026.10.12. For each level it counts the articles, categories, menu items, modules, fields, plugins and other items that use it, and each number links to Joomla's list already filtered. Tables of other extensions with an `access` column, such as attachments, are counted as a whole. Details in the [README](README.en.md#content-by-access-level).
+
+### Can I delete an access level without breaking anything?
+
+Joomla does not let you delete a level used by any item, including those in the trash. «Content by access level» shows which items use it, so you can change their level first, and the levels no item uses are listed below the table. Keep in mind that a level can also be used only to grant view permissions to groups without having content of its own.
+
 ### Why can't I see the screen?
 
-It requires the *View groups and access levels* permission. Super Users have it; for others, grant it in Components → User Tools → Options → Permissions.
+It requires the *View groups, levels and content by level* permission. Super Users have it; for others, grant it in Components → User Tools → Options → Permissions.
 
 ## Installation and updates
 

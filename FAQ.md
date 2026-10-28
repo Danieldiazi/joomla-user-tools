@@ -240,9 +240,17 @@ Sí, desde la 2026.10.11, en CSV y en dos formas: la tabla tal como se ve (una f
 
 Solo aparece cuando algún nivel tiene cuentas asignadas directamente, sin grupo. Joomla no ofrece hacerlo desde su pantalla de niveles, así que lo normal es que no haya ninguna.
 
+### ¿Cómo veo qué contenido tiene cada nivel de acceso?
+
+Con **Contenido por nivel de acceso**, desde la 2026.10.12. Cuenta, para cada nivel, los artículos, categorías, menús, módulos, campos, plugins y demás elementos que lo usan, y cada cifra enlaza al listado de Joomla ya filtrado. Las tablas de otras extensiones con columna `access`, como las de adjuntos, se cuentan enteras. Detalles en el [README](README.md#contenido-por-nivel-de-acceso).
+
+### ¿Puedo borrar un nivel de acceso sin romper nada?
+
+Joomla no deja borrar un nivel que use algún elemento, incluidos los de la papelera. En «Contenido por nivel de acceso» verás qué elementos lo usan, para cambiarles el nivel antes, y bajo la tabla aparecen los niveles que no usa ningún elemento. Recuerda que un nivel también puede servir solo para dar permisos de vista por grupos sin tener contenido propio.
+
 ### ¿Por qué no veo la pantalla?
 
-Requiere el permiso *Ver grupos y niveles de acceso*. Los superusuarios lo tienen; para los demás, concédelo en Componentes → User Tools → Opciones → Permisos.
+Requiere el permiso *Ver grupos, niveles y contenido por nivel*. Los superusuarios lo tienen; para los demás, concédelo en Componentes → User Tools → Opciones → Permisos.
 
 ## Instalación y actualización
 
