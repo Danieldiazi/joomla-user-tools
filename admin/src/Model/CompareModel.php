@@ -248,6 +248,8 @@ class CompareModel extends BaseDatabaseModel
             if (!$this->identity()->authorise('usertools.create', 'com_usertools')) {
                 throw new UserFacingException('COM_USERTOOLS_ERROR_CREATE_REVOKED');
             }
+            // The same for the target group: it must still exist and give no administrator access.
+            $this->assertRegisteredGroup();
             $factory = Toolkit::users();
             $mailer  = new AccountMailer();
             $log     = new ActionLogger();

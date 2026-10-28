@@ -399,6 +399,19 @@ $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_en
 $data = $step($delegate, $progress);
 Test::check(str_contains($data['error'] ?? '', 'no longer allowed to create accounts') && $site->userId('permiso2') === 0, 'without "Create accounts" the rest is not created (' . json_encode($data) . ')');
 $delegate->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.discard'], 'data-ut-job-pending');
+// Registered gains administrator access while a job is paused: continuing creates nothing more there.
+$admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster([], ['grupo1', 'grupo2']),
+    'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+$progress = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
+    'creation_mode' => 'email', 'registrations' => $registrationsFor(['grupo1', 'grupo2'])], 'data-ut-review');
+$rootRules = (string) $site->q("SELECT rules FROM #__assets WHERE name = 'root.1'")[0]['rules'];
+$withAdmin = json_decode($rootRules, true) ?: [];
+$withAdmin['core.login.admin'][(string) $site->q("SELECT id FROM #__usergroups WHERE title = 'Registered'")[0]['id']] = 1;
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'root.1'", [json_encode($withAdmin)]);
+$data = $step($admin, $progress);
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'root.1'", [$rootRules]);
+Test::check($site->userId('grupo1') > 0 && $site->userId('grupo2') === 0 && isset($data['error']), 'a target group that gained administrator access stops the pending creations (' . json_encode($data) . ')');
+$admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.discard'], 'data-ut-job-pending');
 $site->options(['batch_seconds' => 8]);
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
