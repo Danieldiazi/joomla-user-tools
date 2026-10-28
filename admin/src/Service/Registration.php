@@ -100,9 +100,11 @@ final class Registration
      * @param  list<array{username: string, email: string}> $selection
      * @param  callable(): object                           $newUser  returns an empty Joomla User
      * @param  callable(object): bool                       $sendLink sends the "choose your password" email (email mode)
+     * @param  (callable(object): void)|null                $saved    runs as soon as each account exists (the action log),
+     *                                                                so an interrupted request never leaves an unlogged account
      * @return array{created: list<array<string, mixed>>, errors: list<array{username: string, message: string}>}
      */
-    public static function create(array $selection, callable $newUser, int $groupId, string $mode, PasswordGenerator $passwords, callable $sendLink): array
+    public static function create(array $selection, callable $newUser, int $groupId, string $mode, PasswordGenerator $passwords, callable $sendLink, ?callable $saved = null): array
     {
         $mode   = self::mode($mode);
         $result = ['created' => [], 'errors' => []];
@@ -123,6 +125,13 @@ final class Registration
                 // Never put generated passwords or third-party plugin diagnostics in results or logs.
                 $result['errors'][] = ['username' => $row['username'], 'message' => 'COM_USERTOOLS_ERROR_CREATE_FAILED'];
                 continue;
+            }
+            if ($saved !== null) {
+                try {
+                    $saved($user);
+                } catch (\Throwable) {
+                    // The account exists; a failing log writer must not hide it from the result.
+                }
             }
             $created = $row + ['id' => (int) $user->id, 'mode' => $mode];
             if ($mode === self::MODE_PASSWORD) {

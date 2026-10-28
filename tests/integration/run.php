@@ -286,6 +286,81 @@ $site->q('UPDATE #__users SET block = 0 WHERE username IN (?, ?)', ['baja', 'ser
 $review = $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => 'pepito', 'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
 Test::check(str_contains($review, 'alert-danger') && str_contains($review, 'No name in the list matches a Joomla user'), 'red warning when nothing matches and accounts would be blocked');
 
+Test::section('Comparison in batches: progress, continue, discard, one-time passwords');
+// One account per request, as if each one hit the time budget.
+$site->options(['batch_seconds' => 0]);
+// Every current username except $without, plus new names: only $without can be proposed for blocking.
+$roster   = fn (array $without, array $new): string => implode("\n", array_merge(array_diff(array_column($site->q('SELECT username FROM #__users'), 'username'), $without), $new));
+$registrationsFor = function (array $names): string {
+    $rows = [];
+    foreach ($names as $name) {
+        $rows[hash('sha256', $name)] = ['checked' => true, 'email' => $name . '@example.test'];
+    }
+    return json_encode($rows);
+};
+$step = function (Client $client, string $page): array {
+    [$code, $body] = $client->request('index.php?option=com_usertools', ['task' => 'compare.step', Client::token($page) => 1]);
+    return json_decode($body, true) ?: ['http' => $code, 'body' => substr($body, 0, 200)];
+};
+$logCount = fn (string $key): int => (int) $site->q('SELECT COUNT(*) AS n FROM #__action_logs WHERE message_language_key = ?', [$key])[0]['n'];
+$createdBefore = $logCount('COM_USERTOOLS_ACTION_LOG_CREATED_EMAIL');
+$blockedBefore = $logCount('COM_USERTOOLS_ACTION_LOG_BLOCKED');
+
+$admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster(['baja', 'servicio'], ['lote1', 'lote2', 'lote3']),
+    'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+$progress = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
+    'creation_mode' => 'email', 'registrations' => $registrationsFor(['lote1', 'lote2', 'lote3'])], 'data-ut-review');
+Test::check(str_contains($progress, 'data-ut-progress') && str_contains($progress, '1 of 5 accounts processed'), 'a large job continues on the progress screen after the first batch');
+Test::check($site->blocked('baja') && !$site->blocked('servicio') && $site->userId('lote1') === 0, 'the first batch did one account only');
+[, $noToken] = $admin->request('index.php?option=com_usertools', ['task' => 'compare.step']);
+Test::check(!str_contains($noToken, '"processed"') && !$site->blocked('servicio'), 'a batch without the form token does nothing');
+$data = $step($admin, $progress);
+Test::check(($data['done'] ?? null) === false && ($data['processed'] ?? 0) === 2 && $site->blocked('servicio'), 'each request processes the next account (' . json_encode($data) . ')');
+// The operator leaves: the first screen offers to continue or discard, and nothing else can be applied meanwhile.
+$first = $admin->get('index.php?option=com_usertools&view=compare');
+Test::check(str_contains($first, 'data-ut-job-pending') && str_contains($first, '2 of 5 accounts have been processed'), 'a job left half-way is offered to continue or discard');
+$admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster([], []), 'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+$refused = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
+    'creation_mode' => 'email', 'registrations' => '{}'], 'data-ut-review');
+Test::check(str_contains($refused, 'A comparison is partly applied'), 'another comparison cannot be applied while one is pending');
+$progress = $admin->get('index.php?option=com_usertools&view=compare&layout=progress');
+for ($i = 0, $data = []; $i < 10 && empty($data['done']); $i++) {
+    $data = $step($admin, $progress);
+}
+Test::check(($data['done'] ?? false) === true && ($data['processed'] ?? 0) === 5 && $i === 3, 'continuing finishes the job, one account per request');
+Test::check($site->userId('lote1') && $site->userId('lote2') && $site->userId('lote3') && array_key_exists('password', $data['created'][0] ?? []) && $data['created'][0]['password'] === null, 'the three accounts were created; email mode sends no password');
+Test::check($logCount('COM_USERTOOLS_ACTION_LOG_CREATED_EMAIL') === $createdBefore + 3 && $logCount('COM_USERTOOLS_ACTION_LOG_BLOCKED') === $blockedBefore + 2,
+    'every block and creation is in the User Actions Log');
+$summary = $admin->get('index.php?option=com_usertools&view=compare&layout=result');
+Test::check(str_contains($summary, 'Operation finished') && str_contains($summary, 'lote3@example.test') && str_contains($summary, '>baja<'), 'the summary covers every batch');
+Test::check(!str_contains($admin->get('index.php?option=com_usertools&view=compare'), 'data-ut-job-pending'), 'nothing is pending afterwards');
+
+// Discarding keeps what was done and leaves the rest untouched.
+$admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster(['baja', 'servicio', 'lote1', 'lote2'], ['lote3', 'lote4', 'lote5']),
+    'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+$admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
+    'creation_mode' => 'email', 'registrations' => $registrationsFor(['lote4', 'lote5'])], 'data-ut-review');
+$discarded = $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.discard'], 'data-ut-job-pending');
+Test::check($site->blocked('lote1') && !$site->blocked('lote2') && $site->userId('lote4') === 0 && str_contains($discarded, '3 pending accounts were neither blocked nor created'),
+    'discarding keeps the first account and leaves the other three untouched');
+
+// Password mode: each batch shows the passwords it created, and none is stored.
+$admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster(['baja', 'servicio', 'lote1'], ['lote6', 'lote7']),
+    'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+$progress = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
+    'creation_mode' => 'password', 'registrations' => $registrationsFor(['lote6', 'lote7'])], 'data-ut-review');
+preg_match('#<script type="application/json" data-ut-progress-initial>(.*?)</script>#s', $progress, $initial);
+$firstRows = json_decode($initial[1] ?? '[]', true) ?: [];
+$data = $step($admin, $progress);
+$passwords = array_filter([$firstRows[0]['password'] ?? '', $data['created'][0]['password'] ?? '']);
+Test::check(count($passwords) === 2 && ($firstRows[0]['username'] ?? '') === 'lote6' && ($data['done'] ?? false) === true, 'each batch returns the passwords it created, once');
+$stored = implode('', array_column($site->q('SELECT data FROM #__session'), 'data'));
+Test::check(!array_filter($passwords, fn ($p) => str_contains($stored, $p)), 'no batch password is stored in any session');
+$summary = $admin->get('index.php?option=com_usertools&view=compare&layout=result');
+Test::check(!array_filter($passwords, fn ($p) => str_contains($summary, $p)) && str_contains($summary, 'Already shown'), 'the summary never shows them again');
+$site->options(['batch_seconds' => 8]);
+$site->q('UPDATE #__users SET block = 0 WHERE username IN (?, ?)', ['baja', 'servicio']);
+
 Test::section('Delegated permission: no Super User, no backend accounts');
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.compare' => ['6' => 1]])]);
 $site->q('UPDATE #__users SET block = 0 WHERE username = ?', ['mgr']);

@@ -14,6 +14,15 @@ $layouts = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
   <?= LayoutHelper::render('usertools.steps', ['steps' => ['edit' => 'COM_USERTOOLS_STEP_LIST', 'review' => 'COM_USERTOOLS_STEP_REVIEW', 'result' => 'COM_USERTOOLS_STEP_RESULT'], 'current' => 'edit', 'label' => 'COM_USERTOOLS_COMPARE_PROGRESS'], $layouts) ?>
   <h2 class="h3"><?= Text::_('COM_USERTOOLS_COMPARE_EDIT_HEADING') ?></h2>
   <p class="lead"><?= Text::_('COM_USERTOOLS_COMPARE_EDIT_INTRO') ?></p>
+  <?php if ($this->job) : ?>
+  <form method="post" action="<?= Route::_('index.php?option=com_usertools&view=compare') ?>" class="alert alert-warning" role="alert" data-ut-job-pending>
+    <strong class="d-block"><?= Text::_('COM_USERTOOLS_JOB_PENDING_HEADING') ?></strong>
+    <p><?= Text::sprintf('COM_USERTOOLS_JOB_PENDING_TEXT', (int) $this->job['processed'], (int) $this->job['total']) ?></p>
+    <a class="btn btn-primary" href="<?= Route::_('index.php?option=com_usertools&view=compare&layout=progress') ?>"><?= Text::_('COM_USERTOOLS_PROGRESS_CONTINUE') ?></a>
+    <button class="btn btn-outline-danger" name="task" value="compare.discard"><?= Text::_('COM_USERTOOLS_PROGRESS_DISCARD') ?></button>
+    <?= HTMLHelper::_('form.token') ?>
+  </form>
+  <?php endif; ?>
   <form method="post" action="<?= Route::_('index.php?option=com_usertools&view=compare') ?>">
     <div class="row g-4">
       <div class="col-lg-7">

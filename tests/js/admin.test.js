@@ -238,3 +238,59 @@ test('new accounts: emails built from the username and domain, never over a type
   assert.equal(domain.disabled, true);
   assert.equal(note.hidden, true);
 });
+
+const progressPage = (passwords, initial = []) => `<div data-ut-progress data-ut-step-url="/step" data-ut-result-url="/result" data-ut-token="tok123"
+  data-ut-total="5" data-ut-processed="1" data-ut-passwords="${passwords ? 1 : 0}">
+  <div data-ut-progress-bar aria-valuenow="0"><div style="width:0%"></div></div><p data-ut-progress-text></p>
+  <div data-ut-progress-error hidden><p data-ut-progress-error-text></p><button type="button" data-ut-progress-retry></button></div>
+  ${passwords ? '<button type="button" data-ut-progress-copy></button><table><tbody data-ut-progress-rows></tbody></table><div data-ut-progress-finished hidden></div>' : ''}
+  <script type="application/json" data-ut-progress-initial>${JSON.stringify(initial)}</script>
+  <form data-ut-progress-discard><button name="task" value="compare.discard"></button></form></div>`;
+
+const loadWithFetch = (html, responses) => {
+  const dom = new JSDOM(`<!doctype html><body>${html}</body>`, { runScripts: 'outside-only' });
+  const calls = [];
+  dom.window.Joomla = { Text: { _: (key, fallback) => fallback } };
+  dom.window.fetch = async (url, options) => {
+    calls.push({ url, token: options.body.get('tok123') });
+    const next = responses.shift();
+    if (next instanceof Error) throw next;
+    if (!next) return new Promise(() => {});
+    return { ok: next.status === undefined || next.status === 200, status: next.status || 200, json: async () => next.body };
+  };
+  dom.window.eval(script);
+  return { doc: dom.window.document, calls };
+};
+const settle = () => new Promise((resolve) => { setTimeout(resolve, 20); });
+
+test('progress: batches run one after another and one-time passwords stay on the page', async () => {
+  const row = (n) => ({ id: n, username: `u${n}`, email: `u${n}@x.test`, password: `P${n}` });
+  const { doc, calls } = loadWithFetch(progressPage(true, [row(1)]), [
+    { body: { done: false, total: 5, processed: 3, created: [row(2), row(3)] } },
+    { body: { done: true, total: 5, processed: 5, created: [row(4), row(5)] } },
+  ]);
+  await settle();
+  assert.equal(calls.length, 2, 'it stops when the job is done');
+  assert.ok(calls.every((c) => c.url === '/step' && c.token === '1'), 'every batch carries the form token');
+  const cells = [...doc.querySelectorAll('[data-ut-progress-rows] tr')].map((tr) => tr.lastElementChild.textContent);
+  assert.deepEqual(cells, ['P1', 'P2', 'P3', 'P4', 'P5'], 'passwords of every batch, including the first one rendered by the server');
+  assert.equal(doc.querySelector('[data-ut-progress-finished]').hidden, false, 'the operator stays on the page to copy them');
+  assert.equal(doc.querySelector('[data-ut-progress-bar]').getAttribute('aria-valuenow'), '100');
+  assert.match(doc.querySelector('[data-ut-progress-text]').textContent, /^5 of 5/);
+});
+
+test('progress: an error from the server stops and offers to continue', async () => {
+  const { doc, calls } = loadWithFetch(progressPage(false), [
+    { body: { error: 'There is no comparison waiting to be applied.' } },
+    { body: { done: false, total: 5, processed: 2, created: [] } },
+  ]);
+  await settle();
+  assert.equal(calls.length, 1);
+  const box = doc.querySelector('[data-ut-progress-error]');
+  assert.equal(box.hidden, false);
+  assert.equal(doc.querySelector('[data-ut-progress-error-text]').textContent, 'There is no comparison waiting to be applied.');
+  doc.querySelector('[data-ut-progress-retry]').click();
+  await settle();
+  assert.equal(calls.length, 3, 'continue sends the next batch');
+  assert.equal(box.hidden, true);
+});

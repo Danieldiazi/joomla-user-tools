@@ -98,6 +98,14 @@ There are two creation modes. By default, an email with a password-selection lin
 
 Passwords appear **once** on the result screen and are not saved or logged in clear text. After reloading or leaving, they cannot be recovered: use Joomla's password recovery or assign a new password under **Users → Manage**. The account will still require a password change at first login.
 
+### I created hundreds of accounts and got a 500 error half-way
+
+Up to 2026.10.10 everything ran in one request, and with hundreds of creations (each one saves the account and sends an email) the server's time limit was exceeded. The accounts created before the cut exist, but they were not written to the action log. Since 2026.10.11 changes are applied in batches with a progress bar, and each creation is logged as soon as it happens. To finish an interrupted list, compare it again: the accounts already created match and only the missing ones appear as new. More details in the [README](README.en.md#compare-a-user-list).
+
+### The tab was closed while the changes were being applied
+
+What was done until then is kept and logged. When you open «Compare list» you will see a notice with how many accounts are done and the **Continue** and **Stop and discard the rest** buttons. When continuing, each account is checked again before changing it. In temporary password mode, passwords already shown cannot be recovered: use Joomla's password reset for those accounts.
+
 ### One account creation failed. Is everything rolled back?
 
 If the selection is invalid before processing starts (duplicate email, existing username, etc.), nothing is applied. Failures during processing appear in the result, but changes already made are not rolled back.

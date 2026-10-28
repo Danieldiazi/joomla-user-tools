@@ -18,6 +18,9 @@ final class Settings
     public const STATUSES = ['blocked', 'all', 'active'];
     public const DEFAULT_STATUS = 'blocked';
 
+    /** Well below PHP's usual 30 s limit and proxy timeouts, including slow mail servers. */
+    public const BATCH_SECONDS = 8;
+
     /** @param array<string, mixed> $params */
     public function __construct(private array $params)
     {
@@ -61,6 +64,15 @@ final class Settings
     public function confirmThreshold(): int
     {
         return max(0, (int) ($this->params['confirm_threshold'] ?? 10));
+    }
+
+    /**
+     * Seconds of work per request when applying a comparison; the rest continues in the next request.
+     * Not shown in Options (hidden field): 0 processes one account per request, which the tests use.
+     */
+    public function batchSeconds(): int
+    {
+        return max(0, min(60, (int) ($this->params['batch_seconds'] ?? self::BATCH_SECONDS)));
     }
 
     public function creationMode(): string

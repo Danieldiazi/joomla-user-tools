@@ -58,6 +58,8 @@ El instalador comprueba las versiones mínimas, registra la extensión en el reg
 3. En la revisión verás las cuentas que se bloquearán, con nombre, correo, último acceso y grupos, y un filtro si la lista es larga. También verás los nombres que no existen en Joomla, para darlos de alta si quieres.
 4. Confirma. El resultado enlaza cada cuenta con el gestor de usuarios. Para deshacer un bloqueo, abre la cuenta y cambia su estado a Habilitado.
 
+Desde la 2026.10.11, los cambios se aplican **por tandas** de unos segundos, para que ninguna petición choque con el límite de tiempo de PHP o del servidor web (antes, dar de alta cientos de cuentas de golpe podía acabar en un error 500 a mitad). Si caben en una tanda, el resultado aparece directamente. Si no, una barra de progreso muestra cuántas cuentas lleva y la página pide la siguiente tanda sola. Cada cuenta se vuelve a comprobar, se cambia y se anota en el registro de acciones por separado, así que un corte no pierde nada de lo hecho. Si cierras la pestaña o se corta la conexión, «Comparar lista» avisa de la operación a medias y ofrece **continuar** o **descartar** lo pendiente; mientras tanto no se puede aplicar otra comparación. En el modo de contraseña temporal, cada contraseña aparece en la pantalla de progreso al crearse su cuenta (con un botón «Copiar todo») y no se guarda en ningún sitio: cópialas antes de salir.
+
 Los nombres se comparan sin distinguir mayúsculas y minúsculas: OTRO y otro son la misma cuenta. Una lista vacía no se admite. Si **ningún nombre coincide** con una cuenta existente, la revisión lo avisa en rojo arriba del todo, porque se propondría bloquear todas las cuentas no protegidas.
 
 Una lista incompleta puede producir bloqueos incorrectos: revisa siempre la previsualización.

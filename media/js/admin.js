@@ -261,6 +261,133 @@
       sync();
     });
 
+    // Applying a comparison: one short request per batch until the job is done. One-time passwords
+    // arrive only in the response of the batch that created them and live only in this page.
+    document.querySelectorAll('[data-ut-progress]').forEach((root) => {
+      const bar = root.querySelector('[data-ut-progress-bar]');
+      const label = root.querySelector('[data-ut-progress-text]');
+      const errorBox = root.querySelector('[data-ut-progress-error]');
+      const errorText = root.querySelector('[data-ut-progress-error-text]');
+      const retry = root.querySelector('[data-ut-progress-retry]');
+      const tbody = root.querySelector('[data-ut-progress-rows]');
+      const finished = root.querySelector('[data-ut-progress-finished]');
+      const copyAll = root.querySelector('[data-ut-progress-copy]');
+      const discard = root.querySelector('[data-ut-progress-discard]');
+      const total = Number(root.dataset.utTotal || 0);
+      let processed = Number(root.dataset.utProcessed || 0);
+      const created = [];
+      let running = null;
+      let stopping = false;
+
+      const show = () => {
+        const percent = total ? Math.floor((processed * 100) / total) : 100;
+        if (bar) {
+          bar.setAttribute('aria-valuenow', String(percent));
+          bar.firstElementChild.style.width = `${percent}%`;
+        }
+        if (label) {
+          label.textContent = text('COM_USERTOOLS_JS_PROGRESS', '%1$d of %2$d accounts processed')
+            .replace('%1$d', processed).replace('%2$d', total);
+        }
+      };
+      const addRows = (rows) => {
+        rows.forEach((row) => {
+          if (!row.password) return;
+          created.push(row);
+          if (!tbody) return;
+          const tr = document.createElement('tr');
+          [row.username, row.email].forEach((value) => {
+            const td = document.createElement('td');
+            td.textContent = value;
+            tr.append(td);
+          });
+          const td = document.createElement('td');
+          const code = document.createElement('code');
+          code.className = 'ut-secret';
+          code.textContent = row.password;
+          td.append(code);
+          tr.append(td);
+          tbody.append(tr);
+        });
+      };
+      const fail = (message) => {
+        if (errorText) errorText.textContent = message;
+        if (errorBox) errorBox.hidden = false;
+      };
+      const request = async () => {
+        const body = new FormData();
+        body.append(root.dataset.utToken, '1');
+        const response = await fetch(root.dataset.utStepUrl, {
+          method: 'POST', body, credentials: 'same-origin', headers: { Accept: 'application/json' },
+        });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        return response.json();
+      };
+      const sleep = (ms) => new Promise((resolve) => { setTimeout(resolve, ms); });
+      const run = async () => {
+        if (errorBox) errorBox.hidden = true;
+        let attempts = 0;
+        while (!stopping) {
+          let data;
+          try {
+            data = await request();
+            attempts = 0;
+          } catch (e) {
+            attempts += 1;
+            if (attempts > 3) {
+              fail(text('COM_USERTOOLS_JS_PROGRESS_FAILED', 'It could not continue. What was done is kept.'));
+              return;
+            }
+            if (label) label.textContent = text('COM_USERTOOLS_JS_PROGRESS_RETRY', 'Retrying…');
+            await sleep(2000 * attempts);
+            continue;
+          }
+          if (data.error) {
+            fail(data.error);
+            return;
+          }
+          processed = data.processed;
+          addRows(data.created || []);
+          show();
+          if (data.done) {
+            if (created.length && finished) {
+              finished.hidden = false;
+              if (discard) discard.hidden = true;
+              bar.firstElementChild.classList.remove('progress-bar-animated');
+            } else {
+              window.location.assign(root.dataset.utResultUrl);
+            }
+            return;
+          }
+        }
+      };
+      const start = () => { running = run(); };
+
+      try {
+        const initial = root.querySelector('[data-ut-progress-initial]');
+        addRows(initial ? JSON.parse(initial.textContent || '[]') : []);
+      } catch (e) { /* Nothing to show from the first batch. */ }
+      show();
+      if (retry) retry.addEventListener('click', start);
+      if (copyAll) copyAll.addEventListener('click', async () => {
+        const lines = created.map((row) => [row.username, row.email, row.password].join('\t')).join('\n');
+        try {
+          await navigator.clipboard.writeText(lines);
+          copyAll.textContent = text('COM_USERTOOLS_JS_COPIED', 'Copied');
+        } catch (e) { /* Clipboard not available: the table stays selectable. */ }
+      });
+      // Let the batch in flight finish before discarding, so it cannot write the job back afterwards.
+      if (discard) discard.addEventListener('submit', async (event) => {
+        if (discard.dataset.utReady === '1') return;
+        event.preventDefault();
+        stopping = true;
+        try { await running; } catch (e) { /* The request already ended. */ }
+        discard.dataset.utReady = '1';
+        discard.requestSubmit(discard.querySelector('button[name="task"]'));
+      });
+      start();
+    });
+
     document.querySelectorAll('[data-ut-copy]').forEach((button) => {
       button.addEventListener('click', async () => {
         try {

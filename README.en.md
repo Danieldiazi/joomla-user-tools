@@ -58,6 +58,8 @@ The installer checks minimum versions, registers the extension with the User Act
 3. The review shows accounts to block, including name, email, last visit and groups, with a filter for long lists. It also shows usernames not found in Joomla, which you may choose to create.
 4. Confirm. The result links each account to Joomla's user manager. To undo a block, open the account and set its status to Enabled.
 
+Since 2026.10.11, changes are applied **in batches** of a few seconds, so no request runs into PHP's or the web server's time limit (before, creating hundreds of accounts at once could end in a 500 error half-way). If they fit in one batch, the result appears directly. Otherwise a progress bar shows how many accounts are done and the page requests the next batch by itself. Each account is checked again, changed and written to the action log on its own, so an interruption loses nothing already done. If you close the tab or the connection drops, «Compare list» warns about the half-applied operation and offers to **continue** or **discard** the rest; meanwhile no other comparison can be applied. In temporary password mode, each password appears on the progress screen when its account is created (with a «Copy all» button) and is not stored anywhere: copy them before leaving.
+
 Username comparison is case-insensitive: OTRO and otro are the same account. Empty lists are rejected. If **no username matches** an existing account, a red warning appears at the top of the review because all unprotected accounts would be proposed for blocking.
 
 An incomplete list can cause incorrect blocks: always review the preview.

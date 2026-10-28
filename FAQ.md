@@ -98,6 +98,14 @@ Hay dos modos de alta. Por defecto se envía un correo con un enlace para elegir
 
 Las contraseñas se muestran **una sola vez** en la pantalla de resultado y no se guardan ni se registran en logs. Si recargas o sales, ya no se pueden recuperar: usa la recuperación de contraseña de Joomla o asigna una nueva desde **Usuarios → Gestionar**. En cualquier caso, la cuenta deberá cambiarla en su primer acceso.
 
+### He dado de alta cientos de cuentas y ha dado error 500 a mitad
+
+Hasta la 2026.10.10 todo se hacía en una sola petición, y con cientos de altas (cada una guarda la cuenta y envía un correo) se superaba el límite de tiempo del servidor. Las cuentas creadas hasta el corte existen, pero no quedaron anotadas en el registro de acciones. Desde la 2026.10.11 los cambios se aplican por tandas con una barra de progreso y cada alta se anota en cuanto se crea. Para terminar una lista cortada, vuelve a compararla: las cuentas ya creadas coinciden y solo aparecen como nuevas las que faltan. Más detalles en el [README](README.md#comparar-una-lista-de-usuarios).
+
+### Se cerró la pestaña mientras se aplicaban los cambios
+
+Lo hecho hasta entonces se conserva y está anotado. Al abrir «Comparar lista» verás un aviso con cuántas cuentas lleva y los botones **Continuar** y **Detener y descartar lo pendiente**. Al continuar, cada cuenta se vuelve a comprobar antes de cambiarla. En el modo de contraseña temporal, las contraseñas que ya se mostraron no se pueden recuperar: usa la recuperación de contraseña de Joomla para esas cuentas.
+
 ### Una alta ha fallado y otras no, ¿se deshace todo?
 
 Si la selección es inválida antes de empezar (correo repetido, nombre existente…), no se aplica nada. Los fallos que ocurran ya durante la aplicación aparecen en el resultado, pero los cambios que ya se hubieran hecho no se revierten.

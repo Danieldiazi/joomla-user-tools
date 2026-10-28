@@ -29,6 +29,12 @@ class HtmlView extends BaseHtmlView
     public ?array $oneTimeResult = null;
     /** @var array<int, object> */
     public array $groups = [];
+    /** Pending job of a comparison being applied (progress screen and the notice on the first screen). */
+    /** @var array<string, mixed>|null */
+    public ?array $job = null;
+    /** Accounts created, with their one-time passwords, by the request that rendered the progress screen. */
+    /** @var list<array<string, mixed>> */
+    public array $oneTimeRows = [];
 
     public function display($tpl = null): void
     {
@@ -37,7 +43,13 @@ class HtmlView extends BaseHtmlView
         $this->draft  = $model->getDraft();
         $this->groups = $model->getGroups();
         $layout       = $this->getLayout();
-        if ($layout === 'review') {
+        $this->job    = $model->getJob();
+        if ($layout === 'progress') {
+            if (!$this->job) {
+                Toolkit::app()->redirect('index.php?option=com_usertools&view=compare' . ($model->getResult() ? '&layout=result' : ''));
+                return;
+            }
+        } elseif ($layout === 'review') {
             try {
                 $this->preview = $model->getPreview();
                 $this->review  = $model->getReview();
@@ -58,6 +70,9 @@ class HtmlView extends BaseHtmlView
         Text::script('COM_USERTOOLS_JS_EMAIL_SKIPPED');
         Text::script('COM_USERTOOLS_JS_EMAIL_SKIPPED_1');
         Text::script('COM_USERTOOLS_JS_EMAIL_DOMAIN_INVALID');
+        foreach (['PROGRESS', 'PROGRESS_RETRY', 'PROGRESS_FAILED', 'PROGRESS_DONE_PASSWORDS', 'COPY_ALL', 'COPIED'] as $key) {
+            Text::script('COM_USERTOOLS_JS_' . $key);
+        }
         parent::display($tpl);
     }
 }
