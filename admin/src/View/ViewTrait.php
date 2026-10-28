@@ -16,7 +16,8 @@ trait ViewTrait
     protected function prepareDocument(string $titleKey): void
     {
         $user = Factory::getApplication()->getIdentity();
-        ToolbarHelper::title(Text::_('COM_USERTOOLS') . ' · ' . Text::_($titleKey), 'users');
+        // The home screen is titled with the extension name alone.
+        ToolbarHelper::title(Text::_('COM_USERTOOLS') . ($titleKey === '' ? '' : ' · ' . Text::_($titleKey)), 'users');
         if ($user->authorise('core.admin', 'com_usertools') || $user->authorise('core.options', 'com_usertools')) {
             ToolbarHelper::preferences('com_usertools');
         }

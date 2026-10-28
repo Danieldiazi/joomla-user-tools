@@ -50,7 +50,7 @@ $pageUrl = fn (int $p) => Route::_('index.php?option=com_usertools&view=reports&
         <tr><td><?= $this->escape($item['started_at'] ?? '—') ?></td>
           <td><?= $this->escape($item['task_title'] ?? '') ?> <small class="text-muted">#<?= (int) ($item['task_id'] ?? 0) ?></small></td>
           <td><?= Text::_(!empty($item['dry_run']) ? 'COM_USERTOOLS_MODE_DRY' : 'COM_USERTOOLS_MODE_REAL') ?></td>
-          <td><span class="badge bg-<?= $badge ?>"><?= Text::_($states[$status] ?? 'COM_USERTOOLS_STATUS_UNREADABLE') ?></span></td>
+          <td><span class="badge text-bg-<?= $badge ?>"><?= Text::_($states[$status] ?? 'COM_USERTOOLS_STATUS_UNREADABLE') ?></span></td>
           <td><?= (int) ($item['candidates'] ?? 0) ?></td><td><?= (int) ($item['blocked'] ?? 0) ?></td><td><?= (int) ($item['errors'] ?? 0) ?></td>
           <td><a href="<?= Route::_('index.php?option=com_usertools&view=report&report_id=' . $this->escape($item['id'])) ?>"><?= Text::_('COM_USERTOOLS_VIEW_REPORT') ?></a></td></tr>
       <?php endforeach; ?>

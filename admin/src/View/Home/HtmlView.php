@@ -17,7 +17,7 @@ class HtmlView extends BaseHtmlView
     public function display($tpl = null): void
     {
         $this->pluginState = Toolkit::pluginState();
-        $this->prepareDocument('COM_USERTOOLS_HOME');
+        $this->prepareDocument('');
         parent::display($tpl);
     }
 }

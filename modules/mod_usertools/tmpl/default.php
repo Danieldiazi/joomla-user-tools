@@ -82,11 +82,11 @@ $statusBadge = [
             ?>
           <tr>
             <td><a href="<?= Route::_('index.php?option=com_scheduler&task=task.edit&id=' . (int) $task['id']) ?>"><?= $e($task['title']) ?></a>
-              <?php if (!$task['enabled']) : ?><span class="badge bg-secondary"><?= Text::_('MOD_USERTOOLS_DISABLED') ?></span><?php endif; ?></td>
+              <?php if (!$task['enabled']) : ?><span class="badge text-bg-secondary"><?= Text::_('MOD_USERTOOLS_DISABLED') ?></span><?php endif; ?></td>
             <td><?= Text::_($task['dryRun'] ? 'MOD_USERTOOLS_MODE_DRY' : 'MOD_USERTOOLS_MODE_REAL') ?></td>
             <td><?= $date($task['lastRun']) ?></td>
             <td><?php if ($task['reportId'] !== '') : ?><a href="<?= Route::_('index.php?option=com_usertools&view=report&report_id=' . $e($task['reportId'])) ?>"><?php endif; ?>
-              <span class="badge bg-<?= $badge ?>"><?= Text::_($label) ?></span><?php if ($task['reportId'] !== '') : ?></a><?php endif; ?></td>
+              <span class="badge text-bg-<?= $badge ?>"><?= Text::_($label) ?></span><?php if ($task['reportId'] !== '') : ?></a><?php endif; ?></td>
             <td><?= $task['enabled'] && $task['nextRun'] ? $date($task['nextRun']) : '—' ?></td>
           </tr>
         <?php endforeach; ?>
