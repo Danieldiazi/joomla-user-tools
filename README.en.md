@@ -257,7 +257,7 @@ Since 2026.10.15, **Content by age** shows how much content has not been touched
 - **Access level filter**: counts only the items with that level, to see which levels pile up old content.
 - **List of one year**: each number opens the items of that year and kind, from the least recently modified to the most recent, with title, category, access level, author, status and creation and modification dates, 50 per page. The title links to Joomla's edit screen if you can edit it.
 
-**Export CSV** downloads the table or, from a list, all its items (UTF-8 with BOM, semicolons). The screen requires the *View content by age* permission; the list of titles also requires being able to manage articles in Joomla. Without it, the numbers are shown without a link.
+**Export CSV** downloads the table or, from a list, all its items (UTF-8 with BOM, semicolons). The screen requires the *View content by age* permission; the list of titles also requires being able to manage articles in Joomla. Filters, counts, totals, lists and CSV exports respect the authorized viewing levels of both articles and their categories, as Joomla’s article list does; global Super Users retain the full audit view. “Edit own” only links articles owned by the current user. Without it, the numbers are shown without a link.
 
 ## Access diagnosis
 

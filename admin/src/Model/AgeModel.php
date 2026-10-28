@@ -30,7 +30,13 @@ class AgeModel extends BaseDatabaseModel
     /** @return list<array{id: int, title: string}> levels for the filter, in their order */
     public function getLevels(): array
     {
-        return array_map(fn (array $level) => ['id' => $level['id'], 'title' => $level['title']], Toolkit::directory()->viewLevels());
+        $user = Toolkit::app()->getIdentity();
+        $levels = Toolkit::directory()->viewLevels();
+        if (!$user->authorise('core.admin')) {
+            $allowed = array_fill_keys(array_map('intval', $user->getAuthorisedViewLevels()), true);
+            $levels = array_filter($levels, fn (array $level): bool => isset($allowed[$level['id']]));
+        }
+        return array_values(array_map(fn (array $level) => ['id' => $level['id'], 'title' => $level['title']], $levels));
     }
 
     /**
@@ -68,6 +74,10 @@ class AgeModel extends BaseDatabaseModel
 
     private function reader(): ContentAgeReader
     {
-        return $this->reader ??= new ContentAgeReader(Toolkit::db());
+        if ($this->reader === null) {
+            $user = Toolkit::app()->getIdentity();
+            $this->reader = new ContentAgeReader(Toolkit::db(), $user->authorise('core.admin') ? null : array_values(array_map('intval', $user->getAuthorisedViewLevels())));
+        }
+        return $this->reader;
     }
 }

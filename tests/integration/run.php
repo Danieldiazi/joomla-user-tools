@@ -824,7 +824,7 @@ $addArticle = function (string $alias, string $modified, int $state = 1, int $ac
     return (int) $site->q('SELECT id FROM #__content WHERE alias = ?', ['ut-age-' . $alias])[0]['id'];
 };
 $a2012 = $addArticle('old-a', '2012-03-01 00:00:00');
-$addArticle('old-b', '2012-12-31 23:59:59', 2);
+$a2012Own = $addArticle('old-b', '2012-12-31 23:59:59', 2);
 $addArticle('old-trash', '2012-06-01 00:00:00', -2);
 $addArticle('old-registered', '2013-01-01 00:00:00', 0, 2);
 $ageCount = function (string $html, int $year): int {
@@ -864,9 +864,63 @@ $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [json_enco
 [$listCode] = $delegate->request($ageUrl . '&layout=list&kind=articles&year=2012');
 Test::check($code === 200 && $ageCount($delegateAge, 2012) === 2 && !str_contains($delegateAge, 'layout=list') && $listCode === 403,
     'without managing articles in Joomla, the numbers are shown but the titles are not (got ' . $listCode . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [json_encode(['core.manage' => ['6' => 1], 'core.edit' => ['6' => 0], 'core.edit.own' => ['6' => 1]])]);
+// Give the two ownership fixtures real assets so Joomla resolves their component permissions.
+$ageAssets = [];
+foreach ([$a2012, $a2012Own] as $articleId) {
+    $parentAsset = $site->q("SELECT id, rgt, level FROM #__assets WHERE name = 'com_content'")[0];
+    $right = (int) $parentAsset['rgt'];
+    $site->q('UPDATE #__assets SET rgt = rgt + 2 WHERE rgt >= ?', [$right]);
+    $site->q('UPDATE #__assets SET lft = lft + 2 WHERE lft > ?', [$right]);
+    $assetName = 'com_content.article.' . $articleId;
+    $site->q("INSERT INTO #__assets (parent_id, lft, rgt, level, name, title, rules) VALUES (?, ?, ?, ?, ?, ?, '{}')",
+        [(int) $parentAsset['id'], $right, $right + 1, (int) $parentAsset['level'] + 1, $assetName, 'UT age fixture']);
+    $assetId = (int) $site->q('SELECT id FROM #__assets WHERE name = ?', [$assetName])[0]['id'];
+    $ageAssets[] = $assetId;
+    $site->q('UPDATE #__content SET asset_id = ? WHERE id = ?', [$assetId, $articleId]);
+}
+$site->q('UPDATE #__content SET created_by = ? WHERE id = ?', [$site->userId('delegate'), $a2012Own]);
+$site->q("INSERT INTO #__viewlevels (title, ordering, rules) VALUES ('UT age private', 98, '[8]')");
+$agePrivate = (int) $site->q("SELECT id FROM #__viewlevels WHERE title = 'UT age private'")[0]['id'];
+$privateArticle = $addArticle('private', '2012-04-01 00:00:00', 1, $agePrivate);
+$delegateAge = $delegate->get($ageUrl);
+$list = $delegate->get($ageUrl . '&layout=list&kind=articles&year=2012');
+Test::check($ageCount($delegateAge, 2012) === 2 && str_contains($list, 'data-ut-age-list-total="2"')
+    && !str_contains($list, 'UT private') && !str_contains($delegateAge, 'UT age private'),
+    'article access limits counts, list totals and filter choices for a delegate');
+Test::check(str_contains($list, 'task=article.edit&amp;id=' . $a2012Own . '"')
+    && !str_contains($list, 'task=article.edit&amp;id=' . $a2012 . '"') && str_contains($list, 'UT old-a'),
+    '"edit own" links only the delegate-owned article; other visible titles remain plain text');
+preg_match('/href="([^"]*task=age\\.export[^"]*year=2012[^"]*)"/', $list, $export);
+[$code, $csv] = $delegate->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($export[1] ?? '')));
+Test::check($code === 200 && !str_contains($csv, 'UT private') && substr_count($csv, "\n") === 3,
+    'the yearly CSV has the same two visible items as the list');
+preg_match('/href="([^"]*task=age\\.export[^"]*)"/', $delegateAge, $tableExport);
+[$code, $csv] = $delegate->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($tableExport[1] ?? '')));
+Test::check($code === 200 && preg_match('/^2012;2;2\\r?$/m', $csv) === 1, 'the table CSV uses the same access scope');
+$privateList = $delegate->get($ageUrl . '&layout=list&kind=articles&year=2012&level=' . $agePrivate);
+Test::check(str_contains($privateList, 'data-ut-age-list-total="0"') && !str_contains($privateList, 'UT private'),
+    'forcing an unauthorized level in the URL exposes no titles');
+preg_match('/href="([^"]*task=age\\.export[^"]*year=2012[^"]*)"/', $privateList, $privateExport);
+[$code, $csv] = $delegate->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($privateExport[1] ?? '')));
+Test::check($code === 200 && substr_count($csv, "\n") === 1, 'forcing an unauthorized level in the CSV returns only headers');
+$categoryAccess = (int) $site->q('SELECT access FROM #__categories WHERE id = ?', [$ageCategory])[0]['access'];
+$site->q('UPDATE #__categories SET access = ? WHERE id = ?', [$agePrivate, $ageCategory]);
+$categoryList = $delegate->get($ageUrl . '&layout=list&kind=articles&year=2012');
+Test::check(str_contains($categoryList, 'data-ut-age-list-total="0"') && !str_contains($categoryList, 'UT old-a')
+    && $ageCount($delegate->get($ageUrl), 2012) === -1, 'category access also restricts public articles and their counts');
+preg_match('/href="([^"]*task=age\\.export[^"]*year=2012[^"]*)"/', $categoryList, $categoryExport);
+[$code, $csv] = $delegate->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($categoryExport[1] ?? '')));
+Test::check($code === 200 && substr_count($csv, "\n") === 1, 'category access also protects the CSV');
+Test::check($ageCount($admin->get($ageUrl), 2012) === 3, 'a global Super User retains the full audit view');
+$site->q('UPDATE #__categories SET access = ? WHERE id = ?', [$categoryAccess, $ageCategory]);
+foreach ($ageAssets as $assetId) {
+    $site->q('DELETE FROM #__assets WHERE id = ?', [$assetId]);
+}
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [$contentRules]);
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 $site->q("DELETE FROM #__content WHERE alias LIKE 'ut-age-%'");
+$site->q("DELETE FROM #__viewlevels WHERE title = 'UT age private'");
 
 Test::section('Remove from groups');
 $gid = fn (string $title): int => (int) $site->q('SELECT id FROM #__usergroups WHERE title = ?', [$title])[0]['id'];

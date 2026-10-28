@@ -53,7 +53,7 @@ $heading = Text::sprintf('COM_USERTOOLS_AGE_LIST_HEADING', Text::_($source['labe
         <tr data-ut-age-item="<?= (int) $item['id'] ?>">
           <th scope="row">
             <?php $asset = str_replace('{id}', (string) (int) $item['id'], $source['item']); ?>
-            <?php if ($user->authorise('core.edit', $asset) || $user->authorise('core.edit.own', $asset)) : ?>
+            <?php if ($user->authorise('core.edit', $asset) || ($user->authorise('core.edit.own', $asset) && (int) $item['created_by'] === (int) $user->id)) : ?>
             <a href="<?= Route::_(str_replace('{id}', (string) (int) $item['id'], $source['edit'])) ?>"><?= $this->escape($item['title']) ?></a>
             <?php else : ?><?= $this->escape($item['title']) ?><?php endif; ?>
             <small class="d-block text-body-secondary fw-normal">ID <?= (int) $item['id'] ?></small>

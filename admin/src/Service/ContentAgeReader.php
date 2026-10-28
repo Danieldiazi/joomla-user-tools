@@ -26,7 +26,8 @@ final class ContentAgeReader
             'item' => 'com_content.article.{id}', 'edit' => 'index.php?option=com_content&task=article.edit&id={id}'],
     ];
 
-    public function __construct(private DatabaseInterface $db)
+    /** @param list<int>|null $viewLevels allowed viewing levels; null only for a global Super User */
+    public function __construct(private DatabaseInterface $db, private ?array $viewLevels = null)
     {
     }
 
@@ -67,7 +68,7 @@ final class ContentAgeReader
     /**
      * Items last modified in a year, oldest first.
      *
-     * @return list<array{id: int, title: string, category: string, level: string, access: int, author: string, state: int, created: ?string, modified: ?string}>
+     * @return list<array{id: int, title: string, category: string, level: string, access: int, author: string, created_by: int, state: int, created: ?string, modified: ?string}>
      */
     public function items(string $kind, int $year, int $level = 0, int $offset = 0, int $limit = 0): array
     {
@@ -75,11 +76,10 @@ final class ContentAgeReader
         $source = self::KINDS[$kind];
         $query  = $this->inYear($this->base($kind, $level), $year)
             ->select([
-                $db->quoteName('a.id'), $db->quoteName('a.title'), $db->quoteName('a.access'), $db->quoteName('a.created'), $db->quoteName('a.modified'),
+                $db->quoteName('a.id'), $db->quoteName('a.created_by'), $db->quoteName('a.title'), $db->quoteName('a.access'), $db->quoteName('a.created'), $db->quoteName('a.modified'),
                 $db->quoteName('a.' . $source['state'], 'state'), $db->quoteName('c.title', 'category'), $db->quoteName('u.name', 'author'),
                 $db->quoteName('l.title', 'level'),
             ])
-            ->join('LEFT', $db->quoteName('#__categories', 'c'), $db->quoteName('c.id') . ' = ' . $db->quoteName('a.' . $source['category']))
             ->join('LEFT', $db->quoteName('#__users', 'u'), $db->quoteName('u.id') . ' = ' . $db->quoteName('a.created_by'))
             ->join('LEFT', $db->quoteName('#__viewlevels', 'l'), $db->quoteName('l.id') . ' = ' . $db->quoteName('a.access'))
             ->order([$this->dateColumn(), $db->quoteName('a.id')]);
@@ -92,6 +92,7 @@ final class ContentAgeReader
                 'level'    => (string) ($row->level ?? ''),
                 'access'   => (int) $row->access,
                 'author'   => (string) ($row->author ?? ''),
+                'created_by' => (int) $row->created_by,
                 'state'    => (int) $row->state,
                 'created'  => $row->created !== null ? substr((string) $row->created, 0, 19) : null,
                 'modified' => $row->modified !== null ? substr((string) $row->modified, 0, 19) : null,
@@ -116,8 +117,20 @@ final class ContentAgeReader
         $trashed = self::TRASHED;
         $query   = $db->createQuery()
             ->from($db->quoteName($source['table'], 'a'))
+            ->join('LEFT', $db->quoteName('#__categories', 'c'), $db->quoteName('c.id') . ' = ' . $db->quoteName('a.' . $source['category']))
             ->where($db->quoteName('a.' . $source['state']) . ' <> :trashed')
             ->bind(':trashed', $trashed, ParameterType::INTEGER);
+        // Match Joomla's administrator article list: component access does not grant access to
+        // every article or category. Keep the same scope for counts, pages and CSV exports.
+        if ($this->viewLevels !== null) {
+            $allowed = array_values(array_unique(array_filter(array_map('intval', $this->viewLevels), fn (int $id): bool => $id > 0)));
+            if (!$allowed) {
+                $query->where('1 = 0');
+            } else {
+                $query->whereIn($db->quoteName('a.access'), $allowed);
+                $query->whereIn($db->quoteName('c.access'), $allowed);
+            }
+        }
         if ($level > 0) {
             $query->where($db->quoteName('a.access') . ' = :level')->bind(':level', $level, ParameterType::INTEGER);
         }

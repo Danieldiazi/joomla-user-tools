@@ -255,7 +255,7 @@ Desde la 2026.10.15, **Contenido por antigüedad** muestra cuánto contenido lle
 - **Filtro por nivel de acceso**: cuenta solo los elementos con ese nivel, para ver qué niveles acumulan contenido antiguo.
 - **Lista de un año**: cada cifra abre los elementos de ese año y tipo, del modificado hace más tiempo al más reciente, con título, categoría, nivel de acceso, autor, estado y fechas de creación y modificación, 50 por página. El título enlaza a la edición en Joomla si puedes editarlo.
 
-**Exportar CSV** descarga la tabla o, desde una lista, todos sus elementos (UTF-8 con BOM y punto y coma). La pantalla necesita el permiso *Ver contenido por antigüedad*; la lista de títulos requiere además poder gestionar los artículos en Joomla. Sin ese permiso, las cifras se ven pero sin enlace.
+**Exportar CSV** descarga la tabla o, desde una lista, todos sus elementos (UTF-8 con BOM y punto y coma). La pantalla necesita el permiso *Ver contenido por antigüedad*; la lista de títulos requiere además poder gestionar los artículos en Joomla. El filtro, las cifras, los totales, las listas y los CSV respetan los niveles de acceso autorizados del artículo y de su categoría, como el listado de artículos de Joomla; los superusuarios globales conservan la vista completa. «Editar propios» solo muestra el enlace en artículos del propio usuario. Sin ese permiso, las cifras se ven pero sin enlace.
 
 ## Diagnóstico de accesos
 
