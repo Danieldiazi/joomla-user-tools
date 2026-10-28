@@ -40,7 +40,7 @@ No. La comparación de listas, la revisión manual por inactividad, la eliminaci
 
 ### ¿Quién puede usarlo?
 
-Los superusuarios y los usuarios con los permisos delegados correspondientes en **Opciones → Permisos**. Hay permisos separados para comparar listas y bloquear, crear cuentas, revisar usuarios inactivos, eliminar usuarios inactivos y consultar resultados de tareas. El de eliminar no se concede a nadie más que a los superusuarios hasta que lo des expresamente. El acceso al componente también requiere `core.manage`.
+Los superusuarios y los usuarios con los permisos delegados correspondientes en **Opciones → Permisos**. Hay permisos separados para comparar listas y bloquear, crear cuentas, revisar usuarios inactivos, eliminar usuarios inactivos, consultar resultados de tareas, quitar de grupos, ver grupos, niveles y contenido por nivel, y ver el diagnóstico de accesos. El de eliminar no se concede a nadie más que a los superusuarios hasta que lo des expresamente. El acceso al componente también requiere `core.manage`.
 
 ### ¿Necesita JavaScript?
 
@@ -259,6 +259,32 @@ Joomla no deja borrar un nivel que use algún elemento, incluidos los de la pape
 ### ¿Por qué no veo la pantalla?
 
 Requiere el permiso *Ver grupos, niveles y contenido por nivel*. Los superusuarios lo tienen; para los demás, concédelo en Componentes → User Tools → Opciones → Permisos.
+
+## Diagnóstico de accesos
+
+### ¿Qué revisa el diagnóstico de accesos?
+
+Desde la 2026.10.15, cinco cosas: cuentas con acceso a la administración que llevan tiempo sin entrar, si queda un solo superusuario activo, niveles de acceso que no tiene ningún grupo ni ninguna cuenta, contenido con un nivel que no existe y grupos sin miembros. Cada aviso explica qué ha detectado, por qué importa y cómo revisarlo. Detalles en el [README](README.md#diagnóstico-de-accesos).
+
+### ¿Corrige algo?
+
+No. Solo lee. Las correcciones se hacen en Joomla (Usuarios, Niveles de acceso, Grupos o el listado de cada contenido) o con las herramientas de User Tools que enlaza cada aviso.
+
+### ¿Por qué aparecen superusuarios si User Tools nunca los bloquea?
+
+Porque una cuenta de superusuario sin uso es justo la que más conviene revisar. Las herramientas de bloqueo y eliminación los siguen protegiendo; el diagnóstico solo los señala para que decidas tú.
+
+### ¿Cómo cambio el plazo de inactividad del diagnóstico?
+
+En Componentes → User Tools → Opciones → **Diagnóstico**. Son 90 días por defecto y no dependen del plazo de «Revisar usuarios inactivos».
+
+### Me aparecen grupos como Publisher, ¿es un error?
+
+No. «Grupos sin miembros» es informativo: Joomla trae grupos que muchos sitios no usan. Sirve para localizar grupos que ya no hacen falta. Antes de borrar uno, comprueba que no se use en permisos ni en niveles de acceso.
+
+### ¿Por qué no veo el diagnóstico?
+
+Requiere el permiso *Ver el diagnóstico de accesos*. Los superusuarios lo tienen; para los demás, concédelo en Componentes → User Tools → Opciones → Permisos.
 
 ## Instalación y actualización
 

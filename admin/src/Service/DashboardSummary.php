@@ -123,6 +123,24 @@ final class DashboardSummary
         return $alerts;
     }
 
+    /**
+     * Adds the access diagnosis to the alerts when some check needs reviewing, keeping the order.
+     *
+     * @param  list<array{level: string, key: string, args: list<string|int>, link: string}> $alerts
+     * @return list<array{level: string, key: string, args: list<string|int>, link: string}>
+     */
+    public static function withDiagnosis(array $alerts, int $count): array
+    {
+        if ($count <= 0) {
+            return $alerts;
+        }
+        $alerts[] = ['level' => 'warning', 'key' => $count === 1 ? 'MOD_USERTOOLS_ALERT_DIAGNOSIS_1' : 'MOD_USERTOOLS_ALERT_DIAGNOSIS', 'args' => [$count],
+            'link' => 'index.php?option=com_usertools&view=diagnose'];
+        $order = ['danger' => 0, 'warning' => 1, 'info' => 2];
+        usort($alerts, fn ($a, $b) => $order[$a['level']] <=> $order[$b['level']]);
+        return $alerts;
+    }
+
     private static function date(mixed $value): ?string
     {
         $value = (string) ($value ?? '');

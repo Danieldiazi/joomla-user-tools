@@ -15,10 +15,11 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Remove from groups | Choose an account, untick the groups it should leave and, if you want, also remove it from all their subgroups. With a review and a confirmation. Available since 2026.10.9. |
 | Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.9. |
 | Content by access level | How many articles, categories, menu items, modules, fields and other items use each level, with a link to each filtered list. Read only. Available since 2026.10.12. |
+| Access diagnosis | Points out accounts with administrator access and no activity, a single remaining Super User, access levels nobody has, content with levels that do not exist and groups with no members. It explains each notice and is read only. Available since 2026.10.15. |
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
 
-The home screen groups the tools into four sections, each with its explanation always visible: **Review accounts** (compare a list and review inactive users), **Groups and access levels** (remove from groups and the two read-only screens), **Automation and follow-up** (the scheduled task, with its plugin status, and its results) and, last and on its own, **Delete accounts**, the only one marked “Permanent”. Each person only sees the tools they are allowed to use, and sections with none are left out. From any other screen, the «User Tools home» button in Joomla's toolbar goes back to the home screen.
+The home screen groups the tools into four sections, each with its explanation always visible: **Review accounts** (compare a list and review inactive users), **Groups and access levels** (remove from groups, the two read-only screens and the access diagnosis), **Automation and follow-up** (the scheduled task, with its plugin status, and its results) and, last and on its own, **Delete accounts**, the only one marked “Permanent”. Each person only sees the tools they are allowed to use, and sections with none are left out. From any other screen, the «User Tools home» button in Joomla's toolbar goes back to the home screen.
 
 **Requirements:** Joomla 6 and PHP 8.3 or later. Compatible with MySQL/MariaDB and PostgreSQL.  
 **Download:** [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest), package `pkg_usertools-VERSION.zip`.  
@@ -36,6 +37,7 @@ The home screen groups the tools into four sections, each with its explanation a
 - [Remove from groups](#remove-from-groups)
 - [Groups and access levels](#groups-and-access-levels)
 - [Content by access level](#content-by-access-level)
+- [Access diagnosis](#access-diagnosis)
 - [Security](#security)
 - [Options](#options)
 - [Tool screenshots](#tool-screenshots)
@@ -136,7 +138,7 @@ Since 2026.10.6, the administrator **Users** dashboard (the dashboard icon next 
 - **Unblocked inactive accounts**, using the period and exclusions of “Review inactive users”. The count links to that tool.
 - **Blocked accounts pending deletion**: those offered by “Delete inactive users” with “Blocked only”, its period and exclusions. The count opens the tool with that option selected.
 - **User Tools scheduled tasks**, including mode (dry run or real), last run, result (linked to its report) and next run.
-- **Notices**: task plugin disabled or missing, no enabled task, a task stopped by the safety limit, a failed task or a report unfinished for more than an hour, and tasks still in dry-run mode more than 14 days after creation.
+- **Notices**: task plugin disabled or missing, no enabled task, a task stopped by the safety limit, a failed task or a report unfinished for more than an hour, tasks still in dry-run mode more than 14 days after creation and, since 2026.10.15, the [access diagnosis](#access-diagnosis) checks worth reviewing, only for users who can see it.
 
 Since 2026.10.14, the counts are shown as “Inactive accounts to review” and “Blocked accounts to review”: they are candidate accounts, not automatic actions, and each card links to its review. Each task shows its mode, the result of its last run with a link to the report, and labelled dates; if it has no next run, the module says why. When any task is a dry run, a note explains that dry runs do not change accounts. The footer shows the update time and how the cache works.
 
@@ -242,6 +244,20 @@ Items in the trash are not counted. Joomla lists also hide archived items unless
 
 ![Content by access level (Spanish interface)](docs/screenshots/18-contenido-por-nivel.jpg)
 
+## Access diagnosis
+
+Since 2026.10.15, **Access diagnosis** brings together on one screen the situations worth reviewing in accounts, groups and access levels. It is read only: it does not fix permissions or change accounts. Every check is always shown, with or without notices, and when it finds something it explains what it found, **why it matters** and **how to review it**, with links to the matching account, group, level or Joomla list.
+
+| Check | Type | What it points out |
+|---|---|---|
+| Accounts with administrator access and no recent activity | Review | Active accounts with administrator access that have not signed in for the last N days (90 by default, in Options → Diagnosis). Accounts that never signed in are counted from their registration. Super Users are included, even though the blocking and deletion tools protect them. |
+| Active Super Users | Review | Warns when only one active Super User is left: if that account is lost, nobody can administer the site without access to the server. |
+| Access levels with no groups or accounts | Review | Levels, except Public, with no group and no account assigned. Their content is only seen by Super Users. It says how many items use them. |
+| Content with an access level that does not exist | Review | Items whose level does not exist, by kind, with a link to the Joomla list already filtered by that level. Nobody sees them on the site. The same tables as in «Content by access level» are used. |
+| Groups with no members | Information | Groups with no accounts, either directly or in their subgroups, with their subgroups and the levels that use them. This is not usually an error: Joomla ships groups that many sites do not use. Public and the guest group are left out. |
+
+The type is always written out («Review», «Information» or «No notices»), not shown by colour alone. **Export CSV** downloads every notice (UTF-8 with BOM, semicolons). The screen requires the *View the access diagnosis* permission, and the Users dashboard module tells users who have it how many checks are worth reviewing.
+
 ## Security
 
 - **Super Users are always protected**, in every tool, even when “Exclude administrators” is disabled. User Tools does not block or delete Super User accounts.
@@ -249,7 +265,7 @@ Items in the trash are not counted. Joomla lists also hide archived items unless
 - **Each block or group change closes the account's open sessions**, as Joomla's user manager does (requires “Session Metadata”, enabled by default).
 - **Creations, blocks, deletions and group changes are written to the User Actions Log** (Users → User Actions Log): who changed each account and which tool or scheduled task performed it.
 - **Separate permissions**, delegable without granting Super User access (Options → Permissions):
-  - *Compare list and block*, *Create accounts*, *Review inactive users*, *Delete inactive users*, *View task results*, *Remove from groups* and *View groups, levels and content by level*.
+  - *Compare list and block*, *Create accounts*, *Review inactive users*, *Delete inactive users*, *View task results*, *Remove from groups*, *View groups, levels and content by level* and *View the access diagnosis*.
   - Non-Super Users can never block, delete or remove from groups accounts with administrator access.
 - **Configurable reinforced confirmation**: from N accounts (10 by default), the exact number must be typed in addition to ticking the box.
 - **Deletion always requires typing the number of accounts**, even for one; the configurable threshold does not disable this confirmation.
@@ -267,6 +283,7 @@ Components → User Tools → **Options** (toolbar button):
 | Comparison | Exclude administrators, usernames and groups from manual comparison |
 | Inactivity review | Period, include never-logged-in users, and manual review exclusions |
 | Inactivity deletion | Period, account status (blocked only by default, both, or active only), include never-logged-in users, and deletion exclusions |
+| Diagnosis | Days without activity after which an account with administrator access appears in the access diagnosis (90 by default) |
 | Permissions | Permissions for each tool |
 
 Manual-tool exclusions are also saved when using the tools. Each scheduled task has its own exclusions in its settings.

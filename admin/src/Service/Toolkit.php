@@ -9,6 +9,7 @@ use Joomla\CMS\Cache\CacheControllerFactoryInterface;
 use Joomla\CMS\Cache\Controller\OutputController;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Language\Text;
 use Joomla\CMS\User\UserFactoryInterface;
 use Joomla\Database\DatabaseInterface;
 
@@ -82,6 +83,40 @@ final class Toolkit
         return max(1, (int) Factory::getApplication()->get('lifetime', 15)) * 60;
     }
 
+    /** Reads how many items use each access level, with names in the interface language. */
+    public static function usageReader(): AccessUsageReader
+    {
+        $identity = self::app()->getIdentity();
+        $language = self::app()->getLanguage();
+        return new AccessUsageReader(
+            self::db(),
+            fn (string $key, string $argument) => $argument === '' ? Text::_($key) : Text::sprintf($key, $argument),
+            function (string $component) use ($language): string {
+                // Component names come from each component's own language file.
+                $language->load($component . '.sys', JPATH_ADMINISTRATOR) || $language->load($component . '.sys', JPATH_ADMINISTRATOR . '/components/' . $component);
+                $key = strtoupper($component);
+                return $language->hasKey($key) ? Text::_($key) : $component;
+            },
+            fn (string $component) => (bool) $identity?->authorise('core.manage', $component),
+        );
+    }
+
+    /**
+     * Access diagnosis (see AccessHealth::build()).
+     *
+     * @return array{days: int, checks: array<string, array{severity: string, found: bool, items: list<array<string, mixed>>, count: int}>}
+     */
+    public static function accessHealth(\DateTimeImmutable $now): array
+    {
+        $directory = self::directory();
+        $guest     = (int) ComponentHelper::getParams('com_users')->get('guest_usergroup', 1);
+        $groups    = $directory->groups();
+        $levels    = $directory->viewLevels();
+        $matrix    = AccessMatrix::build($groups, $levels, [], $guest);
+        $usage     = AccessUsage::build(array_map(fn (array $level) => ['id' => $level['id'], 'title' => $level['title']], $levels), self::usageReader()->sources());
+        return AccessHealth::build($directory->users(), $groups, $directory->membersPerGroup(), $matrix['levels'], $usage, $guest, $now, self::settings()->diagnoseDays());
+    }
+
     /** Cache group of the dashboard module. */
     public const DASHBOARD_CACHE = 'mod_usertools';
 
@@ -92,7 +127,7 @@ final class Toolkit
      * Dashboard figures for one user, cached for a few minutes. Each part is only computed when the
      * user may use the matching tool.
      *
-     * @return array{inactive: ?int, pendingDeletion: ?int, tasks: ?list<array<string, mixed>>, alerts: list<array<string, mixed>>, generated: string}
+     * @return array{inactive: ?int, pendingDeletion: ?int, tasks: ?list<array<string, mixed>>, diagnosis: ?int, alerts: list<array<string, mixed>>, generated: string}
      */
     public static function dashboard(\Joomla\CMS\User\User $user): array
     {
@@ -100,6 +135,7 @@ final class Toolkit
             'inactive' => $user->authorise('usertools.inactive', 'com_usertools'),
             'delete'   => $user->authorise('usertools.delete', 'com_usertools'),
             'reports'  => $user->authorise('usertools.reports', 'com_usertools'),
+            'diagnose' => $user->authorise('usertools.diagnose', 'com_usertools'),
         ];
         $key   = 'dashboard-' . (int) $user->id . '-' . implode('', array_map('intval', $can));
         $cache = self::dashboardCache();
@@ -108,7 +144,7 @@ final class Toolkit
             return $data;
         }
         $now  = new \DateTimeImmutable('now', new \DateTimeZone('UTC'));
-        $data = ['inactive' => null, 'pendingDeletion' => null, 'tasks' => null, 'alerts' => [], 'generated' => $now->format('Y-m-d H:i:s')];
+        $data = ['inactive' => null, 'pendingDeletion' => null, 'tasks' => null, 'diagnosis' => null, 'alerts' => [], 'generated' => $now->format('Y-m-d H:i:s')];
         if ($can['inactive'] || $can['delete']) {
             $directory = self::directory();
             $counts    = DashboardSummary::counts($directory->users(), self::settings(), Operator::fromUser($user),
@@ -135,6 +171,15 @@ final class Toolkit
             $data['alerts'] = DashboardSummary::alerts($pluginState, $data['tasks'], $now);
         } elseif ($pluginState !== 'enabled') {
             $data['alerts'] = DashboardSummary::alerts($pluginState, [], $now);
+        }
+        if ($can['diagnose']) {
+            // The same checks as the diagnosis screen; a failure there does not hide the rest of the summary.
+            try {
+                $data['diagnosis'] = AccessHealth::reviewCount(self::accessHealth($now));
+                $data['alerts']    = DashboardSummary::withDiagnosis($data['alerts'], $data['diagnosis']);
+            } catch (\Throwable) {
+                $data['diagnosis'] = null;
+            }
         }
         $cache->store((string) json_encode($data), $key);
         return $data;

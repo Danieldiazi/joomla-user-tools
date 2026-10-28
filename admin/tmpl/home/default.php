@@ -24,6 +24,7 @@ $sections = [
         ['usertools.ungroup', 'ungroup', 'COM_USERTOOLS_UNGROUP_TITLE', 'COM_USERTOOLS_UNGROUP_HOME_DESC', 'COM_USERTOOLS_UNGROUP_START', '', 'users-cog'],
         ['usertools.access', 'access', 'COM_USERTOOLS_ACCESS_TITLE', 'COM_USERTOOLS_ACCESS_HOME_DESC', 'COM_USERTOOLS_ACCESS_START', 'read', 'user-lock'],
         ['usertools.access', 'usage', 'COM_USERTOOLS_USAGE_TITLE', 'COM_USERTOOLS_USAGE_HOME_DESC', 'COM_USERTOOLS_USAGE_START', 'read', 'file-alt'],
+        ['usertools.diagnose', 'diagnose', 'COM_USERTOOLS_DIAGNOSE_TITLE', 'COM_USERTOOLS_DIAGNOSE_HOME_DESC', 'COM_USERTOOLS_DIAGNOSE_START', 'read', 'search'],
     ]],
     'automation' => ['COM_USERTOOLS_HOME_SECTION_AUTOMATION', 'COM_USERTOOLS_HOME_SECTION_AUTOMATION_DESC', [
         ['core.manage', 'schedule', 'COM_USERTOOLS_SCHEDULE_HOME_TITLE', 'COM_USERTOOLS_SCHEDULE_HOME_DESC', 'COM_USERTOOLS_SCHEDULE_START', 'plugin', 'calendar-check'],

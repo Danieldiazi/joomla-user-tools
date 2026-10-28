@@ -218,11 +218,11 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['compare', 'inactive', 'ungroup', 'access', 'usage', 'schedule', 'reports', 'delete'], 'every tool has its card, in order');
+Test::check($cards[1] === ['compare', 'inactive', 'ungroup', 'access', 'usage', 'diagnose', 'schedule', 'reports', 'delete'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 8 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 9 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -746,6 +746,72 @@ foreach (array_slice($modules, 0, 3) as $module) {
 $site->q('UPDATE #__modules SET published = 1 WHERE id = ?', [$modules[2]['id']]);
 $site->db->exec('DROP TABLE ' . $site->prefix . 'ut_gallery');
 $site->q("DELETE FROM #__viewlevels WHERE title LIKE 'UT usage%'");
+
+Test::section('Access diagnosis');
+$diagUrl = 'index.php?option=com_usertools&view=diagnose';
+$site->q("DELETE FROM #__viewlevels WHERE title LIKE 'UT diag%'");
+$site->q("INSERT INTO #__viewlevels (title, ordering, rules) VALUES ('UT diag nobody', 97, '[99999]')");
+$nobodyLevel = (int) $site->q("SELECT id FROM #__viewlevels WHERE title = 'UT diag nobody'")[0]['id'];
+$diagOld   = gmdate('Y-m-d H:i:s', time() - 200 * 86400);
+$diagAdmin = $site->addUser('diag_admin', 'Manager', '', $diagOld);
+$diagNever = $site->addUser('diag_never', 'Administrator', '', $diagOld);
+$site->q('UPDATE #__users SET "lastvisitDate" = NULL WHERE id = ?', [$diagNever]);
+$diagRecent = $site->addUser('diag_recent', 'Manager', '', gmdate('Y-m-d H:i:s', time() - 5 * 86400));
+$diagModule = $site->q('SELECT id, title, access FROM #__modules WHERE client_id = 0 AND published = 1 ORDER BY id')[0];
+$site->q('UPDATE #__modules SET access = 998 WHERE id = ?', [$diagModule['id']]);
+$diag = $admin->get($diagUrl);
+Test::noPhpErrors($diag, 'the access diagnosis');
+$check = function (string $html, string $key): string {
+    $start = strpos($html, 'data-ut-check="' . $key . '"');
+    return $start === false ? '' : substr($html, $start, (int) strpos($html, '</section>', $start) - $start);
+};
+preg_match_all('/data-ut-check="([a-z_]+)"/', $diag, $checks);
+Test::check($checks[1] === ['admins', 'superusers', 'empty_levels', 'missing_levels', 'empty_groups'], 'every check is shown, in order, found or not');
+$admins = $check($diag, 'admins');
+Test::check(str_contains($admins, 'data-ut-diagnose-admin="' . $diagAdmin . '"') && str_contains($admins, 'data-ut-diagnose-admin="' . $diagNever . '"')
+    && !str_contains($admins, 'data-ut-diagnose-admin="' . $diagRecent . '"'), 'backend accounts without activity for 90 days are listed, never-visited ones by registration date');
+Test::check(str_contains($admins, 'Never (registered: ') && str_contains($admins, 'Why it matters:') && str_contains($admins, 'How to review it:') && str_contains($admins, '>Review<'),
+    'each notice says what, why and how, with its type in text');
+$site->options(['diagnose_admin_days' => 365]);
+Test::check(!str_contains($check($admin->get($diagUrl), 'admins'), 'data-ut-diagnose-admin="' . $diagAdmin . '"'), 'the period comes from Options');
+$site->options(['diagnose_admin_days' => 90]);
+$supers = (int) $site->q("SELECT COUNT(DISTINCT u.id) AS n FROM #__users u JOIN #__user_usergroup_map m ON m.user_id = u.id WHERE m.group_id = 8 AND u.block = 0")[0]['n'];
+Test::check(str_contains($check($diag, 'superusers'), 'data-ut-check-found="' . (int) ($supers <= 1) . '"') && str_contains($check($diag, 'superusers'), 'data-ut-check-count="' . $supers . '"'),
+    'the number of active Super Users is reported (' . $supers . ')');
+Test::check(str_contains($check($diag, 'empty_levels'), 'data-ut-diagnose-level="' . $nobodyLevel . '"') && !str_contains($check($diag, 'empty_levels'), 'data-ut-diagnose-level="1"'),
+    'a level whose only group does not exist is reported; Public never is');
+$missing = $check($diag, 'missing_levels');
+preg_match('/data-ut-diagnose-kind="modules">[^<]*<a href="([^"]+)"/', $missing, $modulesLink);
+Test::check(str_contains($missing, 'data-ut-diagnose-missing="998"') && isset($modulesLink[1]), 'content with a missing level is listed with a link to the filtered list');
+$filtered = $admin->get(preg_replace('#^.*/administrator/#', '', html_entity_decode($modulesLink[1] ?? '')));
+Test::check(str_contains($filtered, htmlspecialchars($diagModule['title'])), 'Joomla lists the item when filtered by the missing level');
+$emptyGroups = $check($diag, 'empty_groups');
+$publisherMembers = (int) $site->q("SELECT COUNT(*) AS n FROM #__user_usergroup_map m JOIN #__usergroups g ON g.id = m.group_id WHERE g.title = 'Publisher'")[0]['n'];
+Test::check(str_contains($emptyGroups, '>Information<') && ($publisherMembers > 0 || str_contains($emptyGroups, '>Publisher</a>')) && !str_contains($emptyGroups, '>Public</a>')
+    && !str_contains($emptyGroups, '>Guest</a>'), 'groups without members are information; Public and Guest are left out');
+preg_match('/href="([^"]*task=diagnose\.export[^"]*)"/', $diag, $export);
+[$code, $csv, $headers] = $admin->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($export[1] ?? '')));
+Test::check($code === 200 && str_starts_with($headers['content-type'] ?? '', 'text/csv') && str_contains($csv, ';' . $diagAdmin . ';diag_admin;') && str_contains($csv, '"ID 998 (missing)"'),
+    'the findings download as CSV');
+[, , $tokenless] = $admin->request('index.php?option=com_usertools&task=diagnose.export');
+Test::check(!str_starts_with($tokenless['content-type'] ?? '', 'text/csv'), 'without the token there is no CSV');
+// The dashboard module points to the diagnosis with the same count.
+foreach (glob($site->path . '/administrator/cache/' . 'mod_usertools/*') ?: [] as $file) {
+    @unlink($file);
+}
+$reviewChecks = substr_count($diag, 'data-ut-check-found="1" data-ut-check-severity="review"');
+$dashboardDiag = $admin->get('index.php?option=com_cpanel&view=cpanel&dashboard=users');
+Test::check(str_contains($dashboardDiag, 'The access diagnosis has ' . $reviewChecks . ' checks to review.') && str_contains($dashboardDiag, 'view=diagnose'),
+    'the dashboard module warns with the same number of checks (' . $reviewChecks . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.access' => ['6' => 1]])]);
+[$code] = $delegate->request($diagUrl);
+Test::check($code === 403, 'the diagnosis needs its own permission (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+$site->q('UPDATE #__modules SET access = ? WHERE id = ?', [$diagModule['access'], $diagModule['id']]);
+$site->q("DELETE FROM #__viewlevels WHERE title LIKE 'UT diag%'");
+foreach (['diag_admin', 'diag_never', 'diag_recent'] as $name) {
+    $site->cli('user:delete --username=' . $name);
+}
 
 Test::section('Remove from groups');
 $gid = fn (string $title): int => (int) $site->q('SELECT id FROM #__usergroups WHERE title = ?', [$title])[0]['id'];

@@ -75,6 +75,13 @@ final class Settings
         return max(0, min(60, (int) ($this->params['batch_seconds'] ?? self::BATCH_SECONDS)));
     }
 
+    /** Days without signing in after which the access diagnosis reports an account with administrator access. */
+    public function diagnoseDays(): int
+    {
+        $days = (int) ($this->params['diagnose_admin_days'] ?? AccessHealth::DEFAULT_ADMIN_DAYS);
+        return max(InactivityPolicy::MIN_DAYS, min(InactivityPolicy::MAX_DAYS, $days ?: AccessHealth::DEFAULT_ADMIN_DAYS));
+    }
+
     public function creationMode(): string
     {
         return Registration::mode($this->params['creation_mode'] ?? Registration::MODE_EMAIL);

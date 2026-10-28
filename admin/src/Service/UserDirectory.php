@@ -173,6 +173,25 @@ final class UserDirectory
         return $counts;
     }
 
+    /**
+     * Accounts per group they are directly assigned to, blocked ones included.
+     *
+     * @return array<int, int>
+     */
+    public function membersPerGroup(): array
+    {
+        $db    = $this->db;
+        $query = $db->createQuery()
+            ->select([$db->quoteName('group_id'), 'COUNT(*) AS ' . $db->quoteName('total')])
+            ->from($db->quoteName('#__user_usergroup_map'))
+            ->group($db->quoteName('group_id'));
+        $counts = [];
+        foreach ($db->setQuery($query)->loadObjectList() as $row) {
+            $counts[(int) $row->group_id] = (int) $row->total;
+        }
+        return $counts;
+    }
+
     /** Account id by username or email (case-insensitive on every database), or 0. */
     public function findId(string $login): int
     {
