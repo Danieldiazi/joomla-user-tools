@@ -18,7 +18,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
 
-The home screen groups the tools into four sections, each with its explanation always visible: **Review accounts** (compare a list and review inactive users), **Groups and access levels** (remove from groups and the two read-only screens), **Automation and follow-up** (the scheduled task, with its plugin status, and its results) and, last and on its own, **Delete accounts**, the only one marked “Permanent”. Each person only sees the tools they are allowed to use, and sections with none are left out.
+The home screen groups the tools into four sections, each with its explanation always visible: **Review accounts** (compare a list and review inactive users), **Groups and access levels** (remove from groups and the two read-only screens), **Automation and follow-up** (the scheduled task, with its plugin status, and its results) and, last and on its own, **Delete accounts**, the only one marked “Permanent”. Each person only sees the tools they are allowed to use, and sections with none are left out. From any other screen, the «User Tools home» button in Joomla's toolbar goes back to the home screen.
 
 **Requirements:** Joomla 6 and PHP 8.3 or later. Compatible with MySQL/MariaDB and PostgreSQL.  
 **Download:** [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest), package `pkg_usertools-VERSION.zip`.  

@@ -8,6 +8,7 @@ use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Router\Route;
 use Joomla\CMS\Toolbar\ToolbarHelper;
 
 /** Toolbar, assets and helpers shared by every screen. */
@@ -18,6 +19,10 @@ trait ViewTrait
         $user = Factory::getApplication()->getIdentity();
         // The home screen is titled with the extension name alone.
         ToolbarHelper::title(Text::_('COM_USERTOOLS') . ($titleKey === '' ? '' : ' · ' . Text::_($titleKey)), 'users');
+        if ($titleKey !== '') {
+            // Every screen but the home screen leads back to it from the same place in Joomla's toolbar.
+            ToolbarHelper::link(Route::_('index.php?option=com_usertools'), Text::_('COM_USERTOOLS_TOOLBAR_HOME'), 'home');
+        }
         if ($user->authorise('core.admin', 'com_usertools') || $user->authorise('core.options', 'com_usertools')) {
             ToolbarHelper::preferences('com_usertools');
         }

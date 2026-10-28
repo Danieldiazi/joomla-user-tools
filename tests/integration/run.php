@@ -225,6 +225,7 @@ Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 
 Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 8 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
+Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
 $admin->get('index.php?option=com_config&view=component&component=com_usertools');
 
 Test::section('Comparison: preview, Super Users always protected, reinforced confirmation');
@@ -627,6 +628,8 @@ $editorId     = (int) $site->q("SELECT id FROM #__usergroups WHERE title = 'Edit
 $site->q("INSERT INTO #__viewlevels (title, ordering, rules) VALUES ('UT level empty', 90, '[]')");
 $site->q('INSERT INTO #__viewlevels (title, ordering, rules) VALUES (?, 91, ?)', ['UT level authors', json_encode([$author, -$site->userId('gm_mgr')])]);
 $accessPage = $admin->get('index.php?option=com_usertools&view=access');
+Test::check(str_contains($accessPage, 'User Tools home') && (bool) preg_match('#href="[^"]*index\.php\?option=com_usertools"[^>]*>\s*<span class="icon-home#', $accessPage),
+    'each screen has a toolbar button back to the User Tools home');
 $row = function (string $html, string $attribute, int $id): string {
     $start = strpos($html, $attribute . '="' . $id . '"');
     return $start === false ? '' : substr($html, $start, (int) strpos($html, '</tr>', $start) - $start);
