@@ -131,14 +131,14 @@ Los informes se guardan en la subcarpeta usertools-reports de la carpeta de regi
 
 ## Resumen en el panel de Usuarios
 
-Desde 2026.10.14, los contadores distinguen «Inactivas para revisar» y «Bloqueadas para revisar»; son candidatas, no acciones automáticas. Las tareas se muestran en una lista adaptable, con su modo, resultado, enlace al informe y fechas etiquetadas. Si no hay próxima ejecución, se explica en texto en lugar de mostrar un guion. La fecha de actualización y la explicación de la caché aparecen separadas al pie.
-
 Desde la 2026.10.6, el panel **Usuarios** de la administración (el icono de panel junto a «Usuarios» en el menú lateral) muestra un módulo «User Tools» con:
 
 - **Cuentas inactivas sin bloquear**, con el plazo y las exclusiones de «Revisar usuarios inactivos». La cifra enlaza con esa herramienta.
 - **Cuentas bloqueadas pendientes de eliminar**: las que ofrecería «Eliminar usuarios inactivos» con «Solo bloqueadas», su plazo y sus exclusiones. La cifra abre la herramienta con esa opción ya elegida.
 - **Tareas programadas de User Tools**, con modo (simulación o real), última ejecución, resultado (enlazado con su informe) y próxima ejecución.
 - **Avisos**: plugin de tareas deshabilitado o no instalado, ninguna tarea habilitada, una tarea detenida por el límite de seguridad, fallida o con un informe sin finalizar desde hace más de una hora, y una tarea que sigue en simulación más de 14 días después de crearla.
+
+Desde la 2026.10.14, las cifras se presentan como «Inactivas para revisar» y «Bloqueadas para revisar»: son cuentas candidatas, no acciones automáticas, y cada tarjeta enlaza con su revisión. Cada tarea muestra su modo, el resultado de la última ejecución con enlace al informe y las fechas con su etiqueta; si no tiene próxima ejecución, se explica por qué. Cuando alguna tarea está en simulación, una nota recuerda que la simulación no modifica cuentas. Al pie aparecen la fecha de actualización y cómo funciona la caché.
 
 Las cifras usan exactamente las mismas reglas que las herramientas, así que coinciden con lo que verás al abrirlas. Se calculan como mucho cada **10 minutos** y se recalculan en cuanto una herramienta o una tarea cambia cuentas, o se guardan las Opciones.
 

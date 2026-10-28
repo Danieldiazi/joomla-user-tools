@@ -527,12 +527,15 @@ $moduleCount = function (string $html, string $name): ?int {
 $dashboard = $admin->get($dashboardUrl);
 Test::check(str_contains($dashboard, 'mod-usertools') && str_contains($dashboard, 'Inactive accounts to review'), 'the summary module is published on the Users dashboard');
 Test::check(str_contains($dashboard, 'UT integration'), 'the module lists the User Tools tasks');
-Test::check(str_contains($dashboard, 'data-ut-dashboard-tasks') && str_contains($dashboard, '<dl class="row g-2 small mb-0">'),
+Test::check(str_contains($dashboard, 'data-ut-dashboard-task=') && preg_match('/<dl\b[^>]*>\s*<div\b[^>]*>\s*<dt\b/', $dashboard) === 1,
     'tasks expose labelled dates without squeezing five table columns');
-Test::check(str_contains($dashboard, 'They are not deleted automatically.') && str_contains($dashboard, 'Review deletion candidates'),
+Test::check(str_contains($dashboard, 'They are not deleted automatically.') && str_contains($dashboard, 'Review accounts to delete'),
     'the deletion count describes candidates and leads to a review, not an immediate deletion');
-Test::check(str_contains($dashboard, 'Dry runs do not change accounts.') && str_contains($dashboard, 'Data updated:'),
-    'the module explains dry runs and labels the data timestamp');
+Test::check(str_contains($dashboard, 'Data updated:'), 'the module labels the data timestamp');
+Test::check(str_contains($dashboard, 'Dry runs do not change accounts.') === str_contains($dashboard, 'data-ut-task-mode="dry"'),
+    'dry runs are explained only when some task is a dry run');
+Test::check(str_contains($dashboard, 'data-ut-task-mode="real"') && str_contains($dashboard, 'text-bg-warning" data-ut-task-mode="real"'),
+    'live blocking is told apart from the disabled badge');
 
 // Figures match what the tools list with the same options.
 $review = $admin->submit('index.php?option=com_usertools&view=inactive', ['task' => 'inactive.search', 'days' => 365, 'include_never' => 0, 'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);

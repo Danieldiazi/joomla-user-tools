@@ -76,7 +76,7 @@ $statusBadge = [
       <li class="border rounded p-3 mb-2" data-ut-dashboard-task="<?= (int) $task['id'] ?>">
         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
           <a class="fw-semibold text-break" href="<?= Route::_('index.php?option=com_scheduler&task=task.edit&id=' . (int) $task['id']) ?>"><?= $e($task['title']) ?></a>
-          <span class="badge text-bg-<?= $task['dryRun'] ? 'info' : 'secondary' ?>"><?= Text::_($task['dryRun'] ? 'MOD_USERTOOLS_MODE_DRY' : 'MOD_USERTOOLS_MODE_REAL') ?></span>
+          <span class="badge text-bg-<?= $task['dryRun'] ? 'info' : 'warning' ?>" data-ut-task-mode="<?= $task['dryRun'] ? 'dry' : 'real' ?>"><?= Text::_($task['dryRun'] ? 'MOD_USERTOOLS_MODE_DRY' : 'MOD_USERTOOLS_MODE_REAL') ?></span>
           <?php if (!$task['enabled']) : ?><span class="badge text-bg-secondary"><?= Text::_('MOD_USERTOOLS_DISABLED') ?></span><?php endif; ?>
         </div>
         <dl class="row g-2 small mb-0">
@@ -100,7 +100,9 @@ $statusBadge = [
       </li>
       <?php endforeach; ?>
     </ul>
+    <?php if (array_filter(array_column($summary['tasks'], 'dryRun'))) : ?>
     <p class="small text-body-secondary mt-2 mb-0"><?= Text::_('MOD_USERTOOLS_DRY_HELP') ?></p>
+    <?php endif; ?>
   </div>
   <?php endif; ?>
 
