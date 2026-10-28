@@ -57,11 +57,34 @@ Si una petición choca con alguna de estas reglas, se señala el conflicto antes
 - **Idioma**: el código, los comentarios, los mensajes de commit y los nombres en inglés. La documentación de usuario (README, FAQ) y los textos de la interfaz en español, con su traducción al inglés.
 - **Textos de la interfaz**: siempre con claves de idioma (`COM_USERTOOLS_…`, `PLG_TASK_USERTOOLS_…`, `MOD_USERTOOLS_…`, `MOD_USERTOOLS_GROUPS_…`), nunca escritos en el código. Cada clave existe **en es-ES y en-GB a la vez**, sin duplicados. Los servicios lanzan `UserFacingException` con una clave y sus argumentos, y la traducción se hace en controladores y vistas.
 - **Salida HTML**: todo valor variable se escapa (`$this->escape()` en las plantillas).
-- **Estilos**: clases de Bootstrap y Atum (`card`, `alert`, `btn`, `table`) y variables CSS de la plantilla, sin colores fijos, para que el modo oscuro funcione. El CSS propio es solo de maquetación.
+- **Estilos**: componentes y convenciones públicos de Joomla, sin dependencias de una plantilla concreta. Aplica las reglas de «Interfaz, usabilidad y accesibilidad».
 - **Base de datos**: consultas con el query builder de Joomla y parámetros enlazados, compatibles con MySQL y PostgreSQL. Nada de consultas por cuenta dentro de bucles grandes: se usa `UserDirectory`.
 - **Exclusiones**: cada herramienta tiene las suyas, guardadas en Opciones con su prefijo (`compare_`, `inactive_`, `delete_`). Cada tarea programada guarda las suyas en sus parámetros.
 - **Panel**: todo lo que cambie cuentas u Opciones llama a `Toolkit::clearDashboardCache()`. Las cifras del módulo deben usar las mismas reglas que la herramienta a la que enlazan.
 - **Herramienta nueva**: añade su permiso en `access.xml`, la vista en `DisplayController::PERMISSIONS`, su pestaña en `config.xml` si tiene opciones, la tarjeta en la portada, el controlador en `tests/regression/mvc.php`, una sección en `tests/integration/run.php` y la documentación en README y FAQ.
+
+## Interfaz, usabilidad y accesibilidad
+
+Estas reglas se aplican a las pantallas del componente y a los módulos. Integrarse con Joomla no significa depender de Atum ni de otra plantilla concreta.
+
+- **Componentes públicos de Joomla**: utiliza sus APIs, layouts y controles públicos cuando correspondan. Mantén las convenciones de navegación, formularios, barras de herramientas y mensajes de Joomla. Si un control propio es necesario, conserva su semántica y accesibilidad.
+- **Independencia de la plantilla**: no acoples la extensión al DOM, selectores internos, archivos o estilos exclusivos de Atum. Usa las clases de los componentes disponibles en la versión de Joomla soportada y variables de estilo con alternativas adecuadas; evita colores y tipografías fijos. Limita el CSS propio a la maquetación y a necesidades específicas de la extensión. Esto reduce el mantenimiento, pero no garantiza compatibilidad automática con cualquier plantilla o versión futura.
+- **Organización por finalidad**: agrupa herramientas relacionadas bajo encabezados claros y una jerarquía semántica coherente. Documenta las decisiones de distribución de cada pantalla aparte; no impongas tarjetas, pestañas, acordeones ni las tres categorías de la portada a todas las interfaces.
+- **Explicaciones para decidir**: conserva visibles el propósito de cada herramienta y las consecuencias de sus acciones. Evita repeticiones y etiquetas que no aporten información. Sitúa las instrucciones detalladas dentro del flujo, sin ocultar información necesaria para elegir o confirmar.
+- **Textos consistentes**: usa nombres y verbos claros y coherentes entre título, explicación, botón y resultado. Distingue bloquear, eliminar y quitar de grupos. Mantén las claves es-ES y en-GB sincronizadas y aplica las directrices de textos de Joomla; la guía inglesa se orienta a en-GB.
+- **Acciones destructivas**: identifica el borrado con texto explícito como «Permanente» y explica que no se puede deshacer. El color o un icono nunca son el único medio para comunicar riesgo, estado, éxito o error. Conserva las revisiones y confirmaciones del servidor.
+- **Objetivo WCAG 2.2 AA**: usa HTML semántico, encabezados ordenados, etiquetas asociadas a los campos y nombres accesibles para los controles. Toda función debe poder usarse con teclado, con foco visible y orden lógico. Usa ARIA solo cuando sea necesario y comunica de forma accesible los cambios dinámicos relevantes, errores y progreso.
+- **Adaptación visual**: permite ampliar texto y usar zoom, así como pantallas estrechas, sin perder información ni funciones ni recortar controles. Comprueba contraste, modo claro y oscuro cuando estén disponibles, y el comportamiento de tablas anchas.
+- **Verificación**: en cambios de interfaz, comprueba manualmente teclado, foco, claridad de textos, contraste, zoom y distribución estrecha en la administración o el sitio, según corresponda. Complementa con pruebas automáticas y comprobaciones con tecnología de asistencia según el alcance; una prueba automática o usar componentes de Joomla no acredita por sí solo conformidad WCAG.
+- **Evolución de Joomla**: revisa las referencias y los componentes utilizados al cambiar de versión principal de Joomla, y verifica la integración con la plantilla usada en las pruebas. No prometas compatibilidad con plantillas no probadas.
+
+Referencias oficiales:
+
+- [Directrices de textos de interfaz de Joomla](https://manual.joomla.org/docs/next/user-interface-text/).
+- [Accesibilidad y estándares W3C](https://manual.joomla.org/docs/next/accessibility/w3c-standards/).
+- [Accesibilidad para extensiones](https://manual.joomla.org/docs/next/accessibility/).
+
+Estas referencias usan la ruta `next`, cuyo contenido puede cambiar. Contrasta su versión con la de Joomla soportada; las directrices no obligan a una distribución única de la portada.
 
 ## Documentación bilingüe
 
