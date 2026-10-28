@@ -28,6 +28,8 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service {
         public static object $options;
         public static object $store;
         public static int $writes = 0;
+        /** Account id whose block throws, as a request cut off half-way would. */
+        public static int $failOn = 0;
         public static function app() { return self::$application; }
         public static function directory() { return self::$directory; }
         public static function settings() { return self::$options; }
@@ -36,6 +38,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service {
         public static function blocker() {
             return new class {
                 public function block($id, ...$args) {
+                    if ($id === Toolkit::$failOn) { throw new \RuntimeException('time limit'); }
                     Toolkit::$writes++;
                     return ['status' => 'blocked', 'username' => 'user' . $id, 'reason' => ''];
                 }
@@ -188,6 +191,18 @@ namespace {
     $model->apply(applyInput(preview($model)));
     $identity->id = 1;
     check($model->getJob() === null, 'A job belongs to the operator who started it');
+
+    // A request cut off half-way keeps what it did: continuing neither repeats nor loses an account.
     Toolkit::$options->batch = 8;
+    $writes = Toolkit::$writes;
+    $p = preview($model);
+    Toolkit::$failOn = 6;
+    try { $model->apply(applyInput($p)); throw new \RuntimeException('The cut was not simulated'); }
+    catch (\RuntimeException $e) { check($e->getMessage() === 'time limit', 'The batch stops at the sixth account'); }
+    $job = $model->getJob();
+    check($job !== null && $job['processed'] === 4 && count($job['blocked']) === 4 && $job['block'][0] === 6, 'The four accounts done before the cut are saved in the job');
+    Toolkit::$failOn = 0;
+    $step = $model->step();
+    check($step['done'] && Toolkit::$writes === $writes + 10 && count($step['result']['blocked']) === 10, 'Continuing does the other six, once each');
     echo "OK: controller view permissions and changed comparison previews\n";
 }

@@ -227,18 +227,27 @@ class CompareModel extends BaseDatabaseModel
         if ($job['block']) {
             $blocker = Toolkit::blocker();
             while ($job['block'] && $this->more($count, $deadline)) {
-                $id      = (int) array_shift($job['block']);
+                $id      = (int) $job['block'][0];
                 $outcome = $blocker->block($id, $exclusions, $operator,
                     fn (object $user) => !Comparison::contains($names, (string) $user->username), 'COM_USERTOOLS_TOOL_COMPARE');
-                $this->collect($step, $outcome, $id);
-                if ($outcome['status'] === 'error') {
-                    $job['blockErrors'] = (int) ($job['blockErrors'] ?? 0) + 1;
-                }
+                $one = ['blocked' => [], 'errors' => []];
+                $this->collect($one, $outcome, $id);
+                array_shift($job['block']);
+                $job['blocked']     = array_merge($job['blocked'], $one['blocked']);
+                $job['errors']      = array_merge($job['errors'], $one['errors']);
+                $job['blockErrors'] = (int) ($job['blockErrors'] ?? 0) + \count($one['errors']);
                 $job['processed']++;
+                $this->checkpoint($job);
+                $step['blocked'] = array_merge($step['blocked'], $one['blocked']);
+                $step['errors']  = array_merge($step['errors'], $one['errors']);
                 $count++;
             }
         }
         if ($job['create'] && $this->more($count, $deadline)) {
+            // The permission may have been withdrawn while the job was paused: what is left waits, or is discarded.
+            if (!$this->identity()->authorise('usertools.create', 'com_usertools')) {
+                throw new UserFacingException('COM_USERTOOLS_ERROR_CREATE_REVOKED');
+            }
             $factory = Toolkit::users();
             $mailer  = new AccountMailer();
             $log     = new ActionLogger();
@@ -246,13 +255,33 @@ class CompareModel extends BaseDatabaseModel
             $core    = $this->silenceCoreMail();
             try {
                 while ($job['create'] && $this->more($count, $deadline)) {
-                    $row     = array_shift($job['create']);
+                    $row     = $job['create'][0];
                     $created = Registration::create([$row], fn () => $factory->loadUserById(0), self::REGISTERED_GROUP, $mode,
                         Toolkit::passwords(), fn (object $user) => $mailer->send($user),
-                        fn (object $user) => $log->created($user, $operator, $mode));
+                        function (object $user) use ($log, $operator, $mode, &$job): void {
+                            // The account exists: take it off the queue at once, so a request cut off now
+                            // (a slow mail server, a time limit) never creates it twice when continuing.
+                            array_shift($job['create']);
+                            $job['processed']++;
+                            $job['created'][] = ['username' => (string) $user->username, 'email' => (string) $user->email, 'id' => (int) $user->id,
+                                'mode' => $mode, 'mailed' => false];
+                            $this->checkpoint($job);
+                            $log->created($user, $operator, $mode);
+                        });
+                    if (!$created['created']) {
+                        // Not created: nothing exists to repeat, so it leaves the queue as a failure.
+                        array_shift($job['create']);
+                        $job['processed']++;
+                    } else {
+                        // Now the email outcome is known; the stored row never has the password.
+                        $stored = $created['created'][0];
+                        unset($stored['password']);
+                        $job['created'][\count($job['created']) - 1] = $stored;
+                    }
+                    $job['errors'] = array_merge($job['errors'], $created['errors']);
+                    $this->checkpoint($job);
                     $step['created'] = array_merge($step['created'], $created['created']);
                     $step['errors']  = array_merge($step['errors'], $created['errors']);
-                    $job['processed']++;
                     $count++;
                 }
             } finally {
@@ -260,21 +289,16 @@ class CompareModel extends BaseDatabaseModel
             }
         }
 
-        $job['blocked'] = array_merge($job['blocked'], $step['blocked']);
-        $job['errors']  = array_merge($job['errors'], $step['errors']);
-        $before         = $job['created'];
-        foreach ($step['created'] as $row) {
-            unset($row['password']);
-            $job['created'][] = $row;
-        }
         $done   = !$job['block'] && !$job['create'];
         $result = null;
         if ($done) {
             $result = $this->finish($job, 0);
             // The response that created them may show this step's passwords; the stored copy never has them.
-            $result['created'] = array_merge($before, $step['created']);
-        } else {
-            $this->session()->set(self::JOB, $job);
+            $withPasswords = [];
+            foreach ($step['created'] as $row) {
+                $withPasswords[(int) $row['id']] = $row;
+            }
+            $result['created'] = array_map(fn (array $row) => $withPasswords[(int) $row['id']] ?? $row, $result['created']);
         }
         Toolkit::clearDashboardCache();
         return $step + ['done' => $done, 'total' => (int) $job['total'], 'processed' => (int) $job['processed'], 'result' => $result];
@@ -341,6 +365,17 @@ class CompareModel extends BaseDatabaseModel
             }
         }
         return Comparison::compare($users, $names, $exclusions->names, $protected);
+    }
+
+    /**
+     * Saves the job after each account, so a request that is cut off half-way (a time limit, a slow mail
+     * server) keeps everything done so far and continuing never repeats an account.
+     *
+     * @param array<string, mixed> $job
+     */
+    private function checkpoint(array $job): void
+    {
+        $this->session()->set(self::JOB, $job);
     }
 
     /** At least one account per request, so a job always moves forward; then until the time budget runs out. */

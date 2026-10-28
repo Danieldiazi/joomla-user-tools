@@ -104,7 +104,7 @@ Hasta la 2026.10.10 todo se hacía en una sola petición, y con cientos de altas
 
 ### Se cerró la pestaña mientras se aplicaban los cambios
 
-Lo hecho hasta entonces se conserva y está anotado. Al abrir «Comparar lista» verás un aviso con cuántas cuentas lleva y los botones **Continuar** y **Detener y descartar lo pendiente**. Al continuar, cada cuenta se vuelve a comprobar antes de cambiarla. En el modo de contraseña temporal, las contraseñas que ya se mostraron no se pueden recuperar: usa la recuperación de contraseña de Joomla para esas cuentas.
+Lo hecho hasta entonces se conserva y está anotado. Al abrir «Comparar lista» verás un aviso con cuántas cuentas lleva y los botones **Continuar** y **Detener y descartar lo pendiente**. Al continuar, cada cuenta se vuelve a comprobar antes de cambiarla, se retoma justo donde se quedó (el avance se guarda tras cada cuenta, así que ninguna se repite) y se vuelve a comprobar que sigues teniendo permiso para crear cuentas. En el modo de contraseña temporal, las contraseñas que ya se mostraron no se pueden recuperar: usa la recuperación de contraseña de Joomla para esas cuentas.
 
 ### Una alta ha fallado y otras no, ¿se deshace todo?
 
