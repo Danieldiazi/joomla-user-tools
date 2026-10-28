@@ -69,6 +69,11 @@ New accounts are created in the **Registered** group, after checking that it exi
 - **Send a link to choose a password** (default). The account receives a random password that nobody sees, and the user receives an email linking to Joomla's standard password selection page. Edit the message under System → Mail Templates → “User Tools: account created”. Sending mail must be enabled in Global Configuration.
 - **Show a temporary password.** A random password following Joomla's password policy (length and minimum digits, symbols, uppercase and lowercase letters) appears **once**, in the response that creates the account. Its clear text is not stored in the session, database or logs. The user must change it at first login.
 
+When the list brings many new names, two aids in the review save work (since 2026.10.11):
+
+- The box in the **Add** header ticks or unticks every new account at once.
+- **Build the email from the username**: tick the box and type the domain (for example `example.com`, with or without `@`). Each empty email is filled as `username@example.com`. Emails typed by hand are not changed; changing the domain updates the generated ones, and unticking the box clears them. Names that cannot be used as an email (with spaces or accents, for example) stay empty and the screen says how many there are, so you can type their email. Check the emails before applying: in link mode, the access details are sent to them.
+
 The tool does not send the Joomla user plugin's welcome email.
 
 ## Review inactive users
@@ -194,11 +199,20 @@ Since 2026.10.9, **Groups and access levels** shows in a single table which view
   - **Inherited**: one of its parent groups is, and it is named. Joomla grants the level to every group below an assigned group; for example, “Editor” has the *Registered* level because it sits below “Registered”.
   - **Always**: the *Public* level, which Joomla grants to everyone even when nobody is assigned.
   - **—**: the group does not have the level.
-- **Summary by level**: assigned groups, how many groups have the level in total and how many accounts are assigned individually. A level with no groups or accounts is marked “No groups”, because nobody has it.
+- **Summary by level**: assigned groups and how many groups have the level in total. When some level has accounts assigned individually (without a group), the “Accounts assigned individually” column also appears; when there are none, it is hidden. A level with no groups or accounts is marked “No groups”, because nobody has it.
+
+A marked cell always reads the same way: **the members of the row's group can see the content of the column's level**. “Inherited from group «Manager»” in the *Registered* column of the “Administrator” row means administrators see *Registered* content because their group sits under Manager, which is assigned to that level. It does not mean that whoever has the *Registered* level sees what administrators see.
 
 ![Groups and access levels (Spanish interface)](docs/screenshots/14-grupos-niveles.jpg)
 
-A search box filters the groups. Group and level titles link to their edit screens in Joomla for users with the Admin permission on Users (the same one Joomla requires for those screens), and account counts link to the user manager for users who can manage users. The screen requires its own permission, *View groups and access levels*: Super Users have it; grant it to others in Options → Permissions.
+A search box filters the groups. Next to it, two buttons download the information as CSV (since 2026.10.11):
+
+- **CSV: table**: the same table as on screen, one row per group and one column per level. It includes each group's ID and full path (for example `Public / Manager / Administrator`) and the active accounts. Cells say “Assigned”, “Inherited from group «…»”, “Always” or are empty.
+- **CSV: one row per level**: one row for each group and level it has, with the columns Group ID, Group, Path, Level ID, Access level, Type and Inherited from group. It is the handiest shape for filtering or a pivot table.
+
+Both files are UTF-8 with BOM and semicolon-separated, so Excel opens them with accents intact, and they are protected against formulas. They always include every group, even when a filter is typed. Texts follow the administrator language. The download requires the same permission as the screen and the form token.
+
+Group and level titles link to their edit screens in Joomla for users with the Admin permission on Users (the same one Joomla requires for those screens), and account counts link to the user manager for users who can manage users. The screen requires its own permission, *View groups and access levels*: Super Users have it; grant it to others in Options → Permissions.
 
 ## Security
 

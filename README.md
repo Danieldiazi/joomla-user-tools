@@ -69,6 +69,11 @@ Las cuentas nuevas se crean en el grupo **Registrados** (se comprueba que exista
 - **Enviar un enlace para elegir la contraseña** (por defecto). La cuenta se crea con una contraseña aleatoria que nadie ve, y la persona recibe un correo con un enlace a la página estándar de Joomla para elegir la suya. El texto del correo se edita en Sistema → Plantillas de correo → «User Tools: cuenta creada». Requiere que el envío de correo esté activado en la configuración global.
 - **Mostrar una contraseña temporal.** Se genera una contraseña aleatoria que cumple la política de contraseñas de Joomla (longitud y número mínimo de dígitos, símbolos, mayúsculas y minúsculas) y se muestra **una sola vez**, en la misma respuesta que crea la cuenta. No se guarda en la sesión, en la base de datos ni en los registros. La persona debe cambiarla en su primer acceso.
 
+Si la lista trae muchos nombres nuevos, dos ayudas de la revisión ahorran trabajo (desde la 2026.10.11):
+
+- La casilla de la cabecera **Añadir** marca o desmarca todas las cuentas nuevas a la vez.
+- **Generar el correo a partir del nombre de usuario**: marca la casilla y escribe el dominio (por ejemplo `correo.com`, con o sin `@`). Cada correo vacío se rellena como `usuario@correo.com`. Los correos escritos a mano no se cambian; si cambias el dominio se actualizan los generados, y si desmarcas la casilla se borran. Los nombres que no sirven como correo (con espacios o tildes, por ejemplo) se quedan vacíos y se avisa de cuántos son, para que escribas su correo. Revisa los correos antes de aplicar: con el modo de enlace, el acceso se envía a ellos.
+
 La herramienta no envía el correo de bienvenida del plugin de usuarios de Joomla.
 
 ## Revisar usuarios inactivos
@@ -192,11 +197,20 @@ Desde la 2026.10.9, **Grupos y niveles de acceso** muestra en una sola tabla qu�
   - **Heredado**: lo está uno de sus grupos padre, que se indica. Joomla concede el nivel a todos los grupos que cuelgan de un grupo asignado; por ejemplo, «Editor» tiene el nivel *Registrado* porque cuelga de «Registrado».
   - **Siempre**: el nivel *Público*, que Joomla concede a todos aunque nadie esté asignado.
   - **—**: el grupo no tiene el nivel.
-- **Resumen por nivel**: grupos asignados, cuántos grupos tienen el nivel en total y cuántas cuentas están asignadas una a una. Un nivel sin grupos ni cuentas se marca «Sin grupos», porque no lo tiene nadie.
+- **Resumen por nivel**: grupos asignados y cuántos grupos tienen el nivel en total. Si algún nivel tiene cuentas asignadas una a una (sin grupo), aparece además la columna «Cuentas asignadas una a una»; si no hay ninguna, se oculta. Un nivel sin grupos ni cuentas se marca «Sin grupos», porque no lo tiene nadie.
+
+Una celda marcada se lee siempre en el mismo sentido: **los miembros del grupo de la fila pueden ver el contenido del nivel de la columna**. «Heredado del grupo «Manager»» en la columna *Registrado* de la fila «Administrator» significa que los administradores ven el contenido *Registrado* porque su grupo cuelga de Manager, que está asignado a ese nivel. No significa que quien tenga el nivel *Registrado* vea lo mismo que los administradores.
 
 ![Grupos y niveles de acceso](docs/screenshots/14-grupos-niveles.jpg)
 
-Un cuadro de búsqueda filtra los grupos. Los títulos de grupos y niveles enlazan con su edición en Joomla para quien tiene el permiso de administrar Usuarios (el mismo que exige Joomla para esas pantallas), y las cifras de cuentas enlazan con el gestor de usuarios para quien puede gestionar usuarios. La pantalla requiere el permiso propio *Ver grupos y niveles de acceso*: los superusuarios lo tienen; a los demás hay que concedérselo en Opciones → Permisos.
+Un cuadro de búsqueda filtra los grupos. Junto a él, dos botones descargan la información en CSV (desde la 2026.10.11):
+
+- **CSV: tabla**: la misma tabla de la pantalla, con una fila por grupo y una columna por nivel. Incluye el ID y la ruta completa de cada grupo (por ejemplo `Public / Manager / Administrator`) y las cuentas activas. Las celdas dicen «Asignado», «Heredado del grupo «…»», «Siempre» o quedan vacías.
+- **CSV: una fila por nivel**: una fila por cada grupo y nivel que tiene, con las columnas ID del grupo, Grupo, Ruta, ID del nivel, Nivel de acceso, Tipo y Heredado del grupo. Es la forma más cómoda de filtrar o hacer una tabla dinámica.
+
+Los dos ficheros están en UTF-8 con BOM y separados por punto y coma, para que Excel los abra con las tildes bien, y están protegidos contra fórmulas. Siempre incluyen todos los grupos, aunque haya un filtro escrito. Los textos van en el idioma de la administración. La descarga requiere el mismo permiso que la pantalla y el token del formulario.
+
+Los títulos de grupos y niveles enlazan con su edición en Joomla para quien tiene el permiso de administrar Usuarios (el mismo que exige Joomla para esas pantallas), y las cifras de cuentas enlazan con el gestor de usuarios para quien puede gestionar usuarios. La pantalla requiere el permiso propio *Ver grupos y niveles de acceso*: los superusuarios lo tienen; a los demás hay que concedérselo en Opciones → Permisos.
 
 ## Seguridad
 

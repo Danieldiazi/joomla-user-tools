@@ -82,6 +82,10 @@ Existing accounts count as matches and remain unchanged. Already blocked account
 
 No. They appear **unselected** in the review. Only selected accounts are created, each with a different email address that is not already used in Joomla.
 
+### There are many new names: do I have to tick them and type the emails one by one?
+
+No. Since 2026.10.11, the box in the **Add** header ticks them all, and the **Build the email from the username** option fills each empty email as `username@domain` with the domain you type. Emails you typed by hand are not touched, and names that cannot be used as an email (with spaces or accents) stay empty for you to complete. Details in the [README](README.en.md#creating-new-accounts).
+
 ### Which group receives new accounts?
 
 **Registered** (group ID 2). The tool checks that the group exists and does not grant administrator access. The initial display name is the username.
@@ -215,6 +219,18 @@ With **Groups and access levels**, since 2026.10.9. It shows a table with groups
 ### Why does a group show “Inherited” if I did not assign it to the level?
 
 Because Joomla grants the level to every group below an assigned one. The cell names the parent group it comes from. To remove it, take that parent group out of the level or move the group in the tree; the User Tools screen changes nothing.
+
+### “Inherited” in the *Public* column of the “Administrator” row: does it mean whoever has the Public level sees what administrators see?
+
+No, the other way round. Each cell says which levels the members of the row's group have, that is, which content they can see. That cell means administrators can see *Public* content, because their group sits under the “Public” group, assigned to that level. The text below it (“from group «Public»”) names the **group** the inheritance comes from, not the level.
+
+### Can I export the table?
+
+Yes, since 2026.10.11, as CSV in two shapes: the table as shown (one row per group and one column per level) or one row for each group and level it has, handier for filtering or pivot tables. They open correctly in Excel (UTF-8 with BOM, semicolons). Details in the [README](README.en.md#groups-and-access-levels).
+
+### I do not see the “Accounts assigned individually” column
+
+It only appears when some level has accounts assigned directly, without a group. Joomla's access level screen does not offer that, so normally there are none.
 
 ### Why can't I see the screen?
 
