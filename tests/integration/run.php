@@ -222,7 +222,7 @@ Test::check($cards[1] === ['compare', 'inactive', 'ungroup', 'access', 'usage', 
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
-Test::check(substr_count($home, '<h2 class="h4"') === 4 && substr_count($home, '<h3 class="h5 card-title"') === 8 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 8 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 $admin->get('index.php?option=com_config&view=component&component=com_usertools');
