@@ -53,6 +53,9 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 
 ¿Dudas concretas? Consulta las [preguntas frecuentes](FAQ.md). Si vas a contribuir, o a trabajar con un agente de código, lee [AGENTS.md](AGENTS.md).
 
+
+El módulo **User Tools** del panel de Usuarios ofrece accesos directos a cada herramienta según los permisos de quien consulta el panel, además de los indicadores y del enlace general a User Tools.
+
 ## Instalación y actualizaciones
 
 Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) el fichero **pkg_usertools-VERSIÓN.zip** e instálalo desde Sistema → Instalar → Extensiones. El paquete instala el componente, el plugin de tareas, el módulo de administración «User Tools» y el módulo del sitio «User Tools - Grupos de usuarios». En una instalación nueva habilita el plugin «Tarea - User Tools», y la primera vez que se instala el módulo lo publica en el panel de Usuarios. Las tareas que crees empiezan siempre en modo simulación.
