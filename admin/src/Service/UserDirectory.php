@@ -174,6 +174,35 @@ final class UserDirectory
     }
 
     /**
+     * Distinct accounts (blocked ones included) assigned to any of the groups.
+     *
+     * @param list<int> $groupIds
+     */
+    public function accountsIn(array $groupIds): int
+    {
+        $groupIds = array_values(array_unique(array_map('intval', $groupIds)));
+        if (!$groupIds) {
+            return 0;
+        }
+        $db    = $this->db;
+        $query = $db->createQuery()
+            ->select('COUNT(DISTINCT ' . $db->quoteName('user_id') . ')')
+            ->from($db->quoteName('#__user_usergroup_map'))
+            ->whereIn($db->quoteName('group_id'), $groupIds);
+        return (int) $db->setQuery($query)->loadResult();
+    }
+
+    /**
+     * The root asset rule for a group path (the group and its ancestors), as Joomla resolves it.
+     *
+     * @param list<int> $path
+     */
+    public function allows(string $action, array $path): bool
+    {
+        return ($this->allow)($action, array_values(array_map('intval', $path)));
+    }
+
+    /**
      * Accounts per group they are directly assigned to, blocked ones included.
      *
      * @return array<int, int>

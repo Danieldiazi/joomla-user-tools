@@ -45,7 +45,7 @@ trait ViewTrait
 
     public function can(string $action): bool
     {
-        return Factory::getApplication()->getIdentity()->authorise($action, 'com_usertools');
+        return \Danieldiazi\Component\Usertools\Administrator\Controller\DisplayController::allowed(Factory::getApplication()->getIdentity(), $action);
     }
 
     /** UTC date for tables, or "Never". */

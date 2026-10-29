@@ -218,11 +218,11 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['compare', 'inactive', 'ungroup', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete'], 'every tool has its card, in order');
+Test::check($cards[1] === ['compare', 'inactive', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 10 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 11 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -1013,6 +1013,72 @@ Test::check(str_contains($refused, 'Only a Super User') && !str_contains($refuse
 Test::check(str_contains($choose($delegate, 'ug_three'), 'data-ut-keep='), 'a delegate can change ordinary accounts');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 Test::check(in_array('Manager', $groupsOf('ug_back'), true) && in_array('Author', $groupsOf('ug_back'), true), 'refused changes leave the groups untouched');
+
+
+Test::section('Move groups');
+$moveUrl = 'index.php?option=com_usertools&view=move';
+// Groups are created in SQL and the nested set rebuilt the way Joomla's Usergroup table does it.
+$rebuildGroups = function () use ($site): void {
+    $children = [];
+    foreach ($site->q('SELECT id, parent_id FROM #__usergroups ORDER BY parent_id, title') as $row) {
+        $children[(int) $row['parent_id']][] = (int) $row['id'];
+    }
+    $walk = function (int $id, int $left) use (&$walk, $children, $site): int {
+        $right = $left + 1;
+        foreach ($children[$id] ?? [] as $child) {
+            $right = $walk($child, $right);
+        }
+        $site->q('UPDATE #__usergroups SET lft = ?, rgt = ? WHERE id = ?', [$left, $right, $id]);
+        return $right + 1;
+    };
+    $walk(0, 0);
+};
+foreach ([['UT move A', 'Registered'], ['UT move A1', 'UT move A'], ['UT move B', 'Registered'], ['UT move T', 'Registered']] as [$title, $parent]) {
+    $site->q('INSERT INTO #__usergroups (parent_id, lft, rgt, title) VALUES (?, 0, 0, ?)', [$gid($parent), $title]);
+}
+$rebuildGroups();
+$site->q("INSERT INTO #__viewlevels (title, ordering, rules) VALUES ('UT move level', 97, ?)", [json_encode([$gid('UT move T')])]);
+$site->addUser('mv_member', 'UT move A1');
+$parentOf = fn (string $title): int => (int) $site->q('SELECT parent_id FROM #__usergroups WHERE title = ?', [$title])[0]['parent_id'];
+$moveRow = function (string $html, string $title) use ($gid): string {
+    $start = strpos($html, 'data-ut-move-row="' . $gid($title) . '"');
+    return $start === false ? '' : substr($html, $start, (int) strpos($html, '</tr>', $start) - $start);
+};
+
+Test::check(str_contains($admin->get('index.php?option=com_usertools'), 'data-ut-home-card="move"'), 'the home screen offers "Move groups" to a Super User');
+$movePage = $admin->get($moveUrl);
+Test::check(str_contains($movePage, 'data-ut-move-group="' . $gid('UT move A') . '"') && str_contains($movePage, 'data-ut-move-fixed="' . $gid('Public') . '"')
+    && str_contains($movePage, 'data-ut-move-fixed="' . $gid('Super Users') . '"') && !str_contains($movePage, 'data-ut-move-group="' . $gid('Super Users') . '"'),
+    'Public and Super Users are shown without a checkbox');
+$review = $admin->submit($moveUrl, ['task' => 'move.preview', 'target' => $gid('UT move T'),
+    'groups' => [$gid('UT move A'), $gid('UT move A1'), $gid('UT move B'), $gid('UT move T'), $gid('Super Users')]], 'data-ut-move-form');
+Test::check(str_contains($moveRow($review, 'UT move A'), 'data-ut-move-status="move"') && str_contains($moveRow($review, 'UT move A'), 'UT move level')
+    && preg_match('#text-end">1</td>#', $moveRow($review, 'UT move A')) === 1, 'the review shows the level the group gains and the accounts in it and its subgroups');
+Test::check(str_contains($moveRow($review, 'UT move A1'), 'data-ut-move-status="covered"') && str_contains($moveRow($review, 'UT move B'), 'data-ut-move-status="move"'),
+    'a selected subgroup goes with its group');
+Test::check(str_contains($moveRow($review, 'UT move T'), 'COM_USERTOOLS_MOVE_REASON_CYCLE') && str_contains($moveRow($review, 'Super Users'), 'COM_USERTOOLS_MOVE_REASON_SUPER'),
+    'a group cannot go under itself, and Super Users cannot move');
+Test::check($parentOf('UT move A') === $gid('Registered'), 'the review changes nothing');
+$done = $admin->submit($moveUrl . '&layout=review', ['task' => 'move.apply', 'confirm' => 1], 'data-ut-move-apply');
+Test::check(str_contains($done, 'data-ut-move-done="2"') && $parentOf('UT move A') === $gid('UT move T') && $parentOf('UT move B') === $gid('UT move T')
+    && $parentOf('UT move A1') === $gid('UT move A'), 'the groups move with their subgroups');
+$tree = array_column($site->q("SELECT title, lft, rgt FROM #__usergroups WHERE title IN ('UT move T', 'UT move A1')"), null, 'title');
+Test::check($tree['UT move T']['lft'] < $tree['UT move A1']['lft'] && $tree['UT move A1']['rgt'] < $tree['UT move T']['rgt'], 'Joomla rebuilt the nested tree');
+Test::check(count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_GROUP_MOVED'")) === 2, 'each move is in the User Actions Log');
+Test::check(str_contains($admin->get($moveUrl . '&layout=review'), 'data-ut-move-form'), 'the review is used once');
+
+// Administrator access cannot change in bulk.
+$refused = $admin->submit($moveUrl, ['task' => 'move.preview', 'target' => $gid('Manager'), 'groups' => [$gid('UT move B')]], 'data-ut-move-form');
+Test::check(str_contains($moveRow($refused, 'UT move B'), 'COM_USERTOOLS_MOVE_REASON_BACKEND') && str_contains($refused, 'data-ut-move-nothing')
+    && !str_contains($refused, 'data-ut-move-apply'), 'a move that gives administrator access is refused and cannot be applied');
+Test::check($parentOf('UT move B') === $gid('UT move T'), 'and nothing changes');
+
+// Super Users only, even with the component's own "Configure ACL & Options".
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'core.admin' => ['6' => 1]])]);
+[$code] = $delegate->request($moveUrl);
+Test::check($code === 403 && !str_contains($delegate->get('index.php?option=com_usertools'), 'data-ut-home-card="move"'), 'a non Super User cannot open "Move groups" (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+$site->q("DELETE FROM #__viewlevels WHERE title = 'UT move level'");
 
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);

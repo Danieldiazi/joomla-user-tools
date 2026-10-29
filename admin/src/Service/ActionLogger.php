@@ -55,6 +55,27 @@ final class ActionLogger
             ['groups' => implode(', ', $removed), 'added' => $added]);
     }
 
+    /** A group moved under another parent with "Move groups". */
+    public function groupMoved(int $id, string $title, string $from, string $to, Operator $operator): void
+    {
+        $message = [
+            'action'      => 'update',
+            'type'        => 'COM_USERTOOLS_ACTION_LOG_TYPE_GROUP',
+            'id'          => $id,
+            'title'       => $title,
+            'itemlink'    => 'index.php?option=com_users&task=group.edit&id=' . $id,
+            'userid'      => $operator->id,
+            'username'    => $operator->name,
+            'accountlink' => 'index.php?option=com_users&task=user.edit&id=' . $operator->id,
+            'from'        => $from,
+            'to'          => $to,
+        ];
+        try {
+            ($this->writer)([$message], 'COM_USERTOOLS_ACTION_LOG_GROUP_MOVED', self::CONTEXT, $operator->id);
+        } catch (\Throwable) {
+        }
+    }
+
     public function created(object $account, Operator $operator, string $mode): void
     {
         $this->write($mode === Registration::MODE_PASSWORD ? 'COM_USERTOOLS_ACTION_LOG_CREATED_PASSWORD' : 'COM_USERTOOLS_ACTION_LOG_CREATED_EMAIL', 'create', $account, $operator, '');

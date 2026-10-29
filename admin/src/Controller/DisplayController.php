@@ -13,6 +13,9 @@ class DisplayController extends BaseController
 {
     protected $default_view = 'home';
 
+    /** Views for global Super Users only: checked on the root asset, never on the component's own rules. */
+    public const SUPER_USERS = 'core.admin';
+
     /** Permission required by each view; the component itself already requires core.manage. */
     public const PERMISSIONS = [
         'home'     => 'core.manage',
@@ -27,7 +30,14 @@ class DisplayController extends BaseController
         'ungroup'  => 'usertools.ungroup',
         'diagnose' => 'usertools.diagnose',
         'age'      => 'usertools.content',
+        'move'     => self::SUPER_USERS,
     ];
+
+    /** Whether the user has a permission of PERMISSIONS (SUPER_USERS means a global Super User). */
+    public static function allowed(\Joomla\CMS\User\User $user, string $permission): bool
+    {
+        return $permission === self::SUPER_USERS ? (bool) $user->authorise('core.admin') : (bool) $user->authorise($permission, 'com_usertools');
+    }
 
     /**
      * @param  bool                 $cachable
@@ -41,7 +51,7 @@ class DisplayController extends BaseController
             $view = $this->default_view;
             $this->input->set('view', $view);
         }
-        if (!$this->app->getIdentity()->authorise(self::PERMISSIONS[$view], 'com_usertools')) {
+        if (!self::allowed($this->app->getIdentity(), self::PERMISSIONS[$view])) {
             throw new \Joomla\CMS\Access\Exception\NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
         }
         // Reviews and one-time passwords must never be cached by the browser or a proxy.

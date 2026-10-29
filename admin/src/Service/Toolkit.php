@@ -61,6 +61,11 @@ final class Toolkit
         return new AccountRegrouper(self::users(), new ActionLogger());
     }
 
+    public static function groupMover(): GroupMover
+    {
+        return new GroupMover(self::db(), new ActionLogger());
+    }
+
     public static function deleter(): AccountDeleter
     {
         return new AccountDeleter(self::users(), new ActionLogger());
