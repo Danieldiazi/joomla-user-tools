@@ -188,8 +188,10 @@ class AnonymizeModel extends BaseDatabaseModel
             if ($record === null || AnonymizeSelection::fingerprint($record) !== $fingerprint) {
                 $job['skipped']++;
             } else {
+                // The same fingerprint again, on the User loaded right before writing: a change between this
+                // batch's snapshot and the account's turn is caught too.
                 $outcome = $anonymizer->anonymize((int) $id, $exclusions, $operator,
-                    fn (object $user): bool => !AnonymizeSelection::isAnonymized($user) && (string) $user->username === $record->username);
+                    fn (object $user): bool => !AnonymizeSelection::isAnonymized($user) && AnonymizeSelection::fingerprint($user) === $fingerprint);
                 if ($outcome['status'] === AccountAnonymizer::ANONYMIZED) {
                     $job['done'][] = ['id' => (int) $id, 'username' => $outcome['username']];
                 } elseif (\in_array($outcome['status'], [AccountAnonymizer::ERROR, AccountAnonymizer::REFUSED], true)) {

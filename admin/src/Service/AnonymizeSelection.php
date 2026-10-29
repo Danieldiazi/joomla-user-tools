@@ -78,11 +78,15 @@ final class AnonymizeSelection
         return ['candidates' => $candidates, 'skipped' => $skipped];
     }
 
-    /** What must not change between the review and the anonymization of an account. */
-    public static function fingerprint(UserRecord $user): string
+    /**
+     * What must not change between the review and the anonymization of an account. It works on a bulk
+     * UserRecord and on a freshly loaded Joomla User alike, so the check right before writing is the same.
+     */
+    public static function fingerprint(object $user): string
     {
-        $groups = $user->groups;
+        $groups = array_values(array_unique(array_map('intval', (array) $user->groups)));
         sort($groups);
-        return hash('sha256', json_encode([$user->username, $user->email, $user->block, $user->lastvisitDate, $groups], JSON_THROW_ON_ERROR));
+        $visit = $user->lastvisitDate === null || $user->lastvisitDate === '' ? null : substr((string) $user->lastvisitDate, 0, 19);
+        return hash('sha256', json_encode([(string) $user->username, (string) $user->email, (int) $user->block, $visit, $groups], JSON_THROW_ON_ERROR));
     }
 }

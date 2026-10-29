@@ -78,6 +78,11 @@ final class AnonymizeSelectionTest extends TestCase
         $this->assertSame(AnonymizeSelection::fingerprint($a), AnonymizeSelection::fingerprint(Fixtures::user(3, 'old', [10, 2], false, false, 1, '2019-01-01 00:00:00')));
         $this->assertNotSame(AnonymizeSelection::fingerprint($a), AnonymizeSelection::fingerprint(Fixtures::user(3, 'old', [2, 10], false, false, 1, '2026-10-29 00:00:00')), 'a new visit');
         $this->assertNotSame(AnonymizeSelection::fingerprint($a), AnonymizeSelection::fingerprint(Fixtures::user(3, 'old', [2], false, false, 1, '2019-01-01 00:00:00')), 'other groups');
+        // A freshly loaded Joomla User (groups keyed by id, same values) gives the same fingerprint.
+        $fresh = (object) ['username' => 'old', 'email' => 'old@example.test', 'block' => '1', 'lastvisitDate' => '2019-01-01 00:00:00', 'groups' => [10 => '10', 2 => '2']];
+        $this->assertSame(AnonymizeSelection::fingerprint($a), AnonymizeSelection::fingerprint($fresh));
+        $fresh->email = 'new@example.test';
+        $this->assertNotSame(AnonymizeSelection::fingerprint($a), AnonymizeSelection::fingerprint($fresh), 'a new email');
         $this->assertTrue(AnonymizeSelection::isAnonymized((object) ['email' => 'UserID7removed@email.invalid']));
         $this->assertFalse(AnonymizeSelection::isAnonymized((object) ['email' => 'user7@example.test']));
     }
