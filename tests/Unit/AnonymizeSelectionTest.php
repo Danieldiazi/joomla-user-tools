@@ -81,6 +81,9 @@ final class AnonymizeSelectionTest extends TestCase
         [$retry, $retrySkipped] = $this->select(['source' => 'list', 'names' => ['f0e1d2'], 'retryCleanup' => true]);
         $this->assertSame([7], $retry);
         $this->assertSame([], $retrySkipped);
+        [$only, $ignored] = $this->select(['source' => 'list', 'names' => ['old', 'f0e1d2'], 'retryCleanup' => true]);
+        $this->assertSame([7], $only, 'retry mode never offers ordinary accounts');
+        $this->assertSame([], $ignored);
     }
 
     public function testFingerprintChangesWithWhatMatters(): void
