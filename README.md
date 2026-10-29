@@ -15,8 +15,8 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Quitar de grupos | Elige una cuenta, desmarca los grupos de los que debe salir y, si quieres, quítala también de todos sus subgrupos. Con revisión previa y confirmación. Disponible desde 2026.10.9. |
 | Grupos y niveles de acceso | Tabla de solo lectura con los niveles de acceso que tiene cada grupo, asignados o heredados. Disponible desde 2026.10.9. |
 | Contenido por nivel de acceso | Cuántos artículos, categorías, menús, módulos, campos y demás elementos usan cada nivel, con enlace a cada listado filtrado. Solo lee. Disponible desde 2026.10.12. |
-| Contenido por antigüedad | Tabla por años con cuántos artículos se modificaron por última vez en cada uno, filtrable por nivel de acceso; cada cifra abre la lista de esos artículos con enlace para editarlos. Solo lee. Disponible desde 2026.10.15. |
-| Diagnóstico de accesos | Señala cuentas con acceso a la administración sin actividad, si queda un solo superusuario, niveles de acceso que no tiene nadie, contenido con niveles que no existen y grupos sin miembros. Explica cada aviso y solo lee. Disponible desde 2026.10.15. |
+| Contenido por antigüedad | Tabla por años con cuántos artículos se modificaron por última vez en cada uno, filtrable por nivel de acceso; cada cifra abre la lista de esos artículos con enlace para editarlos. Solo lee. Disponible desde 2026.10.14. |
+| Diagnóstico de accesos | Señala cuentas con acceso a la administración sin actividad, si queda un solo superusuario, niveles de acceso que no tiene nadie, contenido con niveles que no existen y grupos sin miembros. Explica cada aviso y solo lee. Disponible desde 2026.10.14. |
 
 **Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
 
@@ -140,7 +140,7 @@ Desde la 2026.10.6, el panel **Usuarios** de la administración (el icono de pan
 - **Cuentas inactivas sin bloquear**, con el plazo y las exclusiones de «Revisar usuarios inactivos». La cifra enlaza con esa herramienta.
 - **Cuentas bloqueadas pendientes de eliminar**: las que ofrecería «Eliminar usuarios inactivos» con «Solo bloqueadas», su plazo y sus exclusiones. La cifra abre la herramienta con esa opción ya elegida.
 - **Tareas programadas de User Tools**, con modo (simulación o real), última ejecución, resultado (enlazado con su informe) y próxima ejecución.
-- **Avisos**: plugin de tareas deshabilitado o no instalado, ninguna tarea habilitada, una tarea detenida por el límite de seguridad, fallida o con un informe sin finalizar desde hace más de una hora, una tarea que sigue en simulación más de 14 días después de crearla y, desde la 2026.10.15, las comprobaciones del [diagnóstico de accesos](#diagnóstico-de-accesos) que conviene revisar, solo para quien puede verlo.
+- **Avisos**: plugin de tareas deshabilitado o no instalado, ninguna tarea habilitada, una tarea detenida por el límite de seguridad, fallida o con un informe sin finalizar desde hace más de una hora, una tarea que sigue en simulación más de 14 días después de crearla y, desde la 2026.10.14, las comprobaciones del [diagnóstico de accesos](#diagnóstico-de-accesos) que conviene revisar, solo para quien puede verlo.
 
 Desde la 2026.10.14, las cifras se presentan como «Inactivas para revisar» y «Bloqueadas para revisar»: son cuentas candidatas, no acciones automáticas, y cada tarjeta enlaza con su revisión. Cada tarea muestra su modo, el resultado de la última ejecución con enlace al informe y las fechas con su etiqueta; si no tiene próxima ejecución, se explica por qué. Cuando alguna tarea está en simulación, una nota recuerda que la simulación no modifica cuentas. Al pie aparecen la fecha de actualización y cómo funciona la caché.
 
@@ -246,7 +246,7 @@ No se cuentan los elementos en la papelera. Los listados de Joomla ocultan adem�
 
 ## Contenido por antigüedad
 
-Desde la 2026.10.15, **Contenido por antigüedad** muestra cuánto contenido lleva tiempo sin tocarse. Joomla no permite filtrar el listado de artículos por fecha, así que esta pantalla hace ese recuento. Solo lee.
+Desde la 2026.10.14, **Contenido por antigüedad** muestra cuánto contenido lleva tiempo sin tocarse. Joomla no permite filtrar el listado de artículos por fecha, así que esta pantalla hace ese recuento. Solo lee.
 
 - **Filas**: los años en que se modificó por última vez algún elemento, del más reciente al más antiguo, con el total de cada año al final y una fila de totales.
 - **Columnas**: un tipo de elemento cada una. De momento solo **artículos**; la tabla está preparada para añadir otros tipos con fecha de modificación.
@@ -259,7 +259,7 @@ Desde la 2026.10.15, **Contenido por antigüedad** muestra cuánto contenido lle
 
 ## Diagnóstico de accesos
 
-Desde la 2026.10.15, **Diagnóstico de accesos** reúne en una pantalla las situaciones que conviene revisar en cuentas, grupos y niveles de acceso. Solo lee: no corrige permisos ni cambia cuentas. Cada comprobación aparece siempre, con o sin avisos, y cuando encuentra algo explica qué ha detectado, **por qué importa** y **cómo revisarlo**, con enlaces a la cuenta, el grupo, el nivel o el listado de Joomla correspondiente.
+Desde la 2026.10.14, **Diagnóstico de accesos** reúne en una pantalla las situaciones que conviene revisar en cuentas, grupos y niveles de acceso. Solo lee: no corrige permisos ni cambia cuentas. Cada comprobación aparece siempre, con o sin avisos, y cuando encuentra algo explica qué ha detectado, **por qué importa** y **cómo revisarlo**, con enlaces a la cuenta, el grupo, el nivel o el listado de Joomla correspondiente.
 
 | Comprobación | Tipo | Qué señala |
 |---|---|---|

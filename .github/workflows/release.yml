@@ -42,6 +42,13 @@ jobs:
             echo 'Use a release tag such as v2026.10.3.' >&2
             exit 1
           fi
+          # The tag must match the version in the manifests, so a release never ships code
+          # prepared for another version (v2026.10.14 was tagged on 2026.10.15 code).
+          manifest=$(php -r 'echo (string) simplexml_load_file("com_usertools.xml")->version;')
+          if [ "v$manifest" != "$GITHUB_REF_NAME" ]; then
+            echo "The tag $GITHUB_REF_NAME does not match the manifest version $manifest. Tag the commit that sets that version." >&2
+            exit 1
+          fi
 
       - name: Tests
         run: |
