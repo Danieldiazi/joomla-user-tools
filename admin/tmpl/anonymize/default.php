@@ -43,6 +43,11 @@ $source  = $draft['source'];
         <fieldset class="card ut-card"><div class="card-body">
           <legend class="h5"><?= Text::_('COM_USERTOOLS_ANONYMIZE_SOURCE') ?></legend>
 
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" name="retry_cleanup" value="1" id="ut-retry-cleanup"<?= !empty($draft['retryCleanup']) ? ' checked' : '' ?>>
+            <label class="form-check-label" for="ut-retry-cleanup"><?= Text::_('COM_USERTOOLS_ANONYMIZE_RETRY_CLEANUP') ?></label>
+            <div class="form-text"><?= Text::_('COM_USERTOOLS_ANONYMIZE_RETRY_CLEANUP_HELP') ?></div>
+          </div>
           <div class="form-check">
             <input class="form-check-input" type="radio" name="source" value="list" id="ut-source-list"<?= $source === 'list' ? ' checked' : '' ?>>
             <label class="form-check-label fw-semibold" for="ut-source-list"><?= Text::_('COM_USERTOOLS_ANONYMIZE_SOURCE_LIST') ?></label>
