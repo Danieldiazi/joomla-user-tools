@@ -66,7 +66,10 @@ final class AnonymizeSelection
         $candidates = [];
         foreach ($matched as $id => $user) {
             $done   = self::isAnonymized($user);
-            $reason = $done ? self::REASON_DONE : $exclusions->reason($user, $operator);
+            $reason = $exclusions->reason($user, $operator);
+            if ($done && empty($criteria['retryCleanup'])) {
+                $reason = self::REASON_DONE;
+            }
             if ($reason !== '') {
                 // An anonymized account's username is random: its ID says more.
                 $skipped[] = ['label' => $done ? 'ID ' . $user->id : $user->username, 'reason' => $reason];
