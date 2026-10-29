@@ -62,6 +62,10 @@ Sí. Las pantallas de revisión usan JavaScript para gestionar las casillas y en
 
 Las pruebas automáticas cubren listas de 1800 usuarios. La revisión envía las selecciones en un único campo JSON precisamente para no chocar con el límite `max_input_vars` de PHP en listas grandes.
 
+### ¿Dónde encuentro los accesos directos a cada herramienta?
+
+En el **panel de Usuarios**, el módulo User Tools muestra enlaces individuales a las herramientas para las que tienes permiso, además de los indicadores y del enlace para abrir el componente completo.
+
 ## Comparación de listas
 
 ### ¿Qué formato debe tener la lista?

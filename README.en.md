@@ -53,6 +53,9 @@ The home screen groups the tools into four sections, each with its explanation a
 
 For specific questions, see the [FAQ](FAQ.en.md). If you are contributing or working with a coding agent, read [AGENTS.md](AGENTS.md) (Spanish).
 
+
+The **User Tools** module on the Users dashboard provides direct links to individual tools according to the viewer's permissions, alongside its status indicators and the main User Tools link.
+
 ## Installation and updates
 
 Download **pkg_usertools-VERSION.zip** from the [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) and install it through System → Install → Extensions. The package installs the component, task plugin, “User Tools” administrator module and “User Tools - User Groups” site module. A fresh installation enables the “Task - User Tools” plugin; the first module installation publishes it on the Users dashboard. New tasks always start in dry-run mode.

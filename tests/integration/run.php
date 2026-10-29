@@ -527,6 +527,11 @@ $moduleCount = function (string $html, string $name): ?int {
 $dashboard = $admin->get($dashboardUrl);
 Test::check(str_contains($dashboard, 'mod-usertools') && str_contains($dashboard, 'Inactive accounts to review'), 'the summary module is published on the Users dashboard');
 Test::check(str_contains($dashboard, 'UT integration'), 'the module lists the User Tools tasks');
+Test::check(str_contains($dashboard, 'aria-label="Quick links"')
+    && str_contains($dashboard, 'Content by access level')
+    && str_contains($dashboard, 'Content by age')
+    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=move"/', $dashboard) === 1,
+    'dashboard shortcuts are translated and not duplicated');
 Test::check(str_contains($dashboard, 'data-ut-dashboard-task=') && preg_match('/<dl\b[^>]*>\s*<div\b[^>]*>\s*<dt\b/', $dashboard) === 1,
     'tasks expose labelled dates without squeezing five table columns');
 Test::check(str_contains($dashboard, 'They are not deleted automatically.') && str_contains($dashboard, 'Review accounts to delete'),
@@ -575,6 +580,12 @@ $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_en
 $usersRules = (string) $site->q("SELECT rules FROM #__assets WHERE name = 'com_users'")[0]['rules'];
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_users'", [json_encode((json_decode($usersRules, true) ?: []) + ['core.manage' => ['6' => 1]])]);
 $delegateDashboard = $delegate->get($dashboardUrl);
+Test::check(!str_contains($delegateDashboard, '>Move groups</a>')
+    && !str_contains($delegateDashboard, '>Anonymise accounts</a>')
+    && substr_count($delegateDashboard, 'view=move') === 0
+    && substr_count($delegateDashboard, 'view=anonymize') === 0,
+    'delegate cannot see superuser or anonymization shortcuts');
+
 Test::check(str_contains($delegateDashboard, 'mod-usertools') && $moduleCount($delegateDashboard, 'inactive') === null && $moduleCount($delegateDashboard, 'pending') === null && !str_contains($delegateDashboard, 'UT integration'),
     'a user without the inactivity, deletion or results permissions sees no figures or tasks');
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['usertools.compare' => ['6' => 1]])]);

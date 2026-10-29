@@ -3,6 +3,8 @@
 \defined('_JEXEC') or die;
 
 use Joomla\CMS\HTML\HTMLHelper;
+use Joomla\CMS\Factory;
+use Danieldiazi\Component\Usertools\Administrator\Controller\DisplayController;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 
@@ -10,6 +12,23 @@ use Joomla\CMS\Router\Route;
  * @var array<string, mixed>|null $summary
  * @var bool                      $canDelete
  */
+$identity = Factory::getApplication()->getIdentity();
+$links = [
+    ['usertools.compare', 'compare', 'MOD_USERTOOLS_LINK_COMPARE'],
+    ['usertools.inactive', 'inactive', 'MOD_USERTOOLS_LINK_INACTIVE'],
+    ['usertools.ungroup', 'ungroup', 'MOD_USERTOOLS_LINK_UNGROUP'],
+    ['usertools.access', 'access', 'MOD_USERTOOLS_LINK_ACCESS'],
+    ['usertools.access', 'usage', 'MOD_USERTOOLS_LINK_USAGE'],
+    ['usertools.content', 'age', 'MOD_USERTOOLS_LINK_AGE'],
+    ['usertools.diagnose', 'diagnose', 'MOD_USERTOOLS_LINK_DIAGNOSE'],
+    ['usertools.reports', 'reports', 'MOD_USERTOOLS_LINK_REPORTS'],
+    ['usertools.delete', 'delete', 'MOD_USERTOOLS_LINK_DELETE'],
+    ['usertools.anonymize', 'anonymize', 'MOD_USERTOOLS_LINK_ANONYMIZE'],
+];
+$links[] = ['core.admin', 'move', 'MOD_USERTOOLS_LINK_MOVE'];
+$links = array_values(array_filter($links, static fn (array $link): bool =>
+    $identity !== null && DisplayController::allowed($identity, $link[0])
+));
 $e    = fn ($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $date = fn (?string $utc) => $utc ? HTMLHelper::_('date', $utc, Text::_('DATE_FORMAT_LC5')) : Text::_('MOD_USERTOOLS_NEVER');
 $statusBadge = [
@@ -104,6 +123,17 @@ $statusBadge = [
     <p class="small text-body-secondary mt-2 mb-0"><?= Text::_('MOD_USERTOOLS_DRY_HELP') ?></p>
     <?php endif; ?>
   </div>
+  <?php endif; ?>
+
+  <?php if ($links) : ?>
+  <nav class="mb-3" aria-label="<?= Text::_('MOD_USERTOOLS_QUICK_LINKS') ?>">
+    <h3 class="fs-6 fw-semibold mb-2"><?= Text::_('MOD_USERTOOLS_QUICK_LINKS') ?></h3>
+    <div class="d-flex flex-wrap gap-2">
+      <?php foreach ($links as [, $view, $label]) : ?>
+      <a class="btn btn-sm btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools&view=' . $view) ?>"><?= Text::_($label) ?></a>
+      <?php endforeach; ?>
+    </div>
+  </nav>
   <?php endif; ?>
 
   <div class="d-flex flex-wrap justify-content-between align-items-center gap-2">
