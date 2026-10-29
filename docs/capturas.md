@@ -4,7 +4,7 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.10, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, la portada de 2026.10.13, la del panel de Usuarios de 2026.10.14 y las de diagnóstico de accesos y contenido por antigüedad de 2026.10.15. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, la portada de 2026.10.13, la del panel de Usuarios de 2026.10.14 y las de diagnóstico de accesos y contenido por antigüedad de 2026.10.15. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
 ![Portada de User Tools agrupada en secciones: revisar cuentas, grupos y niveles, automatización y eliminar cuentas (2026.10.13)](screenshots/01-portada.jpg)
 
@@ -26,7 +26,7 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cad
 
 ![Quitar de grupos: elegir la cuenta (2026.10.9)](screenshots/15-quitar-grupos-cuenta.jpg)
 
-![Quitar de grupos: grupos de la cuenta en su árbol, con «y sus subgrupos» en dos grupos (2026.10.10)](screenshots/16-quitar-grupos-seleccion.jpg)
+![Quitar de grupos: grupos de la cuenta en su árbol, con «y sus subgrupos» en un grupo desmarcado y, sin casilla, un grupo intermedio en el que la cuenta no está (2026.10.16)](screenshots/16-quitar-grupos-seleccion.jpg)
 
 ![Quitar de grupos: revisión, con el grupo que provoca cada baja en cascada (2026.10.9)](screenshots/17-quitar-grupos-revision.jpg)
 
