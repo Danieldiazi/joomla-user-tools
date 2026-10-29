@@ -135,5 +135,5 @@ Todo cambio de comportamiento lleva su prueba. Los cambios que afecten a bloqueo
 
 - Trabaja en una rama y abre una pull request contra `main`. No hagas push directo a `main`.
 - La CI debe estar en verde antes de fusionar.
-- La release la publica una persona: crea en GitHub una release con la etiqueta `vAAAA.M.REVISIÓN` sobre `main`. GitHub Actions construye y adjunta los paquetes y el `updates.xml`.
+- La release la publica una persona: crea en GitHub una release con la etiqueta `vAAAA.M.REVISIÓN` sobre `main`. GitHub Actions construye y adjunta los paquetes y el `updates.xml`. La etiqueta debe coincidir con la versión de los manifiestos del commit etiquetado; si no coincide, la publicación falla.
 - Actualiza README y FAQ cuando cambie lo que ve o configura el usuario. Si cambian las pantallas, renueva las capturas de `docs/screenshots/`.
