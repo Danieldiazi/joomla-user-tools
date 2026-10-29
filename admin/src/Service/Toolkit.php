@@ -66,6 +66,11 @@ final class Toolkit
         return new GroupMover(self::db(), new ActionLogger());
     }
 
+    public static function anonymizer(): AccountAnonymizer
+    {
+        return new AccountAnonymizer(self::users(), self::db(), new ActionLogger());
+    }
+
     public static function deleter(): AccountDeleter
     {
         return new AccountDeleter(self::users(), new ActionLogger());

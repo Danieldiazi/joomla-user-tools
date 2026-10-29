@@ -20,6 +20,14 @@ No. La eliminación es definitiva. En el registro de acciones de usuarios quedan
 
 Se conservan, como cuando se elimina un usuario desde Joomla, pero dejan de estar asociados a una cuenta existente. Si necesitas reasignarlos, hazlo antes de eliminarla.
 
+### ¿Qué diferencia hay entre eliminar y anonimizar una cuenta?
+
+Las dos son permanentes. **Eliminar** borra la cuenta: sus contenidos quedan sin una cuenta asociada. **Anonimizar**, desde la 2026.10.17, la conserva bloqueada, pero sustituye su nombre, usuario y correo y borra su perfil, sus notas y sus campos personalizados: los contenidos siguen apuntando a la misma cuenta, ya sin datos personales. Se pueden anonimizar las cuentas de una lista, todas las inactivas o las de un grupo. Detalles en el [README](README.md#anonimizar-cuentas).
+
+### ¿Por qué no aparece una solicitud en Usuarios → Privacidad al anonimizar?
+
+Porque nadie la pidió: es una decisión del administrador, no una petición de la persona. User Tools ejecuta los mismos plugins de privacidad que una solicitud de eliminación, pero no inventa la solicitud. Cada anonimización queda en el registro de acciones de usuarios con el ID de la cuenta.
+
 ### He bloqueado una cuenta por error, ¿cómo la recupero?
 
 Desde Joomla: **Usuarios → Gestionar**, marca la cuenta y usa la acción **Desbloquear**, o pulsa el icono de la columna «Habilitado». User Tools no deshace bloqueos automáticamente.

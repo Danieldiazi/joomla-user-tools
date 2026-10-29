@@ -21,6 +21,7 @@ spl_autoload_register(static function (string $class) use ($joomla): void {
         'Joomla\\Component\\Actionlogs\\Administrator\\' => $joomla . '/administrator/components/com_actionlogs/src/',
         'Joomla\\Component\\Mails\\Administrator\\' => $joomla . '/administrator/components/com_mails/src/',
         'Joomla\\Component\\Users\\Administrator\\' => $joomla . '/administrator/components/com_users/src/',
+        'Joomla\\Component\\Privacy\\Administrator\\' => $joomla . '/administrator/components/com_privacy/src/',
         'Danieldiazi\\Component\\Usertools\\Administrator\\' => __DIR__ . '/../admin/src/',
         'Danieldiazi\\Plugin\\Task\\Usertools\\' => __DIR__ . '/../plugins/task/usertools/src/',
         'Danieldiazi\\Module\\Usertools\\Administrator\\' => __DIR__ . '/../modules/mod_usertools/src/',

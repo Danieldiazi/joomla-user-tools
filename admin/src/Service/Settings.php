@@ -13,6 +13,7 @@ final class Settings
     public const COMPARE  = 'compare_';
     public const INACTIVE = 'inactive_';
     public const DELETE   = 'delete_';
+    public const ANONYMIZE = 'anonymize_';
 
     /** Which accounts the deletion tool lists: only blocked (default), active and blocked, or only active. */
     public const STATUSES = ['blocked', 'all', 'active'];
@@ -53,6 +54,18 @@ final class Settings
     {
         $status = (string) ($this->toolValues(self::DELETE)[self::DELETE . 'status'] ?? self::DEFAULT_STATUS);
         return \in_array($status, self::STATUSES, true) ? $status : self::DEFAULT_STATUS;
+    }
+
+    /** Inactivity period of the anonymization when it lists inactive accounts; as long as deletion's. */
+    public function anonymizeDays(): int
+    {
+        $days = (int) ($this->toolValues(self::ANONYMIZE)[self::ANONYMIZE . 'days'] ?? 730);
+        return max(InactivityPolicy::MIN_DAYS, min(InactivityPolicy::MAX_DAYS, $days ?: 730));
+    }
+
+    public function anonymizeIncludeNever(): bool
+    {
+        return (int) ($this->toolValues(self::ANONYMIZE)[self::ANONYMIZE . 'include_never'] ?? 0) === 1;
     }
 
     public function inactiveIncludeNever(): bool
@@ -104,7 +117,7 @@ final class Settings
         if ($values) {
             return $values;
         }
-        if ($tool === self::DELETE) {
+        if ($tool === self::DELETE || $tool === self::ANONYMIZE) {
             return [];
         }
         // Legacy layout: compare settings at the top level, inactivity settings in "manual_inactivity".

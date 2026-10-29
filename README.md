@@ -8,6 +8,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 |---|---|
 | Comparar una lista | Propone bloquear las cuentas ausentes de la lista completa, salvo las protegidas, y permite crear los usuarios nuevos que selecciones. |
 | Revisar usuarios inactivos | Busca cuentas inactivas para que selecciones cuáles bloquear. |
+| Anonimizar cuentas | Sustituye los datos personales de las cuentas de una lista, de todas las inactivas o de un grupo, sin eliminarlas. Permanente, con revisión y número escrito. Disponible desde 2026.10.17. |
 | Eliminar usuarios inactivos | Permite seleccionar y borrar definitivamente cuentas inactivas. Por defecto lista solo las ya bloqueadas. Disponible desde 2026.10.5. |
 | Tarea programada | Bloquea cuentas por inactividad; empieza en modo simulación y genera informes. |
 | Resumen en el panel | Muestra en el panel de Usuarios las cuentas pendientes, el estado de las tareas y avisos. Disponible desde 2026.10.6. |
@@ -33,6 +34,7 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 - [Comparar una lista de usuarios](#comparar-una-lista-de-usuarios)
 - [Revisar usuarios inactivos](#revisar-usuarios-inactivos)
 - [Eliminar usuarios inactivos](#eliminar-usuarios-inactivos)
+- [Anonimizar cuentas](#anonimizar-cuentas)
 - [Tarea programada e informes](#tarea-programada-por-inactividad)
 - [Resumen en el panel de Usuarios](#resumen-en-el-panel-de-usuarios)
 - [Módulo de grupos de usuarios en el sitio](#módulo-de-grupos-de-usuarios-en-el-sitio)
@@ -108,6 +110,29 @@ El plazo se cuenta desde el último acceso o, si nunca accedió y se incluye esa
 La cuenta se elimina con la API de usuarios de Joomla, igual que desde el gestor de usuarios. Se borran sus grupos, su perfil, sus sesiones y sus mensajes privados, y otras extensiones pueden limpiar sus propios datos. Los artículos y demás contenidos que creó se conservan, como al borrar desde Joomla.
 
 Cada eliminación queda en el **registro de acciones de usuarios** con el ID, el nombre de usuario, el nombre y quién la hizo («… eliminó con User Tools la cuenta inactiva …»). Joomla añade además su propia entrada de borrado de usuario.
+
+## Anonimizar cuentas
+
+Desde la 2026.10.17, **Anonimizar cuentas** sustituye los datos personales de varias cuentas a la vez sin eliminarlas. Joomla solo lo hace una a una, desde una solicitud de eliminación en Usuarios → Privacidad que la persona tiene que confirmar por correo. Es **permanente**: no se puede deshacer.
+
+1. **Elegir cuentas**, de una de estas tres formas:
+   - **Una lista**: nombres de usuario o correos, uno por línea, sin distinguir mayúsculas. Los que no corresponden a ninguna cuenta se indican en la revisión.
+   - **Todas las cuentas inactivas**: las que, bloqueadas o no, no han entrado en el plazo indicado (730 días por defecto), con la opción de incluir a quien nunca entró.
+   - **Las cuentas de un grupo**, con la casilla «y sus subgrupos» para incluir también las de los grupos que cuelgan de él.
+
+   Tiene sus propias exclusiones (administradores, nombres y grupos), como el resto de herramientas.
+2. **Seleccionar y confirmar**: la lista de cuentas encontradas, ninguna marcada. Las que siguen activas se señalan como «Activa», porque dejarán de poder entrar. Debajo aparecen las que no se ofrecen y por qué: protegidas, ya anonimizadas o nombres sin cuenta. Hay que marcar la confirmación y **escribir siempre el número de cuentas**.
+3. **Resultado**: las cuentas anonimizadas (su ID y su nombre de usuario anterior, que solo se ve en esa pantalla), las omitidas y los errores. Las tandas grandes se procesan en varias peticiones con el botón «Continuar la anonimización».
+
+Qué se hace con cada cuenta:
+
+- Se piden permiso y se ejecutan los **plugins de privacidad de Joomla**, como en una solicitud de eliminación completada. El plugin «Privacidad - Cuentas de usuario» cambia el nombre a «User ID» y el número, el usuario a un valor aleatorio y el correo a `UserID…removed@email.invalid`, bloquea la cuenta y cierra sus sesiones. Los plugins de privacidad de otras extensiones limpian sus propios datos. Si ese plugin está deshabilitado, la herramienta lo avisa y no busca cuentas.
+- User Tools borra además lo que ese plugin deja: los **campos del perfil**, las **notas de usuario** y los **valores de campos personalizados** de la cuenta.
+- La cuenta **no se elimina**: conserva su ID y sus grupos, así que los artículos y demás contenidos siguen apuntando a ella, ya sin datos personales.
+- No se crea ninguna solicitud en Privacidad, porque nadie la pidió. Cada anonimización queda en el **registro de acciones de usuarios** solo con el ID de la cuenta y quién la hizo. Las entradas anteriores del registro no se modifican.
+- Cada cuenta se vuelve a comprobar justo antes de anonimizarla. Si entró, cambió de grupos o dejó de cumplir los criterios después de la revisión, se omite.
+
+Requiere el permiso propio *Anonimizar cuentas*. Superusuarios, tu propia cuenta y, para quien no es superusuario, las cuentas con acceso a la administración nunca se ofrecen.
 
 ## Tarea programada por inactividad
 
@@ -304,15 +329,15 @@ El tipo aparece siempre escrito («Revisar», «Información» o «Sin avisos»)
 
 ## Seguridad
 
-- **Los superusuarios están siempre protegidos**, en todas las herramientas y aunque se desactive «Excluir administradores». User Tools no bloquea ni elimina cuentas de superusuario.
+- **Los superusuarios están siempre protegidos**, en todas las herramientas y aunque se desactive «Excluir administradores». User Tools no bloquea, elimina ni anonimiza cuentas de superusuario.
 - **La cuenta que ejecuta una operación manual siempre queda protegida.**
-- **Cada bloqueo o cambio de grupos cierra las sesiones abiertas** de la cuenta, como hace el gestor de usuarios de Joomla (requiere «Metadatos de sesión», activado por defecto).
-- **Las altas, los bloqueos, las eliminaciones y los cambios de grupo quedan en el registro de acciones de usuarios** (Usuarios → Registro de acciones de usuarios): quién bloqueó, creó o eliminó cada cuenta y con qué herramienta, o qué tarea programada lo hizo.
+- **Cada bloqueo, cambio de grupos o anonimización cierra las sesiones abiertas** de la cuenta, como hace el gestor de usuarios de Joomla (requiere «Metadatos de sesión», activado por defecto).
+- **Las altas, los bloqueos, las eliminaciones, las anonimizaciones y los cambios de grupo quedan en el registro de acciones de usuarios** (Usuarios → Registro de acciones de usuarios): quién bloqueó, creó o eliminó cada cuenta y con qué herramienta, o qué tarea programada lo hizo.
 - **Permisos propios**, delegables sin dar superusuario (Opciones → Permisos):
-  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos*, *Eliminar usuarios inactivos*, *Ver resultados de tareas*, *Quitar de grupos*, *Ver grupos, niveles y contenido por nivel*, *Ver contenido por antigüedad* y *Ver el diagnóstico de accesos*.
-  - Quien no es superusuario nunca puede bloquear, eliminar ni quitar de grupos cuentas con acceso a la administración.
+  - *Comparar lista y bloquear*, *Crear cuentas*, *Revisar usuarios inactivos*, *Eliminar usuarios inactivos*, *Anonimizar cuentas*, *Ver resultados de tareas*, *Quitar de grupos*, *Ver grupos, niveles y contenido por nivel*, *Ver contenido por antigüedad* y *Ver el diagnóstico de accesos*.
+  - Quien no es superusuario nunca puede bloquear, eliminar, anonimizar ni quitar de grupos cuentas con acceso a la administración.
 - **Confirmación reforzada configurable**: a partir de N cuentas (10 por defecto) hay que escribir el número exacto de cuentas afectadas, además de marcar la casilla.
-- **El borrado exige siempre escribir el número de cuentas**, aunque solo se elimine una; el umbral configurable no desactiva esta confirmación.
+- **El borrado y la anonimización exigen siempre escribir el número de cuentas**, aunque solo sea una; el umbral configurable no desactiva esta confirmación.
 - **El módulo de grupos del sitio solo lee**: nunca muestra correos ni cuentas bloqueadas, y por defecto oculta las cuentas con acceso a la administración (ver [módulo de grupos](#módulo-de-grupos-de-usuarios-en-el-sitio)).
 - **Límite de seguridad en las tareas programadas** contra bloqueos masivos (ver [límite de seguridad](#límite-de-seguridad-contra-bloqueos-masivos)).
 - Previsualizaciones de un solo uso que caducan a los 15 minutos, revalidación de cada cuenta justo antes de guardarla, protección CSRF y páginas que no se guardan en caché.
@@ -327,6 +352,7 @@ Componentes → User Tools → **Opciones** (botón de la barra de herramientas)
 | Comparación | Excluir administradores, nombres excluidos y grupos excluidos de la comparación manual |
 | Revisión de inactivos | Plazo, incluir quien nunca accedió y exclusiones de la revisión manual |
 | Eliminación de inactivos | Plazo, cuentas que se listan (solo bloqueadas por defecto, ambas o solo activas), incluir quien nunca accedió y exclusiones de la eliminación |
+| Anonimización | Plazo e incluir quien nunca accedió cuando se eligen las cuentas inactivas, y exclusiones de la anonimización |
 | Diagnóstico | Días sin actividad tras los que una cuenta con acceso a la administración aparece en el diagnóstico de accesos (90 por defecto) |
 | Permisos | Permisos de cada herramienta |
 

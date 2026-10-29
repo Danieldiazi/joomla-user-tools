@@ -20,6 +20,14 @@ No. Deletion is permanent. The User Actions Log retains its ID, username and the
 
 They remain, just as when deleting a user in Joomla, but are no longer associated with an existing account. Reassign them before deleting the account if needed.
 
+### What is the difference between deleting and anonymising an account?
+
+Both are permanent. **Deleting** removes the account: its content is left without an account. **Anonymising**, since 2026.10.17, keeps it blocked but replaces its name, username and email and removes its profile, notes and custom fields: content still points to the same account, now without personal data. You can anonymise the accounts of a list, every inactive account or those of a group. Details in the [README](README.en.md#anonymise-accounts).
+
+### Why does no request appear in Users → Privacy when anonymising?
+
+Because nobody asked for one: it is the administrator's decision, not the person's request. User Tools runs the same privacy plugins as a removal request, but does not invent the request. Each anonymisation is written to the User Actions Log with the account ID.
+
 ### I blocked an account by mistake. How do I restore it?
 
 In Joomla, open **Users → Manage**, select the account and use **Unblock**, or click the icon in the “Enabled” column. User Tools does not automatically undo blocks.

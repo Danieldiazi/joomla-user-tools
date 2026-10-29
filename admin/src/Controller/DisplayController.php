@@ -31,6 +31,7 @@ class DisplayController extends BaseController
         'diagnose' => 'usertools.diagnose',
         'age'      => 'usertools.content',
         'move'     => self::SUPER_USERS,
+        'anonymize' => 'usertools.anonymize',
     ];
 
     /** Whether the user has a permission of PERMISSIONS (SUPER_USERS means a global Super User). */

@@ -63,6 +63,22 @@
     <field name="delete_excluded_groups" type="usergrouplist" multiple="true" layout="joomla.form.field.list-fancy-select" filter="int_array"
       label="COM_USERTOOLS_EXCLUDED_GROUPS" description="COM_USERTOOLS_EXCLUDED_GROUPS_DESC" />
   </fieldset>
+  <fieldset name="anonymize" label="COM_USERTOOLS_CONFIG_ANONYMIZE" description="COM_USERTOOLS_CONFIG_ANONYMIZE_DESC">
+    <field name="anonymize_days" type="number" default="730" min="1" max="36500" filter="integer"
+      label="COM_USERTOOLS_DAYS_LABEL" description="COM_USERTOOLS_ANONYMIZE_DAYS_HELP" />
+    <field name="anonymize_include_never" type="radio" layout="joomla.form.field.radio.switcher" default="0" filter="integer"
+      label="COM_USERTOOLS_INCLUDE_NEVER" description="COM_USERTOOLS_INCLUDE_NEVER_HELP">
+      <option value="0">JNO</option><option value="1">JYES</option>
+    </field>
+    <field name="anonymize_protect_admins" type="radio" layout="joomla.form.field.radio.switcher" default="1" filter="integer"
+      label="COM_USERTOOLS_EXCLUDE_ADMINS" description="COM_USERTOOLS_EXCLUDE_ADMINS_HELP">
+      <option value="0">JNO</option><option value="1">JYES</option>
+    </field>
+    <field name="anonymize_excluded_names" type="textarea" rows="4" filter="string"
+      label="COM_USERTOOLS_EXCLUDED_NAMES" description="COM_USERTOOLS_EXCLUDED_NAMES_DESC" />
+    <field name="anonymize_excluded_groups" type="usergrouplist" multiple="true" layout="joomla.form.field.list-fancy-select" filter="int_array"
+      label="COM_USERTOOLS_EXCLUDED_GROUPS" description="COM_USERTOOLS_EXCLUDED_GROUPS_DESC" />
+  </fieldset>
   <fieldset name="diagnose" label="COM_USERTOOLS_CONFIG_DIAGNOSE" description="COM_USERTOOLS_CONFIG_DIAGNOSE_DESC">
     <field name="diagnose_admin_days" type="number" default="90" min="1" max="36500" filter="integer"
       label="COM_USERTOOLS_CONFIG_DIAGNOSE_DAYS" description="COM_USERTOOLS_CONFIG_DIAGNOSE_DAYS_DESC" />

@@ -218,11 +218,11 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['compare', 'inactive', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete'], 'every tool has its card, in order');
+Test::check($cards[1] === ['compare', 'inactive', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 11 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 12 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -1098,6 +1098,95 @@ $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_en
 Test::check($code === 403 && !str_contains($delegate->get('index.php?option=com_usertools'), 'data-ut-home-card="move"'), 'a non Super User cannot open "Move groups" (got ' . $code . ')');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 $site->q("DELETE FROM #__viewlevels WHERE title = 'UT move level'");
+
+
+Test::section('Anonymize accounts');
+$anonUrl = 'index.php?option=com_usertools&view=anonymize';
+foreach ([['UT anon G', 'Registered'], ['UT anon G sub', 'UT anon G']] as [$title, $parent]) {
+    $site->q('INSERT INTO #__usergroups (parent_id, lft, rgt, title) VALUES (?, 0, 0, ?)', [$gid($parent), $title]);
+}
+$rebuildGroups();
+$site->addUser('an_one', 'Registered', '', gmdate('Y-m-d H:i:s', time() - 86400));
+$site->addUser('an_two', 'Registered');
+$site->addUser('an_old', 'Registered', '', '2018-01-01 00:00:00');
+$site->addUser('an_g1', 'UT anon G');
+$site->addUser('an_g2', 'UT anon G sub');
+$site->addUser('an_mgr', 'Manager', '', '2018-01-01 00:00:00');
+// IDs are taken once: after anonymizing, the usernames no longer exist.
+$anonIds = [];
+foreach (['an_one', 'an_two', 'an_old', 'an_g1', 'an_g2', 'an_mgr'] as $u) {
+    $anonIds[$u] = $site->userId($u);
+}
+$anonId = fn (string $u): int => $anonIds[$u];
+$account = fn (int $id): array => $site->q('SELECT name, username, email, block FROM #__users WHERE id = ?', [$id])[0] ?? [];
+// Data Joomla's privacy plugin leaves behind: profile, a note and a custom field value.
+foreach (['an_one', 'an_two'] as $u) {
+    $site->q("INSERT INTO #__user_profiles (user_id, profile_key, profile_value, ordering) VALUES (?, 'profile.city', '\"Lugo\"', 1)", [$anonId($u)]);
+}
+$site->q("INSERT INTO #__user_notes (user_id, catid, subject, body, state, created_user_id, created_time, modified_user_id, modified_time) VALUES (?, 0, 'UT note', 'secret', 1, 0, '2026-01-01 00:00:00', 0, '2026-01-01 00:00:00')", [$anonId('an_one')]);
+$site->q("INSERT INTO #__fields (context, title, name, label, type, description, state, params, fieldparams, created_time, modified_time) VALUES ('com_users.user', 'UT phone', 'ut-phone', 'Phone', 'text', '', 1, '{}', '{}', '2026-01-01 00:00:00', '2026-01-01 00:00:00')");
+$phoneField = (int) $site->q("SELECT id FROM #__fields WHERE name = 'ut-phone'")[0]['id'];
+$site->q('INSERT INTO #__fields_values (field_id, item_id, value) VALUES (?, ?, ?)', [$phoneField, (string) $anonId('an_one'), '600000000']);
+$anonRows = function (string $html): array {
+    preg_match_all('/data-ut-anonymize-row="(\d+)"/', $html, $m);
+    return array_map('intval', $m[1]);
+};
+$anonSearch = fn (array $extra): string => $admin->submit($anonUrl, $extra + ['task' => 'anonymize.search', 'source' => 'list', 'names' => '', 'days' => 730,
+    'include_never' => 0, 'group' => 0, 'subgroups' => 0, 'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []], 'data-ut-anonymize-form');
+$anonApply = function (array $ids, string $count) use ($admin, $anonUrl): string {
+    $page = $admin->submit($anonUrl . '&layout=review', ['task' => 'anonymize.apply', 'selection_ready' => 1, 'confirm' => 1, 'confirm_count' => $count,
+        'selected' => json_encode($ids)], 'data-ut-suspension-form');
+    for ($i = 0; $i < 20 && str_contains($page, 'data-ut-anonymize-next'); $i++) {
+        $page = $admin->submit($anonUrl . '&layout=progress', ['task' => 'anonymize.next'], 'data-ut-anonymize-next');
+    }
+    return $page;
+};
+
+// Without Joomla's privacy plugin nothing could be anonymized: the tool says so and does not search.
+$site->q("UPDATE #__extensions SET enabled = 0 WHERE type = 'plugin' AND folder = 'privacy' AND element = 'user'");
+Test::check(str_contains($admin->get($anonUrl), 'data-ut-anonymize-plugin'), 'the tool warns when the "Privacy - User Accounts" plugin is disabled');
+$site->q("UPDATE #__extensions SET enabled = 1 WHERE type = 'plugin' AND folder = 'privacy' AND element = 'user'");
+Test::check(!str_contains($admin->get($anonUrl), 'data-ut-anonymize-plugin'), 'and the warning goes away when it is enabled');
+
+$review = $anonSearch(['names' => "an_one\nAN_TWO@example.test\nnobody-here\nan_mgr\n" . (getenv('UT_ADMIN_USER') ?: 'admin')]);
+Test::check($anonRows($review) === [$anonId('an_one'), $anonId('an_two')], 'a list matches usernames and emails, case-insensitive');
+Test::check(str_contains($review, 'nobody-here') && str_contains($review, 'there is no account with that username or email')
+    && str_contains($review, 'data-ut-anonymize-skipped'), 'unknown names and protected accounts are reported, not offered');
+Test::check(str_contains($review, 'data-ut-anonymize-active'), 'active accounts are marked in the review');
+Test::check($account($anonId('an_one'))['username'] === 'an_one', 'the review changes nothing');
+$site->fakeSession($anonId('an_one'));
+$refused = $admin->submit($anonUrl . '&layout=review', ['task' => 'anonymize.apply', 'selection_ready' => 1, 'confirm' => 1, 'confirm_count' => '',
+    'selected' => json_encode([$anonId('an_one'), $anonId('an_two')])], 'data-ut-suspension-form');
+Test::check($account($anonId('an_one'))['username'] === 'an_one' && str_contains($refused, 'data-ut-suspension-form'), 'the number of accounts must always be typed');
+$done = $anonApply([$anonId('an_one'), $anonId('an_two')], '2');
+$one  = $account($anonId('an_one'));
+Test::check(str_contains($done, 'data-ut-anonymized="2"') && $one['name'] === 'User ID ' . $anonId('an_one') && $one['email'] === 'UserID' . $anonId('an_one') . 'removed@email.invalid'
+    && $one['username'] !== 'an_one' && (int) $one['block'] === 1, 'Joomla\'s privacy plugin replaced the name, username and email and blocked the account (two batches)');
+Test::check($site->sessions($anonId('an_one')) === 0, 'its sessions are closed');
+Test::check(!$site->q('SELECT user_id FROM #__user_profiles WHERE user_id = ?', [$anonId('an_one')]) && !$site->q('SELECT id FROM #__user_notes WHERE user_id = ?', [$anonId('an_one')])
+    && !$site->q('SELECT value FROM #__fields_values WHERE item_id = ?', [(string) $anonId('an_one')]), 'profile fields, user notes and custom field values are removed');
+Test::check(count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_ANONYMIZED'")) === 2
+    && !$site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_ANONYMIZED' AND message LIKE '%an_one%'"),
+    'each anonymization is logged with the account ID only');
+Test::check(!$site->q('SELECT id FROM #__privacy_requests'), 'no privacy request is invented');
+Test::check(!in_array($anonId('an_one'), $anonRows($anonSearch(['names' => 'User ID ' . $anonId('an_one') . "\nUserID" . $anonId('an_one') . 'removed@email.invalid'])), true),
+    'an anonymized account is not offered again');
+
+$review = $anonSearch(['source' => 'inactive', 'days' => 365]);
+Test::check(in_array($anonId('an_old'), $anonRows($review), true) && !in_array($anonId('an_mgr'), $anonRows($review), true), 'inactive accounts are offered; administrator accounts are excluded by default');
+$review = $anonSearch(['source' => 'group', 'group' => $gid('UT anon G')]);
+Test::check($anonRows($review) === [$anonId('an_g1')], 'a group without its subgroups');
+$review = $anonSearch(['source' => 'group', 'group' => $gid('UT anon G'), 'subgroups' => 1]);
+Test::check($anonRows($review) === [$anonId('an_g1'), $anonId('an_g2')], 'a group with its subgroups');
+// An account that signs in after the review is skipped, never replaced.
+$site->q('UPDATE #__users SET "lastvisitDate" = ? WHERE id = ?', [gmdate('Y-m-d H:i:s'), $anonId('an_g2')]);
+$done = $anonApply([$anonId('an_g1'), $anonId('an_g2')], '2');
+Test::check(str_contains($done, 'data-ut-anonymized="1"') && $account($anonId('an_g2'))['username'] === 'an_g2', 'an account that changed after the review is left alone');
+
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
+[$code] = $delegate->request($anonUrl);
+Test::check($code === 403, 'the tool needs its own permission (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);
