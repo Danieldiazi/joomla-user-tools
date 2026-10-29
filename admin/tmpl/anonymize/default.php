@@ -25,7 +25,7 @@ $source  = $draft['source'];
       <li><?= Text::_('COM_USERTOOLS_ANONYMIZE_WHAT_OTHERS') ?></li>
     </ul>
   </div>
-  <?php if (!$this->pluginReady) : ?>
+  <?php if (!$this->pluginReady && empty($draft['retryCleanup'])) : ?>
   <div class="alert alert-danger" data-ut-anonymize-plugin><?= Text::_('COM_USERTOOLS_ANONYMIZE_ERROR_PLUGIN') ?></div>
   <?php endif; ?>
   <?php if ($this->job) : ?>
