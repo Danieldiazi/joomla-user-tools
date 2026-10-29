@@ -67,12 +67,12 @@ $skipped    = $review['skipped'];
 
     <?php if ($candidates) : ?>
       <div class="alert alert-danger"><strong><?= Text::_('COM_USERTOOLS_PERMANENT') ?>.</strong> <?= Text::_(!empty($review['criteria']['retryCleanup']) ? 'COM_USERTOOLS_ANONYMIZE_RETRY_ONLY_NOTE' : 'COM_USERTOOLS_ANONYMIZE_WARNING') ?></div>
-      <?= LayoutHelper::render('usertools.confirm', ['label' => 'COM_USERTOOLS_ANONYMIZE_CONFIRM', 'count' => count($review['selected']), 'threshold' => $review['threshold'], 'dynamic' => true, 'help' => 'COM_USERTOOLS_ANONYMIZE_TYPE_HELP'], $layouts) ?>
+      <?= LayoutHelper::render('usertools.confirm', ['label' => !empty($review['criteria']['retryCleanup']) ? 'COM_USERTOOLS_ANONYMIZE_RETRY_CONFIRM' : 'COM_USERTOOLS_ANONYMIZE_CONFIRM', 'count' => count($review['selected']), 'threshold' => $review['threshold'], 'dynamic' => true, 'help' => !empty($review['criteria']['retryCleanup']) ? 'COM_USERTOOLS_ANONYMIZE_RETRY_TYPE_HELP' : 'COM_USERTOOLS_ANONYMIZE_TYPE_HELP'], $layouts) ?>
     <?php endif; ?>
     <noscript><div class="alert alert-warning"><?= Text::_('COM_USERTOOLS_ERROR_JAVASCRIPT') ?></div></noscript>
     <div class="ut-actions">
       <button class="btn btn-outline-secondary" name="task" value="anonymize.back" formnovalidate><?= Text::_('COM_USERTOOLS_BACK_EDIT') ?></button>
-      <?php if ($candidates) : ?><button class="btn btn-danger" name="task" value="anonymize.apply" data-ut-suspend-submit disabled><?= Text::_('COM_USERTOOLS_ANONYMIZE_APPLY') ?></button><?php endif; ?>
+      <?php if ($candidates) : ?><button class="btn btn-danger" name="task" value="anonymize.apply" data-ut-suspend-submit disabled><?= Text::_(!empty($review['criteria']['retryCleanup']) ? 'COM_USERTOOLS_ANONYMIZE_RETRY_APPLY' : 'COM_USERTOOLS_ANONYMIZE_APPLY') ?></button><?php endif; ?>
     </div>
     <?= HTMLHelper::_('form.token') ?>
   </form>
