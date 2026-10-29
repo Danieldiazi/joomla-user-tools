@@ -58,6 +58,10 @@ Yes. Review screens use JavaScript to manage checkboxes and submit selections.
 
 Automated tests cover lists of 1,800 users. Review selections are submitted in a single JSON field to avoid PHP's `max_input_vars` limit on large lists.
 
+### Where are the shortcuts to each tool?
+
+On the **Users dashboard**, the User Tools module shows individual links to the tools you are allowed to use, alongside its indicators and the link to open the full component.
+
 ## List comparison
 
 ### What format should the list use?
