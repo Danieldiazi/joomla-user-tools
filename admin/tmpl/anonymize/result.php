@@ -14,7 +14,7 @@ $result  = $this->result;
   <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'result', 'label' => 'COM_USERTOOLS_ANONYMIZE_PROGRESS'], $layouts) ?>
   <h2 class="h3"><?= Text::_('COM_USERTOOLS_ANONYMIZE_RESULT_HEADING') ?></h2>
   <div class="ut-stats">
-    <?php foreach (['COM_USERTOOLS_STAT_ANONYMIZED' => count($result['anonymized']), 'COM_USERTOOLS_STAT_SKIPPED' => (int) $result['skipped'], 'COM_USERTOOLS_STAT_ERRORS' => count($result['errors'])] as $label => $number) : ?>
+    <?php foreach (['COM_USERTOOLS_STAT_ANONYMIZED' => count($result['anonymized']), 'COM_USERTOOLS_ANONYMIZE_STAT_PARTIAL' => count($result['partial'] ?? []), 'COM_USERTOOLS_STAT_SKIPPED' => (int) $result['skipped'], 'COM_USERTOOLS_STAT_ERRORS' => count($result['errors'])] as $label => $number) : ?>
     <div class="card"><div class="card-body"><strong><?= (int) $number ?></strong><span><?= Text::_($label) ?></span></div></div>
     <?php endforeach; ?>
   </div>
