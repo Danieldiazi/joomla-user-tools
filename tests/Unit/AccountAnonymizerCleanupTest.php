@@ -7,7 +7,6 @@ use Danieldiazi\Component\Usertools\Administrator\Service\ActionLogger;
 use Danieldiazi\Component\Usertools\Administrator\Service\Exclusions;
 use Danieldiazi\Component\Usertools\Administrator\Service\Operator;
 use Joomla\CMS\User\UserFactoryInterface;
-use Joomla\Database\DatabaseInterface;
 use PHPUnit\Framework\TestCase;
 
 final class AccountAnonymizerCleanupTest extends TestCase
@@ -46,7 +45,7 @@ final class AccountAnonymizerCleanupTest extends TestCase
         $cleaned = 0;
         $anonymizer = new AccountAnonymizer(
             $factory,
-            $this->createMock(DatabaseInterface::class),
+            null,
             new ActionLogger(function (array $messages, string $key) use (&$logged): void {
                 $logged[] = [$key, $messages[0]['id']];
             }),
