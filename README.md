@@ -53,7 +53,6 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 
 ¿Dudas concretas? Consulta las [preguntas frecuentes](FAQ.md). Si vas a contribuir, o a trabajar con un agente de código, lee [AGENTS.md](AGENTS.md).
 
-
 ## Instalación y actualizaciones
 
 Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) el fichero **pkg_usertools-VERSIÓN.zip** e instálalo desde Sistema → Instalar → Extensiones. El paquete instala el componente, el plugin de tareas, el módulo de administración «User Tools» y el módulo del sitio «User Tools - Grupos de usuarios». En una instalación nueva habilita el plugin «Tarea - User Tools», y la primera vez que se instala el módulo lo publica en el panel de Usuarios. Las tareas que crees empiezan siempre en modo simulación.
@@ -114,8 +113,6 @@ Cada eliminación queda en el **registro de acciones de usuarios** con el ID, el
 
 ## Anonimizar cuentas
 
-Si falla el borrado del perfil, las notas o los campos, la cuenta **ya está anonimizada** y queda registrada como tal, pero el resultado indica **«Limpieza incompleta»**. Para recuperar la limpieza, vuelve a «Anonimizar cuentas», selecciona **«Solo repetir la limpieza de cuentas ya anonimizadas»**, indica el usuario anonimizado (o filtra por grupo/inactividad), revisa y confirma. Este modo **solo** admite cuentas ya anonimizadas y bloqueadas; no anonimiza cuentas nuevas, y cada limpieza recuperada se anota por separado en el registro de acciones.
-
 Desde la 2026.10.17, **Anonimizar cuentas** sustituye los datos personales de varias cuentas a la vez sin eliminarlas. Joomla solo lo hace una a una, desde una solicitud de eliminación en Usuarios → Privacidad que la persona tiene que confirmar por correo. Es **permanente**: no se puede deshacer.
 
 1. **Elegir cuentas**, de una de estas tres formas:
@@ -136,6 +133,8 @@ Qué se hace con cada cuenta:
 - Cada cuenta se vuelve a comprobar justo antes de anonimizarla. Si entró, cambió de grupos o dejó de cumplir los criterios después de la revisión, se omite.
 
 Requiere el permiso propio *Anonimizar cuentas*. Superusuarios, tu propia cuenta y, para quien no es superusuario, las cuentas con acceso a la administración nunca se ofrecen.
+
+Si falla el borrado del perfil, las notas o los campos, la cuenta **ya está anonimizada** y queda registrada como tal, pero el resultado indica **«Limpieza incompleta»**. Para recuperar la limpieza, vuelve a «Anonimizar cuentas», selecciona **«Solo repetir la limpieza de cuentas ya anonimizadas»**, indica el usuario anonimizado (o filtra por grupo/inactividad), revisa y confirma. Este modo **solo** admite cuentas ya anonimizadas y bloqueadas; no anonimiza cuentas nuevas, y cada limpieza recuperada se anota por separado en el registro de acciones.
 
 ## Tarea programada por inactividad
 
