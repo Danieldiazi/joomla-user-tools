@@ -78,7 +78,7 @@ final class AccountAnonymizerCleanupTest extends TestCase
     {
         [$result, $logged, $removed, $cleaned] = $this->runScenario(true, false);
         $this->assertSame(AccountAnonymizer::ANONYMIZED, $result['status']);
-        $this->assertSame([], $logged);
+        $this->assertSame([['COM_USERTOOLS_ACTION_LOG_CLEANUP_COMPLETED', 42]], $logged);
         $this->assertSame([0, 1], [$removed, $cleaned]);
     }
 }
