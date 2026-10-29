@@ -72,7 +72,7 @@ class AnonymizeModel extends BaseDatabaseModel
         $this->session()->set(self::DRAFT, ['source' => $source, 'names' => $names, 'days' => $days, 'includeNever' => $includeNever,
             'group' => $group, 'subgroups' => $subgroups, 'retryCleanup' => $retryCleanup, 'exclusions' => $exclusions->toArray()]);
         $this->session()->set(self::PREVIEW, []);
-        if (!$this->pluginReady()) {
+        if (!$retryCleanup && !$this->pluginReady()) {
             throw new UserFacingException('COM_USERTOOLS_ANONYMIZE_ERROR_PLUGIN');
         }
         $cutoff = null;
@@ -160,6 +160,7 @@ class AnonymizeModel extends BaseDatabaseModel
             'pending'    => array_intersect_key($preview['fingerprints'], array_flip($selected)),
             'total'      => \count($selected),
             'done'       => [],
+            'cleaned'    => [],
             'errors'     => [],
             'partial'    => [],
             'skipped'    => 0,
@@ -195,7 +196,10 @@ class AnonymizeModel extends BaseDatabaseModel
                 // batch's snapshot and the account's turn is caught too.
                 $outcome = $anonymizer->anonymize((int) $id, $exclusions, $operator,
                     fn (object $user): bool => (empty($job['criteria']['retryCleanup']) ? !AnonymizeSelection::isAnonymized($user) : true) && AnonymizeSelection::fingerprint($user) === $fingerprint);
-                if ($outcome['status'] === AccountAnonymizer::ANONYMIZED) {
+                if ($outcome['status'] === AccountAnonymizer::ANONYMIZED && !empty($job['criteria']['retryCleanup'])) {
+                    $job['cleaned'][] = ['id' => (int) $id, 'username' => $outcome['username'],
+                        'newName' => $outcome['newName'] ?? '', 'newUsername' => $outcome['newUsername'] ?? ''];
+                } elseif ($outcome['status'] === AccountAnonymizer::ANONYMIZED) {
                     $job['done'][] = ['id' => (int) $id, 'username' => $outcome['username'],
                         'newName' => $outcome['newName'] ?? '', 'newUsername' => $outcome['newUsername'] ?? ''];
                 } elseif ($outcome['status'] === AccountAnonymizer::PARTIAL) {
@@ -216,7 +220,7 @@ class AnonymizeModel extends BaseDatabaseModel
             return false;
         }
         $this->session()->set(self::JOB, []);
-        $this->storeResult(self::RESULT, ['anonymized' => $job['done'], 'errors' => $job['errors'], 'partial' => $job['partial'], 'skipped' => $job['skipped'], 'total' => $job['total']]);
+        $this->storeResult(self::RESULT, ['anonymized' => $job['done'], 'cleaned' => $job['cleaned'], 'retryCleanup' => (bool) ($job['criteria']['retryCleanup'] ?? false), 'errors' => $job['errors'], 'partial' => $job['partial'], 'skipped' => $job['skipped'], 'total' => $job['total']]);
         $this->session()->set(self::DRAFT, []);
         return true;
     }
