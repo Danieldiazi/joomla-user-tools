@@ -4,6 +4,7 @@
 
 use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Factory;
+use Danieldiazi\Component\Usertools\Administrator\Controller\DisplayController;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 
@@ -24,13 +25,9 @@ $links = [
     ['usertools.delete', 'delete', 'MOD_USERTOOLS_LINK_DELETE'],
     ['usertools.anonymize', 'anonymize', 'MOD_USERTOOLS_LINK_ANONYMIZE'],
 ];
-if ($identity && $identity->authorise('core.admin')) {
-    $links[] = ['core.admin', 'move', 'MOD_USERTOOLS_LINK_MOVE'];
-}
+$links[] = ['core.admin', 'move', 'MOD_USERTOOLS_LINK_MOVE'];
 $links = array_values(array_filter($links, static fn (array $link): bool =>
-    $identity !== null && ($link[0] === 'core.admin'
-        ? (bool) $identity->authorise('core.admin')
-        : (bool) $identity->authorise($link[0], 'com_usertools'))
+    $identity !== null && DisplayController::allowed($identity, $link[0])
 ));
 $e    = fn ($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $date = fn (?string $utc) => $utc ? HTMLHelper::_('date', $utc, Text::_('DATE_FORMAT_LC5')) : Text::_('MOD_USERTOOLS_NEVER');
