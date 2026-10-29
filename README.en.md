@@ -53,7 +53,6 @@ The home screen groups the tools into four sections, each with its explanation a
 
 For specific questions, see the [FAQ](FAQ.en.md). If you are contributing or working with a coding agent, read [AGENTS.md](AGENTS.md) (Spanish).
 
-
 ## Installation and updates
 
 Download **pkg_usertools-VERSION.zip** from the [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) and install it through System → Install → Extensions. The package installs the component, task plugin, “User Tools” administrator module and “User Tools - User Groups” site module. A fresh installation enables the “Task - User Tools” plugin; the first module installation publishes it on the Users dashboard. New tasks always start in dry-run mode.
@@ -114,8 +113,6 @@ Each deletion is written to the **User Actions Log** with the account ID, userna
 
 ## Anonymise accounts
 
-If profile, notes or custom-field cleanup fails, the account **has already been anonymised** and that action is logged, but the result reports **incomplete cleanup**. To retry, open Anonymise accounts, choose **Only retry the cleanup of already anonymised accounts**, select the anonymised username (or filter by group/inactivity), review and confirm. This mode offers **only** already anonymised and blocked accounts, never anonymises new accounts, and logs each completed cleanup separately.
-
 Since 2026.10.17, **Anonymise accounts** replaces the personal data of several accounts at once without deleting them. Joomla only does this one account at a time, from a removal request in Users → Privacy that the person has to confirm by email. It is **permanent**: it cannot be undone.
 
 1. **Choose accounts**, in one of three ways:
@@ -136,6 +133,8 @@ What happens to each account:
 - Each account is checked again right before it is anonymised. If it signed in, changed groups or stopped meeting the criteria after the review, it is skipped.
 
 It requires its own permission, *Anonymise accounts*. Super Users, your own account and, for non-Super Users, accounts with administrator access are never offered.
+
+If profile, notes or custom-field cleanup fails, the account **has already been anonymised** and that action is logged, but the result reports **incomplete cleanup**. To retry, open Anonymise accounts, choose **Only retry the cleanup of already anonymised accounts**, select the anonymised username (or filter by group/inactivity), review and confirm. This mode offers **only** already anonymised and blocked accounts, never anonymises new accounts, and logs each completed cleanup separately.
 
 ## Scheduled inactivity task
 
