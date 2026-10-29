@@ -183,7 +183,7 @@ Since 2026.10.9, **Remove from groups** takes an account out of the groups you c
 3. **Review**: each group of the account as “Removed” or “Kept”, and which group causes a removal through “and its subgroups”. Nothing changes until you confirm. The review is single-use and expires after 15 minutes.
 4. **Result**: the groups the account keeps, with links to its user record and the action log.
 
-![Remove from groups: the account's groups in their tree (Spanish interface)](docs/screenshots/16-quitar-grupos-seleccion.jpg)
+![Remove from groups: the account's groups in their tree, with an intermediate group without a checkbox (Spanish interface)](docs/screenshots/16-quitar-grupos-seleccion.jpg)
 
 ![Remove from groups: review (Spanish interface)](docs/screenshots/17-quitar-grupos-revision.jpg)
 

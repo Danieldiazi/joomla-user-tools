@@ -4,7 +4,7 @@
 
 [Back to the README](../README.en.md)
 
-These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.10, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, the home screen in 2026.10.13, the Users dashboard in 2026.10.14, and access diagnosis and content by age in 2026.10.15. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
+These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, the home screen in 2026.10.13, the Users dashboard in 2026.10.14, and access diagnosis and content by age in 2026.10.15. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
 ![User Tools home screen grouped into sections: review accounts, groups and levels, automation and delete accounts (2026.10.13, Spanish interface)](screenshots/01-portada.jpg)
 
@@ -26,7 +26,7 @@ These shared screenshots show the Spanish interface on Joomla 6.2.0. Each captio
 
 ![Remove from groups: choose the account (2026.10.9)](screenshots/15-quitar-grupos-cuenta.jpg)
 
-![Remove from groups: the account's groups in their tree, with “and its subgroups” on two groups (2026.10.10)](screenshots/16-quitar-grupos-seleccion.jpg)
+![Remove from groups: the account's groups in their tree, with “and its subgroups” on an unticked group and, without a checkbox, an intermediate group the account is not in (2026.10.16, Spanish interface)](screenshots/16-quitar-grupos-seleccion.jpg)
 
 ![Remove from groups: review, with the group that causes each cascaded removal (2026.10.9)](screenshots/17-quitar-grupos-revision.jpg)
 

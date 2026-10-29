@@ -181,7 +181,7 @@ Desde la 2026.10.9, **Quitar de grupos** saca una cuenta de los grupos que elija
 3. **Revisar**: cada grupo de la cuenta con «Se quita» o «Se mantiene», y por qué grupo se quita uno por «y sus subgrupos». No se cambia nada hasta confirmar. La revisión es de un solo uso y caduca a los 15 minutos.
 4. **Resultado**: los grupos que conserva la cuenta y enlaces a su ficha y al registro de acciones.
 
-![Quitar de grupos: grupos de la cuenta en su árbol](docs/screenshots/16-quitar-grupos-seleccion.jpg)
+![Quitar de grupos: grupos de la cuenta en su árbol, con un grupo intermedio sin casilla](docs/screenshots/16-quitar-grupos-seleccion.jpg)
 
 ![Quitar de grupos: revisión](docs/screenshots/17-quitar-grupos-revision.jpg)
 
