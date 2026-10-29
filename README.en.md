@@ -114,6 +114,10 @@ Deletion uses Joomla's User API, just like the user manager. Group memberships, 
 
 Each deletion is written to the **User Actions Log** with the account ID, username, name and operator (“… deleted the inactive account … with User Tools”). Joomla also adds its own user deletion entry.
 
+## Bulk add accounts to groups
+
+Open **User Tools → Add accounts to groups** to add existing accounts to groups without removing other memberships. Enter usernames or emails and one target group, or `username;#ID` pairs on separate lines. Identify groups by `#ID` or a **full path** (for example `Public/Registered`); bare titles or duplicate paths are rejected. The preview distinguishes additions, existing memberships and exclusions. Only groups without administrator access can be assigned, and administrator accounts, Super Users and the operator are protected. Confirm and type the number of accounts. Changes use Joomla's User API, close sessions, log every assignment and proceed in resumable batches.
+
 ## Anonymise accounts
 
 Since 2026.10.17, **Anonymise accounts** replaces the personal data of several accounts at once without deleting them. Joomla only does this one account at a time, from a removal request in Users → Privacy that the person has to confirm by email. It is **permanent**: it cannot be undone.

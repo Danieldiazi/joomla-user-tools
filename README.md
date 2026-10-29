@@ -114,6 +114,10 @@ La cuenta se elimina con la API de usuarios de Joomla, igual que desde el gestor
 
 Cada eliminación queda en el **registro de acciones de usuarios** con el ID, el nombre de usuario, el nombre y quién la hizo («… eliminó con User Tools la cuenta inactiva …»). Joomla añade además su propia entrada de borrado de usuario.
 
+## Añadir cuentas a grupos en bloque
+
+Desde **User Tools → Añadir cuentas a grupos** se pueden añadir usuarios existentes a grupos sin eliminar sus pertenencias actuales. Introduce una lista de usuarios o correos y un grupo de destino, o pares `usuario;#ID` en líneas independientes. Los grupos se identifican por `#ID` o **ruta completa** (por ejemplo `Public/Registered`); los títulos aislados o rutas duplicadas se rechazan. La revisión muestra qué se añadiría, qué ya existe y qué se excluye. Solo se pueden asignar grupos sin acceso a administración y no se modifican administradores, superusuarios ni la cuenta del operador. Debes confirmar y escribir el número de cuentas. El guardado usa la API de Joomla, cierra sesiones, registra cada asignación y continúa por tandas para listas grandes.
+
 ## Anonimizar cuentas
 
 Desde la 2026.10.17, **Anonimizar cuentas** sustituye los datos personales de varias cuentas a la vez sin eliminarlas. Joomla solo lo hace una a una, desde una solicitud de eliminación en Usuarios → Privacidad que la persona tiene que confirmar por correo. Es **permanente**: no se puede deshacer.

@@ -114,6 +114,13 @@ final class ActionLogger
         }
     }
 
+    /** A successful additive group assignment; saves only the group ID in the audit trail. */
+    public function groupAdded(object $account, Operator $operator, int $group): void
+    {
+        $this->write('COM_USERTOOLS_ACTION_LOG_GROUP_ADDED', 'update', $account, $operator,
+            '', ['group' => '#' . $group]);
+    }
+
     public function created(object $account, Operator $operator, string $mode): void
     {
         $this->write($mode === Registration::MODE_PASSWORD ? 'COM_USERTOOLS_ACTION_LOG_CREATED_PASSWORD' : 'COM_USERTOOLS_ACTION_LOG_CREATED_EMAIL', 'create', $account, $operator, '');

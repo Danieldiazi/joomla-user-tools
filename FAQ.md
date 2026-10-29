@@ -66,6 +66,10 @@ Las pruebas automáticas cubren listas de 1800 usuarios. La revisión envía las
 
 En el **panel de Usuarios**, el módulo User Tools muestra enlaces individuales a las herramientas para las que tienes permiso, además de los indicadores y del enlace para abrir el componente completo.
 
+### ¿Puedo añadir muchos usuarios a grupos sin quitarles los actuales?
+
+Sí. Usa **Añadir cuentas a grupos** con lista y grupo único, o pares `usuario;#ID`. Se revisan cambios y duplicados antes de confirmar, y no se modifican administradores ni se asignan grupos con acceso a la administración. Los grupos se indican por ID o ruta completa sin ambigüedad.
+
 ## Comparación de listas
 
 ### ¿Qué formato debe tener la lista?
