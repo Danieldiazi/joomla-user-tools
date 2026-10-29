@@ -257,9 +257,15 @@ Desde la 2026.10.15, **Contenido por antigüedad** muestra cuánto contenido lle
 
 **Exportar CSV** descarga la tabla o, desde una lista, todos sus elementos (UTF-8 con BOM y punto y coma). La pantalla necesita el permiso *Ver contenido por antigüedad*; la lista de títulos requiere además poder gestionar los artículos en Joomla. El filtro, las cifras, los totales, las listas y los CSV respetan los niveles de acceso autorizados del artículo y de su categoría, como el listado de artículos de Joomla; los superusuarios globales conservan la vista completa. «Editar propios» solo muestra el enlace en artículos del propio usuario. Sin ese permiso, las cifras se ven pero sin enlace.
 
+![Contenido por antigüedad: tabla por años](docs/screenshots/20-contenido-antiguedad.jpg)
+
+![Contenido por antigüedad: lista de un año](docs/screenshots/21-contenido-antiguedad-lista.jpg)
+
 ## Diagnóstico de accesos
 
 Desde la 2026.10.15, **Diagnóstico de accesos** reúne en una pantalla las situaciones que conviene revisar en cuentas, grupos y niveles de acceso. Solo lee: no corrige permisos ni cambia cuentas. Cada comprobación aparece siempre, con o sin avisos, y cuando encuentra algo explica qué ha detectado, **por qué importa** y **cómo revisarlo**, con enlaces a la cuenta, el grupo, el nivel o el listado de Joomla correspondiente.
+
+![Diagnóstico de accesos](docs/screenshots/19-diagnostico.jpg)
 
 | Comprobación | Tipo | Qué señala |
 |---|---|---|

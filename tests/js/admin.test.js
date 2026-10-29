@@ -294,3 +294,19 @@ test('progress: an error from the server stops and offers to continue', async ()
   assert.equal(calls.length, 3, 'continue sends the next batch');
   assert.equal(box.hidden, true);
 });
+
+test('stylesheet: plain table wrappers hide vertical overflow, height-limited ones keep scrolling', () => {
+  const css = fs.readFileSync(path.join(__dirname, '../../media/css/admin.css'), 'utf8');
+  const dom = new JSDOM(`<!doctype html><style>.table-responsive{overflow-x:auto}${css}</style><body><div class="ut-app">
+    <div class="table-responsive" id="plain"></div>
+    <div class="table-responsive ut-access-scroll mt-3" id="tall"></div>
+    <div class="table-responsive ut-table-scroll" id="list"></div></div></body>`);
+  const style = (id) => dom.window.getComputedStyle(dom.window.document.getElementById(id));
+  assert.equal(style('plain').overflowY, 'hidden');
+  // jsdom keeps the `overflow` shorthand unexpanded: the rule must not set overflow-y on these wrappers.
+  for (const id of ['tall', 'list']) {
+    assert.notEqual(style(id).overflowY, 'hidden', id);
+    assert.equal(style(id).overflow, 'auto', id);
+  }
+  assert.equal(style('tall').maxHeight, '40rem');
+});
