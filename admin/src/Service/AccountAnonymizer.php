@@ -7,6 +7,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service;
 use Joomla\CMS\Event\Privacy\CanRemoveDataEvent;
 use Joomla\CMS\Event\Privacy\RemoveDataEvent;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Log\Log;
 use Joomla\CMS\MVC\Factory\MVCFactoryServiceInterface;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\User\User;
@@ -106,6 +107,11 @@ final class AccountAnonymizer
         try {
             $this->removeExtraData($id);
         } catch (\Throwable $e) {
+            try {
+                Log::add('Additional anonymization cleanup failed for user ID ' . $id, Log::ERROR, 'com_usertools');
+            } catch (\Throwable) {
+                // The cleanup failure is still returned to the caller.
+            }
             return ['status' => self::ERROR, 'username' => $name, 'reason' => 'COM_USERTOOLS_ANONYMIZE_ERROR_FAILED'];
         }
         $this->log->anonymized($id, $operator);
