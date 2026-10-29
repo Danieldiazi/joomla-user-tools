@@ -54,8 +54,6 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 ¿Dudas concretas? Consulta las [preguntas frecuentes](FAQ.md). Si vas a contribuir, o a trabajar con un agente de código, lee [AGENTS.md](AGENTS.md).
 
 
-Si falla la limpieza de perfiles, notas o campos tras anonimizar, el resultado indica **«Anonimizada con limpieza incompleta»** (no un fallo de anonimización). La operación ya se registra en el historial. Para reintentar solo la limpieza, vuelve a «Anonimizar cuentas», marca **«Incluir cuentas ya anonimizadas para repetir la limpieza»**, pega el nuevo nombre de usuario que muestra el resultado, revisa y confirma. El reintento no ejecuta de nuevo los plugins de privacidad.
-
 ## Instalación y actualizaciones
 
 Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) el fichero **pkg_usertools-VERSIÓN.zip** e instálalo desde Sistema → Instalar → Extensiones. El paquete instala el componente, el plugin de tareas, el módulo de administración «User Tools» y el módulo del sitio «User Tools - Grupos de usuarios». En una instalación nueva habilita el plugin «Tarea - User Tools», y la primera vez que se instala el módulo lo publica en el panel de Usuarios. Las tareas que crees empiezan siempre en modo simulación.
@@ -115,6 +113,8 @@ La cuenta se elimina con la API de usuarios de Joomla, igual que desde el gestor
 Cada eliminación queda en el **registro de acciones de usuarios** con el ID, el nombre de usuario, el nombre y quién la hizo («… eliminó con User Tools la cuenta inactiva …»). Joomla añade además su propia entrada de borrado de usuario.
 
 ## Anonimizar cuentas
+
+Si falla el borrado del perfil, las notas o los campos, la cuenta **ya está anonimizada** y queda registrada como tal, pero el resultado indica **«Limpieza incompleta»**. Para recuperar la limpieza, vuelve a «Anonimizar cuentas», selecciona **«Solo repetir la limpieza de cuentas ya anonimizadas»**, indica el usuario anonimizado (o filtra por grupo/inactividad), revisa y confirma. Este modo **solo** admite cuentas ya anonimizadas y bloqueadas; no anonimiza cuentas nuevas, y cada limpieza recuperada se anota por separado en el registro de acciones.
 
 Desde la 2026.10.17, **Anonimizar cuentas** sustituye los datos personales de varias cuentas a la vez sin eliminarlas. Joomla solo lo hace una a una, desde una solicitud de eliminación en Usuarios → Privacidad que la persona tiene que confirmar por correo. Es **permanente**: no se puede deshacer.
 
