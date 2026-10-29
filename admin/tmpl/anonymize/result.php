@@ -32,6 +32,13 @@ $result  = $this->result;
     </tbody></table></div>
   </div></section>
   <?php endif; ?>
+  <?php if (!empty($result['partial'])) : ?>
+  <section class="alert alert-warning" data-ut-anonymize-partial>
+    <h3 class="h5"><?= Text::_('COM_USERTOOLS_ANONYMIZE_PARTIAL_HEADING') ?></h3>
+    <p><?= Text::_('COM_USERTOOLS_ANONYMIZE_CLEANUP_INCOMPLETE') ?></p>
+    <ul><?php foreach ($result['partial'] as $row) : ?><li>ID <?= (int) $row['id'] ?>: <?= $this->escape($row['newUsername']) ?></li><?php endforeach; ?></ul>
+  </section>
+  <?php endif; ?>
   <?php if ((int) $result['skipped'] > 0) : ?><div class="alert alert-info"><?= Text::_('COM_USERTOOLS_ANONYMIZE_SKIPPED_HELP') ?></div><?php endif; ?>
   <?php if ($result['errors']) : ?>
   <section class="card ut-card border-danger"><div class="card-body">
