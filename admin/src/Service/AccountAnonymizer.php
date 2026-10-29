@@ -41,7 +41,7 @@ final class AccountAnonymizer
     private \Closure $cleanup;
 
     /** @param (callable(User): array{0: bool, 1: string})|null $remove asks the privacy plugins and removes; [removed, refusal] */
-    public function __construct(private UserFactoryInterface $users, private DatabaseInterface $db, private ActionLogger $log, ?callable $remove = null, ?callable $cleanup = null)
+    public function __construct(private UserFactoryInterface $users, private ?DatabaseInterface $db, private ActionLogger $log, ?callable $remove = null, ?callable $cleanup = null)
     {
         $this->cleanup = $cleanup !== null ? \Closure::fromCallable($cleanup) : $this->removeExtraData(...);
         $this->remove = $remove !== null ? \Closure::fromCallable($remove) : static function (User $user): array {
@@ -128,7 +128,7 @@ final class AccountAnonymizer
     /** Profile fields, user notes and custom field values of the account. */
     private function removeExtraData(int $id): void
     {
-        $db = $this->db;
+        $db = $this->db ?? throw new \LogicException('Database required for cleanup.');
         foreach (['#__user_profiles' => 'user_id', '#__user_notes' => 'user_id'] as $table => $column) {
             $db->setQuery($db->createQuery()->delete($db->quoteName($table))
                 ->where($db->quoteName($column) . ' = :id')->bind(':id', $id, ParameterType::INTEGER))->execute();
