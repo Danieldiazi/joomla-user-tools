@@ -122,6 +122,9 @@ final class AccountAnonymizer
             }
             return ['status' => self::PARTIAL, 'username' => $name, 'reason' => 'COM_USERTOOLS_ANONYMIZE_CLEANUP_INCOMPLETE', 'newName' => (string) $after->name, 'newUsername' => (string) $after->username];
         }
+        if ($already) {
+            $this->log->cleanupCompleted($id, $operator);
+        }
         return ['status' => self::ANONYMIZED, 'username' => $name, 'reason' => '', 'newName' => (string) $after->name, 'newUsername' => (string) $after->username];
     }
 
