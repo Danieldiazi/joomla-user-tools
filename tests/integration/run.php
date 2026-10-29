@@ -1193,6 +1193,12 @@ Test::check(str_contains($retryDone, 'data-ut-cleaned="1"')
     && str_contains($retryDone, 'Cleanups completed')
     && !str_contains($retryDone, 'data-ut-anonymized="1"'),
     'retry result counts completed cleanups, not new anonymizations');
+preg_match('/<tr\\s+data-ut-cleaned-row="' . $retryId . '"[^>]*>(.*?)<\\/tr>/s', $retryDone, $retryRow);
+preg_match_all('/<td\\b/', (string) ($retryRow[1] ?? ''), $retryCells);
+Test::check(str_contains($retryDone, 'Cleanup retry result')
+    && substr_count($retryDone, 'Accounts with completed cleanup') === 1
+    && count($retryCells[0]) === 2,
+    'retry result has distinct headings and exactly ID and username columns');
 Test::check($account($retryId) === $retryBefore && $account($anonId('an_old'))['username'] === 'an_old',
     'cleanup retry leaves anonymized identity unchanged and does not anonymize a normal account');
 Test::check(!$site->q('SELECT user_id FROM #__user_profiles WHERE user_id = ?', [$retryId])
