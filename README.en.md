@@ -259,9 +259,15 @@ Since 2026.10.15, **Content by age** shows how much content has not been touched
 
 **Export CSV** downloads the table or, from a list, all its items (UTF-8 with BOM, semicolons). The screen requires the *View content by age* permission; the list of titles also requires being able to manage articles in Joomla. Filters, counts, totals, lists and CSV exports respect the authorized viewing levels of both articles and their categories, as Joomla’s article list does; global Super Users retain the full audit view. “Edit own” only links articles owned by the current user. Without it, the numbers are shown without a link.
 
+![Content by age: table by year (Spanish interface)](docs/screenshots/20-contenido-antiguedad.jpg)
+
+![Content by age: list of one year (Spanish interface)](docs/screenshots/21-contenido-antiguedad-lista.jpg)
+
 ## Access diagnosis
 
 Since 2026.10.15, **Access diagnosis** brings together on one screen the situations worth reviewing in accounts, groups and access levels. It is read only: it does not fix permissions or change accounts. Every check is always shown, with or without notices, and when it finds something it explains what it found, **why it matters** and **how to review it**, with links to the matching account, group, level or Joomla list.
+
+![Access diagnosis (Spanish interface)](docs/screenshots/19-diagnostico.jpg)
 
 | Check | Type | What it points out |
 |---|---|---|

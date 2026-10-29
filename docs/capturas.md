@@ -4,7 +4,7 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.10, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, la portada de 2026.10.13 y la del panel de Usuarios de 2026.10.14. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.10, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, la portada de 2026.10.13, la del panel de Usuarios de 2026.10.14 y las de diagnóstico de accesos y contenido por antigüedad de 2026.10.15. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
 ![Portada de User Tools agrupada en secciones: revisar cuentas, grupos y niveles, automatización y eliminar cuentas (2026.10.13)](screenshots/01-portada.jpg)
 
@@ -41,3 +41,9 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cad
 ![Grupos y niveles de acceso: matriz de grupos por nivel, exportación CSV y resumen por nivel (2026.10.11)](screenshots/14-grupos-niveles.jpg)
 
 ![Contenido por nivel de acceso: una fila por nivel y una columna por tipo de elemento, con la tabla de una extensión de adjuntos (2026.10.12)](screenshots/18-contenido-por-nivel.jpg)
+
+![Diagnóstico de accesos: resumen con el tipo de cada comprobación y el detalle de cada una, con qué se detectó, por qué importa y cómo revisarlo (2026.10.15)](screenshots/19-diagnostico.jpg)
+
+![Contenido por antigüedad: artículos por año de última modificación, con filtro por nivel de acceso (2026.10.15)](screenshots/20-contenido-antiguedad.jpg)
+
+![Contenido por antigüedad: lista de los artículos de un año, con enlace a su edición (2026.10.15)](screenshots/21-contenido-antiguedad-lista.jpg)
