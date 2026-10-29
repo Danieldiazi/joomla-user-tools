@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 final class BulkGroupAssignmentsTest extends TestCase
 {
     /** @return array<int, object> */
-    private function groups(): array
+    private function fixtureGroups(): array
     {
         $list = [
             [1, 0, 'Public', false],
@@ -47,7 +47,7 @@ final class BulkGroupAssignmentsTest extends TestCase
 
     public function testResolvesOnlyIdsAndUniqueFullPaths(): void
     {
-        $g = $this->groups();
+        $g = $this->fixtureGroups();
         $this->assertSame(11, Plan::resolveGroup($g, '#11'));
         $this->assertSame(11, Plan::resolveGroup($g, '11'));
         $this->assertSame(12, Plan::resolveGroup($g, 'Public/Registered/Socios/Directiva'));
@@ -59,7 +59,7 @@ final class BulkGroupAssignmentsTest extends TestCase
 
     public function testClassifiesDuplicatesExistingMembersProtectedAndUnknown(): void
     {
-        $plan = Plan::plan($this->groups(), $this->users(), 'pairs',
+        $plan = Plan::plan($this->fixtureGroups(), $this->users(), 'pairs',
             "ALICE;#11\nalice;#11\nbob;#11\nboss;#11\nnobody;#11\nalice;#8\nalice;Directiva\nalice;Public/Registered/Doble",
             new Operator(9, true, 'admin'));
         $this->assertSame([
@@ -71,7 +71,7 @@ final class BulkGroupAssignmentsTest extends TestCase
 
     public function testSingleGroupAndOperatorProtection(): void
     {
-        $plan = Plan::plan($this->groups(), $this->users(), 'single', "alice\nbob", '#12',
+        $plan = Plan::plan($this->fixtureGroups(), $this->users(), 'single', "alice\nbob", '#12',
             new Operator(41, true, 'alice'));
         $this->assertSame([Plan::PROTECTED, Plan::ADD], array_column($plan, 'status'));
     }
