@@ -527,6 +527,12 @@ $moduleCount = function (string $html, string $name): ?int {
 $dashboard = $admin->get($dashboardUrl);
 Test::check(str_contains($dashboard, 'mod-usertools') && str_contains($dashboard, 'Inactive accounts to review'), 'the summary module is published on the Users dashboard');
 Test::check(str_contains($dashboard, 'UT integration'), 'the module lists the User Tools tasks');
+Test::check(str_contains($dashboard, 'aria-label="Quick links"')
+    && str_contains($dashboard, 'Content by access level')
+    && str_contains($dashboard, 'Content by age')
+    && substr_count($dashboard, 'MOD_USERTOOLS_LINK_MOVE') === 0
+    && substr_count($dashboard, 'href="/administrator/index.php?option=com_usertools&amp;view=move"') <= 1,
+    'dashboard shortcuts are translated and not duplicated');
 Test::check(str_contains($dashboard, 'data-ut-dashboard-task=') && preg_match('/<dl\b[^>]*>\s*<div\b[^>]*>\s*<dt\b/', $dashboard) === 1,
     'tasks expose labelled dates without squeezing five table columns');
 Test::check(str_contains($dashboard, 'They are not deleted automatically.') && str_contains($dashboard, 'Review accounts to delete'),
