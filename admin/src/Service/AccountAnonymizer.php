@@ -7,6 +7,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service;
 use Joomla\CMS\Event\Privacy\CanRemoveDataEvent;
 use Joomla\CMS\Event\Privacy\RemoveDataEvent;
 use Joomla\CMS\Factory;
+use Joomla\CMS\Log\Log;
 use Joomla\CMS\MVC\Factory\MVCFactoryServiceInterface;
 use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\CMS\User\User;
@@ -28,6 +29,7 @@ use Joomla\Database\ParameterType;
 final class AccountAnonymizer
 {
     public const ANONYMIZED = 'anonymized';
+    public const PARTIAL = 'partial';
     public const SKIPPED    = 'skipped';
     public const PROTECTED  = 'protected';
     public const REFUSED    = 'refused';
@@ -35,10 +37,13 @@ final class AccountAnonymizer
 
     /** @var \Closure(User): array{0: bool, 1: string} */
     private \Closure $remove;
+    /** @var \Closure(int): int Number of auxiliary records actually deleted. */
+    private \Closure $cleanup;
 
     /** @param (callable(User): array{0: bool, 1: string})|null $remove asks the privacy plugins and removes; [removed, refusal] */
-    public function __construct(private UserFactoryInterface $users, private DatabaseInterface $db, private ActionLogger $log, ?callable $remove = null)
+    public function __construct(private UserFactoryInterface $users, private ?DatabaseInterface $db, private ActionLogger $log, ?callable $remove = null, ?callable $cleanup = null)
     {
+        $this->cleanup = $cleanup !== null ? \Closure::fromCallable($cleanup) : $this->removeExtraData(...);
         $this->remove = $remove !== null ? \Closure::fromCallable($remove) : static function (User $user): array {
             $app        = Factory::getApplication();
             $dispatcher = $app->getDispatcher();
@@ -88,8 +93,9 @@ final class AccountAnonymizer
         if (!$stillEligible($user)) {
             return ['status' => self::SKIPPED, 'username' => $name, 'reason' => 'COM_USERTOOLS_REASON_NO_LONGER_ELIGIBLE'];
         }
+        $already = AnonymizeSelection::isAnonymized($user) && (int) $user->block === 1;
         try {
-            [$removed, $refusal] = ($this->remove)($user);
+            [$removed, $refusal] = $already ? [true, ''] : ($this->remove)($user);
         } catch (\Throwable) {
             [$removed, $refusal] = [false, ''];
         }
@@ -103,22 +109,35 @@ final class AccountAnonymizer
         if (!AnonymizeSelection::isAnonymized($after) || (int) $after->block !== 1) {
             return ['status' => self::ERROR, 'username' => $name, 'reason' => 'COM_USERTOOLS_ANONYMIZE_ERROR_FAILED'];
         }
-        $this->removeExtraData($id);
-        $this->log->anonymized($id, $operator);
+        if (!$already) {
+            $this->log->anonymized($id, $operator);
+        }
+        try {
+            $deleted = ($this->cleanup)($id);
+        } catch (\Throwable $e) {
+            try {
+                Log::add('Additional anonymization cleanup failed for user ID ' . $id, Log::ERROR, 'com_usertools');
+            } catch (\Throwable) {
+                // The cleanup failure is still returned to the caller.
+            }
+            return ['status' => self::PARTIAL, 'username' => $name, 'reason' => 'COM_USERTOOLS_ANONYMIZE_CLEANUP_INCOMPLETE', 'newName' => (string) $after->name, 'newUsername' => (string) $after->username];
+        }
+        // A successful no-op retry must not create a misleading cleanup action log entry.
+        if ($already && $deleted > 0) {
+            $this->log->cleanupCompleted($id, $operator);
+        }
         return ['status' => self::ANONYMIZED, 'username' => $name, 'reason' => '', 'newName' => (string) $after->name, 'newUsername' => (string) $after->username];
     }
 
-    /** Profile fields, user notes and custom field values of the account. */
-    private function removeExtraData(int $id): void
+    /** Deletes auxiliary data and returns the number of rows actually removed. */
+    private function removeExtraData(int $id): int
     {
-        $db = $this->db;
+        $db      = $this->db ?? throw new \LogicException('Database required for cleanup.');
+        $deleted = 0;
         foreach (['#__user_profiles' => 'user_id', '#__user_notes' => 'user_id'] as $table => $column) {
-            try {
-                $db->setQuery($db->createQuery()->delete($db->quoteName($table))
-                    ->where($db->quoteName($column) . ' = :id')->bind(':id', $id, ParameterType::INTEGER))->execute();
-            } catch (\Throwable) {
-                // The profile plugin may never have been installed.
-            }
+            $db->setQuery($db->createQuery()->delete($db->quoteName($table))
+                ->where($db->quoteName($column) . ' = :id')->bind(':id', $id, ParameterType::INTEGER))->execute();
+            $deleted += $db->getAffectedRows();
         }
         $item    = (string) $id;
         $context = 'com_users.user';
@@ -128,5 +147,7 @@ final class AccountAnonymizer
             ->where($db->quoteName('item_id') . ' = :item')
             ->where($db->quoteName('field_id') . ' IN (' . $fields . ')')
             ->bind(':item', $item)->bind(':context', $context))->execute();
+        $deleted += $db->getAffectedRows();
+        return $deleted;
     }
 }

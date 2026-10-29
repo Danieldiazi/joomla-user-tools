@@ -1174,6 +1174,60 @@ Test::check(!$site->q('SELECT id FROM #__privacy_requests'), 'no privacy request
 Test::check(!in_array($anonId('an_one'), $anonRows($anonSearch(['names' => 'User ID ' . $anonId('an_one') . "\nUserID" . $anonId('an_one') . 'removed@email.invalid'])), true),
     'an anonymized account is not offered again');
 
+// Regression: a cleanup retry must never anonymize another account, even if the Privacy
+// - User Accounts plugin is disabled. Reintroduce auxiliary data as if cleanup had failed.
+$retryId = $anonId('an_one');
+$retryBefore = $account($retryId);
+$site->q('INSERT INTO #__user_profiles (user_id, profile_key, profile_value, ordering) VALUES (?, ?, ?, 1)', [$retryId, 'profile.city', json_encode('Retry data')]);
+$site->q("INSERT INTO #__user_notes (user_id, catid, subject, body, state, created_user_id, created_time, modified_user_id, modified_time) VALUES (?, 0, 'UT retry note', 'remaining', 1, 0, '2026-01-01 00:00:00', 0, '2026-01-01 00:00:00')", [$retryId]);
+$site->q('INSERT INTO #__fields_values (field_id, item_id, value) VALUES (?, ?, ?)', [$phoneField, (string) $retryId, 'still-here']);
+$site->q("UPDATE #__extensions SET enabled = 0 WHERE type = 'plugin' AND folder = 'privacy' AND element = 'user'");
+$retryReview = $anonSearch(['names' => $retryBefore['username'] . chr(10) . 'an_old', 'retry_cleanup' => 1]);
+Test::check($anonRows($retryReview) === [$retryId]
+    && str_contains($retryReview, 'Review cleanup of already anonymised accounts only')
+    && str_contains($retryReview, 'Cleanup only')
+    && str_contains($retryReview, 'I understand that only auxiliary data'),
+    'retry review offers only anonymised accounts and clearly confirms cleanup-only mode');
+$retryDone = $anonApply([$retryId], '1');
+Test::check(str_contains($retryDone, 'data-ut-cleaned="1"')
+    && str_contains($retryDone, 'Cleanups completed')
+    && !str_contains($retryDone, 'data-ut-anonymized="1"'),
+    'retry result counts completed cleanups, not new anonymizations');
+preg_match('/<tr\\s+data-ut-cleaned-row="' . $retryId . '"[^>]*>(.*?)<\\/tr>/s', $retryDone, $retryRow);
+preg_match_all('/<td\\b/', (string) ($retryRow[1] ?? ''), $retryCells);
+Test::check(str_contains($retryDone, 'Cleanup retry result')
+    && substr_count($retryDone, 'Accounts with completed cleanup') === 1
+    && count($retryCells[0]) === 2,
+    'retry result has distinct headings and exactly ID and username columns');
+Test::check($account($retryId) === $retryBefore && $account($anonId('an_old'))['username'] === 'an_old',
+    'cleanup retry leaves anonymized identity unchanged and does not anonymize a normal account');
+Test::check(!$site->q('SELECT user_id FROM #__user_profiles WHERE user_id = ?', [$retryId])
+    && !$site->q('SELECT id FROM #__user_notes WHERE user_id = ?', [$retryId])
+    && !$site->q('SELECT value FROM #__fields_values WHERE item_id = ?', [(string) $retryId]),
+    'cleanup retry deletes the leftover profiles, notes and field values');
+$cleanupLogs = $site->q("SELECT message FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_CLEANUP_COMPLETED'");
+$cleanupMessage = json_decode((string) ($cleanupLogs[0]['message'] ?? ''), true) ?: [];
+Test::check(count($cleanupLogs) === 1
+    && ($cleanupMessage['id'] ?? 0) == $retryId
+    && str_contains((string) ($cleanupMessage['itemlink'] ?? ''), 'id=' . $retryId)
+    && !empty($cleanupMessage['accountlink'])
+    && count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_ANONYMIZED'")) === 2,
+    'retry logs the cleanup with account and operator links without logging another anonymization');
+
+// Retrying a second time when there are no auxiliary rows left is a successful no-op:
+// do not add another "cleanup completed" action log entry.
+$cleanReview = $anonSearch(['names' => $retryBefore['username'], 'retry_cleanup' => 1]);
+Test::check($anonRows($cleanReview) === [$retryId],
+    'already-clean anonymized account can still be reviewed for a cleanup retry');
+$cleanDone = $anonApply([$retryId], '1');
+Test::check(str_contains($cleanDone, 'data-ut-cleaned="1"')
+    && $account($retryId) === $retryBefore,
+    'empty cleanup retry succeeds without altering the anonymized account');
+Test::check(count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_CLEANUP_COMPLETED'")) === 1,
+    'no-op cleanup retry does not duplicate the cleanup completed action log');
+$site->q("UPDATE #__extensions SET enabled = 1 WHERE type = 'plugin' AND folder = 'privacy' AND element = 'user'");
+
+
 $review = $anonSearch(['source' => 'inactive', 'days' => 365]);
 Test::check(in_array($anonId('an_old'), $anonRows($review), true) && !in_array($anonId('an_mgr'), $anonRows($review), true), 'inactive accounts are offered; administrator accounts are excluded by default');
 $review = $anonSearch(['source' => 'group', 'group' => $gid('UT anon G')]);

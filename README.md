@@ -134,6 +134,8 @@ Qué se hace con cada cuenta:
 
 Requiere el permiso propio *Anonimizar cuentas*. Superusuarios, tu propia cuenta y, para quien no es superusuario, las cuentas con acceso a la administración nunca se ofrecen.
 
+Si falla el borrado del perfil, las notas o los campos, la cuenta **ya está anonimizada** y queda registrada como tal, pero el resultado indica **«Limpieza incompleta»**. Para recuperar la limpieza, vuelve a «Anonimizar cuentas», selecciona **«Solo repetir la limpieza de cuentas ya anonimizadas»**, indica el usuario anonimizado (o filtra por grupo/inactividad), revisa y confirma. Este modo **solo** admite cuentas ya anonimizadas y bloqueadas; no anonimiza cuentas nuevas, y cada limpieza recuperada se anota por separado en el registro de acciones.
+
 ## Tarea programada por inactividad
 
 1. Comprueba que el plugin «Tarea - User Tools» está habilitado; la portada indica su estado.

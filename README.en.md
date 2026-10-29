@@ -134,6 +134,8 @@ What happens to each account:
 
 It requires its own permission, *Anonymise accounts*. Super Users, your own account and, for non-Super Users, accounts with administrator access are never offered.
 
+If profile, notes or custom-field cleanup fails, the account **has already been anonymised** and that action is logged, but the result reports **incomplete cleanup**. To retry, open Anonymise accounts, choose **Only retry the cleanup of already anonymised accounts**, select the anonymised username (or filter by group/inactivity), review and confirm. This mode offers **only** already anonymised and blocked accounts, never anonymises new accounts, and logs each completed cleanup separately.
+
 ## Scheduled inactivity task
 
 1. Check that “Task - User Tools” is enabled; its status appears on the home screen.

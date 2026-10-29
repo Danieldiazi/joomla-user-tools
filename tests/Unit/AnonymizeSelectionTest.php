@@ -72,6 +72,20 @@ final class AnonymizeSelectionTest extends TestCase
         $this->assertSame([], $this->select(['source' => 'group', 'group' => 99])[0], 'unknown group: nothing');
     }
 
+
+    public function testAlreadyAnonymizedAccountIsOnlyOfferedForExplicitCleanupRetry(): void
+    {
+        [$normal, $skipped] = $this->select(['source' => 'list', 'names' => ['f0e1d2']]);
+        $this->assertSame([], $normal);
+        $this->assertContains('ID 7:COM_USERTOOLS_ANONYMIZE_REASON_DONE', $skipped);
+        [$retry, $retrySkipped] = $this->select(['source' => 'list', 'names' => ['f0e1d2'], 'retryCleanup' => true]);
+        $this->assertSame([7], $retry);
+        $this->assertSame([], $retrySkipped);
+        [$only, $ignored] = $this->select(['source' => 'list', 'names' => ['old', 'f0e1d2'], 'retryCleanup' => true]);
+        $this->assertSame([7], $only, 'retry mode never offers ordinary accounts');
+        $this->assertSame([], $ignored);
+    }
+
     public function testFingerprintChangesWithWhatMatters(): void
     {
         $a = Fixtures::user(3, 'old', [2, 10], false, false, 1, '2019-01-01 00:00:00');
