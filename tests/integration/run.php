@@ -1213,6 +1213,18 @@ Test::check(count($cleanupLogs) === 1
     && !empty($cleanupMessage['accountlink'])
     && count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_ANONYMIZED'")) === 2,
     'retry logs the cleanup with account and operator links without logging another anonymization');
+
+// Retrying a second time when there are no auxiliary rows left is a successful no-op:
+// do not add another "cleanup completed" action log entry.
+$cleanReview = $anonSearch(['names' => $retryBefore['username'], 'retry_cleanup' => 1]);
+Test::check($anonRows($cleanReview) === [$retryId],
+    'already-clean anonymized account can still be reviewed for a cleanup retry');
+$cleanDone = $anonApply([$retryId], '1');
+Test::check(str_contains($cleanDone, 'data-ut-cleaned="1"')
+    && $account($retryId) === $retryBefore,
+    'empty cleanup retry succeeds without altering the anonymized account');
+Test::check(count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_CLEANUP_COMPLETED'")) === 1,
+    'no-op cleanup retry does not duplicate the cleanup completed action log');
 $site->q("UPDATE #__extensions SET enabled = 1 WHERE type = 'plugin' AND folder = 'privacy' AND element = 'user'");
 
 
