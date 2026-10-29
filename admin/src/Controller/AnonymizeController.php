@@ -23,6 +23,7 @@ class AnonymizeController extends DisplayController
                 'source'    => $post->getCmd('source', ''),
                 'group'     => $post->getInt('group', 0),
                 'subgroups' => $post->getInt('subgroups', 0),
+                'retry_cleanup' => $post->getInt('retry_cleanup', 0),
             ]);
             $this->go('view=anonymize&layout=review');
         } catch (UserFacingException $e) {
