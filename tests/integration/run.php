@@ -932,6 +932,7 @@ $site->addUser('ug_one', 'Registered,Author,Editor');
 $site->addUser('ug_two', 'Editor');
 $site->addUser('ug_three', 'Author');
 $site->addUser('ug_back', 'Manager,Author');
+$site->addUser('ug_gap', 'Guest,Editor');
 $ungroupUrl = 'index.php?option=com_usertools&view=ungroup';
 $choose = fn (Client $client, string $login): string => $client->submit($ungroupUrl, ['task' => 'ungroup.choose', 'login' => $login], 'data-ut-ungroup-choose');
 // $keep: titles left ticked (the operator's own ticks, as the browser sends them); $subgroups: unticked
@@ -951,6 +952,14 @@ Test::check(!in_array(getenv('UT_ADMIN_USER') ?: 'admin', array_column((array) j
 [$code] = $admin->request('index.php?option=com_usertools&task=ungroup.suggest&q=ug_');
 Test::check($code === 403, 'suggestions need the form token (got ' . $code . ')');
 
+// Editor sits under Registered > Author, which the account is not in: those two are shown without a
+// checkbox, so Editor hangs from its real parent instead of looking like a child of Guest.
+$gapPage = $choose($admin, 'ug_gap');
+Test::check(substr_count($gapPage, 'data-ut-keep=') === 2 && str_contains($gapPage, 'data-ut-ungroup-context="' . $gid('Registered') . '"')
+    && str_contains($gapPage, 'data-ut-ungroup-context="' . $gid('Author') . '"') && !str_contains($gapPage, 'data-ut-ungroup-context="' . $gid('Public') . '"')
+    && preg_match('/data-ut-depth="2">\\s*<input[^>]*data-ut-keep="' . $gid('Editor') . '"/', $gapPage) === 1
+    && !str_contains($gapPage, 'data-ut-subgroups=') && str_contains($gapPage, 'the account is not in this group'),
+    'groups between the account\'s groups are shown without a checkbox, so each group hangs from its real parent');
 $groupsPage = $choose($admin, 'UG_ONE');
 Test::check(substr_count($groupsPage, 'data-ut-keep=') === 3 && str_contains($groupsPage, 'data-ut-subgroups="' . $gid('Author') . '"') && !str_contains($groupsPage, 'data-ut-subgroups="' . $gid('Editor') . '"'), 'the second step lists only the groups of the account, with "and its subgroups" only where there are subgroups (login is case-insensitive)');
 $review = $select($admin, ['Registered', 'Editor']);

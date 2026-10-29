@@ -109,6 +109,46 @@ final class GroupRemoval
     }
 
     /**
+     * Rows of the selection tree: the account's groups plus the groups between them that the account is
+     * not in, so every row hangs from its real parent. Ancestors shared by all the account's groups (the
+     * common trunk, such as Public) are left out unless the account is in them.
+     *
+     * @param  array<int, object> $groups  UserDirectory::groups(), in tree order
+     * @param  list<int>          $members the account's groups
+     * @return list<array{id: int, member: bool, depth: int}> in tree order; depth counts the shown ancestors
+     */
+    public static function treeRows(array $groups, array $members): array
+    {
+        $members   = array_values(array_filter(array_unique(array_map('intval', $members)), fn (int $id): bool => isset($groups[$id])));
+        $ancestors = [];
+        foreach ($members as $id) {
+            $ancestors[$id] = self::ancestors($groups, $id);
+        }
+        if (!$ancestors) {
+            return [];
+        }
+        $common = \count($ancestors) === 1 ? reset($ancestors) : array_intersect(...array_values($ancestors));
+        $shown  = array_fill_keys($members, true);
+        foreach ($ancestors as $list) {
+            foreach (array_diff($list, $common) as $id) {
+                $shown[$id] = true;
+            }
+        }
+        $rows = [];
+        foreach ($groups as $group) {
+            $id = (int) $group->id;
+            if (isset($shown[$id])) {
+                $depth = 0;
+                foreach (self::ancestors($groups, $id) as $ancestor) {
+                    $depth += isset($shown[$ancestor]) ? 1 : 0;
+                }
+                $rows[] = ['id' => $id, 'member' => \in_array($id, $members, true), 'depth' => $depth];
+            }
+        }
+        return $rows;
+    }
+
+    /**
      * Ancestors of each group (nearest last), for the selection screen.
      *
      * @param  array<int, object> $groups

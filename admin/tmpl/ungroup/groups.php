@@ -13,7 +13,6 @@ $layouts = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
 $account = $this->selection['account'];
 $removed   = array_flip($this->selection['removed']);
 $recursive = array_flip($this->selection['recursive']);
-$minLevel = $this->selection['groups'] ? min(array_column($this->selection['groups'], 'level')) : 0;
 ?>
 <div class="ut-app ut-narrow">
   <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'groups', 'label' => 'COM_USERTOOLS_UNGROUP_PROGRESS'], $layouts) ?>
@@ -26,7 +25,13 @@ $minLevel = $this->selection['groups'] ? min(array_column($this->selection['grou
       <fieldset class="mb-3">
         <legend class="visually-hidden"><?= Text::_('COM_USERTOOLS_UNGROUP_CHANGES') ?></legend>
         <?php foreach ($this->selection['groups'] as $group) : ?>
-        <?php $depth = (int) $group['level'] - $minLevel; ?>
+        <?php $depth = (int) $group['depth']; ?>
+        <?php if (!$group['member']) : ?>
+        <div class="ut-tree-row ut-tree-context text-body-secondary" style="--ut-level: <?= $depth ?>" data-ut-ungroup-context="<?= (int) $group['id'] ?>">
+          <?php if ($depth > 0) : ?><span class="ut-tree-branch" aria-hidden="true">└</span><?php endif; ?><?= $this->escape($group['title']) ?>
+          <small class="ms-1">(<?= Text::_('COM_USERTOOLS_UNGROUP_NOT_MEMBER') ?>)</small>
+        </div>
+        <?php continue; endif; ?>
         <div class="form-check ut-tree-row" style="--ut-level: <?= $depth ?>" data-ut-ungroup-row data-ut-depth="<?= $depth ?>">
           <input class="form-check-input" type="checkbox" name="keep[]" value="<?= (int) $group['id'] ?>" id="ut-keep-<?= (int) $group['id'] ?>"
             data-ut-keep="<?= (int) $group['id'] ?>" data-ut-parents="<?= $this->escape(implode(',', $group['parents'])) ?>"<?= isset($removed[$group['id']]) ? '' : ' checked' ?>>

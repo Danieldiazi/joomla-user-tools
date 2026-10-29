@@ -212,7 +212,7 @@ Joomla's batch removes only the exact group you choose, without showing the acco
 
 ### What exactly does “and its subgroups” do?
 
-It appears when you untick a group that has subgroups. If you tick it, the account also leaves every group below that one that it belongs to, however many levels down. It is decided group by group: you can use it on several groups and each keeps its own choice. Parent groups are not touched. Without it, the account only leaves the group you untick.
+It appears when you untick a group that other groups of the account sit under. If the account is in none of the groups below it, there is nothing to remove in cascade and the option is not shown; since 2026.10.16 the intermediate groups the account is not in are drawn without a checkbox, so you can see which group each one really sits under. If you tick it, the account also leaves every group below that one that it belongs to, however many levels down. It is decided group by group: you can use it on several groups and each keeps its own choice. Parent groups are not touched. Without it, the account only leaves the group you untick.
 
 ### What happens if the account is left without groups?
 

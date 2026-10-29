@@ -232,4 +232,18 @@ final class GroupRemovalTest extends TestCase
         $this->assertSame(AccountRegrouper::SESSIONS_UNKNOWN, (new AccountRegrouper($factory, $logger, fn () => null, fn () => null))->closeSessions(50), 'session metadata off');
         $this->assertSame(AccountRegrouper::SESSIONS_CLOSED, (new AccountRegrouper($factory, $logger, fn () => null, fn () => 0))->closeSessions(50));
     }
+
+    public function testTreeRowsShowTheGroupsBetweenTheAccountsGroups(): void
+    {
+        $rows = fn (array $members) => array_map(fn (array $r) => [$r['id'], $r['member'], $r['depth']], GroupRemoval::treeRows($this->tree(), $members));
+        // Socios and Publisher: Author and Editor are shown without a checkbox, so Publisher does not look
+        // like a child of the row above it; the common trunk (Public, Registered) is left out.
+        $this->assertSame([[3, false, 0], [4, false, 1], [5, true, 2], [10, true, 0]], $rows([10, 5]));
+        $this->assertSame([[11, true, 0]], $rows([11]), 'a single group needs no context');
+        $this->assertSame([[2, true, 0], [3, false, 1], [4, true, 2]], $rows([4, 2]), 'a member ancestor is kept and anchors the depth');
+        $this->assertSame([[6, false, 0], [7, true, 1], [2, false, 0], [10, false, 1], [11, false, 2], [12, true, 3]], $rows([7, 12]),
+            'two branches: only Public is common');
+        $this->assertSame([], $rows([]));
+        $this->assertSame([[11, true, 0]], $rows([11, 99]), 'unknown groups are ignored');
+    }
 }
