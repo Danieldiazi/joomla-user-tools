@@ -47,6 +47,7 @@ class AnonymizeModel extends BaseDatabaseModel
             'includeNever' => (bool) ($draft['includeNever'] ?? $settings->anonymizeIncludeNever()),
             'group'        => (int) ($draft['group'] ?? 0),
             'subgroups'    => (bool) ($draft['subgroups'] ?? false),
+            'retryCleanup' => (bool) ($draft['retryCleanup'] ?? false),
             'exclusions'   => isset($draft['exclusions']) ? Exclusions::fromArray($draft['exclusions']) : $settings->exclusions(Settings::ANONYMIZE),
         ];
     }
@@ -66,9 +67,10 @@ class AnonymizeModel extends BaseDatabaseModel
         $includeNever = (int) ($input['include_never'] ?? 0) === 1;
         $group        = (int) ($input['group'] ?? 0);
         $subgroups    = (int) ($input['subgroups'] ?? 0) === 1;
+        $retryCleanup = (int) ($input['retry_cleanup'] ?? 0) === 1;
         $exclusions   = $this->exclusionsFromInput($input);
         $this->session()->set(self::DRAFT, ['source' => $source, 'names' => $names, 'days' => $days, 'includeNever' => $includeNever,
-            'group' => $group, 'subgroups' => $subgroups, 'exclusions' => $exclusions->toArray()]);
+            'group' => $group, 'subgroups' => $subgroups, 'retryCleanup' => $retryCleanup, 'exclusions' => $exclusions->toArray()]);
         $this->session()->set(self::PREVIEW, []);
         if (!$this->pluginReady()) {
             throw new UserFacingException('COM_USERTOOLS_ANONYMIZE_ERROR_PLUGIN');
@@ -86,7 +88,7 @@ class AnonymizeModel extends BaseDatabaseModel
             Settings::ANONYMIZE . 'include_never' => (int) $includeNever,
         ]);
         $criteria = ['source' => $source, 'names' => Comparison::parse($names), 'cutoff' => $cutoff?->format('Y-m-d H:i:s'),
-            'includeNever' => $includeNever, 'group' => $group, 'subgroups' => $subgroups];
+            'includeNever' => $includeNever, 'group' => $group, 'subgroups' => $subgroups, 'retryCleanup' => $retryCleanup];
         $found = $this->select($criteria, $exclusions);
         $this->session()->set(self::PREVIEW, $this->newPreview([
             'criteria'     => $criteria,
@@ -159,6 +161,7 @@ class AnonymizeModel extends BaseDatabaseModel
             'total'      => \count($selected),
             'done'       => [],
             'errors'     => [],
+            'partial'    => [],
             'skipped'    => 0,
         ]);
         return $this->step();
@@ -191,10 +194,14 @@ class AnonymizeModel extends BaseDatabaseModel
                 // The same fingerprint again, on the User loaded right before writing: a change between this
                 // batch's snapshot and the account's turn is caught too.
                 $outcome = $anonymizer->anonymize((int) $id, $exclusions, $operator,
-                    fn (object $user): bool => !AnonymizeSelection::isAnonymized($user) && AnonymizeSelection::fingerprint($user) === $fingerprint);
+                    fn (object $user): bool => (empty($job['criteria']['retryCleanup']) ? !AnonymizeSelection::isAnonymized($user) : true) && AnonymizeSelection::fingerprint($user) === $fingerprint);
                 if ($outcome['status'] === AccountAnonymizer::ANONYMIZED) {
                     $job['done'][] = ['id' => (int) $id, 'username' => $outcome['username'],
                         'newName' => $outcome['newName'] ?? '', 'newUsername' => $outcome['newUsername'] ?? ''];
+                } elseif ($outcome['status'] === AccountAnonymizer::PARTIAL) {
+                    $job['partial'][] = ['id' => (int) $id, 'username' => $outcome['username'],
+                        'newName' => $outcome['newName'] ?? '', 'newUsername' => $outcome['newUsername'] ?? '',
+                        'message' => $outcome['reason']];
                 } elseif (\in_array($outcome['status'], [AccountAnonymizer::ERROR, AccountAnonymizer::REFUSED], true)) {
                     $job['errors'][] = ['username' => $outcome['username'], 'message' => $outcome['reason']];
                 } else {
@@ -209,7 +216,7 @@ class AnonymizeModel extends BaseDatabaseModel
             return false;
         }
         $this->session()->set(self::JOB, []);
-        $this->storeResult(self::RESULT, ['anonymized' => $job['done'], 'errors' => $job['errors'], 'skipped' => $job['skipped'], 'total' => $job['total']]);
+        $this->storeResult(self::RESULT, ['anonymized' => $job['done'], 'errors' => $job['errors'], 'partial' => $job['partial'], 'skipped' => $job['skipped'], 'total' => $job['total']]);
         $this->session()->set(self::DRAFT, []);
         return true;
     }
@@ -250,6 +257,7 @@ class AnonymizeModel extends BaseDatabaseModel
             'includeNever' => (bool) $criteria['includeNever'],
             'group'        => (int) $criteria['group'],
             'subgroups'    => (bool) $criteria['subgroups'],
+            'retryCleanup' => (bool) ($criteria['retryCleanup'] ?? false),
         ], $exclusions, $this->operator(), $directory->groups());
     }
 
