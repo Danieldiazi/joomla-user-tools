@@ -24,6 +24,10 @@ Se conservan, como cuando se elimina un usuario desde Joomla, pero dejan de esta
 
 Las dos son permanentes. **Eliminar** borra la cuenta: sus contenidos quedan sin una cuenta asociada. **Anonimizar**, desde la 2026.10.17, la conserva bloqueada, pero sustituye su nombre, usuario y correo y borra su perfil, sus notas y sus campos personalizados: los contenidos siguen apuntando a la misma cuenta, ya sin datos personales. Se pueden anonimizar las cuentas de una lista, todas las inactivas o las de un grupo. Detalles en el [README](README.md#anonimizar-cuentas).
 
+### ¿Qué ocurre si falla la limpieza después de anonimizar una cuenta?
+
+La cuenta **ya está anonimizada y bloqueada**, y esa anonimización consta en el registro de acciones. El resultado indicará **«Limpieza incompleta»** si quedan datos en el perfil, las notas o los campos personalizados. Para borrarlos, elige **«Solo repetir la limpieza de cuentas ya anonimizadas»**, selecciona las cuentas y confirma. Este modo no anonimiza cuentas nuevas y registra la limpieza terminada como una acción independiente.
+
 ### ¿Por qué no aparece una solicitud en Usuarios → Privacidad al anonimizar?
 
 Porque nadie la pidió: es una decisión del administrador, no una petición de la persona. User Tools ejecuta los mismos plugins de privacidad que una solicitud de eliminación, pero no inventa la solicitud. Cada anonimización queda en el registro de acciones de usuarios con el ID de la cuenta.
