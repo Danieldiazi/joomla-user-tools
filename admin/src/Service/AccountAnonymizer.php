@@ -37,7 +37,7 @@ final class AccountAnonymizer
 
     /** @var \Closure(User): array{0: bool, 1: string} */
     private \Closure $remove;
-    /** @var \Closure(int): void */
+    /** @var \Closure(int): int Number of auxiliary records actually deleted. */
     private \Closure $cleanup;
 
     /** @param (callable(User): array{0: bool, 1: string})|null $remove asks the privacy plugins and removes; [removed, refusal] */
@@ -113,7 +113,7 @@ final class AccountAnonymizer
             $this->log->anonymized($id, $operator);
         }
         try {
-            ($this->cleanup)($id);
+            $deleted = ($this->cleanup)($id);
         } catch (\Throwable $e) {
             try {
                 Log::add('Additional anonymization cleanup failed for user ID ' . $id, Log::ERROR, 'com_usertools');
@@ -122,19 +122,22 @@ final class AccountAnonymizer
             }
             return ['status' => self::PARTIAL, 'username' => $name, 'reason' => 'COM_USERTOOLS_ANONYMIZE_CLEANUP_INCOMPLETE', 'newName' => (string) $after->name, 'newUsername' => (string) $after->username];
         }
-        if ($already) {
+        // A successful no-op retry must not create a misleading cleanup action log entry.
+        if ($already && $deleted > 0) {
             $this->log->cleanupCompleted($id, $operator);
         }
         return ['status' => self::ANONYMIZED, 'username' => $name, 'reason' => '', 'newName' => (string) $after->name, 'newUsername' => (string) $after->username];
     }
 
-    /** Profile fields, user notes and custom field values of the account. */
-    private function removeExtraData(int $id): void
+    /** Deletes auxiliary data and returns the number of rows actually removed. */
+    private function removeExtraData(int $id): int
     {
-        $db = $this->db ?? throw new \LogicException('Database required for cleanup.');
+        $db      = $this->db ?? throw new \LogicException('Database required for cleanup.');
+        $deleted = 0;
         foreach (['#__user_profiles' => 'user_id', '#__user_notes' => 'user_id'] as $table => $column) {
             $db->setQuery($db->createQuery()->delete($db->quoteName($table))
                 ->where($db->quoteName($column) . ' = :id')->bind(':id', $id, ParameterType::INTEGER))->execute();
+            $deleted += $db->getAffectedRows();
         }
         $item    = (string) $id;
         $context = 'com_users.user';
@@ -144,5 +147,7 @@ final class AccountAnonymizer
             ->where($db->quoteName('item_id') . ' = :item')
             ->where($db->quoteName('field_id') . ' IN (' . $fields . ')')
             ->bind(':item', $item)->bind(':context', $context))->execute();
+        $deleted += $db->getAffectedRows();
+        return $deleted;
     }
 }
