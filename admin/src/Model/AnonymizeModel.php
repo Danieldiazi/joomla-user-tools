@@ -193,7 +193,8 @@ class AnonymizeModel extends BaseDatabaseModel
                 $outcome = $anonymizer->anonymize((int) $id, $exclusions, $operator,
                     fn (object $user): bool => !AnonymizeSelection::isAnonymized($user) && AnonymizeSelection::fingerprint($user) === $fingerprint);
                 if ($outcome['status'] === AccountAnonymizer::ANONYMIZED) {
-                    $job['done'][] = ['id' => (int) $id, 'username' => $outcome['username']];
+                    $job['done'][] = ['id' => (int) $id, 'username' => $outcome['username'],
+                        'newName' => $outcome['newName'] ?? '', 'newUsername' => $outcome['newUsername'] ?? ''];
                 } elseif (\in_array($outcome['status'], [AccountAnonymizer::ERROR, AccountAnonymizer::REFUSED], true)) {
                     $job['errors'][] = ['username' => $outcome['username'], 'message' => $outcome['reason']];
                 } else {

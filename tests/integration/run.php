@@ -1163,6 +1163,8 @@ $one  = $account($anonId('an_one'));
 Test::check(str_contains($done, 'data-ut-anonymized="2"') && $one['name'] === 'User ID ' . $anonId('an_one') && $one['email'] === 'UserID' . $anonId('an_one') . 'removed@email.invalid'
     && $one['username'] !== 'an_one' && (int) $one['block'] === 1, 'Joomla\'s privacy plugin replaced the name, username and email and blocked the account (two batches)');
 Test::check($site->sessions($anonId('an_one')) === 0, 'its sessions are closed');
+Test::check(str_contains($done, 'User ID ' . $anonId('an_one') . '</td>') && str_contains($done, '<code>' . $one['username'] . '</code>')
+    && str_contains($done, 'task=user.edit&amp;id=' . $anonId('an_one')), 'the result shows the new name and username and links each account');
 Test::check(!$site->q('SELECT user_id FROM #__user_profiles WHERE user_id = ?', [$anonId('an_one')]) && !$site->q('SELECT id FROM #__user_notes WHERE user_id = ?', [$anonId('an_one')])
     && !$site->q('SELECT value FROM #__fields_values WHERE item_id = ?', [(string) $anonId('an_one')]), 'profile fields, user notes and custom field values are removed');
 Test::check(count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_ANONYMIZED'")) === 2

@@ -71,7 +71,7 @@ final class AccountAnonymizer
 
     /**
      * @param  callable(object): bool $stillEligible revalidates the review on the fresh User
-     * @return array{status: string, username: string, reason: string}
+     * @return array{status: string, username: string, reason: string, newName?: string, newUsername?: string}
      */
     public function anonymize(int $id, Exclusions $exclusions, Operator $operator, callable $stillEligible): array
     {
@@ -105,7 +105,7 @@ final class AccountAnonymizer
         }
         $this->removeExtraData($id);
         $this->log->anonymized($id, $operator);
-        return ['status' => self::ANONYMIZED, 'username' => $name, 'reason' => ''];
+        return ['status' => self::ANONYMIZED, 'username' => $name, 'reason' => '', 'newName' => (string) $after->name, 'newUsername' => (string) $after->username];
     }
 
     /** Profile fields, user notes and custom field values of the account. */

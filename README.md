@@ -122,7 +122,7 @@ Desde la 2026.10.17, **Anonimizar cuentas** sustituye los datos personales de va
 
    Tiene sus propias exclusiones (administradores, nombres y grupos), como el resto de herramientas.
 2. **Seleccionar y confirmar**: la lista de cuentas encontradas, ninguna marcada. Las que siguen activas se señalan como «Activa», porque dejarán de poder entrar. Debajo aparecen las que no se ofrecen y por qué: protegidas, ya anonimizadas o nombres sin cuenta. Hay que marcar la confirmación y **escribir siempre el número de cuentas**.
-3. **Resultado**: las cuentas anonimizadas (su ID y su nombre de usuario anterior, que solo se ve en esa pantalla), las omitidas y los errores. Las tandas grandes se procesan en varias peticiones con el botón «Continuar la anonimización».
+3. **Resultado**: las cuentas anonimizadas, con su ID (que abre la cuenta en Usuarios), su nombre de usuario anterior (que solo se ve en esa pantalla) y su nombre y usuario nuevos, las omitidas y los errores. Las tandas grandes se procesan en varias peticiones con el botón «Continuar la anonimización».
 
 Qué se hace con cada cuenta:
 

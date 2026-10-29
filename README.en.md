@@ -122,7 +122,7 @@ Since 2026.10.17, **Anonymise accounts** replaces the personal data of several a
 
    It has its own exclusions (administrators, usernames and groups), like the other tools.
 2. **Select and confirm**: the accounts found, none ticked. Those still active are marked “Active”, because they will no longer be able to sign in. Below are those not offered and why: protected, already anonymised, or names with no account. You tick the confirmation and **always type the number of accounts**.
-3. **Result**: the anonymised accounts (their ID and previous username, shown only on that screen), those skipped and any errors. Large batches run over several requests with the “Continue anonymising” button.
+3. **Result**: the anonymised accounts, with their ID (which opens the account in Users), previous username (shown only on that screen) and new name and username, those skipped and any errors. Large batches run over several requests with the “Continue anonymising” button.
 
 What happens to each account:
 

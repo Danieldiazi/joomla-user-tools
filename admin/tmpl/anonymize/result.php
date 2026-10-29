@@ -23,8 +23,12 @@ $result  = $this->result;
     <div class="ut-section-heading"><h3 class="h5 mb-0"><?= Text::_('COM_USERTOOLS_ANONYMIZED_HEADING') ?></h3>
       <a class="btn btn-sm btn-outline-secondary" href="<?= Route::_('index.php?option=com_actionlogs&view=actionlogs&filter[extension]=com_usertools') ?>"><?= Text::_('COM_USERTOOLS_OPEN_ACTION_LOG') ?></a></div>
     <p class="form-text"><?= Text::_('COM_USERTOOLS_ANONYMIZED_HELP') ?></p>
-    <div class="ut-table-scroll"><table class="table table-sm"><thead><tr><th scope="col"><?= Text::_('COM_USERTOOLS_ID') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_ANONYMIZE_OLD_USERNAME') ?></th></tr></thead><tbody>
-    <?php foreach ($result['anonymized'] as $row) : ?><tr><td><?= (int) $row['id'] ?></td><td><?= $this->escape($row['username']) ?></td></tr><?php endforeach; ?>
+    <div class="ut-table-scroll"><table class="table table-sm"><thead><tr><th scope="col"><?= Text::_('COM_USERTOOLS_ID') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_ANONYMIZE_OLD_USERNAME') ?></th>
+      <th scope="col"><?= Text::_('COM_USERTOOLS_ANONYMIZE_NEW_NAME') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_ANONYMIZE_NEW_USERNAME') ?></th></tr></thead><tbody>
+    <?php foreach ($result['anonymized'] as $row) : ?><tr data-ut-anonymized-row="<?= (int) $row['id'] ?>">
+      <td><a href="<?= Route::_('index.php?option=com_users&task=user.edit&id=' . (int) $row['id']) ?>" target="_blank" rel="noopener"
+        aria-label="<?= Text::sprintf('COM_USERTOOLS_ANONYMIZE_OPEN_ACCOUNT', (int) $row['id']) ?>"><?= (int) $row['id'] ?></a></td>
+      <td><?= $this->escape($row['username']) ?></td><td><?= $this->escape($row['newName'] ?? '') ?></td><td><code><?= $this->escape($row['newUsername'] ?? '') ?></code></td></tr><?php endforeach; ?>
     </tbody></table></div>
   </div></section>
   <?php endif; ?>
