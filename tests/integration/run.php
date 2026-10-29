@@ -1178,11 +1178,11 @@ Test::check(!in_array($anonId('an_one'), $anonRows($anonSearch(['names' => 'User
 // - User Accounts plugin is disabled. Reintroduce auxiliary data as if cleanup had failed.
 $retryId = $anonId('an_one');
 $retryBefore = $account($retryId);
-$site->q("INSERT INTO #__user_profiles (user_id, profile_key, profile_value, ordering) VALUES (?, 'profile.city', '\\"Retry data\\"', 1)", [$retryId]);
+$site->q('INSERT INTO #__user_profiles (user_id, profile_key, profile_value, ordering) VALUES (?, ?, ?, 1)', [$retryId, 'profile.city', json_encode('Retry data')]);
 $site->q("INSERT INTO #__user_notes (user_id, catid, subject, body, state, created_user_id, created_time, modified_user_id, modified_time) VALUES (?, 0, 'UT retry note', 'remaining', 1, 0, '2026-01-01 00:00:00', 0, '2026-01-01 00:00:00')", [$retryId]);
 $site->q('INSERT INTO #__fields_values (field_id, item_id, value) VALUES (?, ?, ?)', [$phoneField, (string) $retryId, 'still-here']);
 $site->q("UPDATE #__extensions SET enabled = 0 WHERE type = 'plugin' AND folder = 'privacy' AND element = 'user'");
-$retryReview = $anonSearch(['names' => $retryBefore['username'] . "\\n" . 'an_old', 'retry_cleanup' => 1]);
+$retryReview = $anonSearch(['names' => $retryBefore['username'] . chr(10) . 'an_old', 'retry_cleanup' => 1]);
 Test::check($anonRows($retryReview) === [$retryId]
     && str_contains($retryReview, 'Review cleanup of already anonymised accounts only')
     && str_contains($retryReview, 'Cleanup only')
