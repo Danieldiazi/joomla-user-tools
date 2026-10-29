@@ -53,6 +53,9 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 
 ¿Dudas concretas? Consulta las [preguntas frecuentes](FAQ.md). Si vas a contribuir, o a trabajar con un agente de código, lee [AGENTS.md](AGENTS.md).
 
+
+Si falla la limpieza de perfiles, notas o campos tras anonimizar, el resultado indica **«Anonimizada con limpieza incompleta»** (no un fallo de anonimización). La operación ya se registra en el historial. Para reintentar solo la limpieza, vuelve a «Anonimizar cuentas», marca **«Incluir cuentas ya anonimizadas para repetir la limpieza»**, pega el nuevo nombre de usuario que muestra el resultado, revisa y confirma. El reintento no ejecuta de nuevo los plugins de privacidad.
+
 ## Instalación y actualizaciones
 
 Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) el fichero **pkg_usertools-VERSIÓN.zip** e instálalo desde Sistema → Instalar → Extensiones. El paquete instala el componente, el plugin de tareas, el módulo de administración «User Tools» y el módulo del sitio «User Tools - Grupos de usuarios». En una instalación nueva habilita el plugin «Tarea - User Tools», y la primera vez que se instala el módulo lo publica en el panel de Usuarios. Las tareas que crees empiezan siempre en modo simulación.
