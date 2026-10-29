@@ -54,8 +54,6 @@ The home screen groups the tools into four sections, each with its explanation a
 For specific questions, see the [FAQ](FAQ.en.md). If you are contributing or working with a coding agent, read [AGENTS.md](AGENTS.md) (Spanish).
 
 
-If profile, notes or custom-field cleanup fails after anonymisation, the result reports **incomplete cleanup** rather than a failed anonymisation. The completed anonymisation is already logged. To retry cleanup only, open Anonymise accounts again, enable **Include already anonymised accounts for a cleanup retry**, paste the new username from the result, review and confirm. The retry does not run privacy plugins again.
-
 ## Installation and updates
 
 Download **pkg_usertools-VERSION.zip** from the [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) and install it through System → Install → Extensions. The package installs the component, task plugin, “User Tools” administrator module and “User Tools - User Groups” site module. A fresh installation enables the “Task - User Tools” plugin; the first module installation publishes it on the Users dashboard. New tasks always start in dry-run mode.
@@ -115,6 +113,8 @@ Deletion uses Joomla's User API, just like the user manager. Group memberships, 
 Each deletion is written to the **User Actions Log** with the account ID, username, name and operator (“… deleted the inactive account … with User Tools”). Joomla also adds its own user deletion entry.
 
 ## Anonymise accounts
+
+If profile, notes or custom-field cleanup fails, the account **has already been anonymised** and that action is logged, but the result reports **incomplete cleanup**. To retry, open Anonymise accounts, choose **Only retry the cleanup of already anonymised accounts**, select the anonymised username (or filter by group/inactivity), review and confirm. This mode offers **only** already anonymised and blocked accounts, never anonymises new accounts, and logs each completed cleanup separately.
 
 Since 2026.10.17, **Anonymise accounts** replaces the personal data of several accounts at once without deleting them. Joomla only does this one account at a time, from a removal request in Users → Privacy that the person has to confirm by email. It is **permanent**: it cannot be undone.
 
