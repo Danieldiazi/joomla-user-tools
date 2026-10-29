@@ -103,7 +103,11 @@ final class AccountAnonymizer
         if (!AnonymizeSelection::isAnonymized($after) || (int) $after->block !== 1) {
             return ['status' => self::ERROR, 'username' => $name, 'reason' => 'COM_USERTOOLS_ANONYMIZE_ERROR_FAILED'];
         }
-        $this->removeExtraData($id);
+        try {
+            $this->removeExtraData($id);
+        } catch (\Throwable $e) {
+            return ['status' => self::ERROR, 'username' => $name, 'reason' => 'COM_USERTOOLS_ANONYMIZE_ERROR_FAILED'];
+        }
         $this->log->anonymized($id, $operator);
         return ['status' => self::ANONYMIZED, 'username' => $name, 'reason' => '', 'newName' => (string) $after->name, 'newUsername' => (string) $after->username];
     }
