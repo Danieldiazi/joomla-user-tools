@@ -8,6 +8,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 |---|---|
 | Compare a list | Proposes blocking accounts missing from the complete list, except protected accounts, and lets you create selected new users. |
 | Review inactive users | Finds inactive accounts so you can select which ones to block. |
+| Anonymise accounts | Replaces the personal data of the accounts in a list, of every inactive account or of a group, without deleting them. Permanent, with a review and a typed number. Available since 2026.10.17. |
 | Delete inactive users | Lets you select and permanently delete inactive accounts. By default, only blocked accounts are listed. Available since 2026.10.5. |
 | Scheduled task | Blocks accounts for inactivity; starts in dry-run mode and generates reports. |
 | Dashboard summary | Shows pending accounts, task status and notices on the Users dashboard. Available since 2026.10.6. |
@@ -33,6 +34,7 @@ The home screen groups the tools into four sections, each with its explanation a
 - [Compare a user list](#compare-a-user-list)
 - [Review inactive users](#review-inactive-users)
 - [Delete inactive users](#delete-inactive-users)
+- [Anonymise accounts](#anonymise-accounts)
 - [Scheduled inactivity task and reports](#scheduled-inactivity-task)
 - [Users dashboard summary](#users-dashboard-summary)
 - [User groups module on the site](#user-groups-module-on-the-site)
@@ -108,6 +110,29 @@ The period runs from the last visit or, when including users who have never logg
 Deletion uses Joomla's User API, just like the user manager. Group memberships, profile data, sessions and private messages are removed; other extensions may clean up their own data. Articles and other content created by the user remain, as with Joomla's own deletion.
 
 Each deletion is written to the **User Actions Log** with the account ID, username, name and operator (“… deleted the inactive account … with User Tools”). Joomla also adds its own user deletion entry.
+
+## Anonymise accounts
+
+Since 2026.10.17, **Anonymise accounts** replaces the personal data of several accounts at once without deleting them. Joomla only does this one account at a time, from a removal request in Users → Privacy that the person has to confirm by email. It is **permanent**: it cannot be undone.
+
+1. **Choose accounts**, in one of three ways:
+   - **A list**: usernames or emails, one per line, not case-sensitive. Those that match no account are shown in the review.
+   - **Every inactive account**: those, blocked or not, that have not signed in within the given period (730 days by default), optionally including those who never signed in.
+   - **The accounts of a group**, with the “and its subgroups” checkbox to also include those in the groups below it.
+
+   It has its own exclusions (administrators, usernames and groups), like the other tools.
+2. **Select and confirm**: the accounts found, none ticked. Those still active are marked “Active”, because they will no longer be able to sign in. Below are those not offered and why: protected, already anonymised, or names with no account. You tick the confirmation and **always type the number of accounts**.
+3. **Result**: the anonymised accounts, with their ID (which opens the account in Users), previous username (shown only on that screen) and new name and username, those skipped and any errors. Large batches run over several requests with the “Continue anonymising” button.
+
+What happens to each account:
+
+- **Joomla's privacy plugins** are asked and run, as for a completed removal request. The “Privacy - User Accounts” plugin changes the name to “User ID” and the number, the username to a random value and the email to `UserID…removed@email.invalid`, blocks the account and closes its sessions. Privacy plugins of other extensions clean their own data. If that plugin is disabled, the tool says so and does not search.
+- User Tools also removes what that plugin leaves: the account's **profile fields**, **user notes** and **custom field values**.
+- The account is **not deleted**: it keeps its ID and groups, so articles and other content still point to it, now without personal data.
+- No request is created in Privacy, because nobody asked for one. Each anonymisation is written to the **User Actions Log** with the account ID and who did it only. Earlier log entries are not changed.
+- Each account is checked again right before it is anonymised. If it signed in, changed groups or stopped meeting the criteria after the review, it is skipped.
+
+It requires its own permission, *Anonymise accounts*. Super Users, your own account and, for non-Super Users, accounts with administrator access are never offered.
 
 ## Scheduled inactivity task
 
@@ -306,15 +331,15 @@ The type is always written out («Review», «Information» or «No notices»), 
 
 ## Security
 
-- **Super Users are always protected**, in every tool, even when “Exclude administrators” is disabled. User Tools does not block or delete Super User accounts.
+- **Super Users are always protected**, in every tool, even when “Exclude administrators” is disabled. User Tools does not block, delete or anonymise Super User accounts.
 - **The account performing a manual operation is always protected.**
-- **Each block or group change closes the account's open sessions**, as Joomla's user manager does (requires “Session Metadata”, enabled by default).
-- **Creations, blocks, deletions and group changes are written to the User Actions Log** (Users → User Actions Log): who changed each account and which tool or scheduled task performed it.
+- **Each block, group change or anonymisation closes the account's open sessions**, as Joomla's user manager does (requires “Session Metadata”, enabled by default).
+- **Creations, blocks, deletions, anonymisations and group changes are written to the User Actions Log** (Users → User Actions Log): who changed each account and which tool or scheduled task performed it.
 - **Separate permissions**, delegable without granting Super User access (Options → Permissions):
-  - *Compare list and block*, *Create accounts*, *Review inactive users*, *Delete inactive users*, *View task results*, *Remove from groups*, *View groups, levels and content by level*, *View content by age* and *View the access diagnosis*.
-  - Non-Super Users can never block, delete or remove from groups accounts with administrator access.
+  - *Compare list and block*, *Create accounts*, *Review inactive users*, *Delete inactive users*, *Anonymise accounts*, *View task results*, *Remove from groups*, *View groups, levels and content by level*, *View content by age* and *View the access diagnosis*.
+  - Non-Super Users can never block, delete, anonymise or remove from groups accounts with administrator access.
 - **Configurable reinforced confirmation**: from N accounts (10 by default), the exact number must be typed in addition to ticking the box.
-- **Deletion always requires typing the number of accounts**, even for one; the configurable threshold does not disable this confirmation.
+- **Deletion and anonymisation always require typing the number of accounts**, even for one; the configurable threshold does not disable this confirmation.
 - **The site groups module is read only**: it never shows email addresses or blocked accounts, and by default it hides accounts with administrator access (see [groups module](#user-groups-module-on-the-site)).
 - **Scheduled-task safety limit** against mass blocking (see [safety limit](#safety-limit-against-mass-blocking)).
 - Single-use previews expire after 15 minutes; each account is revalidated immediately before saving; CSRF protection and non-cacheable pages are used.
@@ -329,6 +354,7 @@ Components → User Tools → **Options** (toolbar button):
 | Comparison | Exclude administrators, usernames and groups from manual comparison |
 | Inactivity review | Period, include never-logged-in users, and manual review exclusions |
 | Inactivity deletion | Period, account status (blocked only by default, both, or active only), include never-logged-in users, and deletion exclusions |
+| Anonymisation | Period and include never-logged-in users when choosing inactive accounts, and anonymisation exclusions |
 | Diagnosis | Days without activity after which an account with administrator access appears in the access diagnosis (90 by default) |
 | Permissions | Permissions for each tool |
 

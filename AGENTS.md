@@ -4,11 +4,12 @@ Guía para agentes de código (Copilot, Codex, Claude y similares) y para cualqu
 
 ## Qué es
 
-User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y PostgreSQL) que gestiona cuentas de usuario. Tiene seis herramientas y cuatro pantallas de consulta:
+User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y PostgreSQL) que gestiona cuentas de usuario. Tiene siete herramientas y cuatro pantallas de consulta:
 
 - **Comparar una lista**: bloquea las cuentas que no están en una lista vigente y da de alta las nuevas.
 - **Revisar usuarios inactivos**: bloquea las cuentas seleccionadas.
 - **Eliminar usuarios inactivos**: borra las cuentas seleccionadas.
+- **Anonimizar cuentas**: sustituye los datos personales de las cuentas elegidas por lista, inactividad o grupo, sin eliminarlas. Usa los eventos de privacidad de Joomla (`onPrivacyCanRemoveData`/`onPrivacyRemoveData`) con una solicitud sin guardar, y borra además perfil, notas y valores de campos personalizados. La lógica está en `AnonymizeSelection` y la escritura en `AccountAnonymizer`; permiso `usertools.anonymize`.
 - **Tarea programada**: bloquea por inactividad.
 - **Quitar de grupos**: saca una cuenta de los grupos que se desmarquen y, en los que se marque «y sus subgrupos», de todos los que cuelgan de ellos (se decide grupo a grupo). Una cuenta cada vez; la lógica está en `GroupRemoval` y la escritura en `AccountRegrouper`.
 - **Mover grupos**: cambia el grupo padre de varios grupos a la vez, con sus subgrupos, tras una revisión de los niveles que ganan y pierden. Rechaza los movimientos que cambiarían el acceso a la administración o los permisos de superusuario de cualquier grupo afectado. La lógica está en `GroupMove` y la escritura en `GroupMover` (modelo de grupos de Joomla). Solo superusuarios: no tiene permiso en `access.xml`; usa `DisplayController::SUPER_USERS`, que se comprueba en el activo raíz.
@@ -43,14 +44,14 @@ Se distribuye como un paquete con el componente `com_usertools`, el plugin `plg_
 
 Cualquier cambio debe mantener estas garantías. Hay pruebas que las cubren.
 
-1. **Los superusuarios nunca se bloquean ni se eliminan**, en ninguna herramienta, aunque se desactive «Excluir administradores». Lo decide `Exclusions::reason()`.
+1. **Los superusuarios nunca se bloquean, eliminan ni anonimizan**, en ninguna herramienta, aunque se desactive «Excluir administradores». Lo decide `Exclusions::reason()`.
 2. **La cuenta que ejecuta una operación manual siempre queda protegida.** La tarea programada actúa sin identidad (`Operator::system()`).
-3. **Quien no es superusuario nunca puede bloquear, eliminar ni quitar de grupos cuentas con acceso a la administración.** Un superusuario solo puede perder ese estado si queda otro superusuario activo.
+3. **Quien no es superusuario nunca puede bloquear, eliminar, anonimizar ni quitar de grupos cuentas con acceso a la administración.** Un superusuario solo puede perder ese estado si queda otro superusuario activo.
 4. **Nada se modifica sin revisión previa.** Las previsualizaciones son de un solo uso, caducan a los 15 minutos y se consumen antes de escribir. Cada cuenta se revalida con un objeto `User` recién cargado justo antes de cambiarla, y la que haya cambiado se omite, nunca se sustituye por otra.
 5. **Los cambios en cuentas pasan por la API de usuarios de Joomla** (`User::save()`, `User::delete()`) para que se ejecuten los eventos de los plugins. No se toca `#__users` con SQL para modificar cuentas.
-6. **Cada bloqueo o cambio de grupos cierra las sesiones de la cuenta**, y cada bloqueo, alta, eliminación o cambio de grupos se anota en el registro de acciones de usuarios (`ActionLogger`).
+6. **Cada bloqueo, cambio de grupos o anonimización cierra las sesiones de la cuenta**, y cada bloqueo, alta, eliminación, anonimización o cambio de grupos se anota en el registro de acciones de usuarios (`ActionLogger`).
 7. **Las contraseñas temporales nunca se guardan**: ni en sesión, ni en base de datos, ni en registros. Solo se muestran en la respuesta que crea la cuenta.
-8. **Confirmaciones**: la comparación y la revisión de inactivos piden escribir el número de cuentas a partir del umbral configurado. La eliminación lo pide siempre.
+8. **Confirmaciones**: la comparación y la revisión de inactivos piden escribir el número de cuentas a partir del umbral configurado. La eliminación y la anonimización lo piden siempre.
 9. **La tarea programada tiene un límite de seguridad**: si los candidatos superan el porcentaje configurado de cuentas activas, no bloquea ninguna.
 10. **Cada POST comprueba el token CSRF y el permiso de la herramienta**, y las páginas se sirven con `Cache-Control: no-store`.
 
@@ -63,7 +64,7 @@ Si una petición choca con alguna de estas reglas, se señala el conflicto antes
 - **Salida HTML**: todo valor variable se escapa (`$this->escape()` en las plantillas).
 - **Estilos**: componentes y convenciones públicos de Joomla, sin dependencias de una plantilla concreta. Aplica las reglas de «Interfaz, usabilidad y accesibilidad».
 - **Base de datos**: consultas con el query builder de Joomla y parámetros enlazados, compatibles con MySQL y PostgreSQL. Nada de consultas por cuenta dentro de bucles grandes: se usa `UserDirectory`.
-- **Exclusiones**: cada herramienta tiene las suyas, guardadas en Opciones con su prefijo (`compare_`, `inactive_`, `delete_`). Cada tarea programada guarda las suyas en sus parámetros.
+- **Exclusiones**: cada herramienta tiene las suyas, guardadas en Opciones con su prefijo (`compare_`, `inactive_`, `delete_`, `anonymize_`). Cada tarea programada guarda las suyas en sus parámetros.
 - **Panel**: todo lo que cambie cuentas u Opciones llama a `Toolkit::clearDashboardCache()`. Las cifras del módulo deben usar las mismas reglas que la herramienta a la que enlazan.
 - **Herramienta nueva**: añade su permiso en `access.xml` (o `DisplayController::SUPER_USERS` si es solo para superusuarios), la vista en `DisplayController::PERMISSIONS`, su pestaña en `config.xml` si tiene opciones, la tarjeta en la portada, el controlador en `tests/regression/mvc.php`, una sección en `tests/integration/run.php` y la documentación en README y FAQ.
 

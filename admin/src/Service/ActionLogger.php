@@ -76,6 +76,25 @@ final class ActionLogger
         }
     }
 
+    /** The account's name, username and email no longer exist, so the message keeps only its ID. */
+    public function anonymized(int $id, Operator $operator): void
+    {
+        $message = [
+            'action'      => 'update',
+            'type'        => 'COM_USERTOOLS_ACTION_LOG_TYPE_USER',
+            'id'          => $id,
+            'title'       => 'ID ' . $id,
+            'itemlink'    => 'index.php?option=com_users&task=user.edit&id=' . $id,
+            'userid'      => $operator->id,
+            'username'    => $operator->name,
+            'accountlink' => 'index.php?option=com_users&task=user.edit&id=' . $operator->id,
+        ];
+        try {
+            ($this->writer)([$message], 'COM_USERTOOLS_ACTION_LOG_ANONYMIZED', self::CONTEXT, $operator->id);
+        } catch (\Throwable) {
+        }
+    }
+
     public function created(object $account, Operator $operator, string $mode): void
     {
         $this->write($mode === Registration::MODE_PASSWORD ? 'COM_USERTOOLS_ACTION_LOG_CREATED_PASSWORD' : 'COM_USERTOOLS_ACTION_LOG_CREATED_EMAIL', 'create', $account, $operator, '');

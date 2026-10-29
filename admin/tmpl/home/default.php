@@ -76,11 +76,14 @@ $sections = array_filter($sections, fn (array $section) => (bool) $section[2]);
   </section>
   <?php endforeach; ?>
 
-  <?php if ($this->can('usertools.delete')) : ?>
+  <?php if ($this->can('usertools.delete') || $this->can('usertools.anonymize')) : ?>
   <section class="ut-home-section" aria-labelledby="ut-home-delete" data-ut-home-section="delete">
     <h2 class="ut-home-heading" id="ut-home-delete"><?= Text::_('COM_USERTOOLS_HOME_SECTION_DELETE') ?></h2>
     <p class="ut-home-section-desc"><?= Text::_('COM_USERTOOLS_HOME_SECTION_DELETE_DESC') ?></p>
-    <article class="card border-danger" data-ut-home-card="delete">
+    <div class="row row-cols-1 row-cols-md-2 g-3">
+    <?php if ($this->can('usertools.delete')) : ?>
+    <div class="col">
+    <article class="card border-danger h-100" data-ut-home-card="delete">
       <div class="card-body">
         <div class="ut-card-head">
           <h3 class="card-title ut-card-title" id="ut-card-delete"><span class="icon-trash" aria-hidden="true"></span> <?= Text::_('COM_USERTOOLS_DELETE_TITLE') ?></h3>
@@ -91,6 +94,24 @@ $sections = array_filter($sections, fn (array $section) => (bool) $section[2]);
         <a class="btn btn-sm btn-outline-danger" href="<?= Route::_('index.php?option=com_usertools&view=delete') ?>" aria-describedby="ut-card-delete"><?= Text::_('COM_USERTOOLS_DELETE_START') ?></a>
       </div>
     </article>
+    </div>
+    <?php endif; ?>
+    <?php if ($this->can('usertools.anonymize')) : ?>
+    <div class="col">
+    <article class="card border-danger h-100" data-ut-home-card="anonymize">
+      <div class="card-body">
+        <div class="ut-card-head">
+          <h3 class="card-title ut-card-title" id="ut-card-anonymize"><span class="icon-eye-slash" aria-hidden="true"></span> <?= Text::_('COM_USERTOOLS_ANONYMIZE_TITLE') ?></h3>
+          <span class="badge text-bg-danger"><?= Text::_('COM_USERTOOLS_PERMANENT') ?></span>
+        </div>
+        <p class="card-text"><?= Text::_('COM_USERTOOLS_ANONYMIZE_HOME_DESC') ?></p>
+        <p class="card-text fw-semibold ut-home-warning"><?= Text::_('COM_USERTOOLS_ANONYMIZE_HOME_WARNING') ?></p>
+        <a class="btn btn-sm btn-outline-danger" href="<?= Route::_('index.php?option=com_usertools&view=anonymize') ?>" aria-describedby="ut-card-anonymize"><?= Text::_('COM_USERTOOLS_ANONYMIZE_START') ?></a>
+      </div>
+    </article>
+    </div>
+    <?php endif; ?>
+    </div>
   </section>
   <?php endif; ?>
 </div>
