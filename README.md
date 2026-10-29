@@ -220,6 +220,10 @@ Un grupo no se mueve, y la revisión dice por qué, cuando:
 
 El cambio pasa por el modelo de grupos de Joomla, el mismo de Usuarios → Grupos, así que se ejecutan sus comprobaciones y los eventos de los plugins y el árbol se recalcula. Cada grupo se comprueba de nuevo justo antes de moverlo, y cada movimiento queda en el **registro de acciones de usuarios**. Después se **cierran las sesiones abiertas** de las cuentas de los grupos movidos, para que los niveles que pierden se apliquen enseguida; si alguna sesión sobrevive, el resultado lo avisa. Tu propia sesión no se cierra.
 
+![Mover grupos: revisión](docs/screenshots/22-mover-grupos-revision.jpg)
+
+![Mover grupos: movimiento rechazado por el acceso a la administración](docs/screenshots/23-mover-grupos-rechazo.jpg)
+
 ## Grupos y niveles de acceso
 
 Desde la 2026.10.9, **Grupos y niveles de acceso** muestra en una sola tabla qué niveles de acceso de visualización tiene cada grupo de usuarios. Joomla solo enseña esta relación desde los niveles (Usuarios → Niveles de acceso, columna de grupos), sin la herencia y sin una vista por grupo. Esta pantalla solo lee: no cambia grupos, niveles ni cuentas.
