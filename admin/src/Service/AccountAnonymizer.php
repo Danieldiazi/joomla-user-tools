@@ -117,12 +117,8 @@ final class AccountAnonymizer
     {
         $db = $this->db;
         foreach (['#__user_profiles' => 'user_id', '#__user_notes' => 'user_id'] as $table => $column) {
-            try {
-                $db->setQuery($db->createQuery()->delete($db->quoteName($table))
-                    ->where($db->quoteName($column) . ' = :id')->bind(':id', $id, ParameterType::INTEGER))->execute();
-            } catch (\Throwable) {
-                // The profile plugin may never have been installed.
-            }
+            $db->setQuery($db->createQuery()->delete($db->quoteName($table))
+                ->where($db->quoteName($column) . ' = :id')->bind(':id', $id, ParameterType::INTEGER))->execute();
         }
         $item    = (string) $id;
         $context = 'com_users.user';
