@@ -13,6 +13,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Scheduled task | Blocks accounts for inactivity; starts in dry-run mode and generates reports. |
 | Dashboard summary | Shows pending accounts, task status and notices on the Users dashboard. Available since 2026.10.6. |
 | User groups on the site | Site module that lists the groups of a user or the members of a group. Read only. Available since 2026.10.9. |
+| Add accounts to groups | Adds existing accounts to groups by ID or full path without removing current memberships, with review and confirmation. |
 | Remove from groups | Choose an account, untick the groups it should leave and, if you want, also remove it from all their subgroups. With a review and a confirmation. Available since 2026.10.9. |
 | Move groups | Changes the parent of several groups at once, with their subgroups, after reviewing which levels their members gain or lose. Refuses moves that would change administrator access. Super Users only. Available since 2026.10.16. |
 | Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.9. |
@@ -38,6 +39,7 @@ The home screen groups the tools into four sections, each with its explanation a
 - [Scheduled inactivity task and reports](#scheduled-inactivity-task)
 - [Users dashboard summary](#users-dashboard-summary)
 - [User groups module on the site](#user-groups-module-on-the-site)
+- [Bulk add accounts to groups](#bulk-add-accounts-to-groups)
 - [Remove from groups](#remove-from-groups)
 - [Move groups](#move-groups)
 - [Groups and access levels](#groups-and-access-levels)

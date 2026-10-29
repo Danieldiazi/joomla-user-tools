@@ -1310,6 +1310,22 @@ Test::check(str_contains($noPrivilege, 'data-ut-addgroups-none')
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
 [$code] = $delegate->request($agUrl);
 Test::check($code === 403, 'bulk group assignment requires its own permission (got ' . $code . ')');
+
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'",
+    [json_encode(['core.manage' => ['6' => 1], 'usertools.addgroups' => ['6' => 1]])]);
+$delegated = $delegate->get($agUrl);
+Test::check(str_contains($delegated, 'data-ut-addgroups-form'), 'delegate with explicit permission can open group assignment');
+$delegatedReview = $delegate->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+    'group' => '#' . $agChild, 'lines' => "ag_two\nag_backend"], 'data-ut-addgroups-form');
+Test::check(substr_count($delegatedReview, 'data-ut-addgroups-status="add"') === 1
+    && str_contains($delegatedReview, 'data-ut-addgroups-status="protected"'),
+    'delegated preview permits an ordinary account but never a backend account');
+$delegatedDone = $delegate->submit($agUrl . '&layout=review',
+    ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-addgroups-apply');
+Test::check(str_contains($delegatedDone, 'data-ut-addgroups-result="added"')
+    && in_array('UT anon G sub', $groupsOf('ag_two'), true)
+    && !in_array('UT anon G sub', $groupsOf('ag_backend'), true),
+    'delegated group assignment uses the same protection at write time');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
