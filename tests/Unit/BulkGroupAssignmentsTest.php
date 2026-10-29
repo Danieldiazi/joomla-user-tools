@@ -61,7 +61,7 @@ final class BulkGroupAssignmentsTest extends TestCase
     {
         $plan = Plan::plan($this->fixtureGroups(), $this->users(), 'pairs',
             "ALICE;#11\nalice;#11\nbob;#11\nboss;#11\nnobody;#11\nalice;#8\nalice;Directiva\nalice;Public/Registered/Doble",
-            new Operator(9, true, 'admin'));
+            '', new Operator(9, true, 'admin'));
         $this->assertSame([
             Plan::ADD, Plan::DUPLICATE, Plan::EXISTING, Plan::PROTECTED,
             Plan::UNKNOWN, Plan::PROTECTED, Plan::INVALID_GROUP, Plan::AMBIGUOUS,
