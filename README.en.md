@@ -13,6 +13,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Dashboard summary | Shows pending accounts, task status and notices on the Users dashboard. Available since 2026.10.6. |
 | User groups on the site | Site module that lists the groups of a user or the members of a group. Read only. Available since 2026.10.9. |
 | Remove from groups | Choose an account, untick the groups it should leave and, if you want, also remove it from all their subgroups. With a review and a confirmation. Available since 2026.10.9. |
+| Move groups | Changes the parent of several groups at once, with their subgroups, after reviewing which levels their members gain or lose. Refuses moves that would change administrator access. Super Users only. Available since 2026.10.16. |
 | Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.9. |
 | Content by access level | How many articles, categories, menu items, modules, fields and other items use each level, with a link to each filtered list. Read only. Available since 2026.10.12. |
 | Content by age | Table by year with how many articles were last modified in each one, filterable by access level; each number opens the list of those articles with a link to edit them. Read only. Available since 2026.10.15. |
@@ -36,6 +37,7 @@ The home screen groups the tools into four sections, each with its explanation a
 - [Users dashboard summary](#users-dashboard-summary)
 - [User groups module on the site](#user-groups-module-on-the-site)
 - [Remove from groups](#remove-from-groups)
+- [Move groups](#move-groups)
 - [Groups and access levels](#groups-and-access-levels)
 - [Content by access level](#content-by-access-level)
 - [Content by age](#content-by-age)
@@ -200,6 +202,29 @@ Rules:
 - The list of accounts shown while typing is requested with the form token and the tool permission, shows at most 10 accounts, never your own, and changes nothing.
 
 It requires its own permission, *Remove from groups*: Super Users have it; grant it to others in Options → Permissions. It works on one account at a time.
+
+## Move groups
+
+Since 2026.10.16, **Move groups** changes the parent of several groups at once. In Joomla, groups have to be edited one by one in Users → Groups. **Only Super Users can use it**, even if another account has “Configure ACL & Options” in User Tools.
+
+1. **Groups and parent**: tick the groups in the tree and choose the new parent group. Each group moves with all its subgroups and keeps its members. If you tick a group and one of its subgroups, the subgroup goes with its group.
+2. **Review**: for each group, the group it is under now, whether it moves or why not, how many accounts it affects (those in the group and its subgroups, blocked ones included) and which **access levels** its members gain and lose. Nothing has changed yet. The review is single-use, expires after 15 minutes and asks for confirmation.
+3. **Result**: the groups moved and those skipped because they changed after the review.
+
+A group is not moved, and the review says why, when:
+
+- **it would change administrator access**: if, under the new parent, the group or any of its subgroups would gain or lose administrator access or Super User permissions. The review names every group affected. Those changes are made in Users → Groups, one group at a time;
+- **it would change administrator access for an account**: Joomla decides an account's access with all its groups together, so, for example, a deny inherited through one group can cancel the access another gives. Each account in the ticked groups is checked with all its groups, and the review names those that would change;
+- it is Public (the root) or a Super User group, or the target is a Super User group;
+- the target is the group itself or one of its subgroups;
+- there is already a group with the same name under the target (Joomla does not allow it);
+- it is already under that group (nothing to do).
+
+The change goes through Joomla's group model, the same as Users → Groups, so its checks and the plugin events run and the tree is rebuilt. Each group is checked again right before it moves, and every move is written to the **User Actions Log**. Then the **open sessions** of the accounts in the moved groups **are closed**, so the levels they lose apply at once; if a session survives, the result warns about it. Your own session is not closed.
+
+![Move groups: review (Spanish interface)](docs/screenshots/22-mover-grupos-revision.jpg)
+
+![Move groups: a move refused because of administrator access (Spanish interface)](docs/screenshots/23-mover-grupos-rechazo.jpg)
 
 ## Groups and access levels
 

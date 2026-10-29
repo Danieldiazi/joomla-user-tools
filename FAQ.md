@@ -226,6 +226,10 @@ La herramienta explica el motivo: es tu propia cuenta; tiene acceso a la adminis
 
 No: la herramienta trabaja con una cuenta cada vez, para que cada cambio de permisos se revise por separado.
 
+### ¿Puedo cambiar el grupo padre de varios grupos a la vez?
+
+Sí, desde la 2026.10.16, con **Mover grupos**, si eres superusuario. Marcas los grupos, eliges el nuevo padre y la revisión te enseña qué niveles de acceso ganan o pierden sus miembros antes de confirmar. No mueve los grupos de superusuarios ni ningún grupo cuyo movimiento cambiaría el acceso a la administración de él o de sus subgrupos: esos cambios se hacen en Usuarios → Grupos, uno a uno. Detalles en el [README](README.md#mover-grupos).
+
 ## Grupos y niveles de acceso
 
 ### ¿Cómo veo qué niveles de acceso tiene cada grupo?

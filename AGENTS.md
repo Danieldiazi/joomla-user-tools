@@ -4,13 +4,14 @@ Guía para agentes de código (Copilot, Codex, Claude y similares) y para cualqu
 
 ## Qué es
 
-User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y PostgreSQL) que gestiona cuentas de usuario. Tiene cinco herramientas y cuatro pantallas de consulta:
+User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y PostgreSQL) que gestiona cuentas de usuario. Tiene seis herramientas y cuatro pantallas de consulta:
 
 - **Comparar una lista**: bloquea las cuentas que no están en una lista vigente y da de alta las nuevas.
 - **Revisar usuarios inactivos**: bloquea las cuentas seleccionadas.
 - **Eliminar usuarios inactivos**: borra las cuentas seleccionadas.
 - **Tarea programada**: bloquea por inactividad.
 - **Quitar de grupos**: saca una cuenta de los grupos que se desmarquen y, en los que se marque «y sus subgrupos», de todos los que cuelgan de ellos (se decide grupo a grupo). Una cuenta cada vez; la lógica está en `GroupRemoval` y la escritura en `AccountRegrouper`.
+- **Mover grupos**: cambia el grupo padre de varios grupos a la vez, con sus subgrupos, tras una revisión de los niveles que ganan y pierden. Rechaza los movimientos que cambiarían el acceso a la administración o los permisos de superusuario de cualquier grupo afectado. La lógica está en `GroupMove` y la escritura en `GroupMover` (modelo de grupos de Joomla). Solo superusuarios: no tiene permiso en `access.xml`; usa `DisplayController::SUPER_USERS`, que se comprueba en el activo raíz.
 - **Grupos y niveles de acceso** (solo lectura): qué niveles tiene cada grupo, asignados o heredados, con exportación a CSV. La lógica está en `AccessMatrix`.
 - **Contenido por nivel de acceso** (solo lectura): cuántos elementos de cada tipo usan cada nivel, con enlace a los listados filtrados de Joomla. La lógica está en `AccessUsage` y la lectura en `AccessUsageReader`. Comparte el permiso `usertools.access`.
 - **Contenido por antigüedad** (solo lectura): cuántos elementos se modificaron por última vez en cada año (de momento, artículos), filtrable por nivel, con la lista de cada año y enlace a su edición. La lógica está en `ContentAge` y la lectura en `ContentAgeReader`; permiso `usertools.content`, y la lista exige además poder gestionar ese contenido en Joomla.
@@ -64,7 +65,7 @@ Si una petición choca con alguna de estas reglas, se señala el conflicto antes
 - **Base de datos**: consultas con el query builder de Joomla y parámetros enlazados, compatibles con MySQL y PostgreSQL. Nada de consultas por cuenta dentro de bucles grandes: se usa `UserDirectory`.
 - **Exclusiones**: cada herramienta tiene las suyas, guardadas en Opciones con su prefijo (`compare_`, `inactive_`, `delete_`). Cada tarea programada guarda las suyas en sus parámetros.
 - **Panel**: todo lo que cambie cuentas u Opciones llama a `Toolkit::clearDashboardCache()`. Las cifras del módulo deben usar las mismas reglas que la herramienta a la que enlazan.
-- **Herramienta nueva**: añade su permiso en `access.xml`, la vista en `DisplayController::PERMISSIONS`, su pestaña en `config.xml` si tiene opciones, la tarjeta en la portada, el controlador en `tests/regression/mvc.php`, una sección en `tests/integration/run.php` y la documentación en README y FAQ.
+- **Herramienta nueva**: añade su permiso en `access.xml` (o `DisplayController::SUPER_USERS` si es solo para superusuarios), la vista en `DisplayController::PERMISSIONS`, su pestaña en `config.xml` si tiene opciones, la tarjeta en la portada, el controlador en `tests/regression/mvc.php`, una sección en `tests/integration/run.php` y la documentación en README y FAQ.
 
 ## Interfaz, usabilidad y accesibilidad
 

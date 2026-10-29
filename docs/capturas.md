@@ -4,7 +4,7 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, la portada de 2026.10.13, la del panel de Usuarios de 2026.10.14 y las de diagnóstico de accesos y contenido por antigüedad de 2026.10.15. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, la portada de 2026.10.13, la del panel de Usuarios de 2026.10.14 las de diagnóstico de accesos y contenido por antigüedad de 2026.10.15 y las de mover grupos de 2026.10.16. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
 ![Portada de User Tools agrupada en secciones: revisar cuentas, grupos y niveles, automatización y eliminar cuentas (2026.10.13)](screenshots/01-portada.jpg)
 
@@ -41,6 +41,10 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cad
 ![Grupos y niveles de acceso: matriz de grupos por nivel, exportación CSV y resumen por nivel (2026.10.11)](screenshots/14-grupos-niveles.jpg)
 
 ![Contenido por nivel de acceso: una fila por nivel y una columna por tipo de elemento, con la tabla de una extensión de adjuntos (2026.10.12)](screenshots/18-contenido-por-nivel.jpg)
+
+![Mover grupos: revisión con un grupo que se mueve, el subgrupo que va con él y un grupo que no se puede mover, con las cuentas afectadas y los niveles que gana (2026.10.16)](screenshots/22-mover-grupos-revision.jpg)
+
+![Mover grupos: movimiento rechazado porque daría acceso a la administración al grupo y a sus subgrupos (2026.10.16)](screenshots/23-mover-grupos-rechazo.jpg)
 
 ![Diagnóstico de accesos: resumen con el tipo de cada comprobación y el detalle de cada una, con qué se detectó, por qué importa y cómo revisarlo (2026.10.15)](screenshots/19-diagnostico.jpg)
 

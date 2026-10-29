@@ -226,6 +226,10 @@ The tool gives the reason: it is your own account; it has administrator access a
 
 No: the tool works with one account at a time, so every permission change is reviewed separately.
 
+### Can I change the parent of several groups at once?
+
+Yes, since 2026.10.16, with **Move groups**, if you are a Super User. Tick the groups, choose the new parent, and the review shows which access levels their members gain or lose before you confirm. It does not move Super User groups or any group whose move would change administrator access for it or its subgroups: those changes are made in Users → Groups, one at a time. Details in the [README](README.en.md#move-groups).
+
 ## Groups and access levels
 
 ### How do I see which access levels each group has?

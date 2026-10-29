@@ -13,6 +13,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Resumen en el panel | Muestra en el panel de Usuarios las cuentas pendientes, el estado de las tareas y avisos. Disponible desde 2026.10.6. |
 | Grupos de usuarios en el sitio | Módulo del sitio que lista los grupos de un usuario o los miembros de un grupo. Solo lee. Disponible desde 2026.10.9. |
 | Quitar de grupos | Elige una cuenta, desmarca los grupos de los que debe salir y, si quieres, quítala también de todos sus subgrupos. Con revisión previa y confirmación. Disponible desde 2026.10.9. |
+| Mover grupos | Cambia de una vez el grupo padre de varios grupos, con sus subgrupos, tras revisar qué niveles ganan o pierden sus miembros. Rechaza los movimientos que cambiarían el acceso a la administración. Solo superusuarios. Disponible desde 2026.10.16. |
 | Grupos y niveles de acceso | Tabla de solo lectura con los niveles de acceso que tiene cada grupo, asignados o heredados. Disponible desde 2026.10.9. |
 | Contenido por nivel de acceso | Cuántos artículos, categorías, menús, módulos, campos y demás elementos usan cada nivel, con enlace a cada listado filtrado. Solo lee. Disponible desde 2026.10.12. |
 | Contenido por antigüedad | Tabla por años con cuántos artículos se modificaron por última vez en cada uno, filtrable por nivel de acceso; cada cifra abre la lista de esos artículos con enlace para editarlos. Solo lee. Disponible desde 2026.10.15. |
@@ -36,6 +37,7 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 - [Resumen en el panel de Usuarios](#resumen-en-el-panel-de-usuarios)
 - [Módulo de grupos de usuarios en el sitio](#módulo-de-grupos-de-usuarios-en-el-sitio)
 - [Quitar de grupos](#quitar-de-grupos)
+- [Mover grupos](#mover-grupos)
 - [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso)
 - [Contenido por nivel de acceso](#contenido-por-nivel-de-acceso)
 - [Contenido por antigüedad](#contenido-por-antigüedad)
@@ -198,6 +200,29 @@ Reglas:
 - La lista de cuentas que aparece al escribir se pide al servidor con el token del formulario y el permiso de la herramienta, muestra como mucho 10 cuentas, nunca la tuya, y no cambia nada.
 
 Requiere el permiso propio *Quitar de grupos*: los superusuarios lo tienen; a los demás hay que concedérselo en Opciones → Permisos. Se aplica a una cuenta cada vez.
+
+## Mover grupos
+
+Desde la 2026.10.16, **Mover grupos** cambia de una vez el grupo padre de varios grupos. En Joomla hay que editar los grupos uno a uno en Usuarios → Grupos. **Solo la pueden usar los superusuarios**, aunque otra cuenta tenga «Configurar ACL y opciones» en User Tools.
+
+1. **Grupos y destino**: marca los grupos en el árbol y elige el nuevo grupo padre. Cada grupo se mueve con todos sus subgrupos y conserva sus miembros. Si marcas un grupo y uno de sus subgrupos, el subgrupo va con su grupo.
+2. **Revisar**: por cada grupo, de qué grupo cuelga ahora, si se mueve o por qué no, cuántas cuentas afecta (las del grupo y sus subgrupos, bloqueadas incluidas) y qué **niveles de acceso** ganan y pierden sus miembros. Todavía no se ha cambiado nada. La revisión es de un solo uso, caduca a los 15 minutos y pide confirmación.
+3. **Resultado**: los grupos movidos y los que se omitieron porque cambiaron después de la revisión.
+
+Un grupo no se mueve, y la revisión dice por qué, cuando:
+
+- **cambiaría el acceso a la administración**: si, al colgar del nuevo grupo, él o alguno de sus subgrupos ganaría o perdería el acceso a la administración o los permisos de superusuario. La revisión nombra cada grupo afectado. Esos cambios se hacen en Usuarios → Grupos, grupo a grupo;
+- **cambiaría el acceso a la administración de alguna cuenta**: Joomla decide el acceso de una cuenta con todos sus grupos a la vez, así que, por ejemplo, una denegación heredada a través de un grupo puede anular el acceso que da otro. Cada cuenta de los grupos marcados se comprueba con todos sus grupos, y la revisión nombra las que cambiarían;
+- es Public (la raíz) o un grupo de superusuarios, o el destino es un grupo de superusuarios;
+- el destino es el propio grupo o uno de sus subgrupos;
+- ya hay un grupo con el mismo nombre bajo el destino (Joomla no lo permite);
+- ya cuelga de ese grupo (no hay nada que hacer).
+
+El cambio pasa por el modelo de grupos de Joomla, el mismo de Usuarios → Grupos, así que se ejecutan sus comprobaciones y los eventos de los plugins y el árbol se recalcula. Cada grupo se comprueba de nuevo justo antes de moverlo, y cada movimiento queda en el **registro de acciones de usuarios**. Después se **cierran las sesiones abiertas** de las cuentas de los grupos movidos, para que los niveles que pierden se apliquen enseguida; si alguna sesión sobrevive, el resultado lo avisa. Tu propia sesión no se cierra.
+
+![Mover grupos: revisión](docs/screenshots/22-mover-grupos-revision.jpg)
+
+![Mover grupos: movimiento rechazado por el acceso a la administración](docs/screenshots/23-mover-grupos-rechazo.jpg)
 
 ## Grupos y niveles de acceso
 

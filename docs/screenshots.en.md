@@ -4,7 +4,7 @@
 
 [Back to the README](../README.en.md)
 
-These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, the home screen in 2026.10.13, the Users dashboard in 2026.10.14, and access diagnosis and content by age in 2026.10.15. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
+These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, the home screen in 2026.10.13, the Users dashboard in 2026.10.14, access diagnosis and content by age in 2026.10.15, and move groups in 2026.10.16. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
 ![User Tools home screen grouped into sections: review accounts, groups and levels, automation and delete accounts (2026.10.13, Spanish interface)](screenshots/01-portada.jpg)
 
@@ -41,6 +41,10 @@ These shared screenshots show the Spanish interface on Joomla 6.2.0. Each captio
 ![Groups and access levels: groups by level matrix, CSV export and summary by level (2026.10.11, Spanish interface)](screenshots/14-grupos-niveles.jpg)
 
 ![Content by access level: one row per level and one column per kind of item, including the table of an attachments extension (2026.10.12, Spanish interface)](screenshots/18-contenido-por-nivel.jpg)
+
+![Move groups: review with a group that moves, the subgroup that goes with it and a group that cannot move, with the accounts affected and the level gained (2026.10.16, Spanish interface)](screenshots/22-mover-grupos-revision.jpg)
+
+![Move groups: a move refused because it would give administrator access to the group and its subgroups (2026.10.16, Spanish interface)](screenshots/23-mover-grupos-rechazo.jpg)
 
 ![Access diagnosis: summary with the type of each check and the details of each one, with what was found, why it matters and how to review it (2026.10.15, Spanish interface)](screenshots/19-diagnostico.jpg)
 

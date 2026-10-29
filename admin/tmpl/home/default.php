@@ -22,6 +22,7 @@ $sections = [
     ]],
     'groups' => ['COM_USERTOOLS_HOME_SECTION_GROUPS', 'COM_USERTOOLS_HOME_SECTION_GROUPS_DESC', [
         ['usertools.ungroup', 'ungroup', 'COM_USERTOOLS_UNGROUP_TITLE', 'COM_USERTOOLS_UNGROUP_HOME_DESC', 'COM_USERTOOLS_UNGROUP_START', '', 'users-cog'],
+        ['core.admin', 'move', 'COM_USERTOOLS_MOVE_TITLE', 'COM_USERTOOLS_MOVE_HOME_DESC', 'COM_USERTOOLS_MOVE_START', 'super', 'folder-open'],
         ['usertools.access', 'access', 'COM_USERTOOLS_ACCESS_TITLE', 'COM_USERTOOLS_ACCESS_HOME_DESC', 'COM_USERTOOLS_ACCESS_START', 'read', 'user-lock'],
         ['usertools.access', 'usage', 'COM_USERTOOLS_USAGE_TITLE', 'COM_USERTOOLS_USAGE_HOME_DESC', 'COM_USERTOOLS_USAGE_START', 'read', 'file-alt'],
         ['usertools.content', 'age', 'COM_USERTOOLS_AGE_TITLE', 'COM_USERTOOLS_AGE_HOME_DESC', 'COM_USERTOOLS_AGE_START', 'read', 'calendar'],
@@ -60,6 +61,7 @@ $sections = array_filter($sections, fn (array $section) => (bool) $section[2]);
             <div class="ut-card-head">
               <h3 class="card-title ut-card-title" id="ut-card-<?= $view ?>"><span class="icon-<?= $icon ?>" aria-hidden="true"></span> <?= Text::_($cardTitle) ?></h3>
               <?php if ($kind === 'read') : ?><span class="badge text-bg-secondary"><?= Text::_('COM_USERTOOLS_READ_ONLY') ?></span><?php endif; ?>
+              <?php if ($kind === 'super') : ?><span class="badge text-bg-warning"><?= Text::_('COM_USERTOOLS_SUPER_ONLY') ?></span><?php endif; ?>
             </div>
             <p class="card-text"><?= Text::_($cardText) ?></p>
             <?php if ($kind === 'plugin') : ?>

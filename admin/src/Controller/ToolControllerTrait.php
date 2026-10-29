@@ -15,7 +15,7 @@ trait ToolControllerTrait
     protected function guard(string $permission): void
     {
         $this->checkToken();
-        if (!$this->app->getIdentity()->authorise($permission, 'com_usertools')) {
+        if (!DisplayController::allowed($this->app->getIdentity(), $permission)) {
             throw new NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
         }
         Toolkit::app()->setHeader('Cache-Control', 'no-store, private', true);
