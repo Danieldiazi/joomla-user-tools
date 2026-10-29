@@ -20,11 +20,12 @@ final class AccountGroupAdder
 
     /**
      * @param list<int> $before
+     * @param list<int> $targets
      * @return string
      */
-    public function add(int $id, string $username, array $before, int $group, Operator $operator, bool $safeTarget): string
+    public function add(int $id, string $username, array $before, array $targets, Operator $operator, bool $safeTarget): string
     {
-        if (!$safeTarget || $group < 1 || $id === $operator->id) {
+        if (!$safeTarget || !$targets || $id === $operator->id) {
             return self::CHANGED;
         }
         $user = $this->users->loadUserById($id);
@@ -33,12 +34,11 @@ final class AccountGroupAdder
         sort($current);
         sort($expected);
         if (empty($user->id) || (string) $user->username !== $username || $current !== $expected
-            || $user->authorise('core.admin') || $user->authorise('core.login.admin') || in_array($group, $current, true)) {
+            || $user->authorise('core.admin') || $user->authorise('core.login.admin') || array_intersect($targets, $current)) {
             return self::CHANGED;
         }
-        $user->groups = array_fill_keys(array_merge($current, [$group]), true);
-        // Joomla's User::save expects group IDs as values, not booleans.
-        $user->groups = array_combine(array_keys($user->groups), array_keys($user->groups));
+        $all = array_values(array_unique(array_merge($current, $targets)));
+        $user->groups = array_combine($all, $all);
         try {
             if (!$user->save(true)) {
                 return self::ERROR;
@@ -46,7 +46,9 @@ final class AccountGroupAdder
         } catch (\Throwable) {
             return self::ERROR;
         }
-        $this->log->groupAdded($user, $operator, $group);
+        foreach ($targets as $group) {
+            $this->log->groupAdded($user, $operator, $group);
+        }
         try {
             UserHelper::destroyUserSessions($id);
         } catch (\Throwable) {
