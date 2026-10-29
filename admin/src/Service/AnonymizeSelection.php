@@ -67,7 +67,12 @@ final class AnonymizeSelection
         foreach ($matched as $id => $user) {
             $done   = self::isAnonymized($user);
             $reason = $exclusions->reason($user, $operator);
-            if ($done && empty($criteria['retryCleanup'])) {
+            // A cleanup retry is a separate operation: it must NEVER anonymize a normal account.
+            if (!empty($criteria['retryCleanup'])) {
+                if (!$done || (int) $user->block !== 1) {
+                    continue;
+                }
+            } elseif ($done) {
                 $reason = self::REASON_DONE;
             }
             if ($reason !== '') {
