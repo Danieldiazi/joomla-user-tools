@@ -37,10 +37,13 @@ final class AccountAnonymizer
 
     /** @var \Closure(User): array{0: bool, 1: string} */
     private \Closure $remove;
+    /** @var \Closure(int): void */
+    private \Closure $cleanup;
 
     /** @param (callable(User): array{0: bool, 1: string})|null $remove asks the privacy plugins and removes; [removed, refusal] */
-    public function __construct(private UserFactoryInterface $users, private DatabaseInterface $db, private ActionLogger $log, ?callable $remove = null)
+    public function __construct(private UserFactoryInterface $users, private DatabaseInterface $db, private ActionLogger $log, ?callable $remove = null, ?callable $cleanup = null)
     {
+        $this->cleanup = $cleanup !== null ? \Closure::fromCallable($cleanup) : $this->removeExtraData(...);
         $this->remove = $remove !== null ? \Closure::fromCallable($remove) : static function (User $user): array {
             $app        = Factory::getApplication();
             $dispatcher = $app->getDispatcher();
@@ -110,7 +113,7 @@ final class AccountAnonymizer
             $this->log->anonymized($id, $operator);
         }
         try {
-            $this->removeExtraData($id);
+            ($this->cleanup)($id);
         } catch (\Throwable $e) {
             try {
                 Log::add('Additional anonymization cleanup failed for user ID ' . $id, Log::ERROR, 'com_usertools');
