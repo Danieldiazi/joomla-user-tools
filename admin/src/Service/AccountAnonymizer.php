@@ -29,6 +29,7 @@ use Joomla\Database\ParameterType;
 final class AccountAnonymizer
 {
     public const ANONYMIZED = 'anonymized';
+    public const PARTIAL = 'partial';
     public const SKIPPED    = 'skipped';
     public const PROTECTED  = 'protected';
     public const REFUSED    = 'refused';
@@ -89,8 +90,9 @@ final class AccountAnonymizer
         if (!$stillEligible($user)) {
             return ['status' => self::SKIPPED, 'username' => $name, 'reason' => 'COM_USERTOOLS_REASON_NO_LONGER_ELIGIBLE'];
         }
+        $already = AnonymizeSelection::isAnonymized($user) && (int) $user->block === 1;
         try {
-            [$removed, $refusal] = ($this->remove)($user);
+            [$removed, $refusal] = $already ? [true, ''] : ($this->remove)($user);
         } catch (\Throwable) {
             [$removed, $refusal] = [false, ''];
         }
@@ -104,6 +106,9 @@ final class AccountAnonymizer
         if (!AnonymizeSelection::isAnonymized($after) || (int) $after->block !== 1) {
             return ['status' => self::ERROR, 'username' => $name, 'reason' => 'COM_USERTOOLS_ANONYMIZE_ERROR_FAILED'];
         }
+        if (!$already) {
+            $this->log->anonymized($id, $operator);
+        }
         try {
             $this->removeExtraData($id);
         } catch (\Throwable $e) {
@@ -112,9 +117,8 @@ final class AccountAnonymizer
             } catch (\Throwable) {
                 // The cleanup failure is still returned to the caller.
             }
-            return ['status' => self::ERROR, 'username' => $name, 'reason' => 'COM_USERTOOLS_ANONYMIZE_ERROR_FAILED'];
+            return ['status' => self::PARTIAL, 'username' => $name, 'reason' => 'COM_USERTOOLS_ANONYMIZE_CLEANUP_INCOMPLETE', 'newName' => (string) $after->name, 'newUsername' => (string) $after->username];
         }
-        $this->log->anonymized($id, $operator);
         return ['status' => self::ANONYMIZED, 'username' => $name, 'reason' => '', 'newName' => (string) $after->name, 'newUsername' => (string) $after->username];
     }
 
