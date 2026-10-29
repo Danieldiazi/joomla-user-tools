@@ -1255,5 +1255,62 @@ $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_en
 Test::check($code === 403, 'the tool needs its own permission (got ' . $code . ')');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
+
+Test::section('Bulk add accounts to groups');
+$agUrl = 'index.php?option=com_usertools&view=addgroups';
+$site->addUser('ag_one', 'Registered');
+$site->addUser('ag_two', 'Registered');
+$site->addUser('ag_backend', 'Manager');
+$agOne = $site->userId('ag_one');
+$agTwo = $site->userId('ag_two');
+$agTarget = $gid('UT anon G');
+$agChild = $gid('UT anon G sub');
+Test::check(str_contains($admin->get('index.php?option=com_usertools'), 'data-ut-home-card="addgroups"'),
+    'home page links to bulk group assignments for the Super User');
+$beforeOne = $groupsOf('ag_one');
+$beforeTwo = $groupsOf('ag_two');
+$agReview = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'pairs',
+    'lines' => "ag_one;#$agTarget\nag_one;#$agChild\nag_two;#$agTarget\nag_one;#$agTarget\nag_backend;#$agTarget\nag_one;#8\nmissing;#$agTarget"], 'data-ut-addgroups-form');
+Test::check(substr_count($agReview, 'data-ut-addgroups-status="add"') === 3
+    && str_contains($agReview, 'data-ut-addgroups-status="duplicate"')
+    && str_contains($agReview, 'data-ut-addgroups-status="protected"')
+    && str_contains($agReview, 'data-ut-addgroups-status="unknown"'),
+    'review identifies additions, duplicates, protected accounts/groups and unknown accounts');
+Test::check($groupsOf('ag_one') === $beforeOne && $groupsOf('ag_two') === $beforeTwo,
+    'bulk group assignment preview makes no changes');
+$agRefused = $admin->submit($agUrl . '&layout=review',
+    ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-addgroups-apply');
+Test::check($groupsOf('ag_one') === $beforeOne && str_contains($agRefused, 'data-ut-addgroups-apply'),
+    'bulk group assignment requires the correct typed account count');
+$agDone = $admin->submit($agUrl . '&layout=review',
+    ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '2'], 'data-ut-addgroups-apply');
+for ($i = 0; $i < 15 && str_contains($agDone, 'data-ut-addgroups-next'); $i++) {
+    $agDone = $admin->submit($agUrl . '&layout=progress', ['task' => 'addgroups.next'], 'data-ut-addgroups-next');
+}
+Test::check(str_contains($agDone, 'data-ut-addgroups-result="added"')
+    && in_array('UT anon G', $groupsOf('ag_one'), true)
+    && in_array('UT anon G sub', $groupsOf('ag_one'), true)
+    && in_array('UT anon G', $groupsOf('ag_two'), true)
+    && in_array('Registered', $groupsOf('ag_one'), true)
+    && in_array('Registered', $groupsOf('ag_two'), true),
+    'batch adds multiple group memberships per user without removing any existing ones');
+Test::check(!in_array('UT anon G', $groupsOf('ag_backend'), true)
+    && count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_GROUP_ADDED'")) === 3,
+    'protected accounts are untouched and each membership addition is audited once');
+$again = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+    'group' => '#' . $agTarget, 'lines' => "ag_one\nag_two"], 'data-ut-addgroups-form');
+Test::check(str_contains($again, 'data-ut-addgroups-none')
+    && substr_count($again, 'data-ut-addgroups-status="existing"') === 2,
+    'second preview detects that memberships already exist and cannot reapply them');
+$noPrivilege = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+    'group' => '#8', 'lines' => "ag_one"], 'data-ut-addgroups-form');
+Test::check(str_contains($noPrivilege, 'data-ut-addgroups-none')
+    && str_contains($noPrivilege, 'data-ut-addgroups-status="protected"'),
+    'assigning a Super User group is refused even to a Super User');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
+[$code] = $delegate->request($agUrl);
+Test::check($code === 403, 'bulk group assignment requires its own permission (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);
