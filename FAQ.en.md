@@ -24,6 +24,10 @@ They remain, just as when deleting a user in Joomla, but are no longer associate
 
 Both are permanent. **Deleting** removes the account: its content is left without an account. **Anonymising**, since 2026.10.17, keeps it blocked but replaces its name, username and email and removes its profile, notes and custom fields: content still points to the same account, now without personal data. You can anonymise the accounts of a list, every inactive account or those of a group. Details in the [README](README.en.md#anonymise-accounts).
 
+### What if cleanup fails after an account has been anonymised?
+
+The account **has already been anonymised and blocked**, and that anonymisation is recorded in the User Actions Log. The result shows **Incomplete cleanup** when profile, notes or custom-field data remains. To remove it, choose **Only retry the cleanup of already anonymised accounts**, select the accounts and confirm. This mode never anonymises new accounts and separately logs the completed cleanup.
+
 ### Why does no request appear in Users → Privacy when anonymising?
 
 Because nobody asked for one: it is the administrator's decision, not the person's request. User Tools runs the same privacy plugins as a removal request, but does not invent the request. Each anonymisation is written to the User Actions Log with the account ID.
