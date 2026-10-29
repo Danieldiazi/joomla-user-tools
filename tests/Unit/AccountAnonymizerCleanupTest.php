@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 final class AccountAnonymizerCleanupTest extends TestCase
 {
-    private function runScenario(bool $already, bool $fail): array
+    private function runScenario(bool $already, bool $fail, int $deleted = 1): array
     {
         $account = new class ($already) {
             public int $id = 42;
@@ -54,11 +54,12 @@ final class AccountAnonymizerCleanupTest extends TestCase
                 $user->anonymize();
                 return [true, ''];
             },
-            function (int $id) use ($fail, &$cleaned): void {
+            function (int $id) use ($fail, $deleted, &$cleaned): int {
                 $cleaned++;
                 if ($fail) {
                     throw new \RuntimeException('test failure');
                 }
+                return $deleted;
             },
         );
         $outcome = $anonymizer->anonymize(42, new Exclusions(), new Operator(1, true), static fn (): bool => true);
@@ -81,4 +82,12 @@ final class AccountAnonymizerCleanupTest extends TestCase
         $this->assertSame([['COM_USERTOOLS_ACTION_LOG_CLEANUP_COMPLETED', 42]], $logged);
         $this->assertSame([0, 1], [$removed, $cleaned]);
     }
+    public function testRetryOfAlreadyCleanAccountDoesNotLogCleanup(): void
+    {
+        [$result, $logged, $removed, $cleaned] = $this->runScenario(true, false, 0);
+        $this->assertSame(AccountAnonymizer::ANONYMIZED, $result['status']);
+        $this->assertSame([], $logged, 'a no-op retry is successful but must not claim cleanup took place');
+        $this->assertSame([0, 1], [$removed, $cleaned]);
+    }
+
 }
