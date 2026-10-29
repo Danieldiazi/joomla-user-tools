@@ -29,7 +29,7 @@ final class AccountGroupAdder
             return self::CHANGED;
         }
         $user = $this->users->loadUserById($id);
-        $current = array_values(array_unique(array_map('intval', (array) ($user->groups ?? []))));
+        $current = array_values(array_unique(array_map('intval', (array) $user->groups)));
         $expected = array_values(array_unique(array_map('intval', $before)));
         sort($current);
         sort($expected);
