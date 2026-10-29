@@ -44,6 +44,8 @@
 .ut-usage thead th[data-ut-usage-kind]{white-space:normal;min-width:6.5rem;max-width:9rem;vertical-align:bottom}
 .ut-access-legend li{margin:.25rem 0}
 .ut-tree-row{margin-inline-start:calc(var(--ut-level,0) * 1.5rem)}
+/* Groups the account is not in: no checkbox, aligned with the labels of the rows that have one. */
+.ut-tree-context{padding-inline-start:1.5em;margin-bottom:.125rem}
 .ut-subgroups[hidden]{display:none}
 .ut-tree-branch{display:inline-block;margin-inline-end:.35rem;color:var(--bs-secondary-color,#6c757d)}
 @media (max-width:575.98px){.ut-steps{flex-direction:column;gap:.25rem}}

@@ -91,7 +91,7 @@ class UngroupModel extends BaseDatabaseModel
      * Step 2: the account's groups, in tree order, with their parents so the screen can apply the
      * recursive option while ticking.
      *
-     * @return array{account: UserRecord, groups: list<array{id: int, title: string, level: int, parents: list<int>, superUser: bool, backend: bool, hasChildren: bool}>, removed: list<int>, recursive: list<int>, all: array<int, object>}
+     * @return array{account: UserRecord, groups: list<array{id: int, title: string, member: bool, depth: int, parents: list<int>, superUser: bool, backend: bool, hasChildren: bool}>, removed: list<int>, recursive: list<int>, all: array<int, object>}
      */
     public function getSelection(): array
     {
@@ -101,22 +101,23 @@ class UngroupModel extends BaseDatabaseModel
             throw new UserFacingException('COM_USERTOOLS_UNGROUP_ERROR_CHOOSE');
         }
         $all  = Toolkit::directory()->groups();
-        $mine = array_fill_keys($account->groups, true);
         $rows = [];
-        foreach ($all as $group) {
-            if (isset($mine[(int) $group->id])) {
-                $below = array_diff(GroupRemoval::subtree($all, (int) $group->id), [(int) $group->id]);
-                $rows[] = [
-                    'id'          => (int) $group->id,
-                    'title'       => (string) $group->title,
-                    'level'       => (int) $group->level,
-                    'parents'     => GroupRemoval::ancestors($all, (int) $group->id),
-                    'superUser'   => (bool) $group->superUser,
-                    'backend'     => (bool) $group->backend,
-                    // Only groups with subgroups the account belongs to get "and its subgroups".
-                    'hasChildren' => (bool) array_intersect($below, $account->groups),
-                ];
-            }
+        // The account's groups and, without a checkbox, the groups between them that it is not in, so the
+        // indentation follows the real parent of each group.
+        foreach (GroupRemoval::treeRows($all, $account->groups) as $row) {
+            $group = $all[$row['id']];
+            $below = array_diff(GroupRemoval::subtree($all, $row['id']), [$row['id']]);
+            $rows[] = [
+                'id'          => $row['id'],
+                'title'       => (string) $group->title,
+                'member'      => $row['member'],
+                'depth'       => $row['depth'],
+                'parents'     => GroupRemoval::ancestors($all, $row['id']),
+                'superUser'   => (bool) $group->superUser,
+                'backend'     => (bool) $group->backend,
+                // Only groups with subgroups the account belongs to get "and its subgroups".
+                'hasChildren' => $row['member'] && array_intersect($below, $account->groups),
+            ];
         }
         return ['account' => $account, 'groups' => $rows, 'removed' => $draft['removed'], 'recursive' => $draft['recursive'], 'all' => $all];
     }

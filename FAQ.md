@@ -212,7 +212,7 @@ El lote de Joomla quita solo el grupo exacto que eliges, sin enseñarte antes lo
 
 ### ¿Qué hace exactamente «y sus subgrupos»?
 
-Aparece al desmarcar un grupo que tiene subgrupos. Si lo marcas, la cuenta sale también de todos los grupos que cuelgan de ese y a los que pertenece, aunque estén varios niveles por debajo. Se decide grupo a grupo: puedes usarlo en varios grupos y cada uno conserva su elección. Los grupos padre no se tocan. Sin marcarlo, la cuenta solo sale del grupo que desmarcas.
+Aparece al desmarcar un grupo del que cuelgan otros grupos de la cuenta. Si la cuenta no está en ninguno de los grupos que cuelgan de él, no hay nada que quitar en cascada y la opción no aparece; desde la 2026.10.16, los grupos intermedios en los que la cuenta no está se dibujan sin casilla, para que se vea de qué grupo cuelga realmente cada uno. Si lo marcas, la cuenta sale también de todos los grupos que cuelgan de ese y a los que pertenece, aunque estén varios niveles por debajo. Se decide grupo a grupo: puedes usarlo en varios grupos y cada uno conserva su elección. Los grupos padre no se tocan. Sin marcarlo, la cuenta solo sale del grupo que desmarcas.
 
 ### ¿Qué pasa si la cuenta se queda sin grupos?
 

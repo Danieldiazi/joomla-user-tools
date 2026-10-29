@@ -177,11 +177,11 @@ La lista se obtiene con un número fijo de consultas, sea cual sea el tamaño de
 Desde la 2026.10.9, **Quitar de grupos** saca una cuenta de los grupos que elijas y, si lo pides, también de todos los grupos que cuelgan de ellos: hijos, nietos y siguientes. El lote de Joomla («Quitar del grupo» en Usuarios) solo quita del grupo exacto que eliges y no enseña antes los grupos de la cuenta.
 
 1. **Cuenta**: escribe parte del usuario, el nombre o el correo y elige la cuenta en la lista que aparece mientras escribes. También vale el usuario o el correo completos, sin distinguir mayúsculas.
-2. **Grupos**: aparecen solo los grupos a los que pertenece la cuenta, todos marcados y en su árbol. Desmarca los que debe dejar. Al desmarcar un grupo que tiene subgrupos aparece a su lado **«y sus subgrupos»**: si lo marcas, se desmarcan solos los que cuelgan de él y se indica por qué. Cada grupo se decide por separado, así que puedes hacerlo con varios sin que se deshagan entre sí; si desmarcas «y sus subgrupos» o vuelves a marcar el grupo, sus subgrupos recuperan su estado. Los grupos padre no se tocan nunca.
+2. **Grupos**: aparecen los grupos a los que pertenece la cuenta, todos marcados y en su árbol. Desde la 2026.10.16, los grupos intermedios en los que la cuenta no está se muestran sin casilla y con la nota «la cuenta no está en este grupo», para que cada grupo cuelgue de su padre real. Desmarca los que debe dejar. Al desmarcar un grupo del que cuelgan otros grupos de la cuenta aparece a su lado **«y sus subgrupos»**: si lo marcas, se desmarcan solos los que cuelgan de él y se indica por qué. Cada grupo se decide por separado, así que puedes hacerlo con varios sin que se deshagan entre sí; si desmarcas «y sus subgrupos» o vuelves a marcar el grupo, sus subgrupos recuperan su estado. Los grupos padre no se tocan nunca.
 3. **Revisar**: cada grupo de la cuenta con «Se quita» o «Se mantiene», y por qué grupo se quita uno por «y sus subgrupos». No se cambia nada hasta confirmar. La revisión es de un solo uso y caduca a los 15 minutos.
 4. **Resultado**: los grupos que conserva la cuenta y enlaces a su ficha y al registro de acciones.
 
-![Quitar de grupos: grupos de la cuenta en su árbol](docs/screenshots/16-quitar-grupos-seleccion.jpg)
+![Quitar de grupos: grupos de la cuenta en su árbol, con un grupo intermedio sin casilla](docs/screenshots/16-quitar-grupos-seleccion.jpg)
 
 ![Quitar de grupos: revisión](docs/screenshots/17-quitar-grupos-revision.jpg)
 
