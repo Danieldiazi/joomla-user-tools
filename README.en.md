@@ -15,8 +15,8 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Remove from groups | Choose an account, untick the groups it should leave and, if you want, also remove it from all their subgroups. With a review and a confirmation. Available since 2026.10.9. |
 | Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.9. |
 | Content by access level | How many articles, categories, menu items, modules, fields and other items use each level, with a link to each filtered list. Read only. Available since 2026.10.12. |
-| Content by age | Table by year with how many articles were last modified in each one, filterable by access level; each number opens the list of those articles with a link to edit them. Read only. Available since 2026.10.14. |
-| Access diagnosis | Points out accounts with administrator access and no activity, a single remaining Super User, access levels nobody has, content with levels that do not exist and groups with no members. It explains each notice and is read only. Available since 2026.10.14. |
+| Content by age | Table by year with how many articles were last modified in each one, filterable by access level; each number opens the list of those articles with a link to edit them. Read only. Available since 2026.10.15. |
+| Access diagnosis | Points out accounts with administrator access and no activity, a single remaining Super User, access levels nobody has, content with levels that do not exist and groups with no members. It explains each notice and is read only. Available since 2026.10.15. |
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
 
@@ -140,7 +140,7 @@ Since 2026.10.6, the administrator **Users** dashboard (the dashboard icon next 
 - **Unblocked inactive accounts**, using the period and exclusions of “Review inactive users”. The count links to that tool.
 - **Blocked accounts pending deletion**: those offered by “Delete inactive users” with “Blocked only”, its period and exclusions. The count opens the tool with that option selected.
 - **User Tools scheduled tasks**, including mode (dry run or real), last run, result (linked to its report) and next run.
-- **Notices**: task plugin disabled or missing, no enabled task, a task stopped by the safety limit, a failed task or a report unfinished for more than an hour, tasks still in dry-run mode more than 14 days after creation and, since 2026.10.14, the [access diagnosis](#access-diagnosis) checks worth reviewing, only for users who can see it.
+- **Notices**: task plugin disabled or missing, no enabled task, a task stopped by the safety limit, a failed task or a report unfinished for more than an hour, tasks still in dry-run mode more than 14 days after creation and, since 2026.10.15, the [access diagnosis](#access-diagnosis) checks worth reviewing, only for users who can see it.
 
 Since 2026.10.14, the counts are shown as “Inactive accounts to review” and “Blocked accounts to review”: they are candidate accounts, not automatic actions, and each card links to its review. Each task shows its mode, the result of its last run with a link to the report, and labelled dates; if it has no next run, the module says why. When any task is a dry run, a note explains that dry runs do not change accounts. The footer shows the update time and how the cache works.
 
@@ -248,7 +248,7 @@ Items in the trash are not counted. Joomla lists also hide archived items unless
 
 ## Content by age
 
-Since 2026.10.14, **Content by age** shows how much content has not been touched for a long time. Joomla's article list cannot be filtered by date, so this screen does that count. It is read only.
+Since 2026.10.15, **Content by age** shows how much content has not been touched for a long time. Joomla's article list cannot be filtered by date, so this screen does that count. It is read only.
 
 - **Rows**: the years in which some item was last modified, from the newest to the oldest, with each year's total at the end and a row of totals.
 - **Columns**: one kind of item each. For now only **articles**; the table is ready for other kinds with a modification date.
@@ -261,7 +261,7 @@ Since 2026.10.14, **Content by age** shows how much content has not been touched
 
 ## Access diagnosis
 
-Since 2026.10.14, **Access diagnosis** brings together on one screen the situations worth reviewing in accounts, groups and access levels. It is read only: it does not fix permissions or change accounts. Every check is always shown, with or without notices, and when it finds something it explains what it found, **why it matters** and **how to review it**, with links to the matching account, group, level or Joomla list.
+Since 2026.10.15, **Access diagnosis** brings together on one screen the situations worth reviewing in accounts, groups and access levels. It is read only: it does not fix permissions or change accounts. Every check is always shown, with or without notices, and when it finds something it explains what it found, **why it matters** and **how to review it**, with links to the matching account, group, level or Joomla list.
 
 | Check | Type | What it points out |
 |---|---|---|

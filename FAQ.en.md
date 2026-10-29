@@ -264,7 +264,7 @@ It requires the *View groups, levels and content by level* permission. Super Use
 
 ### How do I see the articles nobody has touched for years?
 
-With **Content by age**, since 2026.10.14. It shows a table by year based on the last modification date, and each number opens the list of those articles with a link to edit them. Details in the [README](README.en.md#content-by-age).
+With **Content by age**, since 2026.10.15. It shows a table by year based on the last modification date, and each number opens the list of those articles with a link to edit them. Details in the [README](README.en.md#content-by-age).
 
 ### Why the modification date and not the creation date?
 
@@ -282,7 +282,7 @@ The list shows titles, so besides the *View content by age* permission you need 
 
 ### What does the access diagnosis check?
 
-Since 2026.10.14, five things: accounts with administrator access that have not signed in for a while, whether only one active Super User is left, access levels with no group and no account, content with a level that does not exist, and groups with no members. Each notice explains what it found, why it matters and how to review it. Details in the [README](README.en.md#access-diagnosis).
+Since 2026.10.15, five things: accounts with administrator access that have not signed in for a while, whether only one active Super User is left, access levels with no group and no account, content with a level that does not exist, and groups with no members. Each notice explains what it found, why it matters and how to review it. Details in the [README](README.en.md#access-diagnosis).
 
 ### Does it fix anything?
 

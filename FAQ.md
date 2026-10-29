@@ -264,7 +264,7 @@ Requiere el permiso *Ver grupos, niveles y contenido por nivel*. Los superusuari
 
 ### ¿Cómo veo los artículos que llevan años sin tocarse?
 
-Con **Contenido por antigüedad**, desde la 2026.10.14. Muestra una tabla por años según la fecha de última modificación, y cada cifra abre la lista de esos artículos con enlace para editarlos. Detalles en el [README](README.md#contenido-por-antigüedad).
+Con **Contenido por antigüedad**, desde la 2026.10.15. Muestra una tabla por años según la fecha de última modificación, y cada cifra abre la lista de esos artículos con enlace para editarlos. Detalles en el [README](README.md#contenido-por-antigüedad).
 
 ### ¿Por qué se usa la fecha de modificación y no la de creación?
 
@@ -282,7 +282,7 @@ La lista muestra títulos, así que además del permiso *Ver contenido por antig
 
 ### ¿Qué revisa el diagnóstico de accesos?
 
-Desde la 2026.10.14, cinco cosas: cuentas con acceso a la administración que llevan tiempo sin entrar, si queda un solo superusuario activo, niveles de acceso que no tiene ningún grupo ni ninguna cuenta, contenido con un nivel que no existe y grupos sin miembros. Cada aviso explica qué ha detectado, por qué importa y cómo revisarlo. Detalles en el [README](README.md#diagnóstico-de-accesos).
+Desde la 2026.10.15, cinco cosas: cuentas con acceso a la administración que llevan tiempo sin entrar, si queda un solo superusuario activo, niveles de acceso que no tiene ningún grupo ni ninguna cuenta, contenido con un nivel que no existe y grupos sin miembros. Cada aviso explica qué ha detectado, por qué importa y cómo revisarlo. Detalles en el [README](README.md#diagnóstico-de-accesos).
 
 ### ¿Corrige algo?
 
