@@ -97,8 +97,8 @@ final class BulkGroupAssignments
                 }
                 $seen[$key] = true;
             }
-            $rows[] = ['login' => $login, 'id' => $user?->id ?? 0, 'username' => $user?->username ?? $login,
-                'group' => $group, 'before' => $user?->groups ?? [], 'status' => $status];
+            $rows[] = ['login' => $login, 'id' => $user === null ? 0 : $user->id, 'username' => $user === null ? $login : $user->username,
+                'group' => $group, 'before' => $user === null ? [] : $user->groups, 'status' => $status];
         }
         return $rows;
     }
