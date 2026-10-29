@@ -23,15 +23,18 @@ final class GroupMove
      * @param  array<int, object>                                     $groups   UserDirectory::groups(), in tree order
      * @param  list<array{id: int, title: string, rules: list<int>}>   $levels   viewing access levels
      * @param  list<int>                                              $selected groups the operator ticked
-     * @param  callable(string, list<int>): bool                      $allow    root asset rule for a group path
+     * @param  callable(string, list<int>): bool                      $allow    root asset rule for a list of identities
+     * @param  array<int, array{username: string, groups: list<int>}> $accounts accounts in any selected group or below,
+     *         with all their groups: an account's access depends on every group it is in, not just the moved one
      * @return list<array{id: int, from: int, status: string, reason: string, via: int, subtree: list<int>,
-     *     gained: list<int>, lost: list<int>, access: list<array{id: int, before: string, after: string}>}>
+     *     gained: list<int>, lost: list<int>, access: list<array{id: int, before: string, after: string}>,
+     *     accounts: list<array{username: string, before: string, after: string}>}>
      *     in tree order; via is the selected group a covered one moves with
      */
-    public static function plan(array $groups, array $levels, array $selected, int $target, callable $allow): array
+    public static function plan(array $groups, array $levels, array $selected, int $target, callable $allow, array $accounts = []): array
     {
         $wanted = array_flip(array_map('intval', $selected));
-        $movers = [];
+        $moves  = [];
         $titles = [];
         foreach ($groups as $group) {
             if ((int) $group->parent_id === $target) {
@@ -45,8 +48,8 @@ final class GroupMove
                 continue;
             }
             $row = ['id' => $id, 'from' => (int) $group->parent_id, 'status' => self::REFUSED, 'reason' => '', 'via' => 0,
-                'subtree' => self::subtree($groups, $id), 'gained' => [], 'lost' => [], 'access' => []];
-            $via = self::movingAncestor($groups, $id, $movers);
+                'subtree' => GroupRemoval::subtree($groups, $id), 'gained' => [], 'lost' => [], 'access' => [], 'accounts' => []];
+            $via   = self::movingAncestor($groups, $id, $moves);
             $title = mb_strtolower(trim((string) $group->title));
             if ($via > 0) {
                 $row['status'] = self::COVERED;
@@ -66,12 +69,18 @@ final class GroupMove
             } elseif (isset($titles[$title])) {
                 $row['reason'] = 'COM_USERTOOLS_MOVE_REASON_TITLE';
             } else {
-                $row = self::changes($groups, $levels, $row, $target, $allow);
+                // Checked together with the moves already accepted: an account in two moved groups is
+                // judged on the final tree.
+                $tentative = $moves + [$id => $target];
+                $row       = self::changes($groups, $levels, $row, $tentative, $allow);
+                $row['accounts'] = $row['access'] ? [] : self::accountChanges($groups, $accounts, $tentative, $allow);
                 if ($row['access']) {
                     $row['reason'] = 'COM_USERTOOLS_MOVE_REASON_BACKEND';
+                } elseif ($row['accounts']) {
+                    $row['reason'] = 'COM_USERTOOLS_MOVE_REASON_ACCOUNTS';
                 } else {
                     $row['status'] = self::MOVE;
-                    $movers[$id]   = true;
+                    $moves         = $tentative;
                     // Two groups with the same name cannot end up under the same parent.
                     $titles[$title] = true;
                 }
@@ -82,31 +91,28 @@ final class GroupMove
     }
 
     /**
-     * Levels gained and lost by the group and its subgroups, and any change in administrator access.
+     * Levels gained and lost by the group and its subgroups, and any change in their administrator access.
      *
      * @param  array<int, object>                                   $groups
      * @param  list<array{id: int, title: string, rules: list<int>}> $levels
      * @param  array<string, mixed>                                 $row
+     * @param  array<int, int>                                      $moves  group id => new parent
      * @param  callable(string, list<int>): bool                    $allow
      * @return array<string, mixed>
      */
-    private static function changes(array $groups, array $levels, array $row, int $target, callable $allow): array
+    private static function changes(array $groups, array $levels, array $row, array $moves, callable $allow): array
     {
-        $above  = self::path($groups, $target);
-        $inside = array_flip($row['subtree']);
         $gained = [];
         $lost   = [];
         foreach ($row['subtree'] as $id) {
             $before = self::path($groups, $id);
-            $after  = array_values(array_unique(array_merge($above, array_values(array_filter($before, fn (int $g) => isset($inside[$g]))))));
+            $after  = self::path($groups, $id, $moves);
             $was    = self::levelsOf($levels, $before);
             $will   = self::levelsOf($levels, $after);
             $gained += array_fill_keys(array_diff($will, $was), true);
             $lost   += array_fill_keys(array_diff($was, $will), true);
-            $super   = $allow('core.admin', $after);
-            $backend = $super || $allow('core.login.admin', $after);
             $old     = self::accessOf($groups[$id]);
-            $new     = $super ? 'super' : ($backend ? 'backend' : 'none');
+            $new     = self::access($allow, $after);
             if ($old !== $new) {
                 $row['access'][] = ['id' => $id, 'before' => $old, 'after' => $new];
             }
@@ -115,6 +121,52 @@ final class GroupMove
         $row['gained'] = array_values(array_filter($order, fn ($id) => isset($gained[$id])));
         $row['lost']   = array_values(array_filter($order, fn ($id) => isset($lost[$id])));
         return $row;
+    }
+
+    /**
+     * Accounts whose administrator access would change: Joomla decides on all the groups of the account
+     * together, so a deny inherited through one group can block the access another group gives.
+     *
+     * @param  array<int, object>                                     $groups
+     * @param  array<int, array{username: string, groups: list<int>}> $accounts
+     * @param  array<int, int>                                        $moves
+     * @param  callable(string, list<int>): bool                      $allow
+     * @return list<array{username: string, before: string, after: string}>
+     */
+    private static function accountChanges(array $groups, array $accounts, array $moves, callable $allow): array
+    {
+        $moved = [];
+        foreach (array_keys($moves) as $root) {
+            $moved += array_fill_keys(GroupRemoval::subtree($groups, $root), true);
+        }
+        $changes = [];
+        foreach ($accounts as $id => $account) {
+            $mine = array_map('intval', $account['groups']);
+            if (!array_intersect_key(array_flip($mine), $moved)) {
+                continue;
+            }
+            $before = [-(int) $id];
+            $after  = [-(int) $id];
+            foreach ($mine as $group) {
+                $before = array_merge($before, self::path($groups, $group));
+                $after  = array_merge($after, self::path($groups, $group, $moves));
+            }
+            $was  = self::access($allow, array_values(array_unique($before)));
+            $will = self::access($allow, array_values(array_unique($after)));
+            if ($was !== $will) {
+                $changes[] = ['username' => (string) $account['username'], 'before' => $was, 'after' => $will];
+            }
+        }
+        return $changes;
+    }
+
+    /**
+     * @param callable(string, list<int>): bool $allow
+     * @param list<int>                          $identities
+     */
+    private static function access(callable $allow, array $identities): string
+    {
+        return $allow('core.admin', $identities) ? 'super' : ($allow('core.login.admin', $identities) ? 'backend' : 'none');
     }
 
     private static function accessOf(object $group): string
@@ -139,43 +191,30 @@ final class GroupMove
     }
 
     /**
-     * The group and its ancestors.
+     * The group and its ancestors, optionally with some groups under a new parent.
      *
      * @param  array<int, object> $groups
+     * @param  array<int, int>    $moves group id => new parent id
      * @return list<int>
      */
-    public static function path(array $groups, int $id): array
+    public static function path(array $groups, int $id, array $moves = []): array
     {
-        if (!isset($groups[$id])) {
-            return [];
+        $path = [];
+        while ($id > 0 && isset($groups[$id]) && !isset($path[$id])) {
+            $path[$id] = $id;
+            $id        = $moves[$id] ?? (int) $groups[$id]->parent_id;
         }
-        $target = $groups[$id];
-        $result = [];
-        foreach ($groups as $group) {
-            if ((int) $group->lft <= (int) $target->lft && (int) $group->rgt >= (int) $target->rgt) {
-                $result[] = (int) $group->id;
-            }
-        }
-        return $result;
-    }
-
-    /**
-     * @param  array<int, object> $groups
-     * @return list<int>
-     */
-    private static function subtree(array $groups, int $id): array
-    {
-        return GroupRemoval::subtree($groups, $id);
+        return array_values($path);
     }
 
     /**
      * @param array<int, object> $groups
-     * @param array<int, bool>   $movers
+     * @param array<int, int>    $moves
      */
-    private static function movingAncestor(array $groups, int $id, array $movers): int
+    private static function movingAncestor(array $groups, int $id, array $moves): int
     {
-        foreach (array_reverse(self::path($groups, $id)) as $ancestor) {
-            if ($ancestor !== $id && isset($movers[$ancestor])) {
+        foreach (self::path($groups, $id) as $ancestor) {
+            if ($ancestor !== $id && isset($moves[$ancestor])) {
                 return $ancestor;
             }
         }

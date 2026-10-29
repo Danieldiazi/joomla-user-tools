@@ -193,6 +193,40 @@ final class UserDirectory
     }
 
     /**
+     * Accounts (blocked ones included) assigned to any of the groups, with all their groups.
+     *
+     * @param  list<int> $groupIds
+     * @return array<int, array{username: string, groups: list<int>}>
+     */
+    public function accountsWithGroups(array $groupIds): array
+    {
+        $groupIds = array_values(array_unique(array_map('intval', $groupIds)));
+        if (!$groupIds) {
+            return [];
+        }
+        $db    = $this->db;
+        $query = $db->createQuery()
+            ->select('DISTINCT ' . $db->quoteName('m.user_id') . ', ' . $db->quoteName('u.username'))
+            ->from($db->quoteName('#__user_usergroup_map', 'm'))
+            ->join('INNER', $db->quoteName('#__users', 'u'), $db->quoteName('u.id') . ' = ' . $db->quoteName('m.user_id'))
+            ->whereIn($db->quoteName('m.group_id'), $groupIds);
+        $names = [];
+        foreach ($db->setQuery($query)->loadObjectList() as $row) {
+            $names[(int) $row->user_id] = (string) $row->username;
+        }
+        if (!$names) {
+            return [];
+        }
+        $membership = $this->membership(array_keys($names));
+        $accounts   = [];
+        foreach ($names as $id => $username) {
+            $accounts[$id] = ['username' => $username, 'groups' => $membership[$id] ?? []];
+        }
+        ksort($accounts);
+        return $accounts;
+    }
+
+    /**
      * The root asset rule for a group path (the group and its ancestors), as Joomla resolves it.
      *
      * @param list<int> $path

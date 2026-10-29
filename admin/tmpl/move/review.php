@@ -27,7 +27,7 @@ $access  = ['none' => 'COM_USERTOOLS_MOVE_ACCESS_NONE', 'backend' => 'COM_USERTO
           <th scope="col"><?= Text::_('COM_USERTOOLS_MOVE_COL_GROUP') ?></th>
           <th scope="col"><?= Text::_('COM_USERTOOLS_MOVE_COL_FROM') ?></th>
           <th scope="col"><?= Text::_('COM_USERTOOLS_MOVE_COL_RESULT') ?></th>
-          <th scope="col" class="text-end"><?= Text::_('COM_USERTOOLS_MOVE_COL_ACCOUNTS') ?></th>
+          <th scope="col" class="text-end pe-3"><?= Text::_('COM_USERTOOLS_MOVE_COL_ACCOUNTS') ?></th>
           <th scope="col"><?= Text::_('COM_USERTOOLS_MOVE_COL_GAINED') ?></th>
           <th scope="col"><?= Text::_('COM_USERTOOLS_MOVE_COL_LOST') ?></th>
         </tr></thead>
@@ -48,6 +48,14 @@ $access  = ['none' => 'COM_USERTOOLS_MOVE_ACCESS_NONE', 'backend' => 'COM_USERTO
               <?php else : ?>
               <span class="badge text-bg-danger"><?= Text::_('COM_USERTOOLS_MOVE_STATUS_REFUSED') ?></span>
               <small class="d-block" data-ut-move-reason="<?= $this->escape($row['reason']) ?>"><?= Text::sprintf($row['reason'], $target) ?></small>
+              <?php if ($row['accounts']) : ?>
+              <ul class="small mb-0 ps-3" data-ut-move-accounts>
+                <?php foreach (array_slice($row['accounts'], 0, 10) as $change) : ?>
+                <li><?= Text::sprintf('COM_USERTOOLS_MOVE_ACCESS_CHANGE', $this->escape($change['username']), Text::_($access[$change['before']]), Text::_($access[$change['after']])) ?></li>
+                <?php endforeach; ?>
+                <?php if (count($row['accounts']) > 10) : ?><li><?= Text::sprintf('COM_USERTOOLS_MOVE_ACCOUNTS_MORE', count($row['accounts']) - 10) ?></li><?php endif; ?>
+              </ul>
+              <?php endif; ?>
               <?php if ($row['access']) : ?>
               <ul class="small mb-0 ps-3">
                 <?php foreach ($row['access'] as $change) : ?>
@@ -57,7 +65,7 @@ $access  = ['none' => 'COM_USERTOOLS_MOVE_ACCESS_NONE', 'backend' => 'COM_USERTO
               <?php endif; ?>
               <?php endif; ?>
             </td>
-            <td class="text-end"><?= isset($review['accounts'][$row['id']]) ? (int) $review['accounts'][$row['id']] : '—' ?></td>
+            <td class="text-end pe-3"><?= isset($review['accounts'][$row['id']]) ? (int) $review['accounts'][$row['id']] : '—' ?></td>
             <?php $moves = $row['status'] === GroupMove::MOVE; ?>
             <td><?= $moves && $row['gained'] ? $this->escape($this->levelTitles($row['gained'])) : '—' ?></td>
             <td><?= $moves && $row['lost'] ? $this->escape($this->levelTitles($row['lost'])) : '—' ?></td>
@@ -75,6 +83,8 @@ $access  = ['none' => 'COM_USERTOOLS_MOVE_ACCESS_NONE', 'backend' => 'COM_USERTO
       <a class="btn btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools&view=move') ?>"><?= Text::_('COM_USERTOOLS_BACK_EDIT') ?></a>
     </div>
   <?php else : ?>
+    <div class="alert alert-info" data-ut-move-sessions><?= Text::plural('COM_USERTOOLS_MOVE_SESSIONS', $review['sessions']) ?>
+      <?php if ($review['self']) : ?> <?= Text::_('COM_USERTOOLS_MOVE_SESSIONS_SELF') ?><?php endif; ?></div>
     <form method="post" action="<?= Route::_('index.php?option=com_usertools&view=move') ?>" data-ut-move-apply>
       <?= LayoutHelper::render('usertools.confirm', ['label' => 'COM_USERTOOLS_MOVE_CONFIRM', 'count' => $review['moving'], 'threshold' => 0], $layouts) ?>
       <input type="hidden" name="preview" value="<?= $this->escape($review['nonce']) ?>">

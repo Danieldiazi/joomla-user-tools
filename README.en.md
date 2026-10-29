@@ -214,12 +214,13 @@ Since 2026.10.16, **Move groups** changes the parent of several groups at once. 
 A group is not moved, and the review says why, when:
 
 - **it would change administrator access**: if, under the new parent, the group or any of its subgroups would gain or lose administrator access or Super User permissions. The review names every group affected. Those changes are made in Users → Groups, one group at a time;
+- **it would change administrator access for an account**: Joomla decides an account's access with all its groups together, so, for example, a deny inherited through one group can cancel the access another gives. Each account in the ticked groups is checked with all its groups, and the review names those that would change;
 - it is Public (the root) or a Super User group, or the target is a Super User group;
 - the target is the group itself or one of its subgroups;
 - there is already a group with the same name under the target (Joomla does not allow it);
 - it is already under that group (nothing to do).
 
-The change goes through Joomla's group model, the same as Users → Groups, so its checks and the plugin events run and the tree is rebuilt. Each group is checked again right before it moves, and every move is written to the **User Actions Log**.
+The change goes through Joomla's group model, the same as Users → Groups, so its checks and the plugin events run and the tree is rebuilt. Each group is checked again right before it moves, and every move is written to the **User Actions Log**. Then the **open sessions** of the accounts in the moved groups **are closed**, so the levels they lose apply at once; if a session survives, the result warns about it. Your own session is not closed.
 
 ## Groups and access levels
 

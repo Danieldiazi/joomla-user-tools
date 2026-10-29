@@ -6,6 +6,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Model;
 
 use Danieldiazi\Component\Usertools\Administrator\Service\GroupMove;
 use Danieldiazi\Component\Usertools\Administrator\Service\GroupMover;
+use Danieldiazi\Component\Usertools\Administrator\Service\GroupRemoval;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
@@ -70,7 +71,7 @@ class MoveModel extends BaseDatabaseModel
     /**
      * Step 2: the review, recomputed now so it never shows stale data.
      *
-     * @return array{target: int, rows: list<array<string, mixed>>, accounts: array<int, int>, moving: int, nonce: string}
+     * @return array{target: int, rows: list<array<string, mixed>>, accounts: array<int, int>, moving: int, sessions: int, self: bool, nonce: string}
      */
     public function getReview(): array
     {
@@ -85,13 +86,17 @@ class MoveModel extends BaseDatabaseModel
         }
         $directory = Toolkit::directory();
         $accounts  = [];
+        $moved     = [];
         foreach ($plan as $row) {
             if ($row['status'] === GroupMove::MOVE) {
                 $accounts[$row['id']] = $directory->accountsIn($row['subtree']);
+                $moved = array_merge($moved, $row['subtree']);
             }
         }
+        $affected = $directory->accountsWithGroups($moved);
         return ['target' => (int) $preview['target'], 'rows' => $plan, 'accounts' => $accounts,
-            'moving' => \count($accounts), 'nonce' => (string) $preview['nonce']];
+            'moving' => \count($accounts), 'sessions' => \count($affected), 'self' => isset($affected[(int) $this->identity()->id]),
+            'nonce' => (string) $preview['nonce']];
     }
 
     /**
@@ -117,7 +122,9 @@ class MoveModel extends BaseDatabaseModel
         $groups = $this->getGroups();
         $title  = fn (int $id): string => isset($groups[$id]) ? (string) $groups[$id]->title : '#' . $id;
         $mover  = Toolkit::groupMover();
-        $result = ['target' => $title($target), 'moved' => [], 'changed' => [], 'errors' => []];
+        $result = ['target' => $title($target), 'moved' => [], 'changed' => [], 'errors' => [],
+            'sessions' => ['closed' => 0, 'unknown' => 0, 'open' => [], 'self' => false]];
+        $moved  = [];
         foreach ($plan as $row) {
             if ($row['status'] !== GroupMove::MOVE) {
                 continue;
@@ -129,6 +136,28 @@ class MoveModel extends BaseDatabaseModel
                 default             => 'errors',
             };
             $result[$key][] = ['id' => $row['id'], 'title' => $title($row['id']), 'from' => $title($row['from'])];
+            if ($status === GroupMover::MOVED) {
+                $moved = array_merge($moved, $row['subtree']);
+            }
+        }
+        // Accounts in the moved groups may keep levels they lost in an open session, as with
+        // "Remove from groups": close those sessions and report any that survives. The operator's own
+        // session stays open; its administrator access cannot change here.
+        $regrouper = Toolkit::regrouper();
+        $self      = (int) $this->identity()->id;
+        foreach (Toolkit::directory()->accountsWithGroups($moved) as $id => $account) {
+            if ($id === $self) {
+                $result['sessions']['self'] = true;
+                continue;
+            }
+            $state = $regrouper->closeSessions($id);
+            if ($state === 'open') {
+                $result['sessions']['open'][] = $account['username'];
+            } elseif ($state === 'unknown') {
+                $result['sessions']['unknown']++;
+            } else {
+                $result['sessions']['closed']++;
+            }
         }
         $this->storeResult(self::RESULT, $result);
         $this->session()->set(self::DRAFT, []);
@@ -149,7 +178,13 @@ class MoveModel extends BaseDatabaseModel
     private function plan(array $groups, int $target): array
     {
         $directory = Toolkit::directory();
-        return GroupMove::plan($directory->groups(), $directory->viewLevels(), array_values(array_map('intval', $groups)), $target,
-            fn (string $action, array $path): bool => $directory->allows($action, $path));
+        $all     = $directory->groups();
+        $ids     = array_values(array_map('intval', $groups));
+        $subtree = [];
+        foreach ($ids as $id) {
+            $subtree = array_merge($subtree, GroupRemoval::subtree($all, $id));
+        }
+        return GroupMove::plan($all, $directory->viewLevels(), $ids, $target,
+            fn (string $action, array $path): bool => $directory->allows($action, $path), $directory->accountsWithGroups($subtree));
     }
 }

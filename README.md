@@ -212,12 +212,13 @@ Desde la 2026.10.16, **Mover grupos** cambia de una vez el grupo padre de varios
 Un grupo no se mueve, y la revisión dice por qué, cuando:
 
 - **cambiaría el acceso a la administración**: si, al colgar del nuevo grupo, él o alguno de sus subgrupos ganaría o perdería el acceso a la administración o los permisos de superusuario. La revisión nombra cada grupo afectado. Esos cambios se hacen en Usuarios → Grupos, grupo a grupo;
+- **cambiaría el acceso a la administración de alguna cuenta**: Joomla decide el acceso de una cuenta con todos sus grupos a la vez, así que, por ejemplo, una denegación heredada a través de un grupo puede anular el acceso que da otro. Cada cuenta de los grupos marcados se comprueba con todos sus grupos, y la revisión nombra las que cambiarían;
 - es Public (la raíz) o un grupo de superusuarios, o el destino es un grupo de superusuarios;
 - el destino es el propio grupo o uno de sus subgrupos;
 - ya hay un grupo con el mismo nombre bajo el destino (Joomla no lo permite);
 - ya cuelga de ese grupo (no hay nada que hacer).
 
-El cambio pasa por el modelo de grupos de Joomla, el mismo de Usuarios → Grupos, así que se ejecutan sus comprobaciones y los eventos de los plugins y el árbol se recalcula. Cada grupo se comprueba de nuevo justo antes de moverlo, y cada movimiento queda en el **registro de acciones de usuarios**.
+El cambio pasa por el modelo de grupos de Joomla, el mismo de Usuarios → Grupos, así que se ejecutan sus comprobaciones y los eventos de los plugins y el árbol se recalcula. Cada grupo se comprueba de nuevo justo antes de moverlo, y cada movimiento queda en el **registro de acciones de usuarios**. Después se **cierran las sesiones abiertas** de las cuentas de los grupos movidos, para que los niveles que pierden se apliquen enseguida; si alguna sesión sobrevive, el resultado lo avisa. Tu propia sesión no se cierra.
 
 ## Grupos y niveles de acceso
 

@@ -1053,13 +1053,16 @@ Test::check(str_contains($movePage, 'data-ut-move-group="' . $gid('UT move A') .
 $review = $admin->submit($moveUrl, ['task' => 'move.preview', 'target' => $gid('UT move T'),
     'groups' => [$gid('UT move A'), $gid('UT move A1'), $gid('UT move B'), $gid('UT move T'), $gid('Super Users')]], 'data-ut-move-form');
 Test::check(str_contains($moveRow($review, 'UT move A'), 'data-ut-move-status="move"') && str_contains($moveRow($review, 'UT move A'), 'UT move level')
-    && preg_match('#text-end">1</td>#', $moveRow($review, 'UT move A')) === 1, 'the review shows the level the group gains and the accounts in it and its subgroups');
+    && preg_match('#text-end pe-3">1</td>#', $moveRow($review, 'UT move A')) === 1, 'the review shows the level the group gains and the accounts in it and its subgroups');
 Test::check(str_contains($moveRow($review, 'UT move A1'), 'data-ut-move-status="covered"') && str_contains($moveRow($review, 'UT move B'), 'data-ut-move-status="move"'),
     'a selected subgroup goes with its group');
 Test::check(str_contains($moveRow($review, 'UT move T'), 'COM_USERTOOLS_MOVE_REASON_CYCLE') && str_contains($moveRow($review, 'Super Users'), 'COM_USERTOOLS_MOVE_REASON_SUPER'),
     'a group cannot go under itself, and Super Users cannot move');
 Test::check($parentOf('UT move A') === $gid('Registered'), 'the review changes nothing');
+Test::check(str_contains($review, 'data-ut-move-sessions'), 'the review says the sessions of the accounts in those groups will be closed');
+$site->fakeSession($site->userId('mv_member'));
 $done = $admin->submit($moveUrl . '&layout=review', ['task' => 'move.apply', 'confirm' => 1], 'data-ut-move-apply');
+Test::check($site->sessions($site->userId('mv_member')) === 0 && str_contains($done, 'data-ut-move-sessions="closed"'), 'the sessions of the accounts in the moved groups are closed');
 Test::check(str_contains($done, 'data-ut-move-done="2"') && $parentOf('UT move A') === $gid('UT move T') && $parentOf('UT move B') === $gid('UT move T')
     && $parentOf('UT move A1') === $gid('UT move A'), 'the groups move with their subgroups');
 $tree = array_column($site->q("SELECT title, lft, rgt FROM #__usergroups WHERE title IN ('UT move T', 'UT move A1')"), null, 'title');
@@ -1072,6 +1075,22 @@ $refused = $admin->submit($moveUrl, ['task' => 'move.preview', 'target' => $gid(
 Test::check(str_contains($moveRow($refused, 'UT move B'), 'COM_USERTOOLS_MOVE_REASON_BACKEND') && str_contains($refused, 'data-ut-move-nothing')
     && !str_contains($refused, 'data-ut-move-apply'), 'a move that gives administrator access is refused and cannot be applied');
 Test::check($parentOf('UT move B') === $gid('UT move T'), 'and nothing changes');
+
+// An account is judged on all its groups: a deny inherited through one group can block what another gives.
+foreach ([['UT move deny', 'Registered'], ['UT move D1', 'UT move deny']] as [$title, $parent]) {
+    $site->q('INSERT INTO #__usergroups (parent_id, lft, rgt, title) VALUES (?, 0, 0, ?)', [$gid($parent), $title]);
+}
+$rebuildGroups();
+$rootBefore = (string) $site->q("SELECT rules FROM #__assets WHERE name = 'root.1'")[0]['rules'];
+$denyRules  = json_decode($rootBefore, true);
+$denyRules['core.login.admin'][(string) $gid('UT move deny')] = 0;
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'root.1'", [json_encode($denyRules)]);
+$site->addUser('mv_mixed', 'Manager');
+$site->q('INSERT INTO #__user_usergroup_map (user_id, group_id) VALUES (?, ?)', [$site->userId('mv_mixed'), $gid('UT move D1')]);
+$mixed = $admin->submit($moveUrl, ['task' => 'move.preview', 'target' => $gid('UT move T'), 'groups' => [$gid('UT move D1')]], 'data-ut-move-form');
+Test::check(str_contains($moveRow($mixed, 'UT move D1'), 'COM_USERTOOLS_MOVE_REASON_ACCOUNTS') && str_contains($moveRow($mixed, 'UT move D1'), 'mv_mixed')
+    && !str_contains($mixed, 'data-ut-move-apply'), 'a move that would give an account administrator access through its other groups is refused');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'root.1'", [$rootBefore]);
 
 // Super Users only, even with the component's own "Configure ACL & Options".
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'core.admin' => ['6' => 1]])]);

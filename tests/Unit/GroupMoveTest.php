@@ -39,12 +39,15 @@ final class GroupMoveTest extends TestCase
         ];
     }
 
-    /** @param list<int> $selected */
-    private function plan(array $selected, int $target, ?array $groups = null): array
+    /**
+     * @param list<int> $selected
+     * @param array<int, array{username: string, groups: list<int>}> $accounts
+     */
+    private function plan(array $selected, int $target, ?array $groups = null, array $accounts = [], ?callable $allow = null): array
     {
-        $allow = fn (string $action, array $path): bool => $action === 'core.admin' ? in_array(8, $path, true)
+        $allow ??= fn (string $action, array $path): bool => $action === 'core.admin' ? in_array(8, $path, true)
             : (in_array(6, $path, true) || in_array(8, $path, true));
-        return array_column(GroupMove::plan($groups ?? $this->tree(), $this->levels(), $selected, $target, $allow), null, 'id');
+        return array_column(GroupMove::plan($groups ?? $this->tree(), $this->levels(), $selected, $target, $allow, $accounts), null, 'id');
     }
 
     public function testMovesWithSubgroupsAndReportsLevels(): void
@@ -106,5 +109,27 @@ final class GroupMoveTest extends TestCase
         $plan = $this->plan([5, 12], 2, $groups);
         $this->assertSame(GroupMove::MOVE, $plan[5]['status']);
         $this->assertSame('COM_USERTOOLS_MOVE_REASON_TITLE', $plan[12]['reason']);
+    }
+
+    public function testAccountsAreJudgedOnAllTheirGroups(): void
+    {
+        // Socios denies administrator login. An account in Manager and in Junta (below Socios) has no
+        // administrator access today; moving Junta out of Socios would give it access through Manager.
+        $allow = fn (string $action, array $ids): bool => $action === 'core.admin' ? in_array(8, $ids, true)
+            : (!in_array(10, $ids, true) && (in_array(6, $ids, true) || in_array(8, $ids, true)));
+        $groups = $this->tree();
+        $groups[6]->backend = $groups[7]->backend = true;
+        $accounts = [50 => ['username' => 'ana', 'groups' => [6, 11]], 51 => ['username' => 'luis', 'groups' => [12]]];
+        $row = $this->plan([11], 3, $groups, $accounts, $allow)[11];
+        $this->assertSame('COM_USERTOOLS_MOVE_REASON_ACCOUNTS', $row['reason']);
+        $this->assertSame([['username' => 'ana', 'before' => 'none', 'after' => 'backend']], $row['accounts'], 'only the account whose access changes is named');
+        $this->assertSame([], $row['access'], 'the groups themselves do not change');
+        $this->assertSame(GroupMove::MOVE, $this->plan([11], 3, $groups, [51 => $accounts[51]], $allow)[11]['status'], 'without that account the move is fine');
+    }
+
+    public function testPathFollowsTheMoves(): void
+    {
+        $this->assertSame([12, 11, 10, 2, 1], GroupMove::path($this->tree(), 12));
+        $this->assertSame([12, 11, 3, 2, 1], GroupMove::path($this->tree(), 12, [11 => 3]));
     }
 }
