@@ -61,6 +61,13 @@ class HtmlView extends BaseHtmlView
             } else {
                 $this->job = $model->getJob();
                 $this->setLayout('default');
+                $requested = Toolkit::app()->getInput()->getInt('account', 0);
+                if (!$this->job && $requested > 0) {
+                    $account = Toolkit::directory()->users([$requested])[$requested] ?? null;
+                    $this->draft['source'] = 'list';
+                    $this->draft['names'] = $account ? $account->username : '';
+                    $this->draft['retryCleanup'] = false;
+                }
             }
         } catch (UserFacingException $e) {
             $this->leave($e, 'view=anonymize');

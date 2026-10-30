@@ -25,6 +25,7 @@ class DisplayController extends BaseController
     /** Permission required by each view; the component itself already requires core.manage. */
     public const PERMISSIONS = [
         'home'     => 'core.manage',
+        'profile'  => 'usertools.profile',
         'compare'  => 'usertools.compare',
         'export'   => 'usertools.export',
         'inactive' => 'usertools.inactive',

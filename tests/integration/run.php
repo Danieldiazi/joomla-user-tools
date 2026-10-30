@@ -218,11 +218,13 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['compare', 'export', 'inactive', 'unblock', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
+Test::check($cards[1] === ['profile', 'compare', 'export', 'inactive', 'unblock', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 15 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(!preg_match('/<span class="icon-(address-card)"/', $home) && str_contains($home, '<span class="icon-vcard" aria-hidden="true"></span> Account profile'),
+    'the profile card uses an icon that Joomla provides');
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 16 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -531,7 +533,8 @@ Test::check(str_contains($dashboard, 'aria-label="Quick links"')
     && str_contains($dashboard, 'Content by access level')
     && str_contains($dashboard, 'Content by age')
     && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=move"/', $dashboard) === 1
-    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=export"/', $dashboard) === 1,
+    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=export"/', $dashboard) === 1
+    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=profile"/', $dashboard) === 1,
     'dashboard shortcuts are translated and not duplicated');
 Test::check(str_contains($dashboard, 'data-ut-dashboard-task=') && preg_match('/<dl\b[^>]*>\s*<div\b[^>]*>\s*<dt\b/', $dashboard) === 1,
     'tasks expose labelled dates without squeezing five table columns');
@@ -1575,6 +1578,174 @@ Test::check($code === 200 && str_contains($delegateCsv, 'xp_base') && !str_conta
     'explicit export permission allows delegate without exposing email by default');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 $site->q('DELETE FROM #__user_mfa WHERE user_id = ?', [$xpBase]);
+Test::section('Read-only account profiles');
+$profileUrl = 'index.php?option=com_usertools&view=profile';
+$profilePath = fn (string $link): string => preg_replace('#^.*?/administrator/#', '', html_entity_decode($link, ENT_QUOTES));
+$profileId = $site->addUser('profile_subject', 'Registered,Editor', '', gmdate('Y-m-d H:i:s'));
+$profileOther = $site->addUser('profile_other', 'Registered');
+$profileBackend = $site->addUser('profile_backend', 'Manager');
+$profileDemo = $site->addUser('profile_demo', 'Registered,Editor', '', gmdate('Y-m-d H:i:s'));
+$site->q('UPDATE #__users SET name = ? WHERE id = ?', ['Alex Rivera', $profileDemo]);
+$site->options(['inactive_protect_admins' => 0, 'inactive_excluded_names' => '', 'inactive_excluded_groups' => [],
+    'anonymize_protect_admins' => 0, 'anonymize_excluded_names' => '', 'anonymize_excluded_groups' => [], 'confirm_threshold' => 1]);
+$site->q('UPDATE #__users SET name = ? WHERE id = ?', ['Alice <script>profile-xss</script>', $profileId]);
+$site->q("INSERT INTO #__viewlevels (title, ordering, rules) VALUES (?, 98, ?)", ['UT profile direct', json_encode([$gid('Editor')])]);
+$site->q("INSERT INTO #__viewlevels (title, ordering, rules) VALUES (?, 99, ?)", ['UT profile inherited', json_encode([$gid('Author')])]);
+$site->q("INSERT INTO #__viewlevels (title, ordering, rules) VALUES (?, 100, ?)", ['UT profile individual', json_encode([-$profileId])]);
+$profileLevel = fn (string $name): int => (int) $site->q('SELECT id FROM #__viewlevels WHERE title = ?', [$name])[0]['id'];
+$demoArticle = $addArticle('profile-demo', gmdate('Y-m-d H:i:s'));
+$site->q('UPDATE #__content SET created_by = ? WHERE id = ?', [$profileDemo, $demoArticle]);
+$profileArticle = $addArticle('profile-owned', gmdate('Y-m-d H:i:s'));
+$profileTrash = $addArticle('profile-trash', gmdate('Y-m-d H:i:s'), -2);
+$profileHidden = $addArticle('profile-hidden', gmdate('Y-m-d H:i:s'), 1, 99999);
+$site->q('UPDATE #__content SET created_by = ? WHERE id IN (?, ?, ?)', [$profileId, $profileArticle, $profileTrash, $profileHidden]);
+// Joomla’s own article list requires workflow associations, even when workflow selection is disabled.
+$profileStage = (int) $site->q('SELECT id FROM #__workflow_stages ORDER BY id')[0]['id'];
+foreach ([$demoArticle, $profileArticle, $profileTrash, $profileHidden] as $articleId) {
+    $site->q('INSERT INTO #__workflow_associations (item_id, stage_id, extension) VALUES (?, ?, ?)',
+        [$articleId, $profileStage, 'com_content.article']);
+}
+$profileCategoryBefore = $site->q('SELECT created_user_id FROM #__categories WHERE id = ?', [$ageCategory])[0]['created_user_id'];
+$site->q('UPDATE #__categories SET created_user_id = ? WHERE id = ?', [$profileId, $ageCategory]);
+$contactCategory = (int) ($site->q("SELECT id FROM #__categories WHERE extension = 'com_contact' AND parent_id <> 0 ORDER BY id")[0]['id'] ?? 0);
+$site->q('INSERT INTO #__contact_details (name, alias, catid, published, access, created, created_by, modified, params, metadata, metadesc, language)'
+    . " VALUES (?, ?, ?, 1, 1, ?, ?, ?, '{}', '{}', '', '*')",
+    ['UT profile contact', 'ut-profile-contact', $contactCategory, gmdate('Y-m-d H:i:s'), $profileId, gmdate('Y-m-d H:i:s')]);
+foreach ([[$profileId, 'totp'], [$profileOther, 'backupcodes'], [$profileOther, 'emergencycodes'], [$profileDemo, 'totp']] as [$mfaUser, $method]) {
+    $site->q('INSERT INTO #__user_mfa (user_id, title, method, options, created_on) VALUES (?, ?, ?, ?, ?)',
+        [$mfaUser, 'Test MFA', $method, json_encode(['secret' => 'never-show-profile-mfa']), gmdate('Y-m-d H:i:s')]);
+}
+$profileLog = function (int $actor, int $item, string $type) use ($site): int {
+    $site->q('INSERT INTO #__action_logs (message_language_key, message, log_date, extension, user_id, item_id, ip_address) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        ['COM_USERTOOLS_ACTION_LOG_GROUP_ADDED', json_encode(['type' => $type, 'id' => $item, 'private_payload' => 'never-show-profile-log']),
+            gmdate('Y-m-d H:i:s'), 'com_usertools.users', $actor, $item, '127.0.0.1']);
+    return (int) $site->q('SELECT id FROM #__action_logs ORDER BY id DESC')[0]['id'];
+};
+$profileObjectLog = $profileLog($site->userId(getenv('UT_ADMIN_USER') ?: 'admin'), $profileId, 'COM_USERTOOLS_ACTION_LOG_TYPE_USER');
+$profileActorLog = $profileLog($profileId, $profileOther, 'COM_USERTOOLS_ACTION_LOG_TYPE_USER');
+$profileBothLog = $profileLog($profileId, $profileId, 'COM_USERTOOLS_ACTION_LOG_TYPE_USER');
+$profileGroupLog = $profileLog($profileOther, $profileId, 'COM_USERTOOLS_ACTION_LOG_TYPE_GROUP');
+$profileBefore = $site->q('SELECT id, name, username, email, block, password FROM #__users WHERE id = ?', [$profileId]);
+$profileMemberships = $groupsOf('profile_subject');
+[$code, $profilePage, $profileHeaders] = $admin->request($profileUrl . '&account=' . $profileId);
+Test::check($code === 200 && str_contains($profileHeaders['cache-control'] ?? '', 'no-store'), 'profile is private and not cached');
+Test::noPhpErrors($profilePage, 'account profile');
+Test::check(str_contains($profilePage, 'data-ut-profile-account="' . $profileId . '"')
+    && str_contains($profilePage, 'Alice &lt;script&gt;profile-xss&lt;/script&gt;')
+    && !str_contains($profilePage, '<script>profile-xss'), 'profile shows the requested identity and escapes its name');
+Test::check($site->q('SELECT id, name, username, email, block, password FROM #__users WHERE id = ?', [$profileId]) === $profileBefore
+    && $groupsOf('profile_subject') === $profileMemberships, 'reading a profile does not write accounts or memberships');
+Test::check(str_contains($profilePage, 'data-ut-profile-group="' . $gid('Author') . '" data-ut-profile-direct="0"')
+    && str_contains($profilePage, 'data-ut-profile-group="' . $gid('Editor') . '" data-ut-profile-direct="1"'),
+    'group tree distinguishes directly assigned groups from the intermediate Author group');
+foreach (['direct', 'inherited', 'individual'] as $levelKind) {
+    Test::check(str_contains($profilePage, 'data-ut-profile-level="' . $profileLevel('UT profile ' . $levelKind) . '"'),
+        'effective profile levels include the ' . $levelKind . ' grant');
+}
+Test::check(str_contains($profilePage, 'data-ut-profile-mfa="1"') && !str_contains($profilePage, 'never-show-profile-mfa')
+    && !str_contains($profilePage, 'never-show-profile-log') && !str_contains($profilePage, $profileBefore[0]['password']),
+    'profile exposes MFA state only and never credentials or arbitrary action-log payloads');
+$profileCount = fn (string $html, string $kind, string $component): int => preg_match('/data-ut-profile-content="' . $kind
+    . '" data-ut-profile-component="' . $component . '" data-ut-profile-count="(\d+)"/', $html, $matches) ? (int) $matches[1] : -1;
+Test::check($profileCount($profilePage, 'articles', 'com_content') === 3
+    && $profileCount($profilePage, 'contacts', 'com_contact') === 1
+    && $profileCount($profilePage, 'categories', 'com_content') === 1,
+    'profile counts authored articles, contacts and categories, including the trash');
+preg_match('/<a href="([^"]*option=com_content[^"]*author_id[^"]*)"/', $profilePage, $profileArticleLink);
+$profileArticles = $admin->get($profilePath($profileArticleLink[1] ?? ''));
+Test::check(str_contains($profileArticles, 'UT profile-owned'), 'article count links to Joomla with the exact author filter');
+foreach ([$profileObjectLog => 'object', $profileActorLog => 'actor', $profileBothLog => 'both'] as $logId => $role) {
+    Test::check(str_contains($profilePage, 'data-ut-profile-log="' . $logId . '" data-ut-profile-role="' . $role . '"'),
+        'profile identifies a matching action-log entry as ' . $role);
+}
+Test::check(!str_contains($profilePage, 'data-ut-profile-log="' . $profileGroupLog . '"'), 'a group with the same ID is not mistaken for the user');
+preg_match('/href="([^"]*option=com_actionlogs[^"]*id%3A' . $profileObjectLog . '[^"]*)"/', $profilePage, $profileLogLink);
+Test::check(isset($profileLogLink[1]), 'each profile action-log date links to the exact entry');
+if (isset($profileLogLink[1])) {
+    $admin->get($profilePath($profileLogLink[1]));
+}
+Test::check(str_contains($admin->get($profileUrl . '&login=' . urlencode('PROFILE_SUBJECT@EXAMPLE.TEST')),
+    'data-ut-profile-account="' . $profileId . '"'), 'profile lookup accepts email case-insensitively');
+Test::check(str_contains($admin->get($profileUrl . '&account=99999999'), 'data-ut-profile-error'), 'missing account shows an explicit lookup error');
+Test::check(str_contains($admin->get($profileUrl . '&account=' . $profileOther), 'data-ut-profile-mfa="0"'),
+    'recovery-code-only records are not presented as configured MFA');
+foreach ([$site->userId(getenv('UT_ADMIN_USER') ?: 'admin'), $site->userId('super2')] as $protectedId) {
+    Test::check(!str_contains($admin->get($profileUrl . '&account=' . $protectedId), 'data-ut-profile-action='),
+        'profile never offers actions for the operator or a Super User');
+}
+$profileAction = function (string $html, string $action) use ($profilePath): string {
+    preg_match('/data-ut-profile-action="' . $action . '" href="([^"]+)"/', $html, $match);
+    return $profilePath($match[1] ?? '');
+};
+$prefilledGroups = $admin->get($profileAction($profilePage, 'ungroup'));
+Test::check(str_contains($prefilledGroups, 'value="profile_subject"'), 'remove-from-groups opens with the account filled in');
+$prefilledAnon = $admin->get($profileAction($profilePage, 'anonymize'));
+Test::check(preg_match('/<textarea[^>]*name="names"[^>]*>profile_subject<\/textarea>/', $prefilledAnon) === 1,
+    'anonymization opens with the chosen account and still needs its normal preview and typed confirmation');
+Test::check(!$site->blocked('profile_subject') && $groupsOf('profile_subject') === $profileMemberships,
+    'following profile action links never changes an account');
+
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
+[$code] = $delegate->request($profileUrl . '&account=' . $profileId);
+Test::check($code === 403, 'profile requires its own permission');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.profile' => ['6' => 1]])]);
+$delegatedProfile = $delegate->get($profileUrl . '&account=' . $profileId);
+Test::check(!str_contains($delegatedProfile, 'data-ut-profile-action=') && !str_contains($delegatedProfile, 'data-ut-profile-log='),
+    'profile permission grants neither modifying actions nor Joomla action-log access');
+Test::check($profileCount($delegatedProfile, 'articles', 'com_content') === 2,
+    'delegated profile content counts exclude inaccessible viewing levels');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1],
+    'usertools.profile' => ['6' => 1], 'usertools.inactive' => ['6' => 1], 'usertools.ungroup' => ['6' => 1], 'usertools.anonymize' => ['6' => 1]])]);
+$delegatedProfile = $delegate->get($profileUrl . '&account=' . $profileId);
+Test::check(substr_count($delegatedProfile, 'data-ut-profile-action=') === 3,
+    'each explicit tool permission enables only its corresponding profile link');
+Test::check(!str_contains($delegate->get($profileUrl . '&account=' . $profileBackend), 'data-ut-profile-action='),
+    'delegate cannot act on another administrator account through a profile');
+[$code] = $delegate->request('index.php?option=com_usertools&task=inactive.account&account=' . $profileId);
+Test::check($code === 403 && !$site->blocked('profile_subject'), 'single-account review link requires a valid CSRF token');
+$delegatedBlockReview = $delegate->get($profileAction($delegatedProfile, 'block'));
+preg_match('/name="preview" value="([^"]+)"/', $delegatedBlockReview, $delegatedNonce);
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.inactive' => ['6' => 1]])]);
+$delegate->request('index.php?option=com_usertools', ['task' => 'inactive.suspend', 'selection_ready' => 1,
+    'preview' => $delegatedNonce[1] ?? '', 'selected' => json_encode([$profileId]), 'confirm' => 1, 'confirm_count' => '1', Client::token($delegatedBlockReview) => 1]);
+Test::check(!$site->blocked('profile_subject'), 'withdrawing the profile permission invalidates an outstanding single-account block review');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+
+$site->fakeSession($profileId);
+$singleReview = $admin->get($profileAction($profilePage, 'block'));
+Test::check(str_contains($singleReview, 'data-ut-profile-block-review') && !$site->blocked('profile_subject')
+    && $site->sessions($profileId) === 1 && substr_count($singleReview, 'data-ut-suspend-id=') === 1,
+    'block link reviews exactly the chosen recently active account without blocking or closing its session');
+$site->q('UPDATE #__users SET name = ? WHERE id = ?', ['Changed after review', $profileId]);
+$admin->submit('index.php?option=com_usertools&view=inactive&layout=review',
+    ['task' => 'inactive.suspend', 'selection_ready' => 1, 'selected' => json_encode([$profileId]), 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-suspension-form');
+Test::check(!$site->blocked('profile_subject') && !$site->blocked('profile_other'),
+    'a single-account block skips a changed account and never substitutes another');
+// A Super User may "manage" an uninstalled component: a missing content table must not break the profile.
+$site->q('ALTER TABLE #__contact_details RENAME TO #__contact_details_off');
+$noContacts = $admin->get($profileUrl . '&account=' . $profileId);
+$site->q('ALTER TABLE #__contact_details_off RENAME TO #__contact_details');
+Test::check(str_contains($noContacts, 'data-ut-profile-account') && !str_contains($noContacts, 'data-ut-profile-content="contacts"')
+    && str_contains($noContacts, 'data-ut-profile-content="articles"'),
+    'a content table that does not exist is left out instead of breaking the profile');
+$profilePage = $admin->get($profileUrl . '&account=' . $profileId);
+$admin->get($profileAction($profilePage, 'block'));
+$refusedSingle = $admin->submit('index.php?option=com_usertools&view=inactive&layout=review',
+    ['task' => 'inactive.suspend', 'selection_ready' => 1, 'selected' => json_encode([$profileId]), 'confirm' => 1, 'confirm_count' => ''], 'data-ut-suspension-form');
+Test::check(!$site->blocked('profile_subject') && str_contains($refusedSingle, 'data-ut-suspension-form'),
+    'single-account blocking keeps the configured typed confirmation threshold');
+$admin->submit('index.php?option=com_usertools&view=inactive&layout=review',
+    ['task' => 'inactive.suspend', 'selection_ready' => 1, 'selected' => json_encode([$profileOther]), 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-suspension-form');
+Test::check(!$site->blocked('profile_other') && !$site->blocked('profile_subject'),
+    'a forged account selection cannot expand a single-account review');
+$singleDone = $admin->submit('index.php?option=com_usertools&view=inactive&layout=review',
+    ['task' => 'inactive.suspend', 'selection_ready' => 1, 'selected' => json_encode([$profileId]), 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-suspension-form');
+Test::check($site->blocked('profile_subject') && !$site->blocked('profile_other') && $site->sessions($profileId) === 0,
+    'confirmed single-account block goes through the normal writer and closes sessions');
+$blockedProfile = $admin->get($profileUrl . '&account=' . $profileId);
+Test::check(!str_contains($blockedProfile, 'data-ut-profile-action="block"') && str_contains($blockedProfile, 'data-ut-profile-status>Blocked'),
+    'reloading a profile reflects the block and removes its block action');
+$site->q('UPDATE #__categories SET created_user_id = ? WHERE id = ?', [$profileCategoryBefore, $ageCategory]);
 
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);

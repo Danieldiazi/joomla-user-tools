@@ -17,13 +17,17 @@ use Joomla\CMS\Router\Route;
 $layouts    = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
 $review     = $this->review;
 $candidates = $review['candidates'];
-$steps      = ['setup' => 'COM_USERTOOLS_STEP_PERIOD', 'review' => 'COM_USERTOOLS_STEP_SELECT', 'result' => 'COM_USERTOOLS_STEP_RESULT'];
+$steps      = ['setup' => $review['singleAccount'] ? 'COM_USERTOOLS_PROFILE_TITLE' : 'COM_USERTOOLS_STEP_PERIOD', 'review' => 'COM_USERTOOLS_STEP_SELECT', 'result' => 'COM_USERTOOLS_STEP_RESULT'];
 ?>
 <div class="ut-app">
   <?= LayoutHelper::render('usertools.steps', ['steps' => $steps, 'current' => 'review', 'label' => 'COM_USERTOOLS_INACTIVE_PROGRESS'], $layouts) ?>
-  <h2 class="h3"><?= Text::_('COM_USERTOOLS_INACTIVE_REVIEW_HEADING') ?></h2>
+  <h2 class="h3"><?= Text::_($review['singleAccount'] ? 'COM_USERTOOLS_PROFILE_BLOCK_HEADING' : 'COM_USERTOOLS_INACTIVE_REVIEW_HEADING') ?></h2>
+  <?php if ($review['singleAccount']) : ?>
+  <div class="alert alert-info" data-ut-profile-block-review><?= Text::_('COM_USERTOOLS_PROFILE_BLOCK_NOTE') ?></div>
+  <?php else : ?>
   <p class="lead"><?= Text::plural('COM_USERTOOLS_INACTIVE_FOUND', count($candidates)) ?></p>
   <div class="alert alert-info"><?= Text::sprintf('COM_USERTOOLS_CUTOFF_NOTE', $this->escape($review['cutoff'])) ?></div>
+  <?php endif; ?>
   <form method="post" action="<?= Route::_('index.php?option=com_usertools&view=inactive') ?>" data-ut-suspension-form>
     <input type="hidden" name="preview" value="<?= $this->escape($review['nonce']) ?>">
     <input type="hidden" name="selected" value="[]" data-ut-selected>
@@ -46,7 +50,7 @@ $steps      = ['setup' => 'COM_USERTOOLS_STEP_PERIOD', 'review' => 'COM_USERTOOL
       <?php endforeach; ?>
       </tbody></table><p class="text-muted" data-ut-filter-empty hidden><?= Text::_('COM_USERTOOLS_JS_NO_RESULTS') ?></p></div>
     <?php else : ?>
-      <p class="mb-0"><?= Text::_('COM_USERTOOLS_INACTIVE_NONE') ?></p>
+      <p class="mb-0"><?= Text::_($review['singleAccount'] ? 'COM_USERTOOLS_PROFILE_BLOCK_CHANGED' : 'COM_USERTOOLS_INACTIVE_NONE') ?></p>
     <?php endif; ?>
       <p class="text-muted mt-2 mb-0" data-ut-suspension-count aria-live="polite"></p>
     </div></section>
@@ -55,7 +59,9 @@ $steps      = ['setup' => 'COM_USERTOOLS_STEP_PERIOD', 'review' => 'COM_USERTOOL
     <?php endif; ?>
     <noscript><div class="alert alert-warning"><?= Text::_('COM_USERTOOLS_ERROR_JAVASCRIPT') ?></div></noscript>
     <div class="ut-actions">
-      <button class="btn btn-outline-secondary" name="task" value="inactive.back" formnovalidate><?= Text::_('COM_USERTOOLS_BACK_EDIT') ?></button>
+      <?php if ($review['singleAccount']) : ?>
+      <a class="btn btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools&view=profile&account=' . (int) $review['singleAccount']) ?>"><?= Text::_('COM_USERTOOLS_PROFILE_BACK') ?></a>
+      <?php else : ?><button class="btn btn-outline-secondary" name="task" value="inactive.back" formnovalidate><?= Text::_('COM_USERTOOLS_BACK_EDIT') ?></button><?php endif; ?>
       <?php if ($candidates) : ?><button class="btn btn-danger" name="task" value="inactive.suspend" data-ut-suspend-submit disabled><?= Text::_('COM_USERTOOLS_SUSPEND_SELECTED') ?></button><?php endif; ?>
     </div>
     <?= HTMLHelper::_('form.token') ?>

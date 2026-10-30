@@ -60,6 +60,11 @@ class HtmlView extends BaseHtmlView
                 }
             } else {
                 $this->setLayout('default');
+                $requested = Toolkit::app()->getInput()->getInt('account', 0);
+                if ($requested > 0) {
+                    $account = Toolkit::directory()->users([$requested])[$requested] ?? null;
+                    $this->draft['login'] = $account ? $account->username : '';
+                }
             }
         } catch (UserFacingException $e) {
             if ($fallback === 'view=ungroup') {

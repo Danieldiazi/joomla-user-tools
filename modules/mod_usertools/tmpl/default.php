@@ -20,6 +20,7 @@ use Joomla\CMS\Router\Route;
  */
 $identity = Factory::getApplication()->getIdentity();
 $links = [
+    ['usertools.profile', 'profile', 'MOD_USERTOOLS_LINK_PROFILE'],
     ['usertools.compare', 'compare', 'MOD_USERTOOLS_LINK_COMPARE'],
     ['usertools.export', 'export', 'MOD_USERTOOLS_LINK_EXPORT'],
     ['usertools.inactive', 'inactive', 'MOD_USERTOOLS_LINK_INACTIVE'],

@@ -6,6 +6,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 
 | Tool | What it does |
 |---|---|
+| Account profile | Reviews account identity, groups, access, content and activity, with protected links to its tools. Read only. |
 | Compare a list | Proposes blocking accounts missing from the complete list, except protected accounts, and lets you create selected new users. |
 | Export accounts to CSV | Downloads accounts, groups, dates, status and MFA with filters and optional email under its own permission. |
 | Review inactive users | Finds inactive accounts so you can select which ones to block. |
@@ -33,6 +34,7 @@ The home screen groups the tools into four sections, each with its explanation a
 ## Contents
 
 - [Installation and updates](#installation-and-updates)
+- [Account profile](#account-profile)
 - [Export accounts to CSV](#export-accounts-to-csv)
 - [Compare a user list](#compare-a-user-list)
 - [Review inactive users](#review-inactive-users)
@@ -68,6 +70,23 @@ Download **pkg_usertools-VERSION.zip** from the [latest release](https://github.
 Since 2026.10.3, Joomla notifies you of new versions under System → Update → Extensions, like any other extension: the package declares an update server pointing to the latest GitHub release. To update, install the new package over the existing installation; do not uninstall the component. Saved exclusions migrate automatically when updating from earlier versions.
 
 The installer checks minimum versions, registers the extension with the User Actions Log and creates the “User Tools: account created” mail template. On uninstall, it warns that task reports remain in the logs directory.
+
+## Account profile
+
+From the home screen, open **Account profile** and search by username or email address, case-insensitively. An account can also be opened by ID. This requires the dedicated `usertools.profile` permission and never saves changes to the account, its groups or other tools’ drafts.
+
+The profile brings together identity, status, last visit and registration in UTC, administrator access, Super User status and whether multi-factor authentication is configured. It never shows passwords, secrets, methods or recovery codes. Groups appear in their tree: intermediate groups are muted and explicitly identified as not directly assigned. Effective viewing levels are those granted by Joomla, with explanations for assigned groups, their ancestors and individual assignments.
+
+Authored content is counted as articles, contacts and categories by extension, including archived and trashed items. Only types you can manage and items within your viewing access levels are shown; Super Users can see all. Articles link to Joomla’s list filtered by author. Categories and contacts have no such author filter in Joomla, so the limitation is explained instead of offering a misleading author-filter link.
+
+The recent log distinguishes whether the account **performed the action**, **was affected** or both. It shows up to 50 matches among the 1000 recent actor/item candidates; it is not an exhaustive history. Each date opens that exact entry in Joomla’s log. This section keeps Joomla’s Super User restriction; `usertools.profile` does not grant log access. Original third-party message payloads are never dumped into the profile.
+
+The **Remove from groups**, **Review blocking this account** and **Anonymise this account** links appear only with each tool’s own permission and when the account is not protected. They are never offered for Super Users or the operator’s own account; a non-Super User also never sees them for administrator accounts. Configured blocking and anonymisation exclusions remain in force. Group removal and anonymisation open their forms with the account filled in. Blocking opens a review of **that explicitly selected account**, even if recently active, without applying the inactivity filter. Opening any of these links does not change the account.
+
+Blocking still requires selection and confirmation, the typed count from the configured threshold and fresh checks of the account’s reviewed details, protections and operator permissions. An account that changes after review is skipped, never replaced. The block is saved through Joomla’s API, closes sessions and is audited. The profile does not itself delete, anonymise or reassign content.
+![Account profile: account details, groups in their tree, effective levels, authored content, recent log and available actions (Spanish interface)](docs/screenshots/28-ficha-persona.jpg)
+
+![Reviewing the block of one account from its profile (Spanish interface)](docs/screenshots/29-ficha-revision-bloqueo.jpg)
 
 ## Export accounts to CSV
 

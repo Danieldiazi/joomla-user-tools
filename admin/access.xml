@@ -4,6 +4,7 @@
     <action name="core.admin" title="JACTION_ADMIN" />
     <action name="core.options" title="JACTION_OPTIONS" />
     <action name="core.manage" title="JACTION_MANAGE" />
+    <action name="usertools.profile" title="COM_USERTOOLS_ACCESS_PROFILE" description="COM_USERTOOLS_ACCESS_PROFILE_DESC" />
     <action name="usertools.compare" title="COM_USERTOOLS_ACCESS_COMPARE" description="COM_USERTOOLS_ACCESS_COMPARE_DESC" />
     <action name="usertools.create" title="COM_USERTOOLS_ACCESS_CREATE" description="COM_USERTOOLS_ACCESS_CREATE_DESC" />
     <action name="usertools.export" title="COM_USERTOOLS_ACCESS_EXPORT" description="COM_USERTOOLS_ACCESS_EXPORT_DESC" />
