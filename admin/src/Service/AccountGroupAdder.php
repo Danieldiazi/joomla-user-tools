@@ -5,7 +5,6 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service;
 \defined('_JEXEC') or die;
 
 use Joomla\CMS\User\UserFactoryInterface;
-use Joomla\CMS\User\UserHelper;
 
 /** Saves only additions, through the User API, after fresh checks on the account. */
 final class AccountGroupAdder
@@ -14,19 +13,25 @@ final class AccountGroupAdder
     public const CHANGED = 'changed';
     public const ERROR = 'error';
 
-    public function __construct(private UserFactoryInterface $users, private ActionLogger $log)
+    /** @var \Closure(int): string */
+    private \Closure $closeSessions;
+
+    /** @param (callable(int): string)|null $closeSessions Injectable for testing failed/unknown session closure. */
+    public function __construct(private UserFactoryInterface $users, private ActionLogger $log, ?callable $closeSessions = null)
     {
+        $this->closeSessions = $closeSessions !== null ? \Closure::fromCallable($closeSessions)
+            : static fn (int $id): string => (new AccountRegrouper($users, $log))->closeSessions($id);
     }
 
     /**
      * @param list<int> $before
      * @param list<int> $targets
-     * @return string
+     * @return array{status: string, sessions: string}
      */
-    public function add(int $id, string $username, array $before, array $targets, Operator $operator, bool $safeTarget): string
+    public function add(int $id, string $username, array $before, array $targets, Operator $operator, bool $safeTarget): array
     {
         if (!$safeTarget || !$targets || $id === $operator->id) {
-            return self::CHANGED;
+            return ['status' => self::CHANGED, 'sessions' => ''];
         }
         $user = $this->users->loadUserById($id);
         $current = array_values(array_unique(array_map('intval', (array) $user->groups)));
@@ -35,25 +40,27 @@ final class AccountGroupAdder
         sort($expected);
         if (empty($user->id) || (string) $user->username !== $username || $current !== $expected
             || $user->authorise('core.admin') || $user->authorise('core.login.admin') || array_intersect($targets, $current)) {
-            return self::CHANGED;
+            return ['status' => self::CHANGED, 'sessions' => ''];
         }
         $all = array_values(array_unique(array_merge($current, $targets)));
         $user->groups = array_combine($all, $all);
         try {
             if (!$user->save(true)) {
-                return self::ERROR;
+                return ['status' => self::ERROR, 'sessions' => ''];
             }
         } catch (\Throwable) {
-            return self::ERROR;
+            return ['status' => self::ERROR, 'sessions' => ''];
         }
         foreach ($targets as $group) {
             $this->log->groupAdded($user, $operator, $group);
         }
+        // Memberships are already saved and audited: report a session problem separately
+        // and never repeat the membership write to retry the session closure.
         try {
-            UserHelper::destroyUserSessions($id);
+            $sessions = ($this->closeSessions)($id);
         } catch (\Throwable) {
-            // The account was saved and logged; do not retry the write.
+            $sessions = AccountRegrouper::SESSIONS_OPEN;
         }
-        return self::ADDED;
+        return ['status' => self::ADDED, 'sessions' => $sessions];
     }
 }
