@@ -39,9 +39,16 @@ try {
       outsideViewport: [...app.querySelectorAll('*')].filter(el => !el.closest('.ut-table-scroll')).map(el => {
         const box = el.getBoundingClientRect();
         return { tag: el.tagName, className: el.className, left: box.left, right: box.right };
-      }).filter(box => box.left < -1 || box.right > innerWidth + 1).slice(0,20) };
+      }).filter(box => box.left < -1 || box.right > innerWidth + 1).slice(0,20),
+      headerOverflow: [...document.querySelectorAll('body *')].filter(el => !el.closest('.ut-app') && !el.closest('.ut-table-scroll'))
+        .map(el => ({ tag: el.tagName, className: String(el.className).slice(0, 60), right: Math.round(el.getBoundingClientRect().right) }))
+        .filter(box => box.right > innerWidth + 1).slice(0, 10) };
   });
-  const fits = layout.documentWidth <= layout.viewport + 1;
+  // Only User Tools' own content is checked: no element of the profile (outside its scrollable tables)
+  // may reach beyond the viewport. Joomla's administrator header (page title and toolbar) belongs to the
+  // template and may be wider than a phone; it is recorded in layout.json, not failed. The app's
+  // scrollWidth is not used: Bootstrap row gutters add a few pixels without anything being cut off.
+  const fits = layout.outsideViewport.length === 0;
   await writeFile(resolve(output, 'layout.json'), JSON.stringify(layout, null, 2));
   await page.screenshot({ path: resolve(output, 'profile-mobile.png'), fullPage: true });
   if (!fits) throw new Error('The profile overflows the narrow viewport');
@@ -61,7 +68,7 @@ try {
     throw new Error('Opening a block review unexpectedly changed the demo account');
   }
   await writeFile(resolve(output, 'checks.json'), JSON.stringify({
-    keyboardSearchFocus: true, narrowProfileFits: fits, openingReviewLeavesAccountActive: true,
+    keyboardSearchFocus: true, narrowProfileFits: fits, templateHeaderWidth: layout.documentWidth, openingReviewLeavesAccountActive: true,
     captures: ['desktop', '390px viewport', '200% root font size', 'dark colour preference', 'block review'],
     language: 'en-GB', fixture: 'profile_demo',
   }, null, 2));
