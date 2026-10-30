@@ -8,6 +8,7 @@
     <action name="usertools.create" title="COM_USERTOOLS_ACCESS_CREATE" description="COM_USERTOOLS_ACCESS_CREATE_DESC" />
     <action name="usertools.export" title="COM_USERTOOLS_ACCESS_EXPORT" description="COM_USERTOOLS_ACCESS_EXPORT_DESC" />
     <action name="usertools.inactive" title="COM_USERTOOLS_ACCESS_INACTIVE" description="COM_USERTOOLS_ACCESS_INACTIVE_DESC" />
+    <action name="usertools.unblock" title="COM_USERTOOLS_ACCESS_UNBLOCK" description="COM_USERTOOLS_ACCESS_UNBLOCK_DESC" />
     <action name="usertools.delete" title="COM_USERTOOLS_ACCESS_DELETE" description="COM_USERTOOLS_ACCESS_DELETE_DESC" />
     <action name="usertools.anonymize" title="COM_USERTOOLS_ACCESS_ANONYMIZE" description="COM_USERTOOLS_ACCESS_ANONYMIZE_DESC" />
     <action name="usertools.addgroups" title="COM_USERTOOLS_ACCESS_ADDGROUPS" description="COM_USERTOOLS_ACCESS_ADDGROUPS_DESC" />

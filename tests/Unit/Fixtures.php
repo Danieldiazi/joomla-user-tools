@@ -20,6 +20,7 @@ final class Fixtures
             public array $bound = [];
             public int $saved = 0;
             public string $name = '';
+            public string $email = '';
             public ?string $lastvisitDate = '2000-01-01 00:00:00';
             public ?string $registerDate = '2000-01-01 00:00:00';
 

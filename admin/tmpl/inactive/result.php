@@ -29,7 +29,7 @@ $steps   = ['setup' => 'COM_USERTOOLS_STEP_PERIOD', 'review' => 'COM_USERTOOLS_S
   <section class="card ut-card"><div class="card-body">
     <div class="ut-section-heading"><h3 class="h5 mb-0"><?= Text::_('COM_USERTOOLS_SUSPENDED_HEADING') ?></h3>
       <a class="btn btn-sm btn-outline-secondary" href="<?= Route::_('index.php?option=com_users&view=users&filter[state]=1') ?>"><?= Text::_('COM_USERTOOLS_OPEN_BLOCKED_USERS') ?></a></div>
-    <p class="form-text"><?= Text::_('COM_USERTOOLS_BLOCKED_UNDO_HELP') ?></p>
+    <?= LayoutHelper::render('usertools.undo', ['batch' => (string) ($result['batch'] ?? ''), 'can' => $this->can('usertools.unblock')], $layouts) ?>
     <ul class="mb-0"><?php foreach ($result['blocked'] as $row) : ?><li><a href="<?= Route::_('index.php?option=com_users&task=user.edit&id=' . (int) $row['id']) ?>"><?= $this->escape($row['username']) ?></a></li><?php endforeach; ?></ul>
   </div></section>
   <?php endif; ?>

@@ -340,6 +340,7 @@ class CompareModel extends BaseDatabaseModel
             'skipped'   => max(0, (int) $job['offered'] - \count($job['blocked']) - (int) ($job['blockErrors'] ?? 0) - \count($job['block'])),
             'discarded' => $discarded,
             'mode'      => $job['mode'],
+            'batch'     => $this->recordBatch('COM_USERTOOLS_TOOL_COMPARE', 'COM_USERTOOLS_UNBLOCK_REASON_NOT_LISTED', $job['blocked']),
         ];
         $this->session()->set(self::JOB, []);
         $this->storeResult(self::RESULT, $result);

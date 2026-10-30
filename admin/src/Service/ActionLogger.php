@@ -155,6 +155,12 @@ final class ActionLogger
         $this->write($mode === Registration::MODE_PASSWORD ? 'COM_USERTOOLS_ACTION_LOG_CREATED_PASSWORD' : 'COM_USERTOOLS_ACTION_LOG_CREATED_EMAIL', 'create', $account, $operator, '');
     }
 
+    /** An account unblocked with "Undo blocks"; $batch says which run or review had blocked it. */
+    public function unblocked(object $account, Operator $operator, string $batch): void
+    {
+        $this->write('COM_USERTOOLS_ACTION_LOG_UNBLOCKED', 'update', $account, $operator, '', ['batch' => $batch]);
+    }
+
     /** @param array<string, string> $extra */
     private function write(string $key, string $action, object $account, Operator $operator, string $tool, array $extra = []): void
     {

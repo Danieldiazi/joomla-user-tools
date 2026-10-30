@@ -218,11 +218,11 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['compare', 'export', 'inactive', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
+Test::check($cards[1] === ['compare', 'export', 'inactive', 'unblock', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 14 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 15 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -1438,6 +1438,74 @@ Test::check(str_contains($bulkComplete, 'data-ut-addgroups-result="added"')
     && $allAdded && !in_array('UT anon G sub', $groupsOf('ag_batch_21'), true),
     'resuming still processes all 21 original users and never applies the rejected second job');
 
+Test::section('Undo blocks');
+$unUrl = 'index.php?option=com_usertools&view=unblock';
+Test::check(str_contains($admin->get('index.php?option=com_usertools'), 'data-ut-home-card="unblock"'), 'the home page offers "Undo blocks"');
+$unBatchRef = static function (string $html, string $label): string {
+    preg_match('/<tr data-ut-unblock-batch="((?:task|manual):[0-9]{14}-[a-f0-9]{24})"><td>[^<]*' . preg_quote($label, '/') . '/', $html, $m);
+    return $m[1] ?? '';
+};
+// 1. A real scheduled task run is a batch.
+$unIds = [];
+foreach (['un_task1', 'un_task2', 'un_task3'] as $name) {
+    $unIds[$name] = $site->addUser($name, 'Registered', '', $old);
+}
+$site->q('INSERT INTO #__scheduler_tasks (asset_id, title, type, execution_rules, cron_rules, state, last_exit_code, times_executed, times_failed, locked, priority, ordering, params, note, created, created_by) VALUES (0, ?, ?, ?, ?, 1, 0, 0, 0, NULL, 0, 0, ?, ?, ?, ?)',
+    ['UT undo', 'usertools.block_inactive', json_encode(['rule-type' => 'manual']), json_encode(['type' => 'manual']), json_encode(['guard_percent' => 0] + $taskParams), '', gmdate('Y-m-d H:i:s'), $site->userId('admin')]);
+$undoTask = (int) $site->q("SELECT id FROM #__scheduler_tasks WHERE title = 'UT undo'")[0]['id'];
+$site->cli('scheduler:run --id=' . $undoTask);
+$site->q('UPDATE #__scheduler_tasks SET state = 0 WHERE id = ?', [$undoTask]);
+Test::check($site->blocked('un_task1') && $site->blocked('un_task2') && $site->blocked('un_task3'), 'the task run blocked the three accounts');
+$unList = $admin->get($unUrl);
+$taskRef = $unBatchRef($unList, 'UT undo');
+Test::check(str_starts_with($taskRef, 'task:'), 'the run is listed as a batch to undo');
+$reportPage = $admin->get('index.php?option=com_usertools&view=report&report_id=' . substr($taskRef, 5));
+Test::check(str_contains($reportPage, 'data-ut-undo-batch') && str_contains($reportPage, 'value="' . $taskRef . '"'), 'the report offers to undo its blocks');
+// Changes after the batch: one account renamed, one already unblocked by hand.
+$site->q('UPDATE #__users SET username = ? WHERE id = ?', ['un_task2_renamed', $unIds['un_task2']]);
+$site->q('UPDATE #__users SET block = 0 WHERE id = ?', [$unIds['un_task3']]);
+$unReview = $admin->submit($unUrl, ['task' => 'unblock.select', 'batch' => $taskRef], 'data-ut-unblock-batches');
+Test::check(str_contains($unReview, 'data-ut-unblock-row="' . $unIds['un_task1'] . '"')
+    && !str_contains($unReview, 'data-ut-unblock-row="' . $unIds['un_task2'] . '"')
+    && str_contains($unReview, 'data-ut-unblock-skipped="' . $unIds['un_task2'] . '"')
+    && str_contains($unReview, 'data-ut-unblock-skipped="' . $unIds['un_task3'] . '"')
+    && str_contains($unReview, 'It has changed since it was blocked') && str_contains($unReview, 'It is no longer blocked'),
+    'the review offers only accounts still blocked and unchanged, and says why the others are not');
+Test::check($site->blocked('un_task1'), 'the review changes nothing');
+// Even if the changed account is posted, the server revalidates it and skips it.
+$unDone = $admin->submit($unUrl . '&layout=review', ['task' => 'unblock.apply', 'selection_ready' => 1, 'confirm' => 1, 'confirm_count' => '2',
+    'selected' => json_encode([$unIds['un_task1'], $unIds['un_task2']])], 'data-ut-suspension-form');
+Test::check(str_contains($unDone, 'data-ut-unblocked="1"') && !$site->blocked('un_task1') && $site->blocked('un_task2_renamed'),
+    'only the unchanged account is unblocked; the changed one stays blocked');
+$unLogs = $site->q("SELECT message FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_UNBLOCKED'");
+$unMessage = json_decode((string) ($unLogs[0]['message'] ?? ''), true) ?: [];
+Test::check(count($unLogs) === 1 && ($unMessage['id'] ?? 0) == $unIds['un_task1'] && str_contains((string) ($unMessage['batch'] ?? ''), 'UT undo'),
+    'the unblock is in the User Actions Log with the batch it undoes');
+$unAgain = $admin->submit($unUrl . '&layout=review', ['task' => 'unblock.apply', 'selection_ready' => 1, 'confirm' => 1, 'confirm_count' => '1',
+    'selected' => json_encode([$unIds['un_task2']]), 'preview' => 'stale'], '<form');
+Test::check(str_contains($unAgain, 'The review expired') && $site->blocked('un_task2_renamed'), 'a review is used only once');
+// 2. A manual review is a batch too; a non Super User never unblocks backend accounts.
+$unIds['un_man'] = $site->addUser('un_man', 'Registered', '', $old);
+$unIds['un_mgr'] = $site->addUser('un_mgr', 'Manager', '', $old);
+$admin->submit('index.php?option=com_usertools&view=inactive', ['task' => 'inactive.search', 'days' => 365, 'include_never' => 0, 'protect_admins' => 0, 'excluded' => '', 'excluded_groups' => []]);
+$manualResult = $admin->submit('index.php?option=com_usertools&view=inactive&layout=review', ['task' => 'inactive.suspend', 'selection_ready' => 1, 'confirm' => 1, 'confirm_count' => '2',
+    'selected' => json_encode([$unIds['un_man'], $unIds['un_mgr']])], 'data-ut-suspension-form');
+preg_match('/name="batch" value="(manual:[0-9]{14}-[a-f0-9]{24})"/', $manualResult, $manualRef);
+Test::check($site->blocked('un_man') && $site->blocked('un_mgr') && isset($manualRef[1]), 'a manual block saves a batch and its result offers to undo it');
+$site->options(['inactive_protect_admins' => 1]);
+[$code] = $delegate->request($unUrl);
+Test::check($code === 403, 'without "Undo blocks" the delegate cannot open it (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.unblock' => ['6' => 1]])]);
+$delegateList = $delegate->get($unUrl);
+Test::check(str_contains($delegateList, 'data-ut-unblock-batch="' . ($manualRef[1] ?? '-') . '"'), 'the delegate sees the manual batch');
+$delegateReview = $delegate->submit($unUrl, ['task' => 'unblock.select', 'batch' => $manualRef[1] ?? ''], 'data-ut-unblock-batches');
+Test::check(str_contains($delegateReview, 'data-ut-unblock-row="' . $unIds['un_man'] . '"')
+    && str_contains($delegateReview, 'data-ut-unblock-skipped="' . $unIds['un_mgr'] . '"')
+    && str_contains($delegateReview, 'only a Super User can unblock it'), 'the delegate is not offered the account with administrator access');
+$delegate->submit($unUrl . '&layout=review', ['task' => 'unblock.apply', 'selection_ready' => 1, 'confirm' => 1, 'confirm_count' => '2',
+    'selected' => json_encode([$unIds['un_man'], $unIds['un_mgr']])], 'data-ut-suspension-form');
+Test::check(!$site->blocked('un_man') && $site->blocked('un_mgr'), 'the delegate unblocks the ordinary account, never the backend one');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
 Test::section('Account CSV export and privacy');
 $exportUrl = 'index.php?option=com_usertools&view=export';
