@@ -1457,6 +1457,12 @@ $profileArticle = $addArticle('profile-owned', gmdate('Y-m-d H:i:s'));
 $profileTrash = $addArticle('profile-trash', gmdate('Y-m-d H:i:s'), -2);
 $profileHidden = $addArticle('profile-hidden', gmdate('Y-m-d H:i:s'), 1, 99999);
 $site->q('UPDATE #__content SET created_by = ? WHERE id IN (?, ?, ?)', [$profileId, $profileArticle, $profileTrash, $profileHidden]);
+// Joomla’s own article list requires workflow associations, even when workflow selection is disabled.
+$profileStage = (int) $site->q('SELECT id FROM #__workflow_stages ORDER BY id')[0]['id'];
+foreach ([$demoArticle, $profileArticle, $profileTrash, $profileHidden] as $articleId) {
+    $site->q('INSERT INTO #__workflow_associations (item_id, stage_id, extension) VALUES (?, ?, ?)',
+        [$articleId, $profileStage, 'com_content.article']);
+}
 $profileCategoryBefore = $site->q('SELECT created_user_id FROM #__categories WHERE id = ?', [$ageCategory])[0]['created_user_id'];
 $site->q('UPDATE #__categories SET created_user_id = ? WHERE id = ?', [$profileId, $ageCategory]);
 $contactCategory = (int) ($site->q("SELECT id FROM #__categories WHERE extension = 'com_contact' AND parent_id <> 0 ORDER BY id")[0]['id'] ?? 0);
