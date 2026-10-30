@@ -69,6 +69,8 @@ foreach (['profile' => 'accounts', 'access' => 'groups', 'reports' => 'automatio
 }
 [$invalidCategory] = $admin->request('index.php?option=com_usertools&view=home&section=invented');
 Test::check($invalidCategory === 404, 'unknown category is rejected instead of opening all tools');
+[$invalidCategoryArray] = $admin->request('index.php?option=com_usertools&view=home&section[]=accounts');
+Test::check($invalidCategoryArray === 404, 'a category array is rejected as an invalid category');
 
 $menuSchedulerRules = $site->q("SELECT rules FROM #__assets WHERE name = 'com_scheduler'")[0]['rules'];
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_scheduler'", [json_encode(['core.manage' => ['6' => 0]])]);

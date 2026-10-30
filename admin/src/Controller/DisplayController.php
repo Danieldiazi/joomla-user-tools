@@ -53,7 +53,7 @@ class DisplayController extends BaseController
         }
         if ($view === 'home') {
             $section = $this->input->getCmd('section', '');
-            if ($section !== '' && !isset(Navigation::CATEGORIES[$section])) {
+            if (!\is_string($section) || ($section !== '' && !isset(Navigation::CATEGORIES[$section]))) {
                 throw new \RuntimeException(Text::_('COM_USERTOOLS_ERROR_CATEGORY'), 404);
             }
             if ($section !== '' && !isset(Navigation::sections(

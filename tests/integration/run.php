@@ -193,6 +193,8 @@ if (!$quoted) {
 }
 
 Test::section('Setup');
+// Keep native tours installed but prevent welcome-tour redirects during browser captures.
+$site->q('UPDATE #__guidedtours SET autostart = 0');
 $site->cli('config:set live_site=' . escapeshellarg($url) . ' error_reporting=maximum mailer=smtp smtphost=127.0.0.1 smtpport=2525 smtpauth=false smtpsecure=none mailonline=true session_metadata=true');
 // Remove what a previous run left behind.
 $previous = array_column($site->q("SELECT id FROM #__users WHERE email LIKE '%@example.test' AND username <> ?", [getenv('UT_ADMIN_USER') ?: 'admin']), 'id');

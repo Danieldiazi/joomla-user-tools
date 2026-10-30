@@ -14,6 +14,7 @@ use Danieldiazi\Component\Usertools\Administrator\Controller\DisplayController;
 use Danieldiazi\Component\Usertools\Administrator\Service\Navigation;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Event\Menu\PreprocessMenuItemsEvent;
+use Joomla\CMS\Menu\MenuItem;
 use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\CMS\Uri\Uri;
 use Joomla\Event\SubscriberInterface;
@@ -62,11 +63,9 @@ final class Usertools extends CMSPlugin implements SubscriberInterface
             }
             // Keep category links pointing to their landing pages while marking their native path.
             if ($itemView === 'home' && !$item->hasChildren() && $active !== null && $section === $active) {
-                $node = $item;
-                do {
+                for ($node = $item; $node instanceof MenuItem; $node = $node->getParent()) {
                     $node->active = true;
-                    $node = $node->getParent();
-                } while ($node !== null);
+                }
             }
         }
     }

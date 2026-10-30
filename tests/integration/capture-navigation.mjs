@@ -38,6 +38,7 @@ try {
   await page.keyboard.press('Tab');
   const keyboardNext = await page.evaluate(() => document.activeElement?.getAttribute('href'));
   if (!keyboardNext?.includes('section=groups')) throw new Error('Unexpected native menu keyboard order');
+  await page.screenshot({ path: resolve(output, 'navigation-keyboard.png'), fullPage: true });
   const parent = page.getByRole('link', { name: 'User Tools', exact: true });
   await parent.click();
   await accounts.waitFor({ state: 'hidden' });
@@ -66,7 +67,14 @@ try {
   await page.screenshot({ path: resolve(output, 'navigation-dark-preference.png'), fullPage: true });
   await page.emulateMedia({ colorScheme: 'light' });
   await page.goto(base + '/administrator/index.php?option=com_cpanel&view=cpanel&dashboard=users');
-  await page.locator('[data-ut-dashboard-links-category="accounts"]').waitFor();
+  try {
+    await page.locator('[data-ut-dashboard-links-category="accounts"]').waitFor();
+  } catch (error) {
+    await page.screenshot({ path: resolve(output, 'navigation-dashboard-error.png'), fullPage: true });
+    console.log(JSON.stringify({ dashboardUrl: page.url(), title: await page.title(),
+      modules: await page.locator('.mod-usertools').allTextContents() }));
+    throw error;
+  }
   await capture('13-panel-usuarios.jpg');
   await writeFile(resolve(output, 'navigation-checks.json'), JSON.stringify({
     menuKeyboardOrder: true, keyboardExpandCollapse: true, activeCategories: true,
