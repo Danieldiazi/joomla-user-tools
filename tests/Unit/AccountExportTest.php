@@ -78,6 +78,18 @@ final class AccountExportTest extends TestCase
         $this->assertSame(10, count(AccountExport::header(true, $text)));
     }
 
+    public function testPasswordResetTokenOnVisitedBlockedAccountIsNotPendingActivation(): void
+    {
+        $text = static fn (string $k): string => $k;
+        $users = [
+            $this->record(10, 'never', 1, null, '2026-01-01 00:00:00', [2]),
+            $this->record(11, 'resetThenBlocked', 1, '2026-05-01 00:00:00', '2025-01-01 00:00:00', [2]),
+            $this->record(12, 'activeWithToken', 0, null, '2026-01-01 00:00:00', [2]),
+        ];
+        $rows = iterator_to_array(AccountExport::rows($users, $this->sampleGroups(), [10 => true, 11 => true, 12 => true], [], false, $text), false);
+        $this->assertSame(['JYES', 'JNO', 'JNO'], array_column($rows, 7));
+    }
+
     public function testUnknownGroupIsNotSilentlyConvertedToAll(): void
     {
         $this->expectException(UserFacingException::class);

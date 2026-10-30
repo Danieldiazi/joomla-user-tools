@@ -70,7 +70,7 @@ El instalador comprueba las versiones mínimas, registra la extensión en el reg
 
 ## Exportar cuentas a CSV
 
-La herramienta **Exportar cuentas a CSV** requiere el permiso `usertools.export`. Permite filtrar por grupo (y subgrupos), estado e inactividad; para las cuentas sin accesos registrados puede utilizar la fecha de alta. El archivo incluye ID, usuario, nombre, **grupos asignados directamente con su ID**, fecha de último acceso, alta, estado, activación pendiente y existencia de un método de autenticación multifactor (MFA) configurado, sin sus secretos. El **correo electrónico es opcional y viene desmarcado**; al exportarlo queda constancia en el registro de acciones, sin guardar direcciones en ese registro. El CSV es UTF-8, usa punto y coma y protege contra fórmulas al abrirlo en una hoja de cálculo. Debe custodiarse como información personal.
+La herramienta **Exportar cuentas a CSV** requiere el permiso `usertools.export`. Permite filtrar por grupo (y subgrupos), estado e inactividad; para las cuentas sin accesos registrados puede utilizar la fecha de alta. El archivo incluye ID, usuario, nombre, **grupos asignados directamente con su ID**, fecha de último acceso, alta, estado, activación pendiente (cuenta bloqueada que nunca ha accedido y tiene token de activación) y existencia de un método de autenticación multifactor (MFA) configurado, sin sus secretos. El **correo electrónico es opcional y viene desmarcado**; al exportarlo queda constancia en el registro de acciones, sin guardar direcciones en ese registro. El CSV es UTF-8, usa punto y coma y protege contra fórmulas al abrirlo en una hoja de cálculo. Debe custodiarse como información personal.
 
 ## Comparar una lista de usuarios
 

@@ -59,7 +59,8 @@ final class AccountExport
     /**
      * @param list<UserRecord> $users
      * @param array<int, object> $groups
-     * @param array<int, bool> $pending  IDs with non-empty activation token and blocked account
+     * @param array<int, bool> $pending  IDs with a non-empty activation token; pending only if also blocked and never visited,
+     *                                  because Joomla reuses the column for password reset tokens
      * @param array<int, bool> $mfa      IDs with at least one configured non-recovery method
      * @param callable(string): string $text
      * @return iterable<list<int|string>>
@@ -78,7 +79,7 @@ final class AccountExport
             }
             array_push($row, implode(' | ', $names), (string) $user->lastvisitDate, (string) $user->registerDate,
                 $text($user->block ? 'COM_USERTOOLS_EXPORT_BLOCKED' : 'COM_USERTOOLS_EXPORT_ACTIVE'),
-                $text(isset($pending[$user->id]) && $user->block ? 'JYES' : 'JNO'),
+                $text(isset($pending[$user->id]) && $user->block && $user->neverVisited() ? 'JYES' : 'JNO'),
                 $text(isset($mfa[$user->id]) ? 'JYES' : 'JNO'));
             yield $row;
         }

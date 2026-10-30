@@ -530,7 +530,8 @@ Test::check(str_contains($dashboard, 'UT integration'), 'the module lists the Us
 Test::check(str_contains($dashboard, 'aria-label="Quick links"')
     && str_contains($dashboard, 'Content by access level')
     && str_contains($dashboard, 'Content by age')
-    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=move"/', $dashboard) === 1,
+    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=move"/', $dashboard) === 1
+    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=export"/', $dashboard) === 1,
     'dashboard shortcuts are translated and not duplicated');
 Test::check(str_contains($dashboard, 'data-ut-dashboard-task=') && preg_match('/<dl\b[^>]*>\s*<div\b[^>]*>\s*<dt\b/', $dashboard) === 1,
     'tasks expose labelled dates without squeezing five table columns');
@@ -583,8 +584,9 @@ $delegateDashboard = $delegate->get($dashboardUrl);
 Test::check(!str_contains($delegateDashboard, '>Move groups</a>')
     && !str_contains($delegateDashboard, '>Anonymise accounts</a>')
     && substr_count($delegateDashboard, 'view=move') === 0
-    && substr_count($delegateDashboard, 'view=anonymize') === 0,
-    'delegate cannot see superuser or anonymization shortcuts');
+    && substr_count($delegateDashboard, 'view=anonymize') === 0
+    && substr_count($delegateDashboard, 'view=export') === 0,
+    'delegate cannot see superuser, anonymization or export shortcuts');
 
 Test::check(str_contains($delegateDashboard, 'mod-usertools') && $moduleCount($delegateDashboard, 'inactive') === null && $moduleCount($delegateDashboard, 'pending') === null && !str_contains($delegateDashboard, 'UT integration'),
     'a user without the inactivity, deletion or results permissions sees no figures or tasks');
