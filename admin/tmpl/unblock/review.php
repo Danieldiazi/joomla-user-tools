@@ -27,8 +27,8 @@ $candidates = $review['candidates'];
     <input type="hidden" name="preview" value="<?= $this->escape($review['nonce']) ?>">
     <input type="hidden" name="selected" value="[]" data-ut-selected>
     <input type="hidden" name="selection_ready" value="0" data-ut-selection-ready>
-    <section class="card ut-card"><div class="card-body">
     <?php if ($candidates) : ?>
+    <section class="card ut-card"><div class="card-body">
       <div class="d-flex flex-wrap gap-3 align-items-center">
         <div class="form-check mb-0"><input class="form-check-input" type="checkbox" id="ut-suspend-all" data-ut-suspend-all><label class="form-check-label" for="ut-suspend-all"><?= Text::_('COM_USERTOOLS_SELECT_ALL') ?></label></div>
         <?php if (count($candidates) > 8) : ?>
@@ -45,11 +45,9 @@ $candidates = $review['candidates'];
           <td><?= $this->date($user->lastvisitDate) ?></td><td><?= $this->groupTitles($user->groups, $this->groups) ?></td></tr>
       <?php endforeach; ?>
       </tbody></table><p class="text-muted" data-ut-filter-empty hidden><?= Text::_('COM_USERTOOLS_JS_NO_RESULTS') ?></p></div>
-    <?php else : ?>
-      <p class="mb-0" data-ut-unblock-nothing><?= Text::_('COM_USERTOOLS_UNBLOCK_NOTHING') ?></p>
-    <?php endif; ?>
       <p class="text-muted mt-2 mb-0" data-ut-suspension-count aria-live="polite"></p>
     </div></section>
+    <?php endif; ?>
     <?php if ($review['skipped']) : ?>
     <section class="card ut-card"><div class="card-body">
       <h3 class="h5"><?= Text::plural('COM_USERTOOLS_UNBLOCK_SKIPPED_HEADING', count($review['skipped'])) ?></h3>

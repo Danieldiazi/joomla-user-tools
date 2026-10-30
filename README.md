@@ -137,6 +137,8 @@ Desde la 2026.10.19, **Deshacer bloqueos** desbloquea de una vez las cuentas que
 
 El desbloqueo usa la API de usuarios de Joomla y queda en el **registro de acciones de usuarios** con la tanda que deshace. Requiere el permiso propio *Deshacer bloqueos*. Las tandas manuales se guardan desde la 2026.10.19 en la subcarpeta usertools-batches de la carpeta de registros de Joomla, con la misma protección y retención que los informes de la tarea.
 
+![Deshacer bloqueos: tandas recientes de la tarea programada con las cuentas que bloqueó cada una](docs/screenshots/27-deshacer-bloqueos.jpg)
+
 ## Eliminar usuarios inactivos
 
 En la portada, «Revisar cuentas para eliminar». Es la única herramienta que **borra** cuentas, y el borrado no se puede deshacer; para impedir el acceso sin borrar, usa la revisión de inactivos.

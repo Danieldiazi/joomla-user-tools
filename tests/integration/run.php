@@ -1510,6 +1510,11 @@ Test::check(str_contains($delegateReview, 'data-ut-unblock-row="' . $unIds['un_m
 $delegate->submit($unUrl . '&layout=review', ['task' => 'unblock.apply', 'selection_ready' => 1, 'confirm' => 1, 'confirm_count' => '2',
     'selected' => json_encode([$unIds['un_man'], $unIds['un_mgr']])], 'data-ut-suspension-form');
 Test::check(!$site->blocked('un_man') && $site->blocked('un_mgr'), 'the delegate unblocks the ordinary account, never the backend one');
+$site->q('UPDATE #__users SET block = 0 WHERE id = ?', [$unIds['un_mgr']]);
+$unEmpty = $admin->submit($unUrl, ['task' => 'unblock.select', 'batch' => $manualRef[1] ?? ''], 'data-ut-unblock-batches');
+Test::check(substr_count($unEmpty, 'No account of this batch can be unblocked.') === 1 && !str_contains($unEmpty, 'data-ut-suspension-count')
+    && !str_contains($unEmpty, 'value="unblock.apply"') && substr_count($unEmpty, 'data-ut-unblock-skipped=') === 2,
+    'a batch with nothing left to unblock says so once and offers no confirmation');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
 Test::section('Account CSV export and privacy');
