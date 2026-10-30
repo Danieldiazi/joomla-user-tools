@@ -327,3 +327,18 @@ test('add accounts to groups: the target group is hidden and not sent in pairs m
   assert.equal(wrapper.hidden, false);
   assert.equal(doc.getElementById('g').disabled, false);
 });
+
+test('stylesheet: sticky headers and first columns have an opaque surface even without Bootstrap variables', () => {
+  const css = fs.readFileSync(path.join(__dirname, '../../media/css/admin.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '');
+  const block = (selector) => {
+    const m = css.match(new RegExp(selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\{([^}]*)\\}'));
+    return m ? m[1] : '';
+  };
+  // Atum defines --body-bg but not --bs-body-bg: the sticky cells must still get a background.
+  assert.match(block('.ut-app'), /max-width:1200px;--ut-surface:var\(--bs-body-bg,var\(--body-bg,Canvas\)\)/);
+  for (const selector of ['.ut-access thead th', '.ut-access .ut-access-group', '.ut-table-scroll thead th']) {
+    assert.match(block(selector), /position:sticky/, selector);
+    assert.match(block(selector), /background-color:var\(--ut-surface\)/, selector);
+  }
+  assert.ok(!/background:var\(--bs-body-bg\)/.test(css), 'no sticky cell depends on --bs-body-bg alone');
+});
