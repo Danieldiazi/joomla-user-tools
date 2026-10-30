@@ -24,6 +24,7 @@ $states = [
 $sections = [
     'accounts' => ['COM_USERTOOLS_HOME_SECTION_ACCOUNTS', 'COM_USERTOOLS_HOME_SECTION_ACCOUNTS_DESC', [
         ['usertools.compare', 'compare', 'COM_USERTOOLS_COMPARE_TITLE', 'COM_USERTOOLS_COMPARE_HOME_DESC', 'COM_USERTOOLS_COMPARE_START', '', 'list'],
+        ['usertools.export', 'export', 'COM_USERTOOLS_EXPORT_TITLE', 'COM_USERTOOLS_EXPORT_HOME_DESC', 'COM_USERTOOLS_EXPORT_START', 'read', 'download'],
         ['usertools.inactive', 'inactive', 'COM_USERTOOLS_INACTIVE_TITLE', 'COM_USERTOOLS_INACTIVE_HOME_DESC', 'COM_USERTOOLS_INACTIVE_START', '', 'clock'],
         ['usertools.unblock', 'unblock', 'COM_USERTOOLS_UNBLOCK_TITLE', 'COM_USERTOOLS_UNBLOCK_HOME_DESC', 'COM_USERTOOLS_UNBLOCK_START', '', 'undo'],
     ]],

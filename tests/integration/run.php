@@ -218,11 +218,11 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['compare', 'inactive', 'unblock', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
+Test::check($cards[1] === ['compare', 'export', 'inactive', 'unblock', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 14 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 15 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -530,7 +530,8 @@ Test::check(str_contains($dashboard, 'UT integration'), 'the module lists the Us
 Test::check(str_contains($dashboard, 'aria-label="Quick links"')
     && str_contains($dashboard, 'Content by access level')
     && str_contains($dashboard, 'Content by age')
-    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=move"/', $dashboard) === 1,
+    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=move"/', $dashboard) === 1
+    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=export"/', $dashboard) === 1,
     'dashboard shortcuts are translated and not duplicated');
 Test::check(str_contains($dashboard, 'data-ut-dashboard-task=') && preg_match('/<dl\b[^>]*>\s*<div\b[^>]*>\s*<dt\b/', $dashboard) === 1,
     'tasks expose labelled dates without squeezing five table columns');
@@ -583,8 +584,9 @@ $delegateDashboard = $delegate->get($dashboardUrl);
 Test::check(!str_contains($delegateDashboard, '>Move groups</a>')
     && !str_contains($delegateDashboard, '>Anonymise accounts</a>')
     && substr_count($delegateDashboard, 'view=move') === 0
-    && substr_count($delegateDashboard, 'view=anonymize') === 0,
-    'delegate cannot see superuser or anonymization shortcuts');
+    && substr_count($delegateDashboard, 'view=anonymize') === 0
+    && substr_count($delegateDashboard, 'view=export') === 0,
+    'delegate cannot see superuser, anonymization or export shortcuts');
 
 Test::check(str_contains($delegateDashboard, 'mod-usertools') && $moduleCount($delegateDashboard, 'inactive') === null && $moduleCount($delegateDashboard, 'pending') === null && !str_contains($delegateDashboard, 'UT integration'),
     'a user without the inactivity, deletion or results permissions sees no figures or tasks');
@@ -1504,6 +1506,73 @@ $delegate->submit($unUrl . '&layout=review', ['task' => 'unblock.apply', 'select
     'selected' => json_encode([$unIds['un_man'], $unIds['un_mgr']])], 'data-ut-suspension-form');
 Test::check(!$site->blocked('un_man') && $site->blocked('un_mgr'), 'the delegate unblocks the ordinary account, never the backend one');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+
+Test::section('Account CSV export and privacy');
+$exportUrl = 'index.php?option=com_usertools&view=export';
+$exportPage = $admin->get($exportUrl);
+Test::check(str_contains($exportPage, 'data-ut-accounts-export')
+    && str_contains($exportPage, 'name="email" value="1"'),
+    'account CSV export has a filter form with opt-in email');
+$xpGroup = $gid('UT anon G');
+$xpSub = $gid('UT anon G sub');
+$xpBase = $site->addUser('xp_base', 'UT anon G', '', $old);
+$xpChild = $site->addUser('xp_child', 'UT anon G sub');
+$xpOther = $site->addUser('xp_other', 'Registered', '', $old);
+$site->q('UPDATE #__users SET "block" = 1, "activation" = ? WHERE id = ?', ['test-pending-activation', $xpChild]);
+$site->q('INSERT INTO #__user_mfa ("user_id", "title", "method", "options", "created_on") VALUES (?, ?, ?, ?, ?)',
+    [$xpBase, 'Test MFA', 'totp', '{}', gmdate('Y-m-d H:i:s')]);
+$token = Client::token($exportPage);
+$csvPath = 'index.php?option=com_usertools&task=export.download&group=' . $xpGroup . '&subgroups=1&status=all&days=0&' . $token . '=1';
+[$status, $csv, $headers] = $admin->request($csvPath);
+$csvLines = preg_split('/\R/', substr($csv, 3)) ?: [];
+$csvRows = array_map(static fn (string $line): array => str_getcsv($line, ';', '"', ''), array_values(array_filter($csvLines, static fn (string $line): bool => $line !== '')));
+$csvById = [];
+foreach (array_slice($csvRows, 1) as $row) {
+    $csvById[(int) $row[0]] = $row;
+}
+Test::check($status === 200 && str_starts_with($csv, "\xEF\xBB\xBF")
+    && str_contains((string) ($headers['content-type'] ?? ''), 'text/csv')
+    && str_contains((string) ($headers['cache-control'] ?? ''), 'no-store')
+    && str_contains((string) ($headers['content-disposition'] ?? ''), 'attachment'),
+    'download is UTF-8 CSV with private no-store response headers');
+Test::check(isset($csvById[$xpBase], $csvById[$xpChild]) && !isset($csvById[$xpOther]),
+    'group with descendants exports only direct and descendant memberships');
+Test::check(count($csvRows[0] ?? []) === 9 && !str_contains($csv, '@example.test'),
+    'email column and addresses are omitted by default');
+Test::check(($csvById[$xpBase][8] ?? '') === 'Yes' && ($csvById[$xpChild][7] ?? '') === 'Yes',
+    'configured MFA and pending activation are exposed as indicators without secrets');
+[$status, $onlyGroup] = $admin->request('index.php?option=com_usertools&task=export.download&group=' . $xpGroup . '&status=all&' . $token . '=1');
+Test::check($status === 200 && str_contains($onlyGroup, 'xp_base')
+    && !str_contains($onlyGroup, 'xp_child'), 'excluding descendants only exports the chosen group');
+[$status, $inactive] = $admin->request('index.php?option=com_usertools&task=export.download&group=' . $xpGroup
+    . '&subgroups=1&days=365&include_never=0&' . $token . '=1');
+Test::check($status === 200 && str_contains($inactive, 'xp_base')
+    && !str_contains($inactive, 'xp_child'), 'inactivity filter excludes never-visited accounts by default');
+[$status, $includingNever] = $admin->request('index.php?option=com_usertools&task=export.download&group=' . $xpGroup
+    . '&subgroups=1&days=365&include_never=1&' . $token . '=1');
+Test::check($status === 200 && str_contains($includingNever, 'xp_base')
+    && !str_contains($includingNever, 'xp_child'), 'never-visited accounts use their registration date as inactivity reference');
+[$status, $withEmail] = $admin->request($csvPath . '&email=1');
+Test::check($status === 200 && str_contains($withEmail, 'xp_base@example.test')
+    && count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_EXPORT_EMAIL'")) === 1,
+    'opt-in email is exported and audited exactly once');
+[$status, $emptyGroup] = $admin->request('index.php?option=com_usertools&task=export.download&group=987654&' . $token . '=1');
+Test::check($status === 200 && !str_contains($emptyGroup, 'xp_base@example.test') && !str_starts_with($emptyGroup, "\xEF\xBB\xBF"),
+    'unknown group is refused rather than falling back to all accounts');
+[$code] = $delegate->request($exportUrl);
+Test::check($code === 403, 'delegate cannot view account export without permission');
+[$code] = $delegate->request('index.php?option=com_usertools&task=export.download&' . $token . '=1');
+Test::check($code === 403, 'direct CSV download checks the dedicated permission');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'",
+    [json_encode(['core.manage' => ['6' => 1], 'usertools.export' => ['6' => 1]])]);
+$delegatePage = $delegate->get($exportUrl);
+$delegateToken = Client::token($delegatePage);
+[$code, $delegateCsv] = $delegate->request('index.php?option=com_usertools&task=export.download&group=' . $xpGroup . '&'
+    . $delegateToken . '=1');
+Test::check($code === 200 && str_contains($delegateCsv, 'xp_base') && !str_contains($delegateCsv, '@example.test'),
+    'explicit export permission allows delegate without exposing email by default');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+$site->q('DELETE FROM #__user_mfa WHERE user_id = ?', [$xpBase]);
 
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);

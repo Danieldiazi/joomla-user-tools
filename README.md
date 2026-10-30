@@ -7,6 +7,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Herramienta | Qué hace |
 |---|---|
 | Comparar una lista | Propone bloquear las cuentas ausentes de la lista completa, salvo las protegidas, y permite crear los usuarios nuevos que selecciones. |
+| Exportar cuentas a CSV | Descarga las cuentas y sus grupos, fechas, estado y MFA, con filtros y correo opcional bajo un permiso propio. |
 | Revisar usuarios inactivos | Busca cuentas inactivas para que selecciones cuáles bloquear. |
 | Anonimizar cuentas | Sustituye los datos personales de las cuentas de una lista, de todas las inactivas o de un grupo, sin eliminarlas. Permanente, con revisión y número escrito. Disponible desde 2026.10.17. |
 | Eliminar usuarios inactivos | Permite seleccionar y borrar definitivamente cuentas inactivas. Por defecto lista solo las ya bloqueadas. Disponible desde 2026.10.5. |
@@ -32,6 +33,7 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 ## Índice
 
 - [Instalación y actualizaciones](#instalación-y-actualizaciones)
+- [Exportar cuentas a CSV](#exportar-cuentas-a-csv)
 - [Comparar una lista de usuarios](#comparar-una-lista-de-usuarios)
 - [Revisar usuarios inactivos](#revisar-usuarios-inactivos)
 - [Deshacer bloqueos](#deshacer-bloqueos)
@@ -66,6 +68,12 @@ Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tool
 A partir de la 2026.10.3, Joomla avisa de las versiones nuevas en Sistema → Actualizar → Extensiones, como con cualquier otra extensión: el paquete declara un servidor de actualizaciones que apunta a la última release de GitHub. Para actualizar, instala el paquete nuevo encima; no desinstales el componente. Al actualizar desde versiones anteriores, las exclusiones guardadas se migran solas.
 
 El instalador comprueba las versiones mínimas, registra la extensión en el registro de acciones de usuarios y crea la plantilla de correo «User Tools: cuenta creada». Al desinstalar avisa de que los informes de tareas se conservan en la carpeta de registros.
+
+## Exportar cuentas a CSV
+
+La herramienta **Exportar cuentas a CSV** requiere el permiso `usertools.export`. Permite filtrar por grupo (y subgrupos), estado e inactividad; para las cuentas sin accesos registrados puede utilizar la fecha de alta. El archivo incluye ID, usuario, nombre, **grupos asignados directamente con su ID**, fecha de último acceso, alta, estado, activación pendiente (cuenta bloqueada que nunca ha accedido y tiene token de activación) y existencia de un método de autenticación multifactor (MFA) configurado, sin sus secretos. El **correo electrónico es opcional y viene desmarcado**; al exportarlo queda constancia en el registro de acciones, sin guardar direcciones en ese registro. El CSV es UTF-8, usa punto y coma y protege contra fórmulas al abrirlo en una hoja de cálculo. Debe custodiarse como información personal.
+
+![Exportar cuentas a CSV: filtros por grupo, inactividad y estado, con el correo opcional](docs/screenshots/26-exportar-cuentas.jpg)
 
 ## Comparar una lista de usuarios
 
@@ -131,6 +139,8 @@ Cada eliminación queda en el **registro de acciones de usuarios** con el ID, el
 
 Desde **User Tools → Añadir cuentas a grupos** se pueden añadir usuarios existentes a grupos sin eliminar sus pertenencias actuales. Introduce una lista de usuarios o correos y un grupo de destino, o pares `usuario;#ID` en líneas independientes. Los grupos se identifican por `#ID` o **ruta completa** (por ejemplo `Public/Registered`); los títulos aislados o rutas duplicadas se rechazan. La revisión muestra qué se añadiría, qué ya existe y qué se excluye. Solo se pueden asignar grupos sin acceso a administración y no se modifican administradores, superusuarios ni la cuenta del operador. Debes confirmar y escribir el número de cuentas. El guardado usa la API de Joomla, comprueba el cierre de sesiones y advierte si permanecen abiertas o no se puede verificar su cierre. Si falla el cierre, puede reintentarse desde el resultado **sin volver a asignar grupos ni duplicar registros**. Cada asignación queda registrada y las listas grandes continúan por tandas.
 
+![Añadir cuentas a grupos: revisión con las asignaciones que se harán, las que ya existían y las rechazadas](docs/screenshots/25-anadir-grupos-revision.jpg)
+
 ## Anonimizar cuentas
 
 Desde la 2026.10.17, **Anonimizar cuentas** sustituye los datos personales de varias cuentas a la vez sin eliminarlas. Joomla solo lo hace una a una, desde una solicitud de eliminación en Usuarios → Privacidad que la persona tiene que confirmar por correo. Es **permanente**: no se puede deshacer.
@@ -191,7 +201,7 @@ Desde la 2026.10.6, el panel **Usuarios** de la administración (el icono de pan
 - **Tareas programadas de User Tools**, con modo (simulación o real), última ejecución, resultado (enlazado con su informe) y próxima ejecución.
 - **Avisos**: plugin de tareas deshabilitado o no instalado, ninguna tarea habilitada, una tarea detenida por el límite de seguridad, fallida o con un informe sin finalizar desde hace más de una hora, una tarea que sigue en simulación más de 14 días después de crearla y, desde la 2026.10.15, las comprobaciones del [diagnóstico de accesos](#diagnóstico-de-accesos) que conviene revisar, solo para quien puede verlo.
 
-Desde la 2026.10.14, las cifras se presentan como «Inactivas para revisar» y «Bloqueadas para revisar»: son cuentas candidatas, no acciones automáticas, y cada tarjeta enlaza con su revisión. Cada tarea muestra su modo, el resultado de la última ejecución con enlace al informe y las fechas con su etiqueta; si no tiene próxima ejecución, se explica por qué. Cuando alguna tarea está en simulación, una nota recuerda que la simulación no modifica cuentas. Al pie aparecen la fecha de actualización y cómo funciona la caché.
+Desde la 2026.10.14, las cifras se presentan como «Inactivas para revisar» y «Bloqueadas para revisar»: son cuentas candidatas, no acciones automáticas, y cada tarjeta enlaza con su revisión. Cada tarea muestra su modo, el resultado de la última ejecución con enlace al informe y las fechas con su etiqueta; si no tiene próxima ejecución, se explica por qué. Cuando alguna tarea está en simulación, una nota recuerda que la simulación no modifica cuentas. Al pie aparecen la fecha de actualización y cómo funciona la caché. Desde la 2026.10.17, el módulo incluye además accesos directos a cada herramienta para la que tienes permiso.
 
 Las cifras usan exactamente las mismas reglas que las herramientas, así que coinciden con lo que verás al abrirlas. Se calculan como mucho cada **10 minutos** y se recalculan en cuanto una herramienta o una tarea cambia cuentas, o se guardan las Opciones.
 

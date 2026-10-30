@@ -7,6 +7,7 @@ Guía para agentes de código (Copilot, Codex, Claude y similares) y para cualqu
 User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y PostgreSQL) que gestiona cuentas de usuario. Tiene siete herramientas y cuatro pantallas de consulta:
 
 - **Comparar una lista**: bloquea las cuentas que no están en una lista vigente y da de alta las nuevas.
+- **Exportar cuentas a CSV**: solo lectura, permiso `usertools.export`, token GET y `Cache-Control: no-store`. `ExportModel` carga cuentas y grupos con `UserDirectory`, flags de activación/MFA con `AccountExportReader` (consultas globales, sin N+1), filtra con `AccountExport` y genera `CsvExport` seguro frente a fórmulas. El correo no se incluye por defecto; si se solicita, se registra la acción sin almacenar las direcciones.
 - **Revisar usuarios inactivos**: bloquea las cuentas seleccionadas.
 - **Deshacer bloqueos**: desbloquea, tras una revisión, las cuentas de una tanda: una ejecución real de la tarea (su informe) o una revisión manual (comparar o inactivos), que se guarda al bloquear en `usertools-batches` con `ReportStore`. Solo ofrece cuentas que siguen bloqueadas y sin cambios (usuario y último acceso, sin anonimizar); quien no es superusuario no desbloquea cuentas con acceso a la administración. La lógica está en `BlockBatch` y la escritura en `AccountUnblocker`; permiso `usertools.unblock`.
 - **Eliminar usuarios inactivos**: borra las cuentas seleccionadas.
