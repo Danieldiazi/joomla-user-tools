@@ -6,6 +6,10 @@ Dudas habituales sobre **Joomla User Tools**. Para la descripción completa de c
 
 **Índice:** [General](#general) · [Comparación de listas](#comparación-de-listas) · [Altas y contraseñas](#altas-y-contraseñas) · [Inactividad y tarea programada](#inactividad-y-tarea-programada) · [Resultados e informes](#resultados-e-informes) · [Módulo de grupos en el sitio](#módulo-de-grupos-en-el-sitio) · [Quitar de grupos](#quitar-de-grupos) · [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso) · [Instalación y actualización](#instalación-y-actualización)
 
+### ¿Puedo exportar todas las cuentas con sus grupos y MFA?
+
+Sí, con **Exportar cuentas a CSV**. Se filtra por grupo, subgrupos, estado e inactividad. El correo está desactivado por defecto y su exportación se registra. El indicador MFA no revela claves ni códigos. Se necesita el permiso `usertools.export`. Consulta el [README](README.md#exportar-cuentas-a-csv).
+
 ## General
 
 ### ¿Borra usuarios?

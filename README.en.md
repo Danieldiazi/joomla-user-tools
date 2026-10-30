@@ -7,6 +7,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Tool | What it does |
 |---|---|
 | Compare a list | Proposes blocking accounts missing from the complete list, except protected accounts, and lets you create selected new users. |
+| Export accounts to CSV | Downloads accounts, groups, dates, status and MFA with filters and optional email under its own permission. |
 | Review inactive users | Finds inactive accounts so you can select which ones to block. |
 | Anonymise accounts | Replaces the personal data of the accounts in a list, of every inactive account or of a group, without deleting them. Permanent, with a review and a typed number. Available since 2026.10.17. |
 | Delete inactive users | Lets you select and permanently delete inactive accounts. By default, only blocked accounts are listed. Available since 2026.10.5. |
@@ -34,6 +35,7 @@ The home screen groups the tools into four sections, each with its explanation a
 - [Installation and updates](#installation-and-updates)
 - [Compare a user list](#compare-a-user-list)
 - [Review inactive users](#review-inactive-users)
+- [Export accounts to CSV](#export-accounts-to-csv)
 - [Delete inactive users](#delete-inactive-users)
 - [Anonymise accounts](#anonymise-accounts)
 - [Scheduled inactivity task and reports](#scheduled-inactivity-task)
@@ -65,6 +67,12 @@ Download **pkg_usertools-VERSION.zip** from the [latest release](https://github.
 Since 2026.10.3, Joomla notifies you of new versions under System → Update → Extensions, like any other extension: the package declares an update server pointing to the latest GitHub release. To update, install the new package over the existing installation; do not uninstall the component. Saved exclusions migrate automatically when updating from earlier versions.
 
 The installer checks minimum versions, registers the extension with the User Actions Log and creates the “User Tools: account created” mail template. On uninstall, it warns that task reports remain in the logs directory.
+
+## Export accounts to CSV
+
+**Export accounts to CSV** requires the `usertools.export` permission. It supports group/descendant, status and inactivity filters; never-visited accounts may be filtered by registration date. The file contains ID, username, name, **direct group memberships with their IDs**, last visit, registration, status, pending activation (a blocked account that has never logged in and has an activation token) and whether an MFA method is configured, without exposing secrets. **Email is optional and unchecked by default**; including it creates a User Actions Log entry without logging the addresses. CSV is UTF-8 with semicolons and spreadsheet formula protection. Handle the file as personal data.
+
+![Export accounts to CSV: group, inactivity and status filters, with optional email (Spanish interface)](docs/screenshots/26-exportar-cuentas.jpg)
 
 ## Compare a user list
 
@@ -119,6 +127,8 @@ Each deletion is written to the **User Actions Log** with the account ID, userna
 ## Bulk add accounts to groups
 
 Open **User Tools → Add accounts to groups** to add existing accounts to groups without removing other memberships. Enter usernames or emails and one target group, or `username;#ID` pairs on separate lines. Identify groups by `#ID` or a **full path** (for example `Public/Registered`); bare titles or duplicate paths are rejected. The preview distinguishes additions, existing memberships and exclusions. Only groups without administrator access can be assigned, and administrator accounts, Super Users and the operator are protected. Confirm and type the number of accounts. Changes use Joomla's User API, verify session closure and warn if sessions remain open or cannot be checked. Session closure can be retried from the result **without repeating memberships or their audit entries**. Every assignment is logged and large batches are resumable.
+
+![Add accounts to groups: review with the assignments to be made, the existing ones and the refused ones (Spanish interface)](docs/screenshots/25-anadir-grupos-revision.jpg)
 
 ## Anonymise accounts
 
@@ -180,7 +190,7 @@ Since 2026.10.6, the administrator **Users** dashboard (the dashboard icon next 
 - **User Tools scheduled tasks**, including mode (dry run or real), last run, result (linked to its report) and next run.
 - **Notices**: task plugin disabled or missing, no enabled task, a task stopped by the safety limit, a failed task or a report unfinished for more than an hour, tasks still in dry-run mode more than 14 days after creation and, since 2026.10.15, the [access diagnosis](#access-diagnosis) checks worth reviewing, only for users who can see it.
 
-Since 2026.10.14, the counts are shown as “Inactive accounts to review” and “Blocked accounts to review”: they are candidate accounts, not automatic actions, and each card links to its review. Each task shows its mode, the result of its last run with a link to the report, and labelled dates; if it has no next run, the module says why. When any task is a dry run, a note explains that dry runs do not change accounts. The footer shows the update time and how the cache works.
+Since 2026.10.14, the counts are shown as “Inactive accounts to review” and “Blocked accounts to review”: they are candidate accounts, not automatic actions, and each card links to its review. Each task shows its mode, the result of its last run with a link to the report, and labelled dates; if it has no next run, the module says why. When any task is a dry run, a note explains that dry runs do not change accounts. The footer shows the update time and how the cache works. Since 2026.10.17, the module also includes shortcuts to each tool you are allowed to use.
 
 Counts use the same rules as the tools, so they match what you see when opening them. They are calculated at most every **10 minutes**, and recalculated as soon as a tool or task changes accounts, or Options are saved.
 

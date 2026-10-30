@@ -6,6 +6,10 @@ Common questions about **Joomla User Tools**. For a complete description of each
 
 **Contents:** [General](#general) · [List comparison](#list-comparison) · [Accounts and passwords](#accounts-and-passwords) · [Inactivity and scheduled tasks](#inactivity-and-scheduled-tasks) · [Results and reports](#results-and-reports) · [Groups module on the site](#groups-module-on-the-site) · [Remove from groups](#remove-from-groups) · [Groups and access levels](#groups-and-access-levels) · [Installation and updates](#installation-and-updates)
 
+### Can I export accounts with groups and MFA status?
+
+Yes. **Export accounts to CSV** supports group, descendants, status and inactivity filters. Email is off by default and its export is logged. The MFA indicator never exposes secrets. The `usertools.export` permission is required. See [README](README.en.md#export-accounts-to-csv).
+
 ## General
 
 ### Does it delete users?

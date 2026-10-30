@@ -61,6 +61,29 @@ final class ActionLogger
             ['groups' => implode(', ', $removed), 'added' => $added]);
     }
 
+    /** Audit exports containing email addresses without storing addresses or the CSV. */
+    public function exportedWithEmails(object $actor, int $group, int $days): void
+    {
+        $operator = Operator::fromUser($actor);
+        $message = [
+            'action' => 'read',
+            'type' => 'COM_USERTOOLS_ACTION_LOG_TYPE_USER',
+            'id' => $operator->id,
+            'title' => $operator->name,
+            'itemlink' => 'index.php?option=com_users&task=user.edit&id=' . $operator->id,
+            'userid' => $operator->id,
+            'username' => $operator->name,
+            'accountlink' => 'index.php?option=com_users&task=user.edit&id=' . $operator->id,
+            'group' => $group,
+            'days' => $days,
+        ];
+        try {
+            ($this->writer)([$message], 'COM_USERTOOLS_ACTION_LOG_EXPORT_EMAIL', self::CONTEXT, $operator->id);
+        } catch (\Throwable) {
+            // Logging must never break a read-only operation.
+        }
+    }
+
     /** A group moved under another parent with "Move groups". */
     public function groupMoved(int $id, string $title, string $from, string $to, Operator $operator): void
     {

@@ -4,9 +4,9 @@
 
 [Back to the README](../README.en.md)
 
-These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, the home screen in 2026.10.13, the Users dashboard in 2026.10.14, access diagnosis and content by age in 2026.10.15, and move groups in 2026.10.16. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
+These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, access diagnosis and content by age in 2026.10.15, move groups in 2026.10.16, and the home screen, the Users dashboard, add accounts to groups and export accounts in 2026.10.19. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
-![User Tools home screen grouped into sections: review accounts, groups and levels, automation and delete accounts (2026.10.13, Spanish interface)](screenshots/01-portada.jpg)
+![User Tools home screen grouped into sections: review accounts, groups and access levels, automation and monitoring, and delete or anonymise accounts (2026.10.19, Spanish interface)](screenshots/01-portada.jpg)
 
 ![Comparison: list and exclusions](screenshots/02-comparacion-lista.jpg)
 
@@ -20,9 +20,15 @@ These shared screenshots show the Spanish interface on Joomla 6.2.0. Each captio
 
 ![Manual inactivity: account selection](screenshots/07-inactivos-seleccion.jpg)
 
+![Export accounts to CSV: group and subgroup, inactivity and status filters, with email unticked by default (2026.10.19, Spanish interface)](screenshots/26-exportar-cuentas.jpg)
+
 ![Delete inactive users: period, status and exclusions (2026.10.5)](screenshots/11-eliminar-plazo.jpg)
 
 ![Delete inactive users: selection and confirmation (2026.10.5)](screenshots/12-eliminar-seleccion.jpg)
+
+![Add accounts to groups: username;group pairs with full paths (2026.10.19, Spanish interface)](screenshots/24-anadir-grupos-lista.jpg)
+
+![Add accounts to groups: review with the assignments to be made, one that already existed, a protected account, an unknown user and a refused group with administrator access (2026.10.19, Spanish interface)](screenshots/25-anadir-grupos-revision.jpg)
 
 ![Remove from groups: choose the account (2026.10.9)](screenshots/15-quitar-grupos-cuenta.jpg)
 
@@ -36,7 +42,7 @@ These shared screenshots show the Spanish interface on Joomla 6.2.0. Each captio
 
 ![Task report details](screenshots/10-informe-tarea.jpg)
 
-![User Tools module on the Users dashboard: accounts to review with a link to their review, and tasks with their mode, result and dates (2026.10.14, Spanish interface)](screenshots/13-panel-usuarios.jpg)
+![User Tools module on the Users dashboard: accounts to review with a link to their review, tasks with their mode, result and dates, and shortcuts to the tools you may use (2026.10.19, Spanish interface)](screenshots/13-panel-usuarios.jpg)
 
 ![Groups and access levels: groups by level matrix, CSV export and summary by level (2026.10.11, Spanish interface)](screenshots/14-grupos-niveles.jpg)
 
