@@ -28,6 +28,7 @@ $layouts = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
           <label class="form-check-label" for="ut-ag-pairs"><?= Text::_('COM_USERTOOLS_ADDGROUPS_PAIRS') ?></label>
         </div>
       </fieldset>
+      <div data-ut-ag-group>
       <label class="form-label" for="ut-ag-group"><?= Text::_('COM_USERTOOLS_ADDGROUPS_GROUP') ?></label>
       <input class="form-control" id="ut-ag-group" name="group" value="<?= $this->escape($this->draft['group']) ?>" list="ut-ag-groups" autocomplete="off">
       <datalist id="ut-ag-groups">
@@ -38,6 +39,7 @@ $layouts = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
         <?php endforeach; ?>
       </datalist>
       <p class="form-text"><?= Text::_('COM_USERTOOLS_ADDGROUPS_GROUP_HELP') ?></p>
+      </div>
       <label class="form-label" for="ut-ag-lines"><?= Text::_('COM_USERTOOLS_ADDGROUPS_ACCOUNTS') ?></label>
       <textarea class="form-control" id="ut-ag-lines" name="lines" rows="10" required><?= $this->escape($this->draft['lines']) ?></textarea>
       <p class="form-text"><?= Text::_('COM_USERTOOLS_ADDGROUPS_ACCOUNTS_HELP') ?></p>
