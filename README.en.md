@@ -13,6 +13,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Scheduled task | Blocks accounts for inactivity; starts in dry-run mode and generates reports. |
 | Dashboard summary | Shows pending accounts, task status and notices on the Users dashboard. Available since 2026.10.6. |
 | User groups on the site | Site module that lists the groups of a user or the members of a group. Read only. Available since 2026.10.9. |
+| Add accounts to groups | Adds existing accounts to groups by ID or full path without removing current memberships, with review and confirmation. |
 | Remove from groups | Choose an account, untick the groups it should leave and, if you want, also remove it from all their subgroups. With a review and a confirmation. Available since 2026.10.9. |
 | Move groups | Changes the parent of several groups at once, with their subgroups, after reviewing which levels their members gain or lose. Refuses moves that would change administrator access. Super Users only. Available since 2026.10.16. |
 | Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.9. |
@@ -38,6 +39,7 @@ The home screen groups the tools into four sections, each with its explanation a
 - [Scheduled inactivity task and reports](#scheduled-inactivity-task)
 - [Users dashboard summary](#users-dashboard-summary)
 - [User groups module on the site](#user-groups-module-on-the-site)
+- [Bulk add accounts to groups](#bulk-add-accounts-to-groups)
 - [Remove from groups](#remove-from-groups)
 - [Move groups](#move-groups)
 - [Groups and access levels](#groups-and-access-levels)
@@ -113,6 +115,10 @@ The period runs from the last visit or, when including users who have never logg
 Deletion uses Joomla's User API, just like the user manager. Group memberships, profile data, sessions and private messages are removed; other extensions may clean up their own data. Articles and other content created by the user remain, as with Joomla's own deletion.
 
 Each deletion is written to the **User Actions Log** with the account ID, username, name and operator (“… deleted the inactive account … with User Tools”). Joomla also adds its own user deletion entry.
+
+## Bulk add accounts to groups
+
+Open **User Tools → Add accounts to groups** to add existing accounts to groups without removing other memberships. Enter usernames or emails and one target group, or `username;#ID` pairs on separate lines. Identify groups by `#ID` or a **full path** (for example `Public/Registered`); bare titles or duplicate paths are rejected. The preview distinguishes additions, existing memberships and exclusions. Only groups without administrator access can be assigned, and administrator accounts, Super Users and the operator are protected. Confirm and type the number of accounts. Changes use Joomla's User API, verify session closure and warn if sessions remain open or cannot be checked. Session closure can be retried from the result **without repeating memberships or their audit entries**. Every assignment is logged and large batches are resumable.
 
 ## Anonymise accounts
 

@@ -27,6 +27,7 @@ $sections = [
         ['usertools.inactive', 'inactive', 'COM_USERTOOLS_INACTIVE_TITLE', 'COM_USERTOOLS_INACTIVE_HOME_DESC', 'COM_USERTOOLS_INACTIVE_START', '', 'clock'],
     ]],
     'groups' => ['COM_USERTOOLS_HOME_SECTION_GROUPS', 'COM_USERTOOLS_HOME_SECTION_GROUPS_DESC', [
+        ['usertools.addgroups', 'addgroups', 'COM_USERTOOLS_ADDGROUPS_TITLE', 'COM_USERTOOLS_ADDGROUPS_HOME_DESC', 'COM_USERTOOLS_ADDGROUPS_START', '', 'users'],
         ['usertools.ungroup', 'ungroup', 'COM_USERTOOLS_UNGROUP_TITLE', 'COM_USERTOOLS_UNGROUP_HOME_DESC', 'COM_USERTOOLS_UNGROUP_START', '', 'users-cog'],
         ['core.admin', 'move', 'COM_USERTOOLS_MOVE_TITLE', 'COM_USERTOOLS_MOVE_HOME_DESC', 'COM_USERTOOLS_MOVE_START', 'super', 'folder-open'],
         ['usertools.access', 'access', 'COM_USERTOOLS_ACCESS_TITLE', 'COM_USERTOOLS_ACCESS_HOME_DESC', 'COM_USERTOOLS_ACCESS_START', 'read', 'user-lock'],

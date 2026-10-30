@@ -66,6 +66,10 @@ Automated tests cover lists of 1,800 users. Review selections are submitted in a
 
 On the **Users dashboard**, the User Tools module shows individual links to the tools you are allowed to use, alongside its indicators and the link to open the full component.
 
+### Can I add many accounts to groups without removing current memberships?
+
+Yes. **Add accounts to groups** accepts a list and a single group, or `username;#ID` pairs. It reviews changes and duplicates before confirmation and prevents administrator account changes or assignment of backend-access groups. Use unambiguous group IDs or full paths.
+
 ## List comparison
 
 ### What format should the list use?

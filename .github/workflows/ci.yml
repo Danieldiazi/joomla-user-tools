@@ -117,6 +117,9 @@ jobs:
           nohup php -S 127.0.0.1:8090 -t "$RUNNER_TEMP/site" > "$RUNNER_TEMP/server.log" 2>&1 &
           nohup php tests/integration/smtp-sink.php 2525 "$RUNNER_TEMP/mails" > "$RUNNER_TEMP/smtp.log" 2>&1 &
           sleep 2
+      - name: Allow failure-injection triggers in the disposable MySQL database
+        if: matrix.database == 'mysql'
+        run: docker exec "${{ job.services.mysql.id }}" mysql -uroot -pjoomla -e "SET GLOBAL log_bin_trust_function_creators = 1"
       - name: End-to-end tests
         run: |
           UT_URL=http://127.0.0.1:8090 UT_JOOMLA="$RUNNER_TEMP/site" UT_ADMIN_USER=admin UT_ADMIN_PASS="$ADMIN_PASS" \

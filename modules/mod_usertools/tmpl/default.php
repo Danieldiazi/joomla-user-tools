@@ -22,6 +22,7 @@ $identity = Factory::getApplication()->getIdentity();
 $links = [
     ['usertools.compare', 'compare', 'MOD_USERTOOLS_LINK_COMPARE'],
     ['usertools.inactive', 'inactive', 'MOD_USERTOOLS_LINK_INACTIVE'],
+    ['usertools.addgroups', 'addgroups', 'MOD_USERTOOLS_LINK_ADDGROUPS'],
     ['usertools.ungroup', 'ungroup', 'MOD_USERTOOLS_LINK_UNGROUP'],
     ['usertools.access', 'access', 'MOD_USERTOOLS_LINK_ACCESS'],
     ['usertools.access', 'usage', 'MOD_USERTOOLS_LINK_USAGE'],

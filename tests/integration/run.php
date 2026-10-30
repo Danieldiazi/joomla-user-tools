@@ -218,11 +218,11 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['compare', 'inactive', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
+Test::check($cards[1] === ['compare', 'inactive', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 12 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 13 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -1254,6 +1254,187 @@ $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_en
 [$code] = $delegate->request($anonUrl);
 Test::check($code === 403, 'the tool needs its own permission (got ' . $code . ')');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+
+
+Test::section('Bulk add accounts to groups');
+$agUrl = 'index.php?option=com_usertools&view=addgroups';
+$site->addUser('ag_one', 'Registered');
+$site->addUser('ag_two', 'Registered');
+$site->addUser('ag_backend', 'Manager');
+$agOne = $site->userId('ag_one');
+$agTwo = $site->userId('ag_two');
+$agTarget = $gid('UT anon G');
+$agChild = $gid('UT anon G sub');
+Test::check(str_contains($admin->get('index.php?option=com_usertools'), 'data-ut-home-card="addgroups"'),
+    'home page links to bulk group assignments for the Super User');
+$beforeOne = $groupsOf('ag_one');
+$beforeTwo = $groupsOf('ag_two');
+$agReview = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'pairs',
+    'lines' => "ag_one;#$agTarget\nag_one;#$agChild\nag_two;#$agTarget\nag_one;#$agTarget\nag_backend;#$agTarget\nag_one;#8\nmissing;#$agTarget"], 'data-ut-addgroups-form');
+Test::check(substr_count($agReview, 'data-ut-addgroups-status="add"') === 3
+    && str_contains($agReview, 'data-ut-addgroups-status="duplicate"')
+    && str_contains($agReview, 'data-ut-addgroups-status="protected"')
+    && str_contains($agReview, 'data-ut-addgroups-status="unknown"'),
+    'review identifies additions, duplicates, protected accounts/groups and unknown accounts');
+Test::check($groupsOf('ag_one') === $beforeOne && $groupsOf('ag_two') === $beforeTwo,
+    'bulk group assignment preview makes no changes');
+$agRefused = $admin->submit($agUrl . '&layout=review',
+    ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-addgroups-apply');
+Test::check($groupsOf('ag_one') === $beforeOne && str_contains($agRefused, 'data-ut-addgroups-apply'),
+    'bulk group assignment requires the correct typed account count');
+$site->fakeSession($agOne);
+$site->fakeSession($agTwo);
+$agDone = $admin->submit($agUrl . '&layout=review',
+    ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '2'], 'data-ut-addgroups-apply');
+for ($i = 0; $i < 15 && str_contains($agDone, 'data-ut-addgroups-next'); $i++) {
+    $agDone = $admin->submit($agUrl . '&layout=progress', ['task' => 'addgroups.next'], 'data-ut-addgroups-next');
+}
+Test::check(substr_count($agDone, 'data-ut-addgroups-session="closed"') === 2
+    && $site->sessions($agOne) === 0 && $site->sessions($agTwo) === 0
+    && !str_contains($agDone, 'data-ut-addgroups-sessions="open"')
+    && !str_contains($agDone, 'data-ut-addgroups-sessions="unknown"'),
+    'group memberships are saved and session closure is verified for each changed account');
+Test::check(str_contains($agDone, 'data-ut-addgroups-result="added"')
+    && in_array('UT anon G', $groupsOf('ag_one'), true)
+    && in_array('UT anon G sub', $groupsOf('ag_one'), true)
+    && in_array('UT anon G', $groupsOf('ag_two'), true)
+    && in_array('Registered', $groupsOf('ag_one'), true)
+    && in_array('Registered', $groupsOf('ag_two'), true),
+    'batch adds multiple group memberships per user without removing any existing ones');
+Test::check(!in_array('UT anon G', $groupsOf('ag_backend'), true)
+    && count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_GROUP_ADDED'")) === 3,
+    'protected accounts are untouched and each membership addition is audited once');
+$again = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+    'group' => '#' . $agTarget, 'lines' => "ag_one\nag_two"], 'data-ut-addgroups-form');
+Test::check(str_contains($again, 'data-ut-addgroups-none')
+    && substr_count($again, 'data-ut-addgroups-status="existing"') === 2,
+    'second preview detects that memberships already exist and cannot reapply them');
+$noPrivilege = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+    'group' => '#8', 'lines' => "ag_one"], 'data-ut-addgroups-form');
+Test::check(str_contains($noPrivilege, 'data-ut-addgroups-none')
+    && str_contains($noPrivilege, 'data-ut-addgroups-status="protected"'),
+    'assigning a Super User group is refused even to a Super User');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
+[$code] = $delegate->request($agUrl);
+Test::check($code === 403, 'bulk group assignment requires its own permission (got ' . $code . ')');
+
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'",
+    [json_encode(['core.manage' => ['6' => 1], 'usertools.addgroups' => ['6' => 1]])]);
+$delegated = $delegate->get($agUrl);
+Test::check(str_contains($delegated, 'data-ut-addgroups-form'), 'delegate with explicit permission can open group assignment');
+$delegatedReview = $delegate->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+    'group' => '#' . $agChild, 'lines' => "ag_two\nag_backend"], 'data-ut-addgroups-form');
+Test::check(substr_count($delegatedReview, 'data-ut-addgroups-status="add"') === 1
+    && str_contains($delegatedReview, 'data-ut-addgroups-status="protected"'),
+    'delegated preview permits an ordinary account but never a backend account');
+$delegatedDone = $delegate->submit($agUrl . '&layout=review',
+    ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-addgroups-apply');
+Test::check(str_contains($delegatedDone, 'data-ut-addgroups-session="closed"'),
+    'delegated group addition reports verified session closure');
+Test::check(str_contains($delegatedDone, 'data-ut-addgroups-result="added"')
+    && in_array('UT anon G sub', $groupsOf('ag_two'), true)
+    && !in_array('UT anon G sub', $groupsOf('ag_backend'), true),
+    'delegated group assignment uses the same protection at write time');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+
+// Keep a real session alive by making the database reject its deletion. This exercises
+// the production UserHelper and AccountRegrouper verification, not a replacement writer.
+$agOpen = $site->addUser('ag_open', 'Registered');
+$site->fakeSession($agOpen);
+$sessionTrigger = $site->prefix . 'ut_keep_session';
+if ($quoted) {
+    $site->db->exec("CREATE FUNCTION $sessionTrigger() RETURNS trigger LANGUAGE plpgsql AS '
+        BEGIN IF OLD.userid = $agOpen THEN RAISE EXCEPTION ''simulated session closure failure'';
+        END IF; RETURN OLD; END;'");
+    $site->db->exec("CREATE TRIGGER $sessionTrigger BEFORE DELETE ON {$site->prefix}session
+        FOR EACH ROW EXECUTE FUNCTION $sessionTrigger()");
+} else {
+    $site->db->exec("CREATE TRIGGER $sessionTrigger BEFORE DELETE ON {$site->prefix}session
+        FOR EACH ROW BEGIN IF OLD.userid = $agOpen THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'simulated session closure failure'; END IF; END");
+}
+try {
+    $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+        'group' => '#' . $agTarget, 'lines' => 'ag_open'], 'data-ut-addgroups-form');
+    $agFailed = $admin->submit($agUrl . '&layout=review',
+        ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-addgroups-apply');
+    Test::check(str_contains($agFailed, 'data-ut-addgroups-session="open"')
+        && str_contains($agFailed, 'data-ut-addgroups-sessions="open"')
+        && str_contains($agFailed, 'data-ut-addgroups-retry="' . $agOpen . '"')
+        && $site->sessions($agOpen) === 1
+        && in_array('UT anon G', $groupsOf('ag_open'), true),
+        'a failed session deletion keeps the saved membership and reports the surviving session with a retry');
+    $agMemberships = $site->q('SELECT group_id FROM #__user_usergroup_map WHERE user_id = ? ORDER BY group_id', [$agOpen]);
+    $agLogs = $site->q("SELECT id, message FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_GROUP_ADDED' ORDER BY id");
+    $stillOpen = $admin->submit($agUrl . '&layout=result',
+        ['task' => 'addgroups.sessions', 'account' => $agOpen], 'data-ut-addgroups-retry="' . $agOpen . '"');
+    Test::check(str_contains($stillOpen, 'data-ut-addgroups-session="open"') && $site->sessions($agOpen) === 1,
+        'an unsuccessful session-only retry preserves the open warning');
+} finally {
+    $site->db->exec('DROP TRIGGER ' . $sessionTrigger . ($quoted ? ' ON ' . $site->prefix . 'session' : ''));
+    if ($quoted) {
+        $site->db->exec("DROP FUNCTION $sessionTrigger()");
+    }
+}
+$agRetried = $admin->submit($agUrl . '&layout=result',
+    ['task' => 'addgroups.sessions', 'account' => $agOpen], 'data-ut-addgroups-retry="' . $agOpen . '"');
+Test::check(str_contains($agRetried, 'data-ut-addgroups-session="closed"')
+    && !str_contains($agRetried, 'data-ut-addgroups-sessions="open"') && $site->sessions($agOpen) === 0,
+    'session-only retry verifies closure and updates the stored result');
+Test::check($site->q('SELECT group_id FROM #__user_usergroup_map WHERE user_id = ? ORDER BY group_id', [$agOpen]) === $agMemberships
+    && $site->q("SELECT id, message FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_GROUP_ADDED' ORDER BY id") === $agLogs,
+    'failed and successful session retries leave memberships and their audit entries unchanged');
+
+$agUnknown = $site->addUser('ag_unknown', 'Registered');
+$site->fakeSession($agUnknown);
+Test::check(str_contains($site->cli('config:set session_metadata=false'), 'Configuration set'),
+    'the test disables Joomla session metadata');
+// The web server may cache configuration.php for opcache.revalidate_freq seconds.
+sleep(3);
+try {
+    $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+        'group' => '#' . $agTarget, 'lines' => 'ag_unknown'], 'data-ut-addgroups-form');
+    $agUnverified = $admin->submit($agUrl . '&layout=review',
+        ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-addgroups-apply');
+    Test::check(str_contains($agUnverified, 'data-ut-addgroups-session="unknown"')
+        && str_contains($agUnverified, 'data-ut-addgroups-sessions="unknown"')
+        && !str_contains($agUnverified, 'data-ut-addgroups-session="closed"')
+        && in_array('UT anon G', $groupsOf('ag_unknown'), true),
+        'metadata disabled reports unknown session closure while preserving the saved membership ('
+            . (preg_match('/data-ut-addgroups-session="([^"]+)"/', $agUnverified, $state) ? $state[1] : 'no result') . ')');
+} finally {
+    $site->cli('config:set session_metadata=true');
+    sleep(3);
+}
+
+// A second assignment must not replace the pending accounts and checkpoint of a >20-account job.
+$bulkNames = [];
+for ($n = 1; $n <= 21; $n++) {
+    $name = sprintf('ag_batch_%02d', $n);
+    $bulkNames[] = $name;
+    $site->addUser($name, 'Registered');
+}
+$admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+    'group' => '#' . $agTarget, 'lines' => implode("\n", $bulkNames)], 'data-ut-addgroups-form');
+$bulkProgress = $admin->submit($agUrl . '&layout=review',
+    ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '21'], 'data-ut-addgroups-apply');
+Test::check(str_contains($bulkProgress, 'data-ut-addgroups-next'),
+    'group assignment of 21 accounts leaves a resumable batch');
+$blockedSecond = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+    'group' => '#' . $agChild, 'lines' => "ag_batch_21"], 'data-ut-addgroups-form');
+Test::check(str_contains($blockedSecond, 'data-ut-addgroups-next')
+    && !in_array('UT anon G', $groupsOf('ag_batch_21'), true)
+    && !in_array('UT anon G sub', $groupsOf('ag_batch_21'), true),
+    'starting another assignment redirects to original pending job instead of replacing it');
+$bulkComplete = $admin->submit($agUrl . '&layout=progress',
+    ['task' => 'addgroups.next'], 'data-ut-addgroups-next');
+$allAdded = true;
+foreach ($bulkNames as $name) {
+    $allAdded = $allAdded && in_array('UT anon G', $groupsOf($name), true);
+}
+Test::check(str_contains($bulkComplete, 'data-ut-addgroups-result="added"')
+    && $allAdded && !in_array('UT anon G sub', $groupsOf('ag_batch_21'), true),
+    'resuming still processes all 21 original users and never applies the rejected second job');
 
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);

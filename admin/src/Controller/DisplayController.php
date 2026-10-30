@@ -37,6 +37,7 @@ class DisplayController extends BaseController
         'diagnose' => 'usertools.diagnose',
         'age'      => 'usertools.content',
         'move'     => self::SUPER_USERS,
+        'addgroups' => 'usertools.addgroups',
         'anonymize' => 'usertools.anonymize',
     ];
 

@@ -13,6 +13,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Tarea programada | Bloquea cuentas por inactividad; empieza en modo simulación y genera informes. |
 | Resumen en el panel | Muestra en el panel de Usuarios las cuentas pendientes, el estado de las tareas y avisos. Disponible desde 2026.10.6. |
 | Grupos de usuarios en el sitio | Módulo del sitio que lista los grupos de un usuario o los miembros de un grupo. Solo lee. Disponible desde 2026.10.9. |
+| Añadir cuentas a grupos | Añade cuentas existentes a grupos por ID o ruta completa, sin quitar grupos ya asignados; exige revisión y confirmación. |
 | Quitar de grupos | Elige una cuenta, desmarca los grupos de los que debe salir y, si quieres, quítala también de todos sus subgrupos. Con revisión previa y confirmación. Disponible desde 2026.10.9. |
 | Mover grupos | Cambia de una vez el grupo padre de varios grupos, con sus subgrupos, tras revisar qué niveles ganan o pierden sus miembros. Rechaza los movimientos que cambiarían el acceso a la administración. Solo superusuarios. Disponible desde 2026.10.16. |
 | Grupos y niveles de acceso | Tabla de solo lectura con los niveles de acceso que tiene cada grupo, asignados o heredados. Disponible desde 2026.10.9. |
@@ -38,6 +39,7 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 - [Tarea programada e informes](#tarea-programada-por-inactividad)
 - [Resumen en el panel de Usuarios](#resumen-en-el-panel-de-usuarios)
 - [Módulo de grupos de usuarios en el sitio](#módulo-de-grupos-de-usuarios-en-el-sitio)
+- [Añadir cuentas a grupos en bloque](#añadir-cuentas-a-grupos-en-bloque)
 - [Quitar de grupos](#quitar-de-grupos)
 - [Mover grupos](#mover-grupos)
 - [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso)
@@ -113,6 +115,10 @@ El plazo se cuenta desde el último acceso o, si nunca accedió y se incluye esa
 La cuenta se elimina con la API de usuarios de Joomla, igual que desde el gestor de usuarios. Se borran sus grupos, su perfil, sus sesiones y sus mensajes privados, y otras extensiones pueden limpiar sus propios datos. Los artículos y demás contenidos que creó se conservan, como al borrar desde Joomla.
 
 Cada eliminación queda en el **registro de acciones de usuarios** con el ID, el nombre de usuario, el nombre y quién la hizo («… eliminó con User Tools la cuenta inactiva …»). Joomla añade además su propia entrada de borrado de usuario.
+
+## Añadir cuentas a grupos en bloque
+
+Desde **User Tools → Añadir cuentas a grupos** se pueden añadir usuarios existentes a grupos sin eliminar sus pertenencias actuales. Introduce una lista de usuarios o correos y un grupo de destino, o pares `usuario;#ID` en líneas independientes. Los grupos se identifican por `#ID` o **ruta completa** (por ejemplo `Public/Registered`); los títulos aislados o rutas duplicadas se rechazan. La revisión muestra qué se añadiría, qué ya existe y qué se excluye. Solo se pueden asignar grupos sin acceso a administración y no se modifican administradores, superusuarios ni la cuenta del operador. Debes confirmar y escribir el número de cuentas. El guardado usa la API de Joomla, comprueba el cierre de sesiones y advierte si permanecen abiertas o no se puede verificar su cierre. Si falla el cierre, puede reintentarse desde el resultado **sin volver a asignar grupos ni duplicar registros**. Cada asignación queda registrada y las listas grandes continúan por tandas.
 
 ## Anonimizar cuentas
 
