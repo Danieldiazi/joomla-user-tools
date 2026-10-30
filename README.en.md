@@ -20,7 +20,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Move groups | Changes the parent of several groups at once, with their subgroups, after reviewing which levels their members gain or lose. Refuses moves that would change administrator access. Super Users only. Available since 2026.10.16. |
 | Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.9. |
 | Content by access level | How many articles, categories, menu items, modules, fields and other items use each level, with a link to each filtered list. Read only. Available since 2026.10.12. |
-| Content by age | Table by year with how many articles were last modified in each one, filterable by access level; each number opens the list of those articles with a link to edit them. Read only. Available since 2026.10.15. |
+| Content by age | Table by year with how many articles, article categories, contacts and news feeds were last modified in each one, filterable by access level; each number opens the list of those items with a link to edit them. Read only. Available since 2026.10.15. |
 | Access diagnosis | Points out accounts with administrator access and no activity, a single remaining Super User, access levels nobody has, content with levels that do not exist and groups with no members. It explains each notice and is read only. Available since 2026.10.15. |
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
@@ -351,16 +351,16 @@ Items in the trash are not counted. Joomla lists also hide archived items unless
 
 ## Content by age
 
-Since 2026.10.15, **Content by age** shows how much content has not been touched for a long time. Joomla's article list cannot be filtered by date, so this screen does that count. It is read only.
+Since 2026.10.15, **Content by age** shows how much content has not been touched for a long time. Joomla's lists cannot be filtered by modification date, so this screen does that count. It is read only.
 
 - **Rows**: the years in which some item was last modified, from the newest to the oldest, with each year's total at the end and a row of totals.
-- **Columns**: one kind of item each. For now only **articles**; the table is ready for other kinds with a modification date.
+- **Columns**: one kind of item each: **articles**, **article categories**, **contacts** and **news feeds**. Modules, menu items and plugins are not shown because Joomla does not store their modification date.
 - **Date**: the last modification date (UTC, as Joomla stores it). A 2015 article reviewed last month counts in the current year.
 - **Statuses**: published, unpublished and archived items count; trashed ones do not.
 - **Access level filter**: counts only the items with that level, to see which levels pile up old content.
-- **List of one year**: each number opens the items of that year and kind, from the least recently modified to the most recent, with title, category, access level, author, status and creation and modification dates, 50 per page. The title links to Joomla's edit screen if you can edit it.
+- **List of one year**: each number opens the items of that year and kind, from the least recently modified to the most recent, with title, category (for categories, their parent category; empty for top-level ones), access level, author, status and creation and modification dates, 50 per page. The title links to Joomla's edit screen if you can edit it.
 
-**Export CSV** downloads the table or, from a list, all its items (UTF-8 with BOM, semicolons). The screen requires the *View content by age* permission; the list of titles also requires being able to manage articles in Joomla. Filters, counts, totals, lists and CSV exports respect the authorized viewing levels of both articles and their categories, as Joomla’s article list does; global Super Users retain the full audit view. “Edit own” only links articles owned by the current user. Without it, the numbers are shown without a link.
+**Export CSV** downloads the table or, from a list, all its items (UTF-8 with BOM, semicolons). The screen requires the *View content by age* permission; the list of titles also requires being able to manage that kind in Joomla: articles and categories in Content, contacts in Contacts and feeds in News Feeds. Filters, counts, totals, lists and CSV exports respect the authorized viewing levels of both the item and its category (categories, only their own), as Joomla’s lists do; global Super Users retain the full audit view. “Edit own” only links items created by the current user. Without it, the numbers are shown without a link.
 
 ![Content by age: table by year (Spanish interface)](docs/screenshots/20-contenido-antiguedad.jpg)
 

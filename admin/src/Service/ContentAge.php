@@ -106,9 +106,9 @@ final class ContentAge
      * @param  callable(string, string=): string $text
      * @return array{header: list<string>, rows: list<list<int|string>>}
      */
-    public static function exportItems(array $items, callable $text): array
+    public static function exportItems(array $items, callable $text, string $categoryLabel = 'COM_USERTOOLS_AGE_CATEGORY'): array
     {
-        $header = [$text('COM_USERTOOLS_AGE_ID'), $text('COM_USERTOOLS_AGE_TITLE_COL'), $text('COM_USERTOOLS_AGE_CATEGORY'), $text('COM_USERTOOLS_ACCESS_LEVEL'),
+        $header = [$text('COM_USERTOOLS_AGE_ID'), $text('COM_USERTOOLS_AGE_TITLE_COL'), $text($categoryLabel), $text('COM_USERTOOLS_ACCESS_LEVEL'),
             $text('COM_USERTOOLS_AGE_AUTHOR'), $text('COM_USERTOOLS_AGE_STATE'), $text('COM_USERTOOLS_AGE_CREATED'), $text('COM_USERTOOLS_AGE_MODIFIED')];
         $rows = [];
         foreach ($items as $item) {

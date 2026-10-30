@@ -47,7 +47,7 @@ $heading = Text::sprintf('COM_USERTOOLS_AGE_LIST_HEADING', Text::_($source['labe
       <caption class="visually-hidden"><?= $this->escape($heading) ?></caption>
       <thead><tr>
         <th scope="col"><?= Text::_('COM_USERTOOLS_AGE_TITLE_COL') ?></th>
-        <th scope="col"><?= Text::_('COM_USERTOOLS_AGE_CATEGORY') ?></th>
+        <th scope="col"><?= Text::_($source['categoryLabel'] ?? 'COM_USERTOOLS_AGE_CATEGORY') ?></th>
         <th scope="col"><?= Text::_('COM_USERTOOLS_ACCESS_LEVEL') ?></th>
         <th scope="col"><?= Text::_('COM_USERTOOLS_AGE_AUTHOR') ?></th>
         <th scope="col"><?= Text::_('COM_USERTOOLS_AGE_STATE') ?></th>
