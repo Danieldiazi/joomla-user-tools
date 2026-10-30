@@ -23,7 +23,7 @@ class AddgroupsController extends DisplayController
             $this->go('view=addgroups&layout=review');
         } catch (UserFacingException $e) {
             $this->warn($e);
-            $this->go('view=addgroups');
+            $this->go($this->model()->getJob() ? 'view=addgroups&layout=progress' : 'view=addgroups');
         }
     }
 
@@ -36,7 +36,7 @@ class AddgroupsController extends DisplayController
             $this->go($done ? 'view=addgroups&layout=result' : 'view=addgroups&layout=progress');
         } catch (UserFacingException $e) {
             $this->warn($e);
-            $this->go($model->getPreview() ? 'view=addgroups&layout=review' : 'view=addgroups');
+            $this->go($model->getJob() ? 'view=addgroups&layout=progress' : ($model->getPreview() ? 'view=addgroups&layout=review' : 'view=addgroups'));
         }
     }
 
