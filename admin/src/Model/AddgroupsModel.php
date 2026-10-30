@@ -124,13 +124,17 @@ class AddgroupsModel extends BaseDatabaseModel
                     $safe = false;
                 }
             }
-            $status = $writer->add((int) $id, $entry['username'], $entry['before'], $entry['targets'], $this->operator(), $safe);
-            $category = match ($status) {
+            $outcome = $writer->add((int) $id, $entry['username'], $entry['before'], $entry['targets'], $this->operator(), $safe);
+            $category = match ($outcome['status']) {
                 AccountGroupAdder::ADDED => 'added',
                 AccountGroupAdder::CHANGED => 'changed',
                 default => 'errors',
             };
-            $job[$category][] = ['id' => (int) $id, 'username' => $entry['username'], 'targets' => $entry['targets']];
+            $row = ['id' => (int) $id, 'username' => $entry['username'], 'targets' => $entry['targets']];
+            if ($outcome['status'] === AccountGroupAdder::ADDED) {
+                $row['sessions'] = $outcome['sessions'];
+            }
+            $job[$category][] = $row;
             $this->session()->set(self::JOB, $job);
         }
         Toolkit::clearDashboardCache();
@@ -142,6 +146,34 @@ class AddgroupsModel extends BaseDatabaseModel
             'errors' => $job['errors'], 'rows' => $job['rows']]);
         $this->session()->set(self::DRAFT, []);
         return true;
+    }
+
+    /**
+     * Retry only session closure for an account whose memberships were saved in this result.
+     * Never repeats User::save() or its action-log entries.
+     *
+     * @param array<string, mixed> $input
+     */
+    public function retrySessions(array $input): string
+    {
+        $result = $this->getResult();
+        $id = (int) ($input['account'] ?? 0);
+        if (!$result || $id < 1) {
+            throw new UserFacingException('COM_USERTOOLS_ERROR_PREVIEW_EXPIRED');
+        }
+        foreach ($result['added'] as &$row) {
+            if ((int) $row['id'] !== $id || ($row['sessions'] ?? '') === 'closed') {
+                continue;
+            }
+            $state = Toolkit::regrouper()->closeSessions($id);
+            $row['sessions'] = $state;
+            unset($row);
+            unset($result['actor'], $result['expires']);
+            $this->storeResult(self::RESULT, $result);
+            return $state;
+        }
+        unset($row);
+        throw new UserFacingException('COM_USERTOOLS_ERROR_PREVIEW_EXPIRED');
     }
 
     /** @return array<string, mixed>|null */
