@@ -1387,7 +1387,10 @@ Test::check($site->q('SELECT group_id FROM #__user_usergroup_map WHERE user_id =
 
 $agUnknown = $site->addUser('ag_unknown', 'Registered');
 $site->fakeSession($agUnknown);
-$site->cli('config:set session_metadata=false');
+Test::check(str_contains($site->cli('config:set session_metadata=false'), 'Configuration set'),
+    'the test disables Joomla session metadata');
+// The web server may cache configuration.php for opcache.revalidate_freq seconds.
+sleep(3);
 try {
     $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
         'group' => '#' . $agTarget, 'lines' => 'ag_unknown'], 'data-ut-addgroups-form');
@@ -1397,9 +1400,11 @@ try {
         && str_contains($agUnverified, 'data-ut-addgroups-sessions="unknown"')
         && !str_contains($agUnverified, 'data-ut-addgroups-session="closed"')
         && in_array('UT anon G', $groupsOf('ag_unknown'), true),
-        'metadata disabled reports unknown session closure while preserving the saved membership');
+        'metadata disabled reports unknown session closure while preserving the saved membership ('
+            . (preg_match('/data-ut-addgroups-session="([^"]+)"/', $agUnverified, $state) ? $state[1] : 'no result') . ')');
 } finally {
     $site->cli('config:set session_metadata=true');
+    sleep(3);
 }
 
 // A second assignment must not replace the pending accounts and checkpoint of a >20-account job.
