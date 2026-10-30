@@ -52,6 +52,22 @@ class AddgroupsController extends DisplayController
         }
     }
 
+    /** Retry session closure only; memberships and action logs are not written again. */
+    public function sessions(): void
+    {
+        $this->guard(self::PERMISSION);
+        try {
+            $state = $this->model()->retrySessions(['account' => $this->input->post->getInt('account', 0)]);
+            if ($state === 'closed') {
+                $this->app->enqueueMessage(\Joomla\CMS\Language\Text::_('COM_USERTOOLS_ADDGROUPS_SESSIONS_CLOSED_NOW'), 'success');
+            }
+            $this->go('view=addgroups&layout=result');
+        } catch (UserFacingException $e) {
+            $this->warn($e);
+            $this->go('view=addgroups&layout=result');
+        }
+    }
+
     private function model(): AddgroupsModel
     {
         /** @var AddgroupsModel $model */
