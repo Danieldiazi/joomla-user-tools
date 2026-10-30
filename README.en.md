@@ -72,6 +72,8 @@ The installer checks minimum versions, registers the extension with the User Act
 
 **Export accounts to CSV** requires the `usertools.export` permission. It supports group/descendant, status and inactivity filters; never-visited accounts may be filtered by registration date. The file contains ID, username, name, **direct group memberships with their IDs**, last visit, registration, status, pending activation (a blocked account that has never logged in and has an activation token) and whether an MFA method is configured, without exposing secrets. **Email is optional and unchecked by default**; including it creates a User Actions Log entry without logging the addresses. CSV is UTF-8 with semicolons and spreadsheet formula protection. Handle the file as personal data.
 
+![Export accounts to CSV: group, inactivity and status filters, with optional email (Spanish interface)](docs/screenshots/26-exportar-cuentas.jpg)
+
 ## Compare a user list
 
 **Example:** Joomla contains `ana`, `luis` and `marta`. If you paste a list containing `ana` and `marta`, the tool proposes blocking `luis`, unless protected or already blocked. If you add `pedro` and that account does not exist, you can select it for creation; it is not created automatically.
