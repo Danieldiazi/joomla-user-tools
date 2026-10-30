@@ -133,6 +133,20 @@ La prueba de extremo a extremo (`tests/integration/run.php`) necesita un Joomla 
 
 Todo cambio de comportamiento lleva su prueba. Los cambios que afecten a bloqueos, borrados o altas llevan también su comprobación en la prueba de extremo a extremo.
 
+## Publicación en el Joomla! Extensions Directory (JED)
+
+Estas reglas del proyecto preservan la preparación para el JED; no sustituyen sus requisitos vigentes ni acreditan su aprobación.
+
+- **Licencia en cada PHP distribuido**: conserva y añade en los archivos nuevos el encabezado `@copyright` y `@license GNU General Public License version 2 or later; see LICENSE`. Mantén el titular real (`Danieldiazi` en el código propio actual) y los avisos de terceros.
+- **Paquetes**: conserva el texto íntegro GPL en `LICENSE` y su inclusión en todos los ZIP generados por `scripts/build.php`, también en los paquetes internos. Revisa el archivo final, no solo las fuentes.
+- **Actualizaciones**: preserva el servidor declarado en el manifiesto del paquete y la generación de `updates.xml`. Comprueba versión, compatibilidad, URL del ZIP y hash, además de la detección e instalación de una actualización en Joomla de pruebas cuando cambie ese flujo.
+- **Ficha**: mantén coherentes el nombre instalado («User Tools»), las funciones, los requisitos y la compatibilidad anunciados. Revisa los enlaces de descarga, documentación, soporte y licencia cuando cambien.
+- **Antes de enviar o actualizar el paquete en el JED**: ejecuta [JED Checker](https://extensions.joomla.org/extension/jedchecker/) sobre el ZIP final, incluidos sus paquetes internos; corrige los errores y revisa los avisos. Registra versión, hash del ZIP, versión del comprobador y resultado en la pull request o en la evidencia de publicación. Si no se ha ejecutado, indícalo como pendiente.
+- **JAMSS**: examina cada aviso en su contexto. No cambies código legítimo solo para silenciar patrones ni declares que un análisis garantiza ausencia de malware. Los escapes `\\xEF\\xBB\\xBF` usados para el BOM UTF-8 y los métodos propios `assertKind`/`assertReviewedCandidates` han generado avisos: vuelve a revisar su implementación si cambian.
+- **Verificación**: PHPUnit, PHPStan, CI y `verify-build.php` complementan JED Checker; no lo sustituyen. No marques como realizada una comprobación pendiente.
+
+Consulta antes de publicar los [requisitos del JED](https://extensions.joomla.org/support/knowledgebase/submission-requirements/), su [lista de comprobación](https://extensions.joomla.org/support/knowledgebase/submission-requirements/jed-entries-checklists/) y el [requisito del sistema de actualizaciones](https://extensions.joomla.org/support/knowledgebase/submission-requirements/joomla-update-system-requirement/).
+
 ## Flujo de trabajo
 
 - Trabaja en una rama y abre una pull request contra `main`. No hagas push directo a `main`.
