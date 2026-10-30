@@ -14,9 +14,9 @@ $layouts = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
   <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'setup', 'label' => 'COM_USERTOOLS_ADDGROUPS_TITLE'], $layouts) ?>
   <h2 class="h3"><?= Text::_('COM_USERTOOLS_ADDGROUPS_CHOOSE') ?></h2>
   <p class="lead"><?= Text::_('COM_USERTOOLS_ADDGROUPS_INTRO') ?></p>
-  <div class="alert alert-warning"><?= Text::_('COM_USERTOOLS_ADDGROUPS_RULES') ?></div>
+  <div class="alert alert-warning" data-ut-tour="rules"><?= Text::_('COM_USERTOOLS_ADDGROUPS_RULES') ?></div>
   <form method="post" action="<?= Route::_('index.php?option=com_usertools&view=addgroups') ?>" data-ut-addgroups-form>
-    <section class="card ut-card"><div class="card-body">
+    <section class="card ut-card" data-ut-tour="accounts"><div class="card-body">
       <fieldset>
         <legend class="h5"><?= Text::_('COM_USERTOOLS_ADDGROUPS_FORMAT') ?></legend>
         <div class="form-check">
@@ -44,7 +44,7 @@ $layouts = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
       <textarea class="form-control" id="ut-ag-lines" name="lines" rows="10" required><?= $this->escape($this->draft['lines']) ?></textarea>
       <p class="form-text"><?= Text::_('COM_USERTOOLS_ADDGROUPS_ACCOUNTS_HELP') ?></p>
     </div></section>
-    <div class="ut-actions"><button class="btn btn-primary" name="task" value="addgroups.preview"><?= Text::_('COM_USERTOOLS_ADDGROUPS_PREVIEW') ?></button></div>
+    <div class="ut-actions" data-ut-tour="actions"><button class="btn btn-primary" name="task" value="addgroups.preview"><?= Text::_('COM_USERTOOLS_ADDGROUPS_PREVIEW') ?></button></div>
     <?= HTMLHelper::_('form.token') ?>
   </form>
 </div>

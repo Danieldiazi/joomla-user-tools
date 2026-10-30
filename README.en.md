@@ -34,6 +34,7 @@ The home screen groups the tools into four sections, each with its explanation a
 ## Contents
 
 - [Installation and updates](#installation-and-updates)
+- [Guided tours](#guided-tours)
 - [Account profile](#account-profile)
 - [Export accounts to CSV](#export-accounts-to-csv)
 - [Compare a user list](#compare-a-user-list)
@@ -69,7 +70,17 @@ Download **pkg_usertools-VERSION.zip** from the [latest release](https://github.
 
 Since 2026.10.3, Joomla notifies you of new versions under System → Update → Extensions, like any other extension: the package declares an update server pointing to the latest GitHub release. To update, install the new package over the existing installation; do not uninstall the component. Saved exclusions migrate automatically when updating from earlier versions.
 
-The installer checks minimum versions, registers the extension with the User Actions Log and creates the “User Tools: account created” mail template. On uninstall, it warns that task reports remain in the logs directory.
+The installer checks minimum versions, registers the extension with the User Actions Log and creates the “User Tools: account created” mail template and the [guided tours](#guided-tours). On uninstall, it removes the tours and warns that task reports remain in the logs directory.
+
+## Guided tours
+
+The tools that change accounts or groups have a Joomla **guided tour** that explains their screen step by step: what it is for, what you choose, what you review before applying and which safeguards it has. Compare a list, Review inactive users, Undo blocks, Delete inactive users, Anonymise accounts, Add accounts to groups, Remove from groups, Move groups and Scheduled task have one.
+
+- **How to open it**: with the **Guided tour** button, next to Help, on the first screen of each tool. It only appears if you can use that tool and Joomla's guided tours are enabled (the “Guided Tours” component and the “System - Guided Tours Plugin” plugin).
+- **What it does**: it only explains. No step selects buttons, fills in fields or applies changes; you can close it at any time. It works with the keyboard and never starts on its own.
+- **Where else they appear**: Joomla can only restrict a tour by access level, not by each tool's permissions. That is why they are not offered in the “Take a Tour” menu on User Tools screens, but they are listed under “Show all tours” for anyone who can open User Tools. Following one grants nothing: the screen of a tool without permission responds with a permission error.
+
+The installer creates the tours and updates them with each version; if you change their status, access level or language in System → Guided Tours, that is kept. Uninstalling removes them.
 
 ## Account profile
 

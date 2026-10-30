@@ -1778,5 +1778,34 @@ Test::check(!str_contains($blockedProfile, 'data-ut-profile-action="block"') && 
     'reloading a profile reflects the block and removes its block action');
 $site->q('UPDATE #__categories SET created_user_id = ? WHERE id = ?', [$profileCategoryBefore, $ageCategory]);
 
+Test::section('Guided tours');
+$tourViews = ['compare' => 4, 'inactive' => 4, 'unblock' => 3, 'delete' => 4, 'anonymize' => 4, 'addgroups' => 3, 'ungroup' => 3, 'move' => 4, 'schedule' => 2];
+$tours = [];
+foreach ($site->q("SELECT id, uid, autostart, published, extensions FROM #__guidedtours WHERE uid LIKE 'com_usertools.tour-%'") as $row) {
+    $tours[substr((string) $row['uid'], strlen('com_usertools.tour-'))] = $row;
+}
+Test::check(array_keys($tours) == array_keys($tourViews) || !array_diff_key($tourViews, $tours) && !array_diff_key($tours, $tourViews), 'the package installs one guided tour per tool that changes accounts or groups');
+Test::check(!array_filter($tours, fn (array $row): bool => (int) $row['autostart'] !== 0 || (int) $row['published'] !== 1 || str_contains((string) $row['extensions'], '"com_usertools"')),
+    'tours are published, never start on their own and are not context tours of the component');
+foreach ($tourViews as $view => $count) {
+    $tourId = (int) ($tours[$view]['id'] ?? 0);
+    $steps  = $site->q('SELECT target, type FROM #__guidedtour_steps WHERE tour_id = ? AND published = 1 ORDER BY ordering', [$tourId]);
+    $page   = $admin->get('index.php?option=com_usertools&view=' . $view);
+    $missing = array_filter($steps, fn (array $step): bool => (int) $step['type'] !== 0
+        || !preg_match('/^\[data-ut-tour="([a-z]+)"\]$/', (string) $step['target'], $m) || !str_contains($page, 'data-ut-tour="' . $m[1] . '"'));
+    Test::check(count($steps) === $count && !$missing, "the $view tour only explains, and every step finds its target on the screen");
+    Test::check(str_contains($page, 'button-start-guidedtour" data-id="' . $tourId . '" data-ut-tour-start="' . $view . '"'), "the $view screen offers its tour next to Help");
+}
+[$code, $json] = $admin->request('index.php?option=com_ajax&plugin=guidedtours&group=system&format=json&id=' . (int) $tours['compare']['id']);
+$flat = json_encode(json_decode($json, true), JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+Test::check($code === 200 && str_contains((string) $flat, 'User Tools: compare a list') && str_contains((string) $flat, 'The current list')
+    && !str_contains((string) $flat, 'COM_USERTOOLS_TOUR_'), 'Joomla loads the tour with its translated texts');
+Test::check(!str_contains($admin->get('index.php?option=com_usertools'), 'data-ut-tour-start') && !str_contains($admin->get('index.php?option=com_usertools&view=diagnose'), 'data-ut-tour-start'),
+    'screens without a tour show no tour button');
+$site->q('UPDATE #__guidedtours SET published = 0 WHERE id = ?', [(int) $tours['compare']['id']]);
+$unpublished = $admin->get('index.php?option=com_usertools&view=compare');
+Test::check(!str_contains($unpublished, 'data-ut-tour-start') && !str_contains($unpublished, 'User Tools: compare a list'), 'an unpublished tour is not offered');
+$site->q('UPDATE #__guidedtours SET published = 1 WHERE id = ?', [(int) $tours['compare']['id']]);
+
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);

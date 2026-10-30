@@ -135,6 +135,16 @@ foreach (['es-ES', 'en-GB'] as $tag) {
 }
 $check(array_keys($languages['es-ES']) == array_keys($languages['en-GB']) || !array_diff_key($languages['es-ES'], $languages['en-GB']) && !array_diff_key($languages['en-GB'], $languages['es-ES']), 'es-ES and en-GB have the same keys');
 
+// Guided tours: one language file per tour, named after the tour uid, in both languages.
+foreach (['compare', 'inactive', 'unblock', 'delete', 'anonymize', 'addgroups', 'ungroup', 'move', 'schedule'] as $tour) {
+    $tourStrings = [];
+    foreach (['es-ES', 'en-GB'] as $tag) {
+        $tourStrings[$tag] = parse_ini_string((string) $read($com, "admin/language/$tag/com_usertools.tour_$tour.ini"), false, INI_SCANNER_RAW) ?: [];
+        $check(isset($tourStrings[$tag]['COM_USERTOOLS_TOUR_' . strtoupper($tour) . '_TITLE']), "$tag guided tour $tour is packaged");
+    }
+    $check(array_keys($tourStrings['es-ES']) === array_keys($tourStrings['en-GB']), "guided tour $tour has the same keys in both languages");
+}
+
 if ($errors) {
     fwrite(STDERR, "Build verification failed:\n- " . implode("\n- ", $errors) . "\n");
     exit(1);

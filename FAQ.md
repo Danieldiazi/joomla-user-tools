@@ -68,6 +68,14 @@ Sí. Las pantallas de revisión usan JavaScript para gestionar las casillas y en
 
 Las pruebas automáticas cubren listas de 1800 usuarios. La revisión envía las selecciones en un único campo JSON precisamente para no chocar con el límite `max_input_vars` de PHP en listas grandes.
 
+### ¿Hay recorridos guiados de las herramientas?
+
+Sí, de las que cambian cuentas o grupos. Se abren con el botón **Recorrido guiado**, junto a Ayuda, en la primera pantalla de cada una; solo explican y no aplican nada. Detalles en el [README](README.md#recorridos-guiados).
+
+### ¿Por qué en «Mostrar todos los recorridos» veo recorridos de herramientas que no puedo usar?
+
+Joomla solo limita los recorridos por nivel de acceso, no por los permisos de cada herramienta, así que esa lista muestra todos los de User Tools a quien pueda entrar en el componente. Seguir uno no da acceso: la pantalla responde con un error de permisos. Si quieres ocultarlos, cambia su nivel de acceso o despublícalos en Sistema → Recorridos guiados; las actualizaciones lo respetan.
+
 ### ¿Dónde encuentro los accesos directos a cada herramienta?
 
 En el **panel de Usuarios**, el módulo User Tools muestra enlaces individuales a las herramientas para las que tienes permiso, además de los indicadores y del enlace para abrir el componente completo.
