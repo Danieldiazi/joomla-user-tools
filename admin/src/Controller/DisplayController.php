@@ -26,6 +26,7 @@ class DisplayController extends BaseController
     public const PERMISSIONS = [
         'home'     => 'core.manage',
         'compare'  => 'usertools.compare',
+        'export'   => 'usertools.export',
         'inactive' => 'usertools.inactive',
         'delete'   => 'usertools.delete',
         'schedule' => 'core.manage',
