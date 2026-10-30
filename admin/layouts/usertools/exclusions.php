@@ -1,6 +1,12 @@
 <?php
 
 /**
+ * @package     UserTools
+ * @copyright   Copyright (C) 2026 Danieldiazi
+ * @license     GNU General Public License version 2 or later; see LICENSE
+ */
+
+/**
  * Exclusion fields shared by the manual tools.
  * $displayData: exclusions (Exclusions), groups (array<int, object>), idPrefix (string), saveNote (string key), title (optional string key)
  */

@@ -60,6 +60,7 @@ function stamp(string $path, string $version): string
 /** @param array<string, string> $entries */
 function zip(string $target, array $entries, string $version): void
 {
+    $entries['LICENSE'] = dirname(__DIR__) . '/LICENSE';
     $zip = new ZipArchive();
     if ($zip->open($target, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
         throw new RuntimeException("Cannot create $target");

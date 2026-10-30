@@ -1,6 +1,12 @@
 <?php
 
 /**
+ * @package     UserTools
+ * @copyright   Copyright (C) 2026 Danieldiazi
+ * @license     GNU General Public License version 2 or later; see LICENSE
+ */
+
+/**
  * Confirmation block of the manual tools.
  * $displayData: label (string key), count (int, accounts to block), threshold (int), dynamic (bool: count follows the selection), help (optional string key)
  */

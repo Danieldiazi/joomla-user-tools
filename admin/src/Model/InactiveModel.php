@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * @package     UserTools
+ * @copyright   Copyright (C) 2026 Danieldiazi
+ * @license     GNU General Public License version 2 or later; see LICENSE
+ */
+
 namespace Danieldiazi\Component\Usertools\Administrator\Model;
 
 \defined('_JEXEC') or die;
@@ -83,97 +89,28 @@ class InactiveModel extends BaseDatabaseModel
         return [
             'candidates' => array_values(array_filter($fresh, fn (UserRecord $u) => isset($offered[$u->id]))),
             'cutoff'     => $preview['cutoff'],
-            'selected'   => array_map('intval', (array) $preview['selected']),
-            'threshold'  => Toolkit::settings()->confirmThreshold(),
-            'nonce'      => $preview['nonce'],
-        ];
-    }
-
-    /** @param array<string, mixed> $input */
-    public function back(array $input): void
-    {
-        $preview             = $this->requirePreview($input);
-        $preview['selected'] = InactiveSelection::decode((string) ($input['selected'] ?? '[]'), $preview['ids']);
-        $this->session()->set(self::PREVIEW, $preview);
-    }
-
-    /**
-     * @param  array<string, mixed> $input
-     * @return array<string, mixed>
-     */
-    public function suspend(array $input): array
-    {
-        $preview             = $this->requirePreview($input);
-        $selected            = InactiveSelection::decode((string) ($input['selected'] ?? '[]'), $preview['ids']);
-        $preview['selected'] = $selected;
-        $this->session()->set(self::PREVIEW, $preview);
-        if (!$selected || (int) ($input['confirm'] ?? 0) !== 1) {
-            throw new UserFacingException('COM_USERTOOLS_ERROR_SUSPEND_CONFIRM');
-        }
-        $this->checkTypedCount(\count($selected), $input);
-        $this->session()->set(self::PREVIEW, []);
-        $exclusions   = Exclusions::fromArray($preview['exclusions']);
-        $cutoff       = new \DateTimeImmutable($preview['cutoff'], new \DateTimeZone('UTC'));
-        $includeNever = (bool) $preview['includeNever'];
-        $operator     = $this->operator();
-        $fresh        = array_map(fn (UserRecord $u) => $u->id, $this->candidates($exclusions, $cutoff, $includeNever));
-        $eligible     = InactiveSelection::eligibleIds($selected, $preview['ids'], $fresh);
-        $result       = ['blocked' => [], 'errors' => [], 'skipped' => 0];
-        $blocker      = Toolkit::blocker();
-        $directory    = Toolkit::directory();
-        $window       = Toolkit::sessionWindow();
-        foreach ($eligible as $id) {
-            $outcome = $blocker->block($id, $exclusions, $operator,
-                fn (object $user) => InactivityPolicy::eligible($user, $cutoff, $includeNever)
-                    && !$directory->withRecentSession([$id], time() - $window), 'COM_USERTOOLS_TOOL_INACTIVE');
-            $this->collect($result, $outcome, $id);
-        }
-        $result['skipped'] = \count($selected) - \count($result['blocked']) - \count($result['errors']);
-        $this->storeResult(self::RESULT, $result);
-        Toolkit::clearDashboardCache();
-        return $result;
-    }
-
-    /** @return array<string, mixed>|null */
-    public function getResult(): ?array
-    {
-        return $this->validResult(self::RESULT);
-    }
-
-    /** @return array<int, object> */
-    public function getGroups(): array
-    {
-        return Toolkit::directory()->groups();
-    }
-
-    /** @return list<UserRecord> */
-    private function candidates(Exclusions $exclusions, \DateTimeImmutable $cutoff, bool $includeNever): array
-    {
-        $directory = Toolkit::directory();
-        $operator  = $this->operator();
-        $matches   = [];
-        foreach ($directory->users() as $user) {
-            if (InactivityPolicy::eligible($user, $cutoff, $includeNever) && !$exclusions->protects($user, $operator)) {
-                $matches[$user->id] = $user;
-            }
-        }
-        $active = $directory->withRecentSession(array_keys($matches), time() - Toolkit::sessionWindow());
-        return array_values(array_diff_key($matches, $active));
-    }
-
-    /**
-     * @param  array<string, mixed> $input
-     * @return array<string, mixed>
-     */
-    private function requirePreview(array $input): array
-    {
-        $preview = $this->getPreview();
-        if (!$preview || !hash_equals((string) $preview['nonce'], (string) ($input['preview'] ?? ''))) {
-            throw new UserFacingException('COM_USERTOOLS_ERROR_PREVIEW_EXPIRED');
-        }
-        if ((int) ($input['selection_ready'] ?? 0) !== 1) {
-            throw new UserFacingException('COM_USERTOOLS_ERROR_JAVASCRIPT');
-        }
-        return $preview;
-    }
-}
+            'selected'   => array_map('intval', (arra…87962 tokens truncated…Text::_('COM_USERTOOLS_DELETE_HOME_WARNING') ?></p>
+        <a class="btn btn-sm btn-outline-danger" href="<?= Route::_('index.php?option=com_usertools&view=delete') ?>" aria-describedby="ut-card-delete"><?= Text::_('COM_USERTOOLS_DELETE_START') ?></a>
+      </div>
+    </article>
+    </div>
+    <?php endif; ?>
+    <?php if ($this->can('usertools.anonymize')) : ?>
+    <div class="col">
+    <article class="card border-danger h-100" data-ut-home-card="anonymize">
+      <div class="card-body">
+        <div class="ut-card-head">
+          <h3 class="card-title ut-card-title" id="ut-card-anonymize"><span class="icon-eye-slash" aria-hidden="true"></span> <?= Text::_('COM_USERTOOLS_ANONYMIZE_TITLE') ?></h3>
+          <span class="badge text-bg-danger"><?= Text::_('COM_USERTOOLS_PERMANENT') ?></span>
+        </div>
+        <p class="card-text"><?= Text::_('COM_USERTOOLS_ANONYMIZE_HOME_DESC') ?></p>
+        <p class="card-text fw-semibold ut-home-warning"><?= Text::_('COM_USERTOOLS_ANONYMIZE_HOME_WARNING') ?></p>
+        <a class="btn btn-sm btn-outline-danger" href="<?= Route::_('index.php?option=com_usertools&view=anonymize') ?>" aria-describedby="ut-card-anonymize"><?= Text::_('COM_USERTOOLS_ANONYMIZE_START') ?></a>
+      </div>
+    </article>
+    </div>
+    <?php endif; ?>
+    </div>
+  </section>
+  <?php endif; ?>
+</div>

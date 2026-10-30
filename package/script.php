@@ -1,6 +1,12 @@
 <?php
 
 /**
+ * @package     UserTools
+ * @copyright   Copyright (C) 2026 Danieldiazi
+ * @license     GNU General Public License version 2 or later; see LICENSE
+ */
+
+/**
  * Package installer: checks versions, migrates options from 2026.10.2 and earlier, registers the
  * extension in the User Actions Log and creates the "account created" mail template.
  */
