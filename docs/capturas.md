@@ -4,7 +4,7 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos y contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, y la portada, el panel de Usuarios, las de añadir cuentas a grupos y la de exportar cuentas de 2026.10.19. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos y contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, y la portada, el panel de Usuarios, las de añadir cuentas a grupos, la de exportar cuentas y la de deshacer bloqueos de 2026.10.19. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
 ![Portada de User Tools agrupada en secciones: revisar cuentas, grupos y niveles de acceso, automatización y seguimiento, y eliminar o anonimizar cuentas (2026.10.19)](screenshots/01-portada.jpg)
 
@@ -21,6 +21,8 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cad
 ![Inactividad manual: selección de cuentas](screenshots/07-inactivos-seleccion.jpg)
 
 ![Exportar cuentas a CSV: filtros por grupo y subgrupos, inactividad y estado, con el correo electrónico desmarcado por defecto (2026.10.19)](screenshots/26-exportar-cuentas.jpg)
+
+![Deshacer bloqueos: tandas recientes de la tarea programada con las cuentas que bloqueó cada una, para revisarlas antes de desbloquear (2026.10.19)](screenshots/27-deshacer-bloqueos.jpg)
 
 ![Eliminar inactivos: plazo, cuentas listadas y exclusiones (2026.10.5)](screenshots/11-eliminar-plazo.jpg)
 

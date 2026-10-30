@@ -118,6 +118,8 @@ Since 2026.10.19, **Undo blocks** unblocks, after a review, the accounts a batch
 
 Unblocking uses Joomla's User API and is written to the **User Actions Log** with the batch it undoes. It requires its own permission, *Undo blocks*. Manual batches are kept since 2026.10.19 in the usertools-batches subfolder of Joomla's logs directory, with the same protection and retention as the task reports.
 
+![Undo blocks: recent scheduled task runs with the accounts each one blocked (Spanish interface)](docs/screenshots/27-deshacer-bloqueos.jpg)
+
 ## Delete inactive users
 
 On the home screen, choose “Review accounts for deletion”. This is the only tool that **deletes** accounts, and deletion cannot be undone; use the inactivity review to prevent access while preserving accounts.
