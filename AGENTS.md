@@ -159,5 +159,6 @@ Consulta antes de publicar los [requisitos del JED](https://extensions.joomla.or
 
 - Trabaja en una rama y abre una pull request contra `main`. No hagas push directo a `main`.
 - La CI debe estar en verde antes de fusionar.
+- **Sin enlaces a sesiones de agentes**: no incluyas URL de sesiones (por ejemplo `https://claude.ai/code/session_…`) ni líneas `Claude-Session:` en commits, descripciones de pull request, issues ni comentarios. La atribución se limita a `Co-Authored-By` en los commits y a una línea «Generated with Claude Code» en las pull requests.
 - La release la publica una persona: crea en GitHub una release con la etiqueta `vAAAA.M.REVISIÓN` sobre `main`. GitHub Actions construye y adjunta los paquetes y el `updates.xml`. La etiqueta debe coincidir con la versión de los manifiestos del commit etiquetado; si no coincide, la publicación falla.
 - Actualiza README y FAQ cuando cambie lo que ve o configura el usuario. Si cambian las pantallas, renueva las capturas de `docs/screenshots/`.
