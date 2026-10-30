@@ -61,6 +61,8 @@ final class ContentAgeTest extends TestCase
             $this->assertStringContainsString('{id}', $kind['edit'], $key);
         }
         $this->assertSame(['extension', 'com_content'], ContentAgeReader::KINDS['categories']['scope'], 'only article categories, not those of every extension');
+        $this->assertFalse(ContentAgeReader::KINDS['categories']['categoryAccess'], 'like Joomla, a category is checked by its own level, not its parent\'s');
+        $this->assertArrayNotHasKey('categoryAccess', ContentAgeReader::KINDS['articles'], 'articles keep the category access check');
     }
 
     public function testItemsCsvCanNameTheParentCategory(): void

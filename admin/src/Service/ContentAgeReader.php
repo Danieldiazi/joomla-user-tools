@@ -27,15 +27,16 @@ final class ContentAgeReader
      * Kinds of item with a creation and a modification date: table, columns, the component that
      * manages them and the screens to open. A new kind is declared here and nowhere else. Modules,
      * menu items and plugins are left out on purpose: Joomla stores no modification date for them.
-     * `category` is the column joined to #__categories (the parent, for categories themselves) and
-     * `scope` limits the rows of a shared table.
+     * `category` is the column joined to #__categories (the parent, for categories themselves),
+     * `scope` limits the rows of a shared table and `categoryAccess: false` skips the access check on
+     * that joined category, as Joomla's category list only checks each category's own level.
      */
     public const KINDS = [
         'articles' => ['table' => '#__content', 'title' => 'title', 'state' => 'state', 'category' => 'catid', 'created' => 'created', 'modified' => 'modified',
             'author' => 'created_by', 'label' => 'COM_USERTOOLS_USAGE_ARTICLES', 'asset' => 'com_content',
             'item' => 'com_content.article.{id}', 'edit' => 'index.php?option=com_content&task=article.edit&id={id}'],
         'categories' => ['table' => '#__categories', 'title' => 'title', 'state' => 'published', 'category' => 'parent_id', 'created' => 'created_time', 'modified' => 'modified_time',
-            'author' => 'created_user_id', 'scope' => ['extension', 'com_content'], 'label' => 'COM_USERTOOLS_AGE_KIND_CATEGORIES', 'categoryLabel' => 'COM_USERTOOLS_AGE_PARENT_CATEGORY', 'asset' => 'com_content',
+            'author' => 'created_user_id', 'scope' => ['extension', 'com_content'], 'categoryAccess' => false, 'label' => 'COM_USERTOOLS_AGE_KIND_CATEGORIES', 'categoryLabel' => 'COM_USERTOOLS_AGE_PARENT_CATEGORY', 'asset' => 'com_content',
             'item' => 'com_content.category.{id}', 'edit' => 'index.php?option=com_categories&task=category.edit&id={id}&extension=com_content'],
         'contacts' => ['table' => '#__contact_details', 'title' => 'name', 'state' => 'published', 'category' => 'catid', 'created' => 'created', 'modified' => 'modified',
             'author' => 'created_by', 'label' => 'COM_USERTOOLS_USAGE_CONTACTS', 'asset' => 'com_contact',
@@ -146,15 +147,17 @@ final class ContentAgeReader
             [$column, $value] = $source['scope'];
             $query->where($db->quoteName('a.' . $column) . ' = :scope')->bind(':scope', $value);
         }
-        // Match Joomla's administrator article list: component access does not grant access to
-        // every article or category. Keep the same scope for counts, pages and CSV exports.
+        // Match Joomla's administrator lists: component access does not grant access to every item
+        // or category. Keep the same scope for counts, pages and CSV exports.
         if ($this->viewLevels !== null) {
             $allowed = array_values(array_unique(array_filter(array_map('intval', $this->viewLevels), fn (int $id): bool => $id > 0)));
             if (!$allowed) {
                 $query->where('1 = 0');
             } else {
                 $query->whereIn($db->quoteName('a.access'), $allowed);
-                $query->whereIn($db->quoteName('c.access'), $allowed);
+                if ($source['categoryAccess'] ?? true) {
+                    $query->whereIn($db->quoteName('c.access'), $allowed);
+                }
             }
         }
         if ($level > 0) {

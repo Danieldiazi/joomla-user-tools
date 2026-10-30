@@ -948,7 +948,13 @@ preg_match('/href="([^"]*task=age\\.export[^"]*year=2012[^"]*)"/', $categoryList
 [$code, $csv] = $delegate->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($categoryExport[1] ?? '')));
 Test::check($code === 200 && substr_count($csv, "\n") === 1, 'category access also protects the CSV');
 Test::check($ageCount($admin->get($ageUrl), 2012) === 3, 'a global Super User retains the full audit view');
-$site->q('UPDATE #__categories SET access = ?, modified_time = ? WHERE id = ?', [$categoryAccess, $ageCategoryModified, $ageCategory]);
+$site->q('UPDATE #__categories SET access = ? WHERE id = ?', [$categoryAccess, $ageCategory]);
+// Like Joomla's category list, a category is checked by its own level, not by its parent's.
+$rootCategory = $site->q('SELECT id, access FROM #__categories WHERE parent_id = 0 ORDER BY id')[0];
+$site->q('UPDATE #__categories SET access = ? WHERE id = ?', [$agePrivate, (int) $rootCategory['id']]);
+Test::check($ageCount($delegate->get($ageUrl), 2012, 'categories') === 1, 'a visible category counts even if its parent has a level the delegate cannot view');
+$site->q('UPDATE #__categories SET access = ? WHERE id = ?', [(int) $rootCategory['access'], (int) $rootCategory['id']]);
+$site->q('UPDATE #__categories SET modified_time = ? WHERE id = ?', [$ageCategoryModified, $ageCategory]);
 $site->q('DELETE FROM #__contact_details WHERE id = ?', [$ageContact]);
 foreach ($ageAssets as $assetId) {
     $site->q('DELETE FROM #__assets WHERE id = ?', [$assetId]);

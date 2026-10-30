@@ -332,7 +332,7 @@ Los archivados sí, con su estado visible en la lista, porque suelen ser justo l
 
 ### ¿Por qué veo las cifras pero no puedo abrir la lista?
 
-La lista muestra títulos, así que además del permiso *Ver contenido por antigüedad* hace falta poder gestionar ese tipo en Joomla (artículos y categorías en Contenido, contactos en Contactos, canales en Canales de noticias). Además, las cifras, las listas y los CSV respetan los niveles de acceso autorizados del elemento y su categoría. El permiso de editar propios solo ofrece enlaces para elementos creados por el usuario actual.
+La lista muestra títulos, así que además del permiso *Ver contenido por antigüedad* hace falta poder gestionar ese tipo en Joomla (artículos y categorías en Contenido, contactos en Contactos, canales en Canales de noticias). Además, las cifras, las listas y los CSV respetan los niveles de acceso autorizados del elemento y su categoría (las categorías, solo el suyo, como en Joomla). El permiso de editar propios solo ofrece enlaces para elementos creados por el usuario actual.
 
 ## Diagnóstico de accesos
 

@@ -332,7 +332,7 @@ Archived ones are, with their status shown in the list, because they are often e
 
 ### Why can I see the numbers but not open the list?
 
-The list shows titles, so besides the *View content by age* permission you need to be able to manage that kind in Joomla (articles and categories in Content, contacts in Contacts, feeds in News Feeds). Counts, lists and CSV exports also respect the authorized viewing levels of the item and its category. Edit-own permission only offers links for items created by the current user.
+The list shows titles, so besides the *View content by age* permission you need to be able to manage that kind in Joomla (articles and categories in Content, contacts in Contacts, feeds in News Feeds). Counts, lists and CSV exports also respect the authorized viewing levels of the item and its category (categories, only their own, as in Joomla). Edit-own permission only offers links for items created by the current user.
 
 ## Access diagnosis
 
