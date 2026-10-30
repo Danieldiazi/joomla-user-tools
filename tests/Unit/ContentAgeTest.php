@@ -3,6 +3,7 @@
 namespace Danieldiazi\Tests;
 
 use Danieldiazi\Component\Usertools\Administrator\Service\ContentAge;
+use Danieldiazi\Component\Usertools\Administrator\Service\ContentAgeReader;
 use PHPUnit\Framework\TestCase;
 
 final class ContentAgeTest extends TestCase
@@ -47,5 +48,29 @@ final class ContentAgeTest extends TestCase
             'formula protection is left to CsvExport');
         $this->assertSame('COM_USERTOOLS_USAGE_MISSING_LEVEL(77)', $table['rows'][1][3], 'a missing level is named by its ID');
         $this->assertSame(['JPUBLISHED', 'JUNPUBLISHED', 'JARCHIVED', 'JTRASHED'], array_map([ContentAge::class, 'stateKey'], [1, 0, 2, -2]));
+    }
+
+    public function testEveryKindDeclaresItsColumnsAndScreens(): void
+    {
+        $this->assertSame(['articles', 'categories', 'contacts', 'newsfeeds'], array_keys(ContentAgeReader::KINDS));
+        foreach (ContentAgeReader::KINDS as $key => $kind) {
+            foreach (['table', 'title', 'state', 'category', 'created', 'modified', 'author', 'label', 'asset', 'item', 'edit'] as $field) {
+                $this->assertNotSame('', (string) ($kind[$field] ?? ''), $key . ' needs ' . $field);
+            }
+            $this->assertStringContainsString('{id}', $kind['item'], $key);
+            $this->assertStringContainsString('{id}', $kind['edit'], $key);
+        }
+        $this->assertSame(['extension', 'com_content'], ContentAgeReader::KINDS['categories']['scope'], 'only article categories, not those of every extension');
+        $this->assertFalse(ContentAgeReader::KINDS['categories']['categoryAccess'], 'like Joomla, a category is checked by its own level, not its parent\'s');
+        $this->assertArrayNotHasKey('categoryAccess', ContentAgeReader::KINDS['articles'], 'articles keep the category access check');
+    }
+
+    public function testItemsCsvCanNameTheParentCategory(): void
+    {
+        $text = fn (string $key, string $argument = '') => $key;
+        $rows = ContentAge::exportItems([['id' => 3, 'title' => 'News', 'category' => '', 'level' => 'Public', 'access' => 1, 'author' => 'A', 'state' => 1,
+            'created' => '2012-01-01 00:00:00', 'modified' => '2012-02-01 00:00:00']], $text, 'COM_USERTOOLS_AGE_PARENT_CATEGORY');
+        $this->assertSame('COM_USERTOOLS_AGE_PARENT_CATEGORY', $rows['header'][2]);
+        $this->assertSame('', $rows['rows'][0][2], 'a top-level category has no parent to show');
     }
 }

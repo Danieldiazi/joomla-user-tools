@@ -844,9 +844,19 @@ $a2012 = $addArticle('old-a', '2012-03-01 00:00:00');
 $a2012Own = $addArticle('old-b', '2012-12-31 23:59:59', 2);
 $addArticle('old-trash', '2012-06-01 00:00:00', -2);
 $addArticle('old-registered', '2013-01-01 00:00:00', 0, 2);
-$ageCount = function (string $html, int $year): int {
-    return preg_match('/data-ut-age-year="' . $year . '".*?data-ut-age-cell="articles" data-ut-age-count="(\d+)"/s', $html, $m) ? (int) $m[1] : -1;
+$ageCount = function (string $html, int $year, string $kind = 'articles'): int {
+    return preg_match('/data-ut-age-year="' . $year . '".*?data-ut-age-cell="' . $kind . '" data-ut-age-count="(\d+)"/s', $html, $m) ? (int) $m[1] : -1;
 };
+// Other kinds with a modification date: the article category itself and a contact.
+$ageCategoryModified = (string) $site->q('SELECT modified_time FROM #__categories WHERE id = ?', [$ageCategory])[0]['modified_time'];
+$site->q('UPDATE #__categories SET modified_time = ? WHERE id = ?', ['2012-08-01 00:00:00', $ageCategory]);
+$ageCategoryTitle = (string) $site->q('SELECT title FROM #__categories WHERE id = ?', [$ageCategory])[0]['title'];
+$contactCategory = (int) ($site->q("SELECT id FROM #__categories WHERE extension = 'com_contact' AND parent_id <> 0 ORDER BY id")[0]['id'] ?? 0);
+$site->q("DELETE FROM #__contact_details WHERE alias = 'ut-age-contact'");
+$site->q("INSERT INTO #__contact_details (name, alias, published, catid, access, params, language, created, created_by, modified, metadesc, metadata)"
+    . " VALUES ('UT age contact', 'ut-age-contact', 1, ?, 1, '{}', '*', '2009-01-01 00:00:00', ?, '2011-02-02 00:00:00', '', '{}')",
+    [$contactCategory, $site->userId(getenv('UT_ADMIN_USER') ?: 'admin')]);
+$ageContact = (int) $site->q("SELECT id FROM #__contact_details WHERE alias = 'ut-age-contact'")[0]['id'];
 $age = $admin->get($ageUrl);
 Test::noPhpErrors($age, 'content by age');
 Test::check($ageCount($age, 2012) === 2 && $ageCount($age, 2013) === 1, 'articles are counted by year of last modification; the trash is not counted, archived ones are');
@@ -855,6 +865,15 @@ $sorted = $years[1];
 rsort($sorted);
 Test::check($years[1] === $sorted, 'years run from the newest to the oldest');
 Test::check(str_contains($age, 'layout=list&amp;kind=articles&amp;year=2012') && str_contains($age, 'data-ut-age-total='), 'each number links to its list and each row has its total');
+Test::check($ageCount($age, 2012, 'categories') === 1 && $ageCount($age, 2011, 'contacts') === 1 && str_contains($age, 'data-ut-age-kind="newsfeeds"')
+    && !str_contains($age, 'data-ut-age-kind="modules"'), 'article categories, contacts and news feeds are counted; modules, without a modification date, are not');
+$categoryAgeList = $admin->get($ageUrl . '&layout=list&kind=categories&year=2012');
+Test::check(str_contains($categoryAgeList, 'data-ut-age-list-total="1"') && str_contains($categoryAgeList, '>' . htmlspecialchars($ageCategoryTitle) . '</a>')
+    && str_contains($categoryAgeList, 'option=com_categories&amp;task=category.edit&amp;id=' . $ageCategory . '&amp;extension=com_content')
+    && str_contains($categoryAgeList, 'Parent category'), 'the list of categories links to their edit screen and names the parent column');
+$contactAgeList = $admin->get($ageUrl . '&layout=list&kind=contacts&year=2011');
+Test::check(str_contains($contactAgeList, 'data-ut-age-list-total="1"') && str_contains($contactAgeList, 'option=com_contact&amp;task=contact.edit&amp;id=' . $ageContact)
+    && str_contains($contactAgeList, 'UT age contact'), 'the list of contacts uses their name and links to their edit screen');
 $filtered = $admin->get($ageUrl . '&level=2');
 Test::check($ageCount($filtered, 2013) === 1 && !str_contains($filtered, 'data-ut-age-year="2012"'), 'the access level filter counts only that level');
 $list = $admin->get($ageUrl . '&layout=list&kind=articles&year=2012');
@@ -868,7 +887,7 @@ Test::check($code === 200 && str_starts_with($headers['content-type'] ?? '', 'te
     'the list of one year downloads as CSV');
 preg_match('/href="([^"]*task=age\.export[^"]*)"/', $age, $export);
 [$code, $csv] = $admin->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($export[1] ?? '')));
-Test::check($code === 200 && preg_match('/^2012;2;2\r?$/m', $csv) === 1, 'the table downloads as CSV, one row per year');
+Test::check($code === 200 && preg_match('/^2012;2;1;0;0;3\r?$/m', $csv) === 1 && preg_match('/^2011;0;0;1;0;1\r?$/m', $csv) === 1, 'the table downloads as CSV, one row per year and one column per kind');
 [$code] = $admin->request($ageUrl . '&layout=list&kind=nothing&year=2012');
 Test::check($code === 403, 'an unknown kind is refused (got ' . $code . ')');
 $contentRules = $site->q("SELECT rules FROM #__assets WHERE name = 'com_content'")[0]['rules'];
@@ -879,7 +898,7 @@ $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_en
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [json_encode(['core.manage' => ['6' => 0]])]);
 [$code, $delegateAge] = $delegate->request($ageUrl);
 [$listCode] = $delegate->request($ageUrl . '&layout=list&kind=articles&year=2012');
-Test::check($code === 200 && $ageCount($delegateAge, 2012) === 2 && !str_contains($delegateAge, 'layout=list') && $listCode === 403,
+Test::check($code === 200 && $ageCount($delegateAge, 2012) === 2 && !str_contains($delegateAge, 'kind=articles') && !str_contains($delegateAge, 'kind=categories') && $listCode === 403,
     'without managing articles in Joomla, the numbers are shown but the titles are not (got ' . $listCode . ')');
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [json_encode(['core.manage' => ['6' => 1], 'core.edit' => ['6' => 0], 'core.edit.own' => ['6' => 1]])]);
 // Give the two ownership fixtures real assets so Joomla resolves their component permissions.
@@ -914,7 +933,7 @@ Test::check($code === 200 && !str_contains($csv, 'UT private') && substr_count($
     'the yearly CSV has the same two visible items as the list');
 preg_match('/href="([^"]*task=age\\.export[^"]*)"/', $delegateAge, $tableExport);
 [$code, $csv] = $delegate->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($tableExport[1] ?? '')));
-Test::check($code === 200 && preg_match('/^2012;2;2\\r?$/m', $csv) === 1, 'the table CSV uses the same access scope');
+Test::check($code === 200 && preg_match('/^2012;2;1;0;0;3\\r?$/m', $csv) === 1, 'the table CSV uses the same access scope');
 $privateList = $delegate->get($ageUrl . '&layout=list&kind=articles&year=2012&level=' . $agePrivate);
 Test::check(str_contains($privateList, 'data-ut-age-list-total="0"') && !str_contains($privateList, 'UT private'),
     'forcing an unauthorized level in the URL exposes no titles');
@@ -931,6 +950,13 @@ preg_match('/href="([^"]*task=age\\.export[^"]*year=2012[^"]*)"/', $categoryList
 Test::check($code === 200 && substr_count($csv, "\n") === 1, 'category access also protects the CSV');
 Test::check($ageCount($admin->get($ageUrl), 2012) === 3, 'a global Super User retains the full audit view');
 $site->q('UPDATE #__categories SET access = ? WHERE id = ?', [$categoryAccess, $ageCategory]);
+// Like Joomla's category list, a category is checked by its own level, not by its parent's.
+$rootCategory = $site->q('SELECT id, access FROM #__categories WHERE parent_id = 0 ORDER BY id')[0];
+$site->q('UPDATE #__categories SET access = ? WHERE id = ?', [$agePrivate, (int) $rootCategory['id']]);
+Test::check($ageCount($delegate->get($ageUrl), 2012, 'categories') === 1, 'a visible category counts even if its parent has a level the delegate cannot view');
+$site->q('UPDATE #__categories SET access = ? WHERE id = ?', [(int) $rootCategory['access'], (int) $rootCategory['id']]);
+$site->q('UPDATE #__categories SET modified_time = ? WHERE id = ?', [$ageCategoryModified, $ageCategory]);
+$site->q('DELETE FROM #__contact_details WHERE id = ?', [$ageContact]);
 foreach ($ageAssets as $assetId) {
     $site->q('DELETE FROM #__assets WHERE id = ?', [$assetId]);
 }

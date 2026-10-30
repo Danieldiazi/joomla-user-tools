@@ -64,7 +64,7 @@ class AgeModel extends BaseDatabaseModel
         $text = fn (string $key, string $argument = '') => $argument === '' ? Text::_($key) : Text::sprintf($key, $argument);
         if ($kind !== '' && $year > 0) {
             $this->assertKind($kind);
-            $table = ContentAge::exportItems($this->reader()->items($kind, $year, $level), $text);
+            $table = ContentAge::exportItems($this->reader()->items($kind, $year, $level), $text, ContentAgeReader::KINDS[$kind]['categoryLabel'] ?? 'COM_USERTOOLS_AGE_CATEGORY');
         } else {
             $table = ContentAge::export($this->getYears($level), $text);
         }

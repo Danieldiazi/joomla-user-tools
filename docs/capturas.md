@@ -4,7 +4,7 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos y contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, las del panel de Usuarios, añadir cuentas a grupos, exportar cuentas y deshacer bloqueos de 2026.10.19, y la portada y las de la ficha de una persona de 2026.10.20. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos y la lista de contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, las del panel de Usuarios, añadir cuentas a grupos, exportar cuentas y deshacer bloqueos de 2026.10.19, la portada y las de la ficha de una persona de 2026.10.20, y la tabla de contenido por antigüedad con sus cuatro tipos, de la versión siguiente a 2026.10.20. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
 ![Portada de User Tools agrupada en secciones: revisar cuentas (con la ficha de una persona, la exportación y deshacer bloqueos), grupos y niveles de acceso, automatización y seguimiento, y eliminar o anonimizar cuentas (2026.10.20)](screenshots/01-portada.jpg)
 
@@ -60,6 +60,6 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cad
 
 ![Diagnóstico de accesos: resumen con el tipo de cada comprobación y el detalle de cada una, con qué se detectó, por qué importa y cómo revisarlo (2026.10.15)](screenshots/19-diagnostico.jpg)
 
-![Contenido por antigüedad: artículos por año de última modificación, con filtro por nivel de acceso (2026.10.15)](screenshots/20-contenido-antiguedad.jpg)
+![Contenido por antigüedad: artículos, categorías de artículos, contactos y canales de noticias por año de última modificación, con filtro por nivel de acceso (posterior a 2026.10.20)](screenshots/20-contenido-antiguedad.jpg)
 
 ![Contenido por antigüedad: lista de los artículos de un año, con enlace a su edición (2026.10.15)](screenshots/21-contenido-antiguedad-lista.jpg)
