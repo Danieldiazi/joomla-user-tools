@@ -34,6 +34,7 @@ The home screen groups the tools into four sections, each with its explanation a
 - [Installation and updates](#installation-and-updates)
 - [Compare a user list](#compare-a-user-list)
 - [Review inactive users](#review-inactive-users)
+- [Undo blocks](#undo-blocks)
 - [Delete inactive users](#delete-inactive-users)
 - [Anonymise accounts](#anonymise-accounts)
 - [Scheduled inactivity task and reports](#scheduled-inactivity-task)
@@ -98,6 +99,16 @@ The tool does not send the Joomla user plugin's welcome email.
 ## Review inactive users
 
 On the home screen, choose “Review inactive accounts”. Select the number of days, whether to include users who have never logged in (using their registration date), and exclusions. Search, select only the accounts you want to suspend, and confirm. No accounts are initially selected, and “Select all” affects only rows visible through the filter. Already blocked accounts and accounts with recent sessions are skipped.
+
+## Undo blocks
+
+Since 2026.10.19, **Undo blocks** unblocks, after a review, the accounts a batch blocked. A batch is a real scheduled task run or a manual review (“Compare a user list” or “Review inactive users”) that blocked at least one account. Until now they had to be unblocked by hand, one by one, in Users.
+
+1. **Choose the batch** from the list of recent ones, or click **“Undo these blocks”** on the result of a manual review or on the report of a run.
+2. **Review**: only accounts that are **still blocked and have not changed** since the batch (same username and last visit, and not anonymised) are offered, ticked. The others are listed apart with the reason. Users who are not Super Users can never unblock accounts with administrator access.
+3. **Confirm** and, from the configured threshold on, type the number of accounts. Each account is checked again right before it is unblocked, and any that changed is skipped.
+
+Unblocking uses Joomla's User API and is written to the **User Actions Log** with the batch it undoes. It requires its own permission, *Undo blocks*. Manual batches are kept since 2026.10.19 in the usertools-batches subfolder of Joomla's logs directory, with the same protection and retention as the task reports.
 
 ## Delete inactive users
 

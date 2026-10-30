@@ -34,7 +34,9 @@ Porque nadie la pidió: es una decisión del administrador, no una petición de 
 
 ### He bloqueado una cuenta por error, ¿cómo la recupero?
 
-Desde Joomla: **Usuarios → Gestionar**, marca la cuenta y usa la acción **Desbloquear**, o pulsa el icono de la columna «Habilitado». User Tools no deshace bloqueos automáticamente.
+Si la bloqueó User Tools, usa **Deshacer bloqueos** (desde la 2026.10.19): elige la ejecución de la tarea o la revisión manual que la bloqueó, revisa y confirma. Solo se ofrecen las cuentas que siguen bloqueadas y no han cambiado desde entonces. Detalles en el [README](README.md#deshacer-bloqueos).
+
+También puedes hacerlo desde Joomla: **Usuarios → Gestionar**, marca la cuenta y usa la acción **Desbloquear**, o pulsa el icono de la columna «Habilitado». User Tools nunca desbloquea cuentas por sí solo.
 
 ### ¿Qué cuentas no se bloquean ni se eliminan nunca?
 

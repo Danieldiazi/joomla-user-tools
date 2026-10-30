@@ -34,6 +34,7 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 - [Instalación y actualizaciones](#instalación-y-actualizaciones)
 - [Comparar una lista de usuarios](#comparar-una-lista-de-usuarios)
 - [Revisar usuarios inactivos](#revisar-usuarios-inactivos)
+- [Deshacer bloqueos](#deshacer-bloqueos)
 - [Eliminar usuarios inactivos](#eliminar-usuarios-inactivos)
 - [Anonimizar cuentas](#anonimizar-cuentas)
 - [Tarea programada e informes](#tarea-programada-por-inactividad)
@@ -98,6 +99,16 @@ La herramienta no envía el correo de bienvenida del plugin de usuarios de Jooml
 ## Revisar usuarios inactivos
 
 En la portada, «Revisar cuentas inactivas». Elige el plazo en días, si se incluyen quienes nunca accedieron (con el plazo contado desde su registro) y las exclusiones. Busca, marca solo las cuentas que quieres suspender y confirma. No hay cuentas marcadas de entrada, y «Seleccionar todos» solo afecta a las filas visibles con el filtro. Se omiten las cuentas ya bloqueadas y las que tienen una sesión reciente.
+
+## Deshacer bloqueos
+
+Desde la 2026.10.19, **Deshacer bloqueos** desbloquea de una vez las cuentas que bloqueó una tanda, tras revisarlas. Una tanda es una ejecución real de la tarea programada o una revisión manual («Comparar una lista» o «Revisar usuarios inactivos») que bloqueó alguna cuenta. Hasta ahora había que desbloquearlas a mano, una a una, en Usuarios.
+
+1. **Elige la tanda** en la lista de las más recientes, o pulsa **«Deshacer estos bloqueos»** en el resultado de una revisión manual o en el informe de una ejecución.
+2. **Revisa**: se ofrecen, marcadas, solo las cuentas que **siguen bloqueadas y no han cambiado** desde la tanda (mismo nombre de usuario y último acceso, y sin anonimizar). Las demás aparecen aparte con el motivo. Quien no es superusuario nunca puede desbloquear cuentas con acceso a la administración.
+3. **Confirma** y, a partir del umbral configurado, escribe el número de cuentas. Cada cuenta se vuelve a comprobar justo antes de desbloquearla y la que haya cambiado se omite.
+
+El desbloqueo usa la API de usuarios de Joomla y queda en el **registro de acciones de usuarios** con la tanda que deshace. Requiere el permiso propio *Deshacer bloqueos*. Las tandas manuales se guardan desde la 2026.10.19 en la subcarpeta usertools-batches de la carpeta de registros de Joomla, con la misma protección y retención que los informes de la tarea.
 
 ## Eliminar usuarios inactivos
 

@@ -135,6 +135,7 @@ class InactiveModel extends BaseDatabaseModel
             $this->collect($result, $outcome, $id);
         }
         $result['skipped'] = \count($selected) - \count($result['blocked']) - \count($result['errors']);
+        $result['batch']   = $this->recordBatch('COM_USERTOOLS_TOOL_INACTIVE', 'COM_USERTOOLS_REASON_INACTIVE', $result['blocked']);
         $this->storeResult(self::RESULT, $result);
         Toolkit::clearDashboardCache();
         return $result;

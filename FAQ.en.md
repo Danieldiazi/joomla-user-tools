@@ -34,7 +34,9 @@ Because nobody asked for one: it is the administrator's decision, not the person
 
 ### I blocked an account by mistake. How do I restore it?
 
-In Joomla, open **Users → Manage**, select the account and use **Unblock**, or click the icon in the “Enabled” column. User Tools does not automatically undo blocks.
+If User Tools blocked it, use **Undo blocks** (since 2026.10.19): choose the task run or manual review that blocked it, review and confirm. Only accounts that are still blocked and have not changed since are offered. Details in the [README](README.en.md#undo-blocks).
+
+You can also do it in Joomla: open **Users → Manage**, select the account and use **Unblock**, or click the icon in the “Enabled” column. User Tools never unblocks accounts on its own.
 
 ### Which accounts are never blocked or deleted?
 

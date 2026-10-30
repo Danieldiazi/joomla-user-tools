@@ -86,8 +86,8 @@ namespace {
     };
     Toolkit::$store = new class { public function save($values) {} };
 
-    foreach (['Compare', 'Inactive', 'Delete', 'Reports', 'Ungroup', 'Access', 'Usage', 'Diagnose', 'Age', 'Move', 'Anonymize', 'Addgroups'] as $controllerName) {
-        foreach (['compare' => 'usertools.compare', 'inactive' => 'usertools.inactive', 'delete' => 'usertools.delete', 'access' => 'usertools.access', 'usage' => 'usertools.access', 'ungroup' => 'usertools.ungroup', 'diagnose' => 'usertools.diagnose', 'age' => 'usertools.content', 'move' => 'core.admin', 'anonymize' => 'usertools.anonymize', 'addgroups' => 'usertools.addgroups',
+    foreach (['Compare', 'Inactive', 'Delete', 'Reports', 'Ungroup', 'Access', 'Usage', 'Diagnose', 'Age', 'Move', 'Anonymize', 'Addgroups', 'Unblock'] as $controllerName) {
+        foreach (['compare' => 'usertools.compare', 'inactive' => 'usertools.inactive', 'delete' => 'usertools.delete', 'access' => 'usertools.access', 'usage' => 'usertools.access', 'ungroup' => 'usertools.ungroup', 'diagnose' => 'usertools.diagnose', 'age' => 'usertools.content', 'move' => 'core.admin', 'anonymize' => 'usertools.anonymize', 'addgroups' => 'usertools.addgroups', 'unblock' => 'usertools.unblock',
                   'reports' => 'usertools.reports', 'report' => 'usertools.reports'] as $view => $permission) {
             $input = new class($view) {
                 public function __construct(private string $view) {}
