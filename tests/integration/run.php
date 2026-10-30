@@ -1282,12 +1282,15 @@ $agRefused = $admin->submit($agUrl . '&layout=review',
     ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-addgroups-apply');
 Test::check($groupsOf('ag_one') === $beforeOne && str_contains($agRefused, 'data-ut-addgroups-apply'),
     'bulk group assignment requires the correct typed account count');
+$site->fakeSession($agOne);
+$site->fakeSession($agTwo);
 $agDone = $admin->submit($agUrl . '&layout=review',
     ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '2'], 'data-ut-addgroups-apply');
 for ($i = 0; $i < 15 && str_contains($agDone, 'data-ut-addgroups-next'); $i++) {
     $agDone = $admin->submit($agUrl . '&layout=progress', ['task' => 'addgroups.next'], 'data-ut-addgroups-next');
 }
 Test::check(substr_count($agDone, 'data-ut-addgroups-session="closed"') === 2
+    && $site->sessions($agOne) === 0 && $site->sessions($agTwo) === 0
     && !str_contains($agDone, 'data-ut-addgroups-sessions="open"')
     && !str_contains($agDone, 'data-ut-addgroups-sessions="unknown"'),
     'group memberships are saved and session closure is verified for each changed account');
@@ -1333,6 +1336,71 @@ Test::check(str_contains($delegatedDone, 'data-ut-addgroups-result="added"')
     && !in_array('UT anon G sub', $groupsOf('ag_backend'), true),
     'delegated group assignment uses the same protection at write time');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+
+// Keep a real session alive by making the database reject its deletion. This exercises
+// the production UserHelper and AccountRegrouper verification, not a replacement writer.
+$agOpen = $site->addUser('ag_open', 'Registered');
+$site->fakeSession($agOpen);
+$sessionTrigger = $site->prefix . 'ut_keep_session';
+if ($quoted) {
+    $site->db->exec("CREATE FUNCTION $sessionTrigger() RETURNS trigger LANGUAGE plpgsql AS '
+        BEGIN IF OLD.userid = $agOpen THEN RAISE EXCEPTION ''simulated session closure failure'';
+        END IF; RETURN OLD; END;'");
+    $site->db->exec("CREATE TRIGGER $sessionTrigger BEFORE DELETE ON {$site->prefix}session
+        FOR EACH ROW EXECUTE FUNCTION $sessionTrigger()");
+} else {
+    $site->db->exec("CREATE TRIGGER $sessionTrigger BEFORE DELETE ON {$site->prefix}session
+        FOR EACH ROW BEGIN IF OLD.userid = $agOpen THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'simulated session closure failure'; END IF; END");
+}
+try {
+    $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+        'group' => '#' . $agTarget, 'lines' => 'ag_open'], 'data-ut-addgroups-form');
+    $agFailed = $admin->submit($agUrl . '&layout=review',
+        ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-addgroups-apply');
+    Test::check(str_contains($agFailed, 'data-ut-addgroups-session="open"')
+        && str_contains($agFailed, 'data-ut-addgroups-sessions="open"')
+        && str_contains($agFailed, 'data-ut-addgroups-retry="' . $agOpen . '"')
+        && $site->sessions($agOpen) === 1
+        && in_array('UT anon G', $groupsOf('ag_open'), true),
+        'a failed session deletion keeps the saved membership and reports the surviving session with a retry');
+    $agMemberships = $site->q('SELECT group_id FROM #__user_usergroup_map WHERE user_id = ? ORDER BY group_id', [$agOpen]);
+    $agLogs = $site->q("SELECT id, message FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_GROUP_ADDED' ORDER BY id");
+    $stillOpen = $admin->submit($agUrl . '&layout=result',
+        ['task' => 'addgroups.sessions', 'account' => $agOpen], 'data-ut-addgroups-retry="' . $agOpen . '"');
+    Test::check(str_contains($stillOpen, 'data-ut-addgroups-session="open"') && $site->sessions($agOpen) === 1,
+        'an unsuccessful session-only retry preserves the open warning');
+} finally {
+    $site->db->exec('DROP TRIGGER ' . $sessionTrigger . ($quoted ? ' ON ' . $site->prefix . 'session' : ''));
+    if ($quoted) {
+        $site->db->exec("DROP FUNCTION $sessionTrigger()");
+    }
+}
+$agRetried = $admin->submit($agUrl . '&layout=result',
+    ['task' => 'addgroups.sessions', 'account' => $agOpen], 'data-ut-addgroups-retry="' . $agOpen . '"');
+Test::check(str_contains($agRetried, 'data-ut-addgroups-session="closed"')
+    && !str_contains($agRetried, 'data-ut-addgroups-sessions="open"') && $site->sessions($agOpen) === 0,
+    'session-only retry verifies closure and updates the stored result');
+Test::check($site->q('SELECT group_id FROM #__user_usergroup_map WHERE user_id = ? ORDER BY group_id', [$agOpen]) === $agMemberships
+    && $site->q("SELECT id, message FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_GROUP_ADDED' ORDER BY id") === $agLogs,
+    'failed and successful session retries leave memberships and their audit entries unchanged');
+
+$agUnknown = $site->addUser('ag_unknown', 'Registered');
+$site->fakeSession($agUnknown);
+$site->cli('config:set session_metadata=false');
+try {
+    $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+        'group' => '#' . $agTarget, 'lines' => 'ag_unknown'], 'data-ut-addgroups-form');
+    $agUnverified = $admin->submit($agUrl . '&layout=review',
+        ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-addgroups-apply');
+    Test::check(str_contains($agUnverified, 'data-ut-addgroups-session="unknown"')
+        && str_contains($agUnverified, 'data-ut-addgroups-sessions="unknown"')
+        && !str_contains($agUnverified, 'data-ut-addgroups-session="closed"')
+        && in_array('UT anon G', $groupsOf('ag_unknown'), true),
+        'metadata disabled reports unknown session closure while preserving the saved membership');
+} finally {
+    $site->cli('config:set session_metadata=true');
+}
 
 // A second assignment must not replace the pending accounts and checkpoint of a >20-account job.
 $bulkNames = [];

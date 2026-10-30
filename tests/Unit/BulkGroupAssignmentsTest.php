@@ -153,4 +153,43 @@ final class BulkGroupAssignmentsTest extends TestCase
             $this->assertCount(1, $logs, 'membership is audited exactly once despite the session problem');
         }
     }
+
+    public function testWriterUsesVerifiedSessionStateEvenWhenDestructionThrows(): void
+    {
+        foreach ([0 => AccountRegrouper::SESSIONS_CLOSED, 1 => AccountRegrouper::SESSIONS_OPEN,
+            'metadata-off' => AccountRegrouper::SESSIONS_UNKNOWN, 'count-fails' => AccountRegrouper::SESSIONS_OPEN] as $left => $expected) {
+            $user = new class () {
+                public int $id = 41;
+                public string $username = 'alice';
+                public array $groups = [2 => 2];
+                public int $saves = 0;
+                public function authorise(string $permission): bool { return false; }
+                public function save(bool $updateOnly): bool { $this->saves++; return true; }
+            };
+            $factory = new class ($user) implements UserFactoryInterface {
+                public function __construct(private object $user) {}
+                public function loadUserById(int $id) { return $this->user; }
+                public function loadUserByUsername(string $name) { return $this->user; }
+            };
+            $logged = 0;
+            $logger = new ActionLogger(static function () use (&$logged): void { $logged++; });
+            $checked = [];
+            $verifier = new AccountRegrouper($factory, $logger, static function (int $id): void {
+                throw new \RuntimeException('session backend failed after attempting closure');
+            }, static function (int $id) use ($left, &$checked): ?int {
+                $checked[] = $id;
+                if ($left === 'count-fails') {
+                    throw new \RuntimeException('session count unavailable');
+                }
+                return $left === 'metadata-off' ? null : $left;
+            });
+            $writer = new AccountGroupAdder($factory, $logger, $verifier->closeSessions(...));
+            $this->assertSame(['status' => AccountGroupAdder::ADDED, 'sessions' => $expected],
+                $writer->add(41, 'alice', [2], [11], new Operator(9, true, 'admin'), true));
+            $this->assertSame([41], $checked, 'destruction failure must still be verified');
+            $this->assertSame([2, 11], array_values($user->groups));
+            $this->assertSame(1, $user->saves);
+            $this->assertSame(1, $logged);
+        }
+    }
 }
