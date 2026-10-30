@@ -71,6 +71,33 @@ final class BlockBatch
     }
 
     /**
+     * Up to $limit batches that blocked at least one account, newest first. Reads page after page,
+     * so runs that blocked nothing never push older undoable batches out of the list.
+     *
+     * @param  callable(int): array{items: list<array<string, mixed>>, total: int} $page reads one page (1-based)
+     * @return list<array<string, mixed>>
+     */
+    public static function withBlocks(callable $page, int $size, int $limit): array
+    {
+        $found = [];
+        for ($number = 1; \count($found) < $limit; $number++) {
+            $result = $page($number);
+            foreach ($result['items'] as $batch) {
+                if ((int) ($batch['blocked'] ?? 0) > 0 && empty($batch['dry_run'])) {
+                    $found[] = $batch;
+                    if (\count($found) === $limit) {
+                        break;
+                    }
+                }
+            }
+            if ($number * $size >= (int) $result['total'] || !$result['items']) {
+                break;
+            }
+        }
+        return $found;
+    }
+
+    /**
      * The row a manual batch stores for a blocked account, the same shape the task report uses.
      *
      * @return array{id: int, username: string, last_visit: ?string, action: string, reason: string}

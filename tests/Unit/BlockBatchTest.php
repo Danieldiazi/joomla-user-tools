@@ -44,6 +44,26 @@ final class BlockBatchTest extends TestCase
         $this->assertSame([], BlockBatch::blockedRows($batch + ['dry_run' => true]), 'a dry run blocked nothing');
     }
 
+    public function testRunsThatBlockedNothingDoNotHideOlderBatches(): void
+    {
+        // 25 newest runs blocked nothing; the older ones did. Pages of 10, newest first.
+        $all = [];
+        for ($i = 0; $i < 40; $i++) {
+            $all[] = ['id' => 'r' . $i, 'blocked' => $i < 25 ? 0 : 1];
+        }
+        $all[30]['dry_run'] = true;
+        $reads = 0;
+        $page  = function (int $n) use ($all, &$reads): array {
+            $reads++;
+            return ['items' => \array_slice($all, ($n - 1) * 10, 10), 'total' => \count($all)];
+        };
+        $found = BlockBatch::withBlocks($page, 10, 3);
+        $this->assertSame(['r25', 'r26', 'r27'], array_column($found, 'id'));
+        $this->assertSame(3, $reads, 'stops once enough batches are found');
+        $this->assertCount(14, BlockBatch::withBlocks($page, 10, 20), 'all older batches with blocks, without the dry run');
+        $this->assertSame([], BlockBatch::withBlocks(fn (int $n): array => ['items' => [], 'total' => 0], 10, 20));
+    }
+
     public function testOnlyStillBlockedUnchangedAccountsAreOffered(): void
     {
         $row      = ['id' => 5, 'username' => 'ana', 'last_visit' => self::VISIT];

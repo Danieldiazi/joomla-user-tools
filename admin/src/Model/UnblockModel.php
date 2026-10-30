@@ -29,6 +29,9 @@ class UnblockModel extends BaseDatabaseModel
 
     public const LIST_SIZE = 20;
 
+    /** Reports read per page while looking for batches that blocked accounts. */
+    private const PAGE_SIZE = 100;
+
     private const PREVIEW = 'com_usertools.unblock.preview';
     private const RESULT  = 'com_usertools.unblock.result';
 
@@ -39,16 +42,14 @@ class UnblockModel extends BaseDatabaseModel
      */
     public function getBatches(): array
     {
+        $reports = Toolkit::reports();
+        $manual  = Toolkit::batches();
         $batches = [];
-        foreach (Toolkit::reports()->page(1, self::LIST_SIZE, ['mode' => 'real'])['items'] as $report) {
-            if ((int) ($report['blocked'] ?? 0) > 0) {
-                $batches[] = $this->summary(BlockBatch::KIND_TASK, (string) $report['id'], $report);
-            }
+        foreach (BlockBatch::withBlocks(fn (int $n): array => $reports->page($n, self::PAGE_SIZE, ['mode' => 'real']), self::PAGE_SIZE, self::LIST_SIZE) as $report) {
+            $batches[] = $this->summary(BlockBatch::KIND_TASK, (string) $report['id'], $report);
         }
-        foreach (Toolkit::batches()->page(1, self::LIST_SIZE)['items'] as $batch) {
-            if ((int) ($batch['blocked'] ?? 0) > 0) {
-                $batches[] = $this->summary(BlockBatch::KIND_MANUAL, (string) $batch['id'], $batch);
-            }
+        foreach (BlockBatch::withBlocks(fn (int $n): array => $manual->page($n, self::PAGE_SIZE), self::PAGE_SIZE, self::LIST_SIZE) as $batch) {
+            $batches[] = $this->summary(BlockBatch::KIND_MANUAL, (string) $batch['id'], $batch);
         }
         usort($batches, static fn (array $a, array $b): int => strcmp($b['started_at'], $a['started_at']));
         return \array_slice($batches, 0, self::LIST_SIZE);
