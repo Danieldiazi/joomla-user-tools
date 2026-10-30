@@ -37,10 +37,11 @@ $names = function (string $zipFile): array {
 
 $com = "$dir/com_usertools-$version.zip";
 $plg = "$dir/plg_task_usertools-$version.zip";
+$nav = "$dir/plg_system_usertools-$version.zip";
 $mod = "$dir/mod_usertools-$version.zip";
 $grp = "$dir/mod_usertools_groups-$version.zip";
 $pkg = "$dir/pkg_usertools-$version.zip";
-foreach ([$com, $plg, $mod, $grp, $pkg, "$dir/SHA256SUMS.txt", "$dir/updates.xml"] as $file) {
+foreach ([$com, $plg, $nav, $mod, $grp, $pkg, "$dir/SHA256SUMS.txt", "$dir/updates.xml"] as $file) {
     $check(is_file($file), "missing $file");
 }
 if ($errors) {
@@ -48,7 +49,7 @@ if ($errors) {
     exit(1);
 }
 
-foreach ([[$com, 'com_usertools.xml'], [$plg, 'usertools.xml'], [$mod, 'mod_usertools.xml'], [$grp, 'mod_usertools_groups.xml'], [$pkg, 'pkg_usertools.xml']] as [$zip, $manifest]) {
+foreach ([[$com, 'com_usertools.xml'], [$plg, 'usertools.xml'], [$nav, 'usertools.xml'], [$mod, 'mod_usertools.xml'], [$grp, 'mod_usertools_groups.xml'], [$pkg, 'pkg_usertools.xml']] as [$zip, $manifest]) {
     $xml = simplexml_load_string((string) $read($zip, $manifest));
     $check($xml !== false && (string) $xml->version === $version, "$manifest has version $version");
 }
@@ -88,6 +89,22 @@ foreach (['es-ES', 'en-GB'] as $tag) {
     }
 }
 
+$navFiles = $names($nav);
+foreach (['usertools.xml', 'services/provider.php', 'src/Extension/Usertools.php', 'language/es-ES/plg_system_usertools.sys.ini',
+    'language/en-GB/plg_system_usertools.sys.ini', 'LICENSE'] as $file) {
+    $check(in_array($file, $navFiles, true), "navigation plugin contains $file");
+}
+$menuManifest = simplexml_load_string((string) $read($com, 'com_usertools.xml'));
+$check(count($menuManifest->administration->submenu->menu) === 5, 'component declares Home and four category links');
+foreach (['es-ES', 'en-GB'] as $tag) {
+    $menuStrings = parse_ini_string((string) $read($com, "admin/language/$tag/com_usertools.sys.ini"), false, INI_SCANNER_RAW) ?: [];
+    $mainStrings = parse_ini_string((string) $read($com, "admin/language/$tag/com_usertools.ini"), false, INI_SCANNER_RAW) ?: [];
+    foreach ($menuManifest->administration->submenu->menu as $item) {
+        $key = (string) $item;
+        $check(isset($menuStrings[$key]) && $menuStrings[$key] === ($mainStrings[$key] ?? null), "$tag menu and page agree on $key");
+    }
+}
+
 $pkgFiles = $names($pkg);
 $modFiles = $names($mod);
 foreach (['mod_usertools.xml', 'services/provider.php', 'src/Dispatcher/Dispatcher.php', 'tmpl/default.php', 'language/es-ES/mod_usertools.ini', 'language/en-GB/mod_usertools.sys.ini'] as $file) {
@@ -111,7 +128,7 @@ preg_match_all('/MOD_USERTOOLS_GROUPS_[A-Z0-9_]+/', implode("\n", array_map(fn (
 foreach (array_unique($groupKeys[0]) as $key) {
     $check(isset($groupStrings['es-ES']['ini'][$key]), "groups module translates $key");
 }
-foreach (['script.php', 'packages/com_usertools.zip', 'packages/plg_task_usertools.zip', 'packages/mod_usertools.zip', 'packages/mod_usertools_groups.zip', 'language/es-ES/pkg_usertools.sys.ini'] as $file) {
+foreach (['script.php', 'packages/com_usertools.zip', 'packages/plg_task_usertools.zip', 'packages/plg_system_usertools.zip', 'packages/mod_usertools.zip', 'packages/mod_usertools_groups.zip', 'language/es-ES/pkg_usertools.sys.ini'] as $file) {
     $check(in_array($file, $pkgFiles, true), "package contains $file");
 }
 $pkgXml = simplexml_load_string((string) $read($pkg, 'pkg_usertools.xml'));

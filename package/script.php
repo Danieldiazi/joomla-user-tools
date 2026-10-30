@@ -55,6 +55,7 @@ class Pkg_UsertoolsInstallerScript extends InstallerScript
             return true;
         }
         $db = Factory::getContainer()->get(DatabaseInterface::class);
+        $this->enableNavigationPlugin($db);
         $this->migrateOptions($db);
         $this->registerActionLog($db);
         $this->createMailTemplate();
@@ -218,6 +219,25 @@ class Pkg_UsertoolsInstallerScript extends InstallerScript
                 ->where($db->quoteName('type') . ' = ' . $db->quote('package')))->execute();
         } catch (\Throwable) {
             // The module can always be published by hand in Content > Administrator Modules.
+        }
+    }
+
+    /** Enable the new menu integration once; later updates preserve an explicit disable. */
+    private function enableNavigationPlugin(DatabaseInterface $db): void
+    {
+        $table = new Extension($db);
+        if (!$table->load(['type' => 'plugin', 'folder' => 'system', 'element' => 'usertools'])) {
+            throw new \RuntimeException(Text::_('PKG_USERTOOLS_ERROR_NAVIGATION'));
+        }
+        $data = new Registry($table->custom_data);
+        if ($data->get('navigation_initialized', false)) {
+            return;
+        }
+        $table->enabled = 1;
+        $data->set('navigation_initialized', true);
+        $table->custom_data = $data->toString();
+        if (!$table->store()) {
+            throw new \RuntimeException(Text::_('PKG_USERTOOLS_ERROR_NAVIGATION'));
         }
     }
 

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="system" method="upgrade">
+  <name>PLG_SYSTEM_USERTOOLS</name>
+  <author>Danieldiazi</author>
+  <creationDate>2026-10</creationDate>
+  <copyright>(C) 2026 Danieldiazi</copyright>
+  <license>GPL-2.0-or-later</license>
+  <version>2026.10.20</version>
+  <description>PLG_SYSTEM_USERTOOLS_XML_DESCRIPTION</description>
+  <namespace path="src">Danieldiazi\Plugin\System\Usertools</namespace>
+  <files>
+    <folder plugin="usertools">services</folder>
+    <folder>src</folder>
+    <folder>language</folder>
+  </files>
+</extension>

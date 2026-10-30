@@ -128,7 +128,7 @@ jobs:
         if: matrix.database == 'mysql' && github.event_name == 'pull_request'
         with:
           node-version: '22'
-      - name: Capture account profiles in Joomla
+      - name: Capture profiles and category navigation in Joomla
         if: matrix.database == 'mysql' && github.event_name == 'pull_request'
         env:
           UT_URL: http://127.0.0.1:8090
@@ -139,6 +139,7 @@ jobs:
           npm install --no-save --package-lock=false --ignore-scripts playwright@1.64.1
           npx playwright install --with-deps chromium
           node tests/integration/capture-profile.mjs
+          node tests/integration/capture-navigation.mjs
       - name: Upload profile screenshots
         if: always() && matrix.database == 'mysql' && github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
@@ -147,6 +148,10 @@ jobs:
           path: ${{ runner.temp }}/profile-screenshots/
           if-no-files-found: ignore
           retention-days: 7
+      - name: Verify package uninstall removes navigation
+        env:
+          UT_JOOMLA: ${{ runner.temp }}/site
+        run: php tests/integration/navigation-uninstall.php
       - name: Logs on failure
         if: failure()
         run: |

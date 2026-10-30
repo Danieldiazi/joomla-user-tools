@@ -11,6 +11,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\View;
 \defined('_JEXEC') or die;
 
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
+use Danieldiazi\Component\Usertools\Administrator\Service\Navigation;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
@@ -28,6 +29,12 @@ trait ViewTrait
         if ($titleKey !== '') {
             // Every screen but the home screen leads back to it from the same place in Joomla's toolbar.
             ToolbarHelper::link(Route::_('index.php?option=com_usertools'), Text::_('COM_USERTOOLS_TOOLBAR_HOME'), 'home');
+        }
+        $input = Factory::getApplication()->getInput();
+        $category = Navigation::categoryForView($input->getCmd('view', 'home'));
+        if ($category !== null) {
+            ToolbarHelper::link(Route::_(Navigation::categoryLink($category)),
+                Text::sprintf('COM_USERTOOLS_TOOLBAR_CATEGORY', Text::_(Navigation::CATEGORIES[$category]['title'])), 'folder-open');
         }
         if ($user->authorise('core.admin', 'com_usertools') || $user->authorise('core.options', 'com_usertools')) {
             ToolbarHelper::preferences('com_usertools');

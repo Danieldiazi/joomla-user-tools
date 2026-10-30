@@ -25,7 +25,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
 
-The home screen groups the tools into four sections, each with its explanation always visible: **Review accounts** (compare a list and review inactive users), **Groups and access levels** (remove from groups, the read-only screens about groups, levels and content, and the access diagnosis), **Automation and follow-up** (the scheduled task, with its plugin status, and its results) and, last and on its own, **Delete accounts**, the only one marked “Permanent”. Each person only sees the tools they are allowed to use, and sections with none are left out. From any other screen, the «User Tools home» button in Joomla's toolbar goes back to the home screen.
+The home screen and Components menu organise tools into **Review accounts**, **Groups and access levels**, **Automation and follow-up**, and **Delete and anonymise accounts**. Home shows every permitted tool; each category opens only its own tools. The Users dashboard shortcuts follow the same classification.
 
 **Requirements:** Joomla 6 and PHP 8.3 or later. Compatible with MySQL/MariaDB and PostgreSQL.  
 **Download:** [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest), package `pkg_usertools-VERSION.zip`.  
@@ -34,6 +34,7 @@ The home screen groups the tools into four sections, each with its explanation a
 ## Contents
 
 - [Installation and updates](#installation-and-updates)
+- [Category navigation](#category-navigation)
 - [Account profile](#account-profile)
 - [Export accounts to CSV](#export-accounts-to-csv)
 - [Compare a user list](#compare-a-user-list)
@@ -65,11 +66,28 @@ The **User Tools** module on the Users dashboard provides direct links to indivi
 
 ## Installation and updates
 
-Download **pkg_usertools-VERSION.zip** from the [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) and install it through System → Install → Extensions. The package installs the component, task plugin, “User Tools” administrator module and “User Tools - User Groups” site module. A fresh installation enables the “Task - User Tools” plugin; the first module installation publishes it on the Users dashboard. New tasks always start in dry-run mode.
+Download **pkg_usertools-VERSION.zip** from the [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) and install it through System → Install → Extensions. The package installs the component, task and menu navigation plugins, “User Tools” administrator module and “User Tools - User Groups” site module. A fresh installation enables the “Task - User Tools” plugin; the first module installation publishes it on the Users dashboard. New tasks always start in dry-run mode.
 
 Since 2026.10.3, Joomla notifies you of new versions under System → Update → Extensions, like any other extension: the package declares an update server pointing to the latest GitHub release. To update, install the new package over the existing installation; do not uninstall the component. Saved exclusions migrate automatically when updating from earlier versions.
 
 The installer checks minimum versions, registers the extension with the User Actions Log and creates the “User Tools: account created” mail template. On uninstall, it warns that task reports remain in the logs directory.
+
+## Category navigation
+
+Under **Components → User Tools**, open **Home** or one of the home screen's four categories:
+
+| Category | Tools |
+|---|---|
+| Review accounts | Account profile, compare a list, export accounts, review inactive users and undo blocks. |
+| Groups and access levels | Add and remove memberships, move groups, groups/levels, content by access level, content by age and diagnosis. |
+| Automation and follow-up | Automatic blocking configuration and results/reports. |
+| Delete and anonymise accounts | Both permanent tools, with their warnings and confirmations. |
+
+Each category shows its tools and explanations. **Home** keeps the complete home screen. Only permitted tools and categories containing an available tool appear; the Users dashboard shortcuts follow the same rules. Task configuration requires permission to manage Joomla's scheduler; viewing results requires the dedicated reports permission.
+
+The category stays marked in the menu when opening a tool, review, result or report. The toolbar offers **Back to [category]** and **User Tools home**. Links only open screens: they do not execute changes, and each tool keeps its review, permissions and confirmations. Old URLs still work; unknown categories are rejected.
+
+The package includes **System - User Tools**, which integrates permission filtering and the active category with Joomla's menu. It is enabled when first installed, including upgrades from a version without this plugin. If you subsequently disable it, later updates respect that choice and the home screen displays a notice. Enable it under **System → Manage → Plugins** to restore filtering and active categories. Screen permissions are still enforced on the server.
 
 ## Account profile
 
@@ -460,9 +478,9 @@ php scripts/build.php --version=v2026.10.5 --output=dist
 php tests/verify-build.php 2026.10.5 dist
 ~~~
 
-Generates the five installable ZIPs (`pkg_usertools`, `com_usertools`, `plg_task_usertools`, `mod_usertools` and `mod_usertools_groups`), `SHA256SUMS.txt` and `updates.xml`. On Windows, `scripts\build.ps1` calls the same script.
+Generates the six installable ZIPs (`pkg_usertools`, `com_usertools`, `plg_task_usertools`, `plg_system_usertools`, `mod_usertools` and `mod_usertools_groups`), `SHA256SUMS.txt` and `updates.xml`. On Windows, `scripts\build.ps1` calls the same script.
 
-Before publishing, update the version number in `com_usertools.xml`, `plugins/task/usertools/usertools.xml`, `modules/mod_usertools/mod_usertools.xml`, `modules/mod_usertools_groups/mod_usertools_groups.xml`, `package/pkg_usertools.xml` and `media/joomla.asset.json` in the same pull request. Check that all six values match, build without `--version`, verify the packages and merge with green CI. Then create a GitHub release with the **vYYYY.M.REVISION** tag on the commit in `main` that contains that version (Releases → Draft a new release → Choose a tag → Publish release). Creating the tag does not change the manifests: if it does not match them, publishing fails and rerunning the same job does not fix it. GitHub Actions runs tests, builds packages with that version in their manifests, and attaches them to the release with `SHA256SUMS.txt` and `updates.xml`. Existing installations receive updates through the update server. Prerelease suffixes are not supported.
+Before publishing, update the version number in `com_usertools.xml`, `plugins/task/usertools/usertools.xml`, `plugins/system/usertools/usertools.xml`, `modules/mod_usertools/mod_usertools.xml`, `modules/mod_usertools_groups/mod_usertools_groups.xml`, `package/pkg_usertools.xml` and `media/joomla.asset.json` in the same pull request. Check that all seven values match, build without `--version`, verify the packages and merge with green CI. Then create a GitHub release with the **vYYYY.M.REVISION** tag on the commit in `main` that contains that version (Releases → Draft a new release → Choose a tag → Publish release). Creating the tag does not change the manifests: if it does not match them, publishing fails and rerunning the same job does not fix it. GitHub Actions runs tests, builds packages with that version in their manifests, and attaches them to the release with `SHA256SUMS.txt` and `updates.xml`. Existing installations receive updates through the update server. Prerelease suffixes are not supported.
 
 ## References
 

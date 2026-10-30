@@ -4,7 +4,7 @@
  * Builds the installable packages:
  *   php scripts/build.php [--version=v2026.10.3] [--output=dist]
  * Creates com_usertools-VERSION.zip, plg_task_usertools-VERSION.zip, mod_usertools-VERSION.zip,
- * mod_usertools_groups-VERSION.zip, pkg_usertools-VERSION.zip,
+ * plg_system_usertools-VERSION.zip, mod_usertools_groups-VERSION.zip, pkg_usertools-VERSION.zip,
  * SHA256SUMS.txt and updates.xml (Joomla update server). The version is stamped only inside the
  * archives; tracked sources are not modified.
  */
@@ -81,10 +81,12 @@ function zip(string $target, array $entries, string $version): void
 
 $component = ['com_usertools.xml' => $root . '/com_usertools.xml'] + collect($root . '/admin', 'admin/') + collect($root . '/media', 'media/');
 $plugin    = collect($root . '/plugins/task/usertools');
+$navigation = collect($root . '/plugins/system/usertools');
 $module    = collect($root . '/modules/mod_usertools');
 $groups    = collect($root . '/modules/mod_usertools_groups');
 $files     = [
     'com'  => $output . "/com_usertools-$version.zip",
+    'nav'  => $output . "/plg_system_usertools-$version.zip",
     'plg'  => $output . "/plg_task_usertools-$version.zip",
     'mod'  => $output . "/mod_usertools-$version.zip",
     'grp'  => $output . "/mod_usertools_groups-$version.zip",
@@ -92,6 +94,7 @@ $files     = [
 ];
 zip($files['com'], $component, $version);
 zip($files['plg'], $plugin, $version);
+zip($files['nav'], $navigation, $version);
 zip($files['mod'], $module, $version);
 zip($files['grp'], $groups, $version);
 zip($files['pkg'], [
@@ -99,6 +102,7 @@ zip($files['pkg'], [
     'script.php'                      => $root . '/package/script.php',
     'packages/com_usertools.zip'      => $files['com'],
     'packages/plg_task_usertools.zip' => $files['plg'],
+    'packages/plg_system_usertools.zip' => $files['nav'],
     'packages/mod_usertools.zip'      => $files['mod'],
     'packages/mod_usertools_groups.zip' => $files['grp'],
 ] + collect($root . '/package/language', 'language/'), $version);

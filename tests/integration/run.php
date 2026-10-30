@@ -229,6 +229,7 @@ Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_c
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
 $admin->get('index.php?option=com_config&view=component&component=com_usertools');
+require __DIR__ . '/navigation.php';
 
 Test::section('Comparison: preview, Super Users always protected, reinforced confirmation');
 $review = $admin->submit('index.php?option=com_usertools&view=compare', [

@@ -29,6 +29,7 @@ class Dispatcher extends AbstractModuleDispatcher
         }
         // Registers the component namespace so its services can be used here.
         $app->bootComponent('com_usertools');
+        $app->getLanguage()->load('com_usertools', JPATH_ADMINISTRATOR . '/components/com_usertools');
         parent::dispatch();
     }
 

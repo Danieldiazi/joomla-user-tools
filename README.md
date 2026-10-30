@@ -25,7 +25,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 
 **Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
 
-La portada agrupa las herramientas en cuatro secciones, con su explicación siempre visible: **Revisar cuentas** (comparar una lista y revisar inactivos), **Grupos y niveles de acceso** (quitar de grupos, las pantallas de consulta de grupos, niveles y contenido, y el diagnóstico de accesos), **Automatización y seguimiento** (la tarea programada, con el estado de su plugin, y sus resultados) y, al final y aparte, **Eliminar cuentas**, la única marcada como «Permanente». Cada persona ve solo las herramientas que tiene permitidas, y las secciones sin ninguna desaparecen. Desde cualquier otra pantalla, el botón «Inicio de User Tools» de la barra de Joomla vuelve a la portada.
+La portada y el menú de Componentes organizan las herramientas en **Revisar cuentas**, **Grupos y niveles de acceso**, **Automatización y seguimiento** y **Eliminar y anonimizar cuentas**. Inicio muestra todas las herramientas permitidas; cada categoría abre solo las suyas. Los accesos del panel de Usuarios mantienen esa misma clasificación.
 
 **Requisitos:** Joomla 6 y PHP 8.3 o posterior. Compatible con MySQL/MariaDB y PostgreSQL.  
 **Descarga:** [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest), paquete `pkg_usertools-VERSIÓN.zip`.  
@@ -34,6 +34,7 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 ## Índice
 
 - [Instalación y actualizaciones](#instalación-y-actualizaciones)
+- [Navegación por categorías](#navegación-por-categorías)
 - [Ficha de una persona](#ficha-de-una-persona)
 - [Exportar cuentas a CSV](#exportar-cuentas-a-csv)
 - [Comparar una lista de usuarios](#comparar-una-lista-de-usuarios)
@@ -65,11 +66,28 @@ El módulo **User Tools** del panel de Usuarios ofrece accesos directos a cada h
 
 ## Instalación y actualizaciones
 
-Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) el fichero **pkg_usertools-VERSIÓN.zip** e instálalo desde Sistema → Instalar → Extensiones. El paquete instala el componente, el plugin de tareas, el módulo de administración «User Tools» y el módulo del sitio «User Tools - Grupos de usuarios». En una instalación nueva habilita el plugin «Tarea - User Tools», y la primera vez que se instala el módulo lo publica en el panel de Usuarios. Las tareas que crees empiezan siempre en modo simulación.
+Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest) el fichero **pkg_usertools-VERSIÓN.zip** e instálalo desde Sistema → Instalar → Extensiones. El paquete instala el componente, los plugins de tareas y de navegación del menú, el módulo de administración «User Tools» y el módulo del sitio «User Tools - Grupos de usuarios». En una instalación nueva habilita el plugin «Tarea - User Tools», y la primera vez que se instala el módulo lo publica en el panel de Usuarios. Las tareas que crees empiezan siempre en modo simulación.
 
 A partir de la 2026.10.3, Joomla avisa de las versiones nuevas en Sistema → Actualizar → Extensiones, como con cualquier otra extensión: el paquete declara un servidor de actualizaciones que apunta a la última release de GitHub. Para actualizar, instala el paquete nuevo encima; no desinstales el componente. Al actualizar desde versiones anteriores, las exclusiones guardadas se migran solas.
 
 El instalador comprueba las versiones mínimas, registra la extensión en el registro de acciones de usuarios y crea la plantilla de correo «User Tools: cuenta creada». Al desinstalar avisa de que los informes de tareas se conservan en la carpeta de registros.
+
+## Navegación por categorías
+
+En **Componentes → User Tools** puedes abrir **Inicio** o una de las cuatro categorías de la portada:
+
+| Categoría | Herramientas |
+|---|---|
+| Revisar cuentas | Ficha de una persona, comparar lista, exportar cuentas, revisar inactivos y deshacer bloqueos. |
+| Grupos y niveles de acceso | Añadir y quitar de grupos, mover grupos, grupos/niveles, contenido por nivel, contenido por antigüedad y diagnóstico. |
+| Automatización y seguimiento | Configuración del bloqueo automático y resultados/informes. |
+| Eliminar y anonimizar cuentas | Las dos herramientas permanentes, con sus advertencias y confirmaciones. |
+
+Cada categoría muestra sus herramientas y sus explicaciones. **Inicio** conserva la portada completa. Solo aparecen herramientas permitidas y categorías que tengan alguna disponible; esto también se aplica a los accesos del panel de Usuarios. La configuración de tareas requiere poder gestionar el programador de Joomla; ver sus resultados requiere el permiso propio de informes.
+
+Al abrir una herramienta, revisión, resultado o informe, su categoría permanece señalada en el menú. La barra ofrece **Volver a [categoría]** e **Inicio de User Tools**. Los enlaces solo abren pantallas: no ejecutan cambios y cada herramienta conserva su revisión, permisos y confirmaciones. Las direcciones antiguas siguen funcionando; una categoría desconocida se rechaza.
+
+El paquete incluye **Sistema - User Tools**, que integra el filtrado y la categoría activa con el menú de Joomla. Se habilita al instalarlo por primera vez, también al actualizar desde una versión sin ese plugin. Si después lo deshabilitas, las siguientes actualizaciones respetan tu decisión y la portada avisa. Para recuperar el filtrado y la categoría activa, habilítalo en **Sistema → Gestionar → Plugins**. Los permisos de las pantallas siguen comprobándose en el servidor.
 
 ## Ficha de una persona
 
@@ -458,9 +476,9 @@ php scripts/build.php --version=v2026.10.5 --output=dist
 php tests/verify-build.php 2026.10.5 dist
 ~~~
 
-Genera los cinco ZIP instalables (`pkg_usertools`, `com_usertools`, `plg_task_usertools`, `mod_usertools` y `mod_usertools_groups`), `SHA256SUMS.txt` y `updates.xml`. En Windows también vale `scripts\build.ps1`, que llama al mismo script.
+Genera los seis ZIP instalables (`pkg_usertools`, `com_usertools`, `plg_task_usertools`, `plg_system_usertools`, `mod_usertools` y `mod_usertools_groups`), `SHA256SUMS.txt` y `updates.xml`. En Windows también vale `scripts\build.ps1`, que llama al mismo script.
 
-Antes de publicar, actualiza el número de versión en `com_usertools.xml`, `plugins/task/usertools/usertools.xml`, `modules/mod_usertools/mod_usertools.xml`, `modules/mod_usertools_groups/mod_usertools_groups.xml`, `package/pkg_usertools.xml` y `media/joomla.asset.json` en una misma pull request. Comprueba que los seis valores coinciden, construye sin `--version`, verifica los paquetes y fusiona con CI en verde. Después crea una release en GitHub con la etiqueta **vAAAA.M.REVISIÓN** sobre el commit de `main` que contiene esa versión (Releases → Draft a new release → Choose a tag → Publish release). Crear la etiqueta no cambia los manifiestos: si no coincide con ellos, la publicación falla y reejecutar el mismo trabajo no lo corrige. GitHub Actions pasa las pruebas, genera los paquetes con esa versión en los manifiestos y los adjunta a la release junto con `SHA256SUMS.txt` y `updates.xml`. Las instalaciones existentes ven la actualización a través del servidor de actualizaciones. No se admiten sufijos de preversión.
+Antes de publicar, actualiza el número de versión en `com_usertools.xml`, `plugins/task/usertools/usertools.xml`, `plugins/system/usertools/usertools.xml`, `modules/mod_usertools/mod_usertools.xml`, `modules/mod_usertools_groups/mod_usertools_groups.xml`, `package/pkg_usertools.xml` y `media/joomla.asset.json` en una misma pull request. Comprueba que los siete valores coinciden, construye sin `--version`, verifica los paquetes y fusiona con CI en verde. Después crea una release en GitHub con la etiqueta **vAAAA.M.REVISIÓN** sobre el commit de `main` que contiene esa versión (Releases → Draft a new release → Choose a tag → Publish release). Crear la etiqueta no cambia los manifiestos: si no coincide con ellos, la publicación falla y reejecutar el mismo trabajo no lo corrige. GitHub Actions pasa las pruebas, genera los paquetes con esa versión en los manifiestos y los adjunta a la release junto con `SHA256SUMS.txt` y `updates.xml`. Las instalaciones existentes ven la actualización a través del servidor de actualizaciones. No se admiten sufijos de preversión.
 
 ## Referencias
 
