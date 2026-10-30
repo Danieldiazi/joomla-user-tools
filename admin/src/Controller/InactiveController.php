@@ -12,6 +12,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Controller;
 
 use Danieldiazi\Component\Usertools\Administrator\Model\InactiveModel;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
+use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 
 /** POST actions of the manual inactivity review. */
 class InactiveController extends DisplayController
@@ -28,7 +29,7 @@ class InactiveController extends DisplayController
             || !$identity->authorise('usertools.profile', 'com_usertools')) {
             throw new \Joomla\CMS\Access\Exception\NotAllowed(\Joomla\CMS\Language\Text::_('JERROR_ALERTNOAUTHOR'), 403);
         }
-        $this->app->setHeader('Cache-Control', 'no-store, private', true);
+        Toolkit::app()->setHeader('Cache-Control', 'no-store, private', true);
         try {
             $this->model()->reviewAccount($this->input->getInt('account', 0));
             $this->go('view=inactive&layout=review');

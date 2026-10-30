@@ -15,7 +15,7 @@ use Joomla\CMS\Session\Session;
 /** @var \Danieldiazi\Component\Usertools\Administrator\View\Profile\HtmlView $this */
 $profile = $this->profile;
 ?>
-<div class="ut-app">
+<div class="ut-app ut-profile">
   <p class="lead"><?= Text::_('COM_USERTOOLS_PROFILE_INTRO') ?></p>
   <form method="get" action="<?= Route::_('index.php') ?>" class="card ut-card" data-ut-profile-search>
     <div class="card-body">

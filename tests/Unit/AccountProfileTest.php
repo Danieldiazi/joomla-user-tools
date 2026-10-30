@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 final class AccountProfileTest extends TestCase
 {
     /** @return array<int, object> */
-    private function groups(): array
+    private function fixtureGroups(): array
     {
         $groups = [];
         foreach ([[1, 0, 'Public'], [2, 1, 'Registered'], [3, 2, 'Author'], [11, 2, 'Members'], [12, 11, 'Board'], [8, 1, 'Super Users']] as [$id, $parent, $title]) {
@@ -27,7 +27,7 @@ final class AccountProfileTest extends TestCase
             ['id' => 4, 'title' => 'Individual', 'rules' => [-41]],
             ['id' => 5, 'title' => 'Other account', 'rules' => [-42]],
         ];
-        $result = AccountProfile::levels($this->groups(), $levels, Fixtures::user(41, 'alice', [12, 3]), [1, 2, 3, 4]);
+        $result = AccountProfile::levels($this->fixtureGroups(), $levels, Fixtures::user(41, 'alice', [12, 3]), [1, 2, 3, 4]);
         $this->assertSame([1, 2, 3, 4], array_column($result, 'id'));
         $this->assertSame([['state' => 'public', 'group' => 0, 'via' => 0]], $result[0]['sources']);
         $this->assertSame([['state' => 'inherited', 'group' => 3, 'via' => 2],
@@ -41,9 +41,9 @@ final class AccountProfileTest extends TestCase
         $levels = [['id' => 1, 'title' => 'Public', 'rules' => [1]],
             ['id' => 7, 'title' => 'Restricted', 'rules' => [11]]];
         $super = Fixtures::user(41, 'root', [8], true, true);
-        $this->assertSame([1], array_column(AccountProfile::levels($this->groups(), $levels, $super, [1]), 'id'),
+        $this->assertSame([1], array_column(AccountProfile::levels($this->fixtureGroups(), $levels, $super, [1]), 'id'),
             'being a Super User does not automatically grant every viewing level');
-        $recovery = AccountProfile::levels($this->groups(), $levels, $super, [1, 7]);
+        $recovery = AccountProfile::levels($this->fixtureGroups(), $levels, $super, [1, 7]);
         $this->assertSame([['state' => 'joomla', 'group' => 0, 'via' => 0]], $recovery[1]['sources']);
     }
 

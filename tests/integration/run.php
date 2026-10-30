@@ -1438,6 +1438,7 @@ Test::check(str_contains($bulkComplete, 'data-ut-addgroups-result="added"')
 
 Test::section('Read-only account profiles');
 $profileUrl = 'index.php?option=com_usertools&view=profile';
+$profilePath = fn (string $link): string => preg_replace('#^.*?/administrator/#', '', html_entity_decode($link, ENT_QUOTES));
 $profileId = $site->addUser('profile_subject', 'Registered,Editor', '', gmdate('Y-m-d H:i:s'));
 $profileOther = $site->addUser('profile_other', 'Registered');
 $profileBackend = $site->addUser('profile_backend', 'Manager');
@@ -1503,7 +1504,7 @@ Test::check($profileCount($profilePage, 'articles', 'com_content') === 3
     && $profileCount($profilePage, 'categories', 'com_content') === 1,
     'profile counts authored articles, contacts and categories, including the trash');
 preg_match('/<a href="([^"]*option=com_content[^"]*author_id[^"]*)"/', $profilePage, $profileArticleLink);
-$profileArticles = $admin->get(html_entity_decode($profileArticleLink[1] ?? '', ENT_QUOTES));
+$profileArticles = $admin->get($profilePath($profileArticleLink[1] ?? ''));
 Test::check(str_contains($profileArticles, 'UT profile-owned'), 'article count links to Joomla with the exact author filter');
 foreach ([$profileObjectLog => 'object', $profileActorLog => 'actor', $profileBothLog => 'both'] as $logId => $role) {
     Test::check(str_contains($profilePage, 'data-ut-profile-log="' . $logId . '" data-ut-profile-role="' . $role . '"'),
@@ -1513,7 +1514,7 @@ Test::check(!str_contains($profilePage, 'data-ut-profile-log="' . $profileGroupL
 preg_match('/href="([^"]*option=com_actionlogs[^"]*id%3A' . $profileObjectLog . '[^"]*)"/', $profilePage, $profileLogLink);
 Test::check(isset($profileLogLink[1]), 'each profile action-log date links to the exact entry');
 if (isset($profileLogLink[1])) {
-    $admin->get(html_entity_decode($profileLogLink[1], ENT_QUOTES));
+    $admin->get($profilePath($profileLogLink[1]));
 }
 Test::check(str_contains($admin->get($profileUrl . '&login=' . urlencode('PROFILE_SUBJECT@EXAMPLE.TEST')),
     'data-ut-profile-account="' . $profileId . '"'), 'profile lookup accepts email case-insensitively');
@@ -1524,9 +1525,9 @@ foreach ([$site->userId(getenv('UT_ADMIN_USER') ?: 'admin'), $site->userId('supe
     Test::check(!str_contains($admin->get($profileUrl . '&account=' . $protectedId), 'data-ut-profile-action='),
         'profile never offers actions for the operator or a Super User');
 }
-$profileAction = function (string $html, string $action): string {
+$profileAction = function (string $html, string $action) use ($profilePath): string {
     preg_match('/data-ut-profile-action="' . $action . '" href="([^"]+)"/', $html, $match);
-    return html_entity_decode($match[1] ?? '', ENT_QUOTES);
+    return $profilePath($match[1] ?? '');
 };
 $prefilledGroups = $admin->get($profileAction($profilePage, 'ungroup'));
 Test::check(str_contains($prefilledGroups, 'value="profile_subject"'), 'remove-from-groups opens with the account filled in');

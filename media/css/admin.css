@@ -60,3 +60,7 @@
 .ut-home .card-text{color:var(--bs-secondary-color)}
 .ut-home .border-danger .ut-card-title [class^="icon-"]{color:var(--bs-danger)}
 .ut-home .card-text.ut-home-warning{color:var(--bs-danger-text-emphasis)}
+
+/* Account profiles keep long identities and translated actions within narrow viewports. */
+.ut-profile{overflow-wrap:anywhere}
+.ut-profile .ut-actions .btn{max-width:100%;white-space:normal}

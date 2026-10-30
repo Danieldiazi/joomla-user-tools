@@ -195,7 +195,10 @@ class InactiveModel extends BaseDatabaseModel
         return array_values(array_diff_key($matches, $active));
     }
 
-    /** @param array<string, mixed> $preview @return list<UserRecord> */
+    /**
+     * @param array<string, mixed> $preview
+     * @return list<UserRecord>
+     */
     private function accountCandidates(array $preview): array
     {
         $id = (int) $preview['account'];

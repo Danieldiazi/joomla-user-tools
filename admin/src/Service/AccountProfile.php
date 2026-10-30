@@ -55,7 +55,10 @@ final class AccountProfile
         return $result;
     }
 
-    /** @param array<string, bool> $permissions @return array<string, bool> */
+    /**
+     * @param array<string, bool> $permissions
+     * @return array<string, bool>
+     */
     public static function actions(UserRecord $account, Operator $operator, array $permissions): array
     {
         $safe = !(new Exclusions(false))->protects($account, $operator);
