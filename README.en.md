@@ -8,6 +8,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 |---|---|
 | Account profile | Reviews account identity, groups, access, content and activity, with protected links to its tools. Read only. |
 | Compare a list | Proposes blocking accounts missing from the complete list, except protected accounts, and lets you create selected new users. |
+| Export accounts to CSV | Downloads accounts, groups, dates, status and MFA with filters and optional email under its own permission. |
 | Review inactive users | Finds inactive accounts so you can select which ones to block. |
 | Anonymise accounts | Replaces the personal data of the accounts in a list, of every inactive account or of a group, without deleting them. Permanent, with a review and a typed number. Available since 2026.10.17. |
 | Delete inactive users | Lets you select and permanently delete inactive accounts. By default, only blocked accounts are listed. Available since 2026.10.5. |
@@ -34,8 +35,10 @@ The home screen groups the tools into four sections, each with its explanation a
 
 - [Installation and updates](#installation-and-updates)
 - [Account profile](#account-profile)
+- [Export accounts to CSV](#export-accounts-to-csv)
 - [Compare a user list](#compare-a-user-list)
 - [Review inactive users](#review-inactive-users)
+- [Undo blocks](#undo-blocks)
 - [Delete inactive users](#delete-inactive-users)
 - [Anonymise accounts](#anonymise-accounts)
 - [Scheduled inactivity task and reports](#scheduled-inactivity-task)
@@ -81,6 +84,11 @@ The recent log distinguishes whether the account **performed the action**, **was
 The **Remove from groups**, **Review blocking this account** and **Anonymise this account** links appear only with each tool’s own permission and when the account is not protected. They are never offered for Super Users or the operator’s own account; a non-Super User also never sees them for administrator accounts. Configured blocking and anonymisation exclusions remain in force. Group removal and anonymisation open their forms with the account filled in. Blocking opens a review of **that explicitly selected account**, even if recently active, without applying the inactivity filter. Opening any of these links does not change the account.
 
 Blocking still requires selection and confirmation, the typed count from the configured threshold and fresh checks of the account’s reviewed details, protections and operator permissions. An account that changes after review is skipped, never replaced. The block is saved through Joomla’s API, closes sessions and is audited. The profile does not itself delete, anonymise or reassign content.
+## Export accounts to CSV
+
+**Export accounts to CSV** requires the `usertools.export` permission. It supports group/descendant, status and inactivity filters; never-visited accounts may be filtered by registration date. The file contains ID, username, name, **direct group memberships with their IDs**, last visit, registration, status, pending activation (a blocked account that has never logged in and has an activation token) and whether an MFA method is configured, without exposing secrets. **Email is optional and unchecked by default**; including it creates a User Actions Log entry without logging the addresses. CSV is UTF-8 with semicolons and spreadsheet formula protection. Handle the file as personal data.
+
+![Export accounts to CSV: group, inactivity and status filters, with optional email (Spanish interface)](docs/screenshots/26-exportar-cuentas.jpg)
 
 ## Compare a user list
 
@@ -115,6 +123,16 @@ The tool does not send the Joomla user plugin's welcome email.
 
 On the home screen, choose “Review inactive accounts”. Select the number of days, whether to include users who have never logged in (using their registration date), and exclusions. Search, select only the accounts you want to suspend, and confirm. No accounts are initially selected, and “Select all” affects only rows visible through the filter. Already blocked accounts and accounts with recent sessions are skipped.
 
+## Undo blocks
+
+Since 2026.10.19, **Undo blocks** unblocks, after a review, the accounts a batch blocked. A batch is a real scheduled task run or a manual review (“Compare a user list” or “Review inactive users”) that blocked at least one account. Until now they had to be unblocked by hand, one by one, in Users.
+
+1. **Choose the batch** from the list of recent ones, or click **“Undo these blocks”** on the result of a manual review or on the report of a run.
+2. **Review**: only accounts that are **still blocked and have not changed** since the batch (same username and last visit, and not anonymised) are offered, ticked. The others are listed apart with the reason. Users who are not Super Users can never unblock accounts with administrator access.
+3. **Confirm** and, from the configured threshold on, type the number of accounts. Each account is checked again right before it is unblocked, and any that changed is skipped.
+
+Unblocking uses Joomla's User API and is written to the **User Actions Log** with the batch it undoes. It requires its own permission, *Undo blocks*. Manual batches are kept since 2026.10.19 in the usertools-batches subfolder of Joomla's logs directory, with the same protection and retention as the task reports.
+
 ## Delete inactive users
 
 On the home screen, choose “Review accounts for deletion”. This is the only tool that **deletes** accounts, and deletion cannot be undone; use the inactivity review to prevent access while preserving accounts.
@@ -135,6 +153,8 @@ Each deletion is written to the **User Actions Log** with the account ID, userna
 ## Bulk add accounts to groups
 
 Open **User Tools → Add accounts to groups** to add existing accounts to groups without removing other memberships. Enter usernames or emails and one target group, or `username;#ID` pairs on separate lines. Identify groups by `#ID` or a **full path** (for example `Public/Registered`); bare titles or duplicate paths are rejected. The preview distinguishes additions, existing memberships and exclusions. Only groups without administrator access can be assigned, and administrator accounts, Super Users and the operator are protected. Confirm and type the number of accounts. Changes use Joomla's User API, verify session closure and warn if sessions remain open or cannot be checked. Session closure can be retried from the result **without repeating memberships or their audit entries**. Every assignment is logged and large batches are resumable.
+
+![Add accounts to groups: review with the assignments to be made, the existing ones and the refused ones (Spanish interface)](docs/screenshots/25-anadir-grupos-revision.jpg)
 
 ## Anonymise accounts
 
@@ -196,7 +216,7 @@ Since 2026.10.6, the administrator **Users** dashboard (the dashboard icon next 
 - **User Tools scheduled tasks**, including mode (dry run or real), last run, result (linked to its report) and next run.
 - **Notices**: task plugin disabled or missing, no enabled task, a task stopped by the safety limit, a failed task or a report unfinished for more than an hour, tasks still in dry-run mode more than 14 days after creation and, since 2026.10.15, the [access diagnosis](#access-diagnosis) checks worth reviewing, only for users who can see it.
 
-Since 2026.10.14, the counts are shown as “Inactive accounts to review” and “Blocked accounts to review”: they are candidate accounts, not automatic actions, and each card links to its review. Each task shows its mode, the result of its last run with a link to the report, and labelled dates; if it has no next run, the module says why. When any task is a dry run, a note explains that dry runs do not change accounts. The footer shows the update time and how the cache works.
+Since 2026.10.14, the counts are shown as “Inactive accounts to review” and “Blocked accounts to review”: they are candidate accounts, not automatic actions, and each card links to its review. Each task shows its mode, the result of its last run with a link to the report, and labelled dates; if it has no next run, the module says why. When any task is a dry run, a note explains that dry runs do not change accounts. The footer shows the update time and how the cache works. Since 2026.10.17, the module also includes shortcuts to each tool you are allowed to use.
 
 Counts use the same rules as the tools, so they match what you see when opening them. They are calculated at most every **10 minutes**, and recalculated as soon as a tool or task changes accounts, or Options are saved.
 

@@ -10,6 +10,7 @@
 
 use Danieldiazi\Component\Usertools\Administrator\Model\ReportsModel;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
 
 /** @var \Danieldiazi\Component\Usertools\Administrator\View\Report\HtmlView $this */
@@ -45,6 +46,11 @@ $report  = $this->report;
     <div class="card"><div class="card-body"><strong><?= (int) ($report[$key] ?? 0) ?></strong><span><?= Text::_($label) ?></span></div></div>
   <?php endforeach; ?>
   </div>
+  <?php if (empty($report['dry_run']) && (int) ($report['blocked'] ?? 0) > 0 && $this->can('usertools.unblock')) : ?>
+  <section class="card ut-card"><div class="card-body">
+    <?= LayoutHelper::render('usertools.undo', ['batch' => 'task:' . $report['id'], 'can' => true], JPATH_ADMINISTRATOR . '/components/com_usertools/layouts') ?>
+  </div></section>
+  <?php endif; ?>
   <?php if (!empty($report['omitted_reasons'])) : ?>
   <section class="card ut-card"><div class="card-body">
     <h3 class="h5"><?= Text::_('COM_USERTOOLS_OMITTED_SUMMARY') ?></h3>

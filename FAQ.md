@@ -6,6 +6,10 @@ Dudas habituales sobre **Joomla User Tools**. Para la descripción completa de c
 
 **Índice:** [General](#general) · [Ficha de una persona](#ficha-de-una-persona) · [Comparación de listas](#comparación-de-listas) · [Altas y contraseñas](#altas-y-contraseñas) · [Inactividad y tarea programada](#inactividad-y-tarea-programada) · [Resultados e informes](#resultados-e-informes) · [Módulo de grupos en el sitio](#módulo-de-grupos-en-el-sitio) · [Quitar de grupos](#quitar-de-grupos) · [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso) · [Instalación y actualización](#instalación-y-actualización)
 
+### ¿Puedo exportar todas las cuentas con sus grupos y MFA?
+
+Sí, con **Exportar cuentas a CSV**. Se filtra por grupo, subgrupos, estado e inactividad. El correo está desactivado por defecto y su exportación se registra. El indicador MFA no revela claves ni códigos. Se necesita el permiso `usertools.export`. Consulta el [README](README.md#exportar-cuentas-a-csv).
+
 ## General
 
 ### ¿Borra usuarios?
@@ -34,7 +38,9 @@ Porque nadie la pidió: es una decisión del administrador, no una petición de 
 
 ### He bloqueado una cuenta por error, ¿cómo la recupero?
 
-Desde Joomla: **Usuarios → Gestionar**, marca la cuenta y usa la acción **Desbloquear**, o pulsa el icono de la columna «Habilitado». User Tools no deshace bloqueos automáticamente.
+Si la bloqueó User Tools, usa **Deshacer bloqueos** (desde la 2026.10.19): elige la ejecución de la tarea o la revisión manual que la bloqueó, revisa y confirma. Solo se ofrecen las cuentas que siguen bloqueadas y no han cambiado desde entonces. Detalles en el [README](README.md#deshacer-bloqueos).
+
+También puedes hacerlo desde Joomla: **Usuarios → Gestionar**, marca la cuenta y usa la acción **Desbloquear**, o pulsa el icono de la columna «Habilitado». User Tools nunca desbloquea cuentas por sí solo.
 
 ### ¿Qué cuentas no se bloquean ni se eliminan nunca?
 

@@ -88,6 +88,18 @@ final class Toolkit
         return ReportStore::forLogPath((string) $app->get('log_path', JPATH_ADMINISTRATOR . '/logs'));
     }
 
+    /** Manual block batches, kept next to the task reports so they can be undone. */
+    public static function batches(): ReportStore
+    {
+        $app = Factory::getApplication();
+        return new ReportStore(rtrim((string) $app->get('log_path', JPATH_ADMINISTRATOR . '/logs'), '/\\') . '/usertools-batches');
+    }
+
+    public static function unblocker(): AccountUnblocker
+    {
+        return new AccountUnblocker(self::users(), new ActionLogger());
+    }
+
     public static function passwords(): PasswordGenerator
     {
         return new PasswordGenerator(ComponentHelper::getParams('com_users')->toArray());

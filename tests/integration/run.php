@@ -218,11 +218,11 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['profile', 'compare', 'inactive', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
+Test::check($cards[1] === ['profile', 'compare', 'export', 'inactive', 'unblock', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 14 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 16 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -530,7 +530,8 @@ Test::check(str_contains($dashboard, 'UT integration'), 'the module lists the Us
 Test::check(str_contains($dashboard, 'aria-label="Quick links"')
     && str_contains($dashboard, 'Content by access level')
     && str_contains($dashboard, 'Content by age')
-    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=move"/', $dashboard) === 1,
+    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=move"/', $dashboard) === 1
+    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=export"/', $dashboard) === 1,
     'dashboard shortcuts are translated and not duplicated');
 Test::check(str_contains($dashboard, 'data-ut-dashboard-task=') && preg_match('/<dl\b[^>]*>\s*<div\b[^>]*>\s*<dt\b/', $dashboard) === 1,
     'tasks expose labelled dates without squeezing five table columns');
@@ -583,8 +584,9 @@ $delegateDashboard = $delegate->get($dashboardUrl);
 Test::check(!str_contains($delegateDashboard, '>Move groups</a>')
     && !str_contains($delegateDashboard, '>Anonymise accounts</a>')
     && substr_count($delegateDashboard, 'view=move') === 0
-    && substr_count($delegateDashboard, 'view=anonymize') === 0,
-    'delegate cannot see superuser or anonymization shortcuts');
+    && substr_count($delegateDashboard, 'view=anonymize') === 0
+    && substr_count($delegateDashboard, 'view=export') === 0,
+    'delegate cannot see superuser, anonymization or export shortcuts');
 
 Test::check(str_contains($delegateDashboard, 'mod-usertools') && $moduleCount($delegateDashboard, 'inactive') === null && $moduleCount($delegateDashboard, 'pending') === null && !str_contains($delegateDashboard, 'UT integration'),
     'a user without the inactivity, deletion or results permissions sees no figures or tasks');
@@ -1274,7 +1276,8 @@ $agReview = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'pa
 Test::check(substr_count($agReview, 'data-ut-addgroups-status="add"') === 3
     && str_contains($agReview, 'data-ut-addgroups-status="duplicate"')
     && str_contains($agReview, 'data-ut-addgroups-status="protected"')
-    && str_contains($agReview, 'data-ut-addgroups-status="unknown"'),
+    && str_contains($agReview, 'data-ut-addgroups-status="unknown"')
+    && (bool) preg_match('/data-ut-addgroups-summary>2 accounts will be changed\.\s*Check the reasons/', $agReview),
     'review identifies additions, duplicates, protected accounts/groups and unknown accounts');
 Test::check($groupsOf('ag_one') === $beforeOne && $groupsOf('ag_two') === $beforeTwo,
     'bulk group assignment preview makes no changes');
@@ -1307,7 +1310,8 @@ Test::check(!in_array('UT anon G', $groupsOf('ag_backend'), true)
 $again = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
     'group' => '#' . $agTarget, 'lines' => "ag_one\nag_two"], 'data-ut-addgroups-form');
 Test::check(str_contains($again, 'data-ut-addgroups-none')
-    && substr_count($again, 'data-ut-addgroups-status="existing"') === 2,
+    && substr_count($again, 'data-ut-addgroups-status="existing"') === 2
+    && (bool) preg_match('/data-ut-addgroups-summary>No account will be changed\.\s*2 assignments already existed\.\s*Check the reasons/', $again),
     'second preview detects that memberships already exist and cannot reapply them');
 $noPrivilege = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
     'group' => '#8', 'lines' => "ag_one"], 'data-ut-addgroups-form');
@@ -1436,6 +1440,141 @@ Test::check(str_contains($bulkComplete, 'data-ut-addgroups-result="added"')
     && $allAdded && !in_array('UT anon G sub', $groupsOf('ag_batch_21'), true),
     'resuming still processes all 21 original users and never applies the rejected second job');
 
+Test::section('Undo blocks');
+$unUrl = 'index.php?option=com_usertools&view=unblock';
+Test::check(str_contains($admin->get('index.php?option=com_usertools'), 'data-ut-home-card="unblock"'), 'the home page offers "Undo blocks"');
+$unBatchRef = static function (string $html, string $label): string {
+    preg_match('/<tr data-ut-unblock-batch="((?:task|manual):[0-9]{14}-[a-f0-9]{24})"><td>[^<]*' . preg_quote($label, '/') . '/', $html, $m);
+    return $m[1] ?? '';
+};
+// 1. A real scheduled task run is a batch.
+$unIds = [];
+foreach (['un_task1', 'un_task2', 'un_task3'] as $name) {
+    $unIds[$name] = $site->addUser($name, 'Registered', '', $old);
+}
+$site->q('INSERT INTO #__scheduler_tasks (asset_id, title, type, execution_rules, cron_rules, state, last_exit_code, times_executed, times_failed, locked, priority, ordering, params, note, created, created_by) VALUES (0, ?, ?, ?, ?, 1, 0, 0, 0, NULL, 0, 0, ?, ?, ?, ?)',
+    ['UT undo', 'usertools.block_inactive', json_encode(['rule-type' => 'manual']), json_encode(['type' => 'manual']), json_encode(['guard_percent' => 0] + $taskParams), '', gmdate('Y-m-d H:i:s'), $site->userId('admin')]);
+$undoTask = (int) $site->q("SELECT id FROM #__scheduler_tasks WHERE title = 'UT undo'")[0]['id'];
+$site->cli('scheduler:run --id=' . $undoTask);
+$site->q('UPDATE #__scheduler_tasks SET state = 0 WHERE id = ?', [$undoTask]);
+Test::check($site->blocked('un_task1') && $site->blocked('un_task2') && $site->blocked('un_task3'), 'the task run blocked the three accounts');
+$unList = $admin->get($unUrl);
+$taskRef = $unBatchRef($unList, 'UT undo');
+Test::check(str_starts_with($taskRef, 'task:'), 'the run is listed as a batch to undo');
+$reportPage = $admin->get('index.php?option=com_usertools&view=report&report_id=' . substr($taskRef, 5));
+Test::check(str_contains($reportPage, 'data-ut-undo-batch') && str_contains($reportPage, 'value="' . $taskRef . '"'), 'the report offers to undo its blocks');
+// Changes after the batch: one account renamed, one already unblocked by hand.
+$site->q('UPDATE #__users SET username = ? WHERE id = ?', ['un_task2_renamed', $unIds['un_task2']]);
+$site->q('UPDATE #__users SET block = 0 WHERE id = ?', [$unIds['un_task3']]);
+$unReview = $admin->submit($unUrl, ['task' => 'unblock.select', 'batch' => $taskRef], 'data-ut-unblock-batches');
+Test::check(str_contains($unReview, 'data-ut-unblock-row="' . $unIds['un_task1'] . '"')
+    && !str_contains($unReview, 'data-ut-unblock-row="' . $unIds['un_task2'] . '"')
+    && str_contains($unReview, 'data-ut-unblock-skipped="' . $unIds['un_task2'] . '"')
+    && str_contains($unReview, 'data-ut-unblock-skipped="' . $unIds['un_task3'] . '"')
+    && str_contains($unReview, 'It has changed since it was blocked') && str_contains($unReview, 'It is no longer blocked'),
+    'the review offers only accounts still blocked and unchanged, and says why the others are not');
+Test::check($site->blocked('un_task1'), 'the review changes nothing');
+// Even if the changed account is posted, the server revalidates it and skips it.
+$unDone = $admin->submit($unUrl . '&layout=review', ['task' => 'unblock.apply', 'selection_ready' => 1, 'confirm' => 1, 'confirm_count' => '2',
+    'selected' => json_encode([$unIds['un_task1'], $unIds['un_task2']])], 'data-ut-suspension-form');
+Test::check(str_contains($unDone, 'data-ut-unblocked="1"') && !$site->blocked('un_task1') && $site->blocked('un_task2_renamed'),
+    'only the unchanged account is unblocked; the changed one stays blocked');
+$unLogs = $site->q("SELECT message FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_UNBLOCKED'");
+$unMessage = json_decode((string) ($unLogs[0]['message'] ?? ''), true) ?: [];
+Test::check(count($unLogs) === 1 && ($unMessage['id'] ?? 0) == $unIds['un_task1'] && str_contains((string) ($unMessage['batch'] ?? ''), 'UT undo'),
+    'the unblock is in the User Actions Log with the batch it undoes');
+$unAgain = $admin->submit($unUrl . '&layout=review', ['task' => 'unblock.apply', 'selection_ready' => 1, 'confirm' => 1, 'confirm_count' => '1',
+    'selected' => json_encode([$unIds['un_task2']]), 'preview' => 'stale'], '<form');
+Test::check(str_contains($unAgain, 'The review expired') && $site->blocked('un_task2_renamed'), 'a review is used only once');
+// 2. A manual review is a batch too; a non Super User never unblocks backend accounts.
+$unIds['un_man'] = $site->addUser('un_man', 'Registered', '', $old);
+$unIds['un_mgr'] = $site->addUser('un_mgr', 'Manager', '', $old);
+$admin->submit('index.php?option=com_usertools&view=inactive', ['task' => 'inactive.search', 'days' => 365, 'include_never' => 0, 'protect_admins' => 0, 'excluded' => '', 'excluded_groups' => []]);
+$manualResult = $admin->submit('index.php?option=com_usertools&view=inactive&layout=review', ['task' => 'inactive.suspend', 'selection_ready' => 1, 'confirm' => 1, 'confirm_count' => '2',
+    'selected' => json_encode([$unIds['un_man'], $unIds['un_mgr']])], 'data-ut-suspension-form');
+preg_match('/name="batch" value="(manual:[0-9]{14}-[a-f0-9]{24})"/', $manualResult, $manualRef);
+Test::check($site->blocked('un_man') && $site->blocked('un_mgr') && isset($manualRef[1]), 'a manual block saves a batch and its result offers to undo it');
+$site->options(['inactive_protect_admins' => 1]);
+[$code] = $delegate->request($unUrl);
+Test::check($code === 403, 'without "Undo blocks" the delegate cannot open it (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.unblock' => ['6' => 1]])]);
+$delegateList = $delegate->get($unUrl);
+Test::check(str_contains($delegateList, 'data-ut-unblock-batch="' . ($manualRef[1] ?? '-') . '"'), 'the delegate sees the manual batch');
+$delegateReview = $delegate->submit($unUrl, ['task' => 'unblock.select', 'batch' => $manualRef[1] ?? ''], 'data-ut-unblock-batches');
+Test::check(str_contains($delegateReview, 'data-ut-unblock-row="' . $unIds['un_man'] . '"')
+    && str_contains($delegateReview, 'data-ut-unblock-skipped="' . $unIds['un_mgr'] . '"')
+    && str_contains($delegateReview, 'only a Super User can unblock it'), 'the delegate is not offered the account with administrator access');
+$delegate->submit($unUrl . '&layout=review', ['task' => 'unblock.apply', 'selection_ready' => 1, 'confirm' => 1, 'confirm_count' => '2',
+    'selected' => json_encode([$unIds['un_man'], $unIds['un_mgr']])], 'data-ut-suspension-form');
+Test::check(!$site->blocked('un_man') && $site->blocked('un_mgr'), 'the delegate unblocks the ordinary account, never the backend one');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+
+Test::section('Account CSV export and privacy');
+$exportUrl = 'index.php?option=com_usertools&view=export';
+$exportPage = $admin->get($exportUrl);
+Test::check(str_contains($exportPage, 'data-ut-accounts-export')
+    && str_contains($exportPage, 'name="email" value="1"'),
+    'account CSV export has a filter form with opt-in email');
+$xpGroup = $gid('UT anon G');
+$xpSub = $gid('UT anon G sub');
+$xpBase = $site->addUser('xp_base', 'UT anon G', '', $old);
+$xpChild = $site->addUser('xp_child', 'UT anon G sub');
+$xpOther = $site->addUser('xp_other', 'Registered', '', $old);
+$site->q('UPDATE #__users SET "block" = 1, "activation" = ? WHERE id = ?', ['test-pending-activation', $xpChild]);
+$site->q('INSERT INTO #__user_mfa ("user_id", "title", "method", "options", "created_on") VALUES (?, ?, ?, ?, ?)',
+    [$xpBase, 'Test MFA', 'totp', '{}', gmdate('Y-m-d H:i:s')]);
+$token = Client::token($exportPage);
+$csvPath = 'index.php?option=com_usertools&task=export.download&group=' . $xpGroup . '&subgroups=1&status=all&days=0&' . $token . '=1';
+[$status, $csv, $headers] = $admin->request($csvPath);
+$csvLines = preg_split('/\R/', substr($csv, 3)) ?: [];
+$csvRows = array_map(static fn (string $line): array => str_getcsv($line, ';', '"', ''), array_values(array_filter($csvLines, static fn (string $line): bool => $line !== '')));
+$csvById = [];
+foreach (array_slice($csvRows, 1) as $row) {
+    $csvById[(int) $row[0]] = $row;
+}
+Test::check($status === 200 && str_starts_with($csv, "\xEF\xBB\xBF")
+    && str_contains((string) ($headers['content-type'] ?? ''), 'text/csv')
+    && str_contains((string) ($headers['cache-control'] ?? ''), 'no-store')
+    && str_contains((string) ($headers['content-disposition'] ?? ''), 'attachment'),
+    'download is UTF-8 CSV with private no-store response headers');
+Test::check(isset($csvById[$xpBase], $csvById[$xpChild]) && !isset($csvById[$xpOther]),
+    'group with descendants exports only direct and descendant memberships');
+Test::check(count($csvRows[0] ?? []) === 9 && !str_contains($csv, '@example.test'),
+    'email column and addresses are omitted by default');
+Test::check(($csvById[$xpBase][8] ?? '') === 'Yes' && ($csvById[$xpChild][7] ?? '') === 'Yes',
+    'configured MFA and pending activation are exposed as indicators without secrets');
+[$status, $onlyGroup] = $admin->request('index.php?option=com_usertools&task=export.download&group=' . $xpGroup . '&status=all&' . $token . '=1');
+Test::check($status === 200 && str_contains($onlyGroup, 'xp_base')
+    && !str_contains($onlyGroup, 'xp_child'), 'excluding descendants only exports the chosen group');
+[$status, $inactive] = $admin->request('index.php?option=com_usertools&task=export.download&group=' . $xpGroup
+    . '&subgroups=1&days=365&include_never=0&' . $token . '=1');
+Test::check($status === 200 && str_contains($inactive, 'xp_base')
+    && !str_contains($inactive, 'xp_child'), 'inactivity filter excludes never-visited accounts by default');
+[$status, $includingNever] = $admin->request('index.php?option=com_usertools&task=export.download&group=' . $xpGroup
+    . '&subgroups=1&days=365&include_never=1&' . $token . '=1');
+Test::check($status === 200 && str_contains($includingNever, 'xp_base')
+    && !str_contains($includingNever, 'xp_child'), 'never-visited accounts use their registration date as inactivity reference');
+[$status, $withEmail] = $admin->request($csvPath . '&email=1');
+Test::check($status === 200 && str_contains($withEmail, 'xp_base@example.test')
+    && count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_EXPORT_EMAIL'")) === 1,
+    'opt-in email is exported and audited exactly once');
+[$status, $emptyGroup] = $admin->request('index.php?option=com_usertools&task=export.download&group=987654&' . $token . '=1');
+Test::check($status === 200 && !str_contains($emptyGroup, 'xp_base@example.test') && !str_starts_with($emptyGroup, "\xEF\xBB\xBF"),
+    'unknown group is refused rather than falling back to all accounts');
+[$code] = $delegate->request($exportUrl);
+Test::check($code === 403, 'delegate cannot view account export without permission');
+[$code] = $delegate->request('index.php?option=com_usertools&task=export.download&' . $token . '=1');
+Test::check($code === 403, 'direct CSV download checks the dedicated permission');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'",
+    [json_encode(['core.manage' => ['6' => 1], 'usertools.export' => ['6' => 1]])]);
+$delegatePage = $delegate->get($exportUrl);
+$delegateToken = Client::token($delegatePage);
+[$code, $delegateCsv] = $delegate->request('index.php?option=com_usertools&task=export.download&group=' . $xpGroup . '&'
+    . $delegateToken . '=1');
+Test::check($code === 200 && str_contains($delegateCsv, 'xp_base') && !str_contains($delegateCsv, '@example.test'),
+    'explicit export permission allows delegate without exposing email by default');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+$site->q('DELETE FROM #__user_mfa WHERE user_id = ?', [$xpBase]);
 Test::section('Read-only account profiles');
 $profileUrl = 'index.php?option=com_usertools&view=profile';
 $profilePath = fn (string $link): string => preg_replace('#^.*?/administrator/#', '', html_entity_decode($link, ENT_QUOTES));

@@ -6,6 +6,10 @@ Common questions about **Joomla User Tools**. For a complete description of each
 
 **Contents:** [General](#general) · [Account profile](#account-profile) · [List comparison](#list-comparison) · [Accounts and passwords](#accounts-and-passwords) · [Inactivity and scheduled tasks](#inactivity-and-scheduled-tasks) · [Results and reports](#results-and-reports) · [Groups module on the site](#groups-module-on-the-site) · [Remove from groups](#remove-from-groups) · [Groups and access levels](#groups-and-access-levels) · [Installation and updates](#installation-and-updates)
 
+### Can I export accounts with groups and MFA status?
+
+Yes. **Export accounts to CSV** supports group, descendants, status and inactivity filters. Email is off by default and its export is logged. The MFA indicator never exposes secrets. The `usertools.export` permission is required. See [README](README.en.md#export-accounts-to-csv).
+
 ## General
 
 ### Does it delete users?
@@ -34,7 +38,9 @@ Because nobody asked for one: it is the administrator's decision, not the person
 
 ### I blocked an account by mistake. How do I restore it?
 
-In Joomla, open **Users → Manage**, select the account and use **Unblock**, or click the icon in the “Enabled” column. User Tools does not automatically undo blocks.
+If User Tools blocked it, use **Undo blocks** (since 2026.10.19): choose the task run or manual review that blocked it, review and confirm. Only accounts that are still blocked and have not changed since are offered. Details in the [README](README.en.md#undo-blocks).
+
+You can also do it in Joomla: open **Users → Manage**, select the account and use **Unblock**, or click the icon in the “Enabled” column. User Tools never unblocks accounts on its own.
 
 ### Which accounts are never blocked or deleted?
 

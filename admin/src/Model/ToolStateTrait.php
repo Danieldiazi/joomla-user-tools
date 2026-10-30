@@ -10,6 +10,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Model;
 
 \defined('_JEXEC') or die;
 
+use Danieldiazi\Component\Usertools\Administrator\Service\BlockBatch;
 use Danieldiazi\Component\Usertools\Administrator\Service\Exclusions;
 use Danieldiazi\Component\Usertools\Administrator\Service\Operator;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
@@ -111,6 +112,45 @@ trait ToolStateTrait
             $result['blocked'][] = ['id' => $id, 'username' => $outcome['username']];
         } elseif ($outcome['status'] === 'error') {
             $result['errors'][] = ['username' => $outcome['username'], 'message' => $outcome['reason']];
+        }
+    }
+
+    /**
+     * Saves the accounts a manual review has just blocked, so "Undo blocks" can offer them later.
+     * Never stops the operation: without a batch, the accounts can still be unblocked in Users.
+     *
+     * @param  list<array{id: int, username: string}> $blocked
+     * @return string the batch reference, or '' if nothing was saved
+     */
+    protected function recordBatch(string $tool, string $reason, array $blocked): string
+    {
+        if (!$blocked) {
+            return '';
+        }
+        try {
+            $operator = $this->operator();
+            $records  = Toolkit::directory()->users(array_map(static fn (array $row): int => (int) $row['id'], $blocked));
+            $users    = [];
+            foreach ($blocked as $row) {
+                if (isset($records[(int) $row['id']])) {
+                    $users[] = BlockBatch::row($records[(int) $row['id']], $reason);
+                }
+            }
+            $store = Toolkit::batches();
+            $id    = $store->start([
+                'version'       => 1,
+                'kind'          => BlockBatch::KIND_MANUAL,
+                'tool'          => $tool,
+                'operator_id'   => $operator->id,
+                'operator_name' => $operator->name,
+                'started_at'    => gmdate('Y-m-d H:i:s'),
+                'blocked'       => \count($users),
+                'users'         => $users,
+            ]);
+            $store->prune(Toolkit::settings()->retentionDays());
+            return BlockBatch::reference(BlockBatch::KIND_MANUAL, $id);
+        } catch (\Throwable) {
+            return '';
         }
     }
 

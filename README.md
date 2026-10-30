@@ -8,6 +8,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 |---|---|
 | Ficha de una persona | Consulta identidad, grupos, accesos, contenido y actividad de una cuenta; ofrece enlaces protegidos a sus herramientas. Solo lectura. |
 | Comparar una lista | Propone bloquear las cuentas ausentes de la lista completa, salvo las protegidas, y permite crear los usuarios nuevos que selecciones. |
+| Exportar cuentas a CSV | Descarga las cuentas y sus grupos, fechas, estado y MFA, con filtros y correo opcional bajo un permiso propio. |
 | Revisar usuarios inactivos | Busca cuentas inactivas para que selecciones cuáles bloquear. |
 | Anonimizar cuentas | Sustituye los datos personales de las cuentas de una lista, de todas las inactivas o de un grupo, sin eliminarlas. Permanente, con revisión y número escrito. Disponible desde 2026.10.17. |
 | Eliminar usuarios inactivos | Permite seleccionar y borrar definitivamente cuentas inactivas. Por defecto lista solo las ya bloqueadas. Disponible desde 2026.10.5. |
@@ -34,8 +35,10 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 
 - [Instalación y actualizaciones](#instalación-y-actualizaciones)
 - [Ficha de una persona](#ficha-de-una-persona)
+- [Exportar cuentas a CSV](#exportar-cuentas-a-csv)
 - [Comparar una lista de usuarios](#comparar-una-lista-de-usuarios)
 - [Revisar usuarios inactivos](#revisar-usuarios-inactivos)
+- [Deshacer bloqueos](#deshacer-bloqueos)
 - [Eliminar usuarios inactivos](#eliminar-usuarios-inactivos)
 - [Anonimizar cuentas](#anonimizar-cuentas)
 - [Tarea programada e informes](#tarea-programada-por-inactividad)
@@ -81,6 +84,11 @@ El registro reciente distingue si la cuenta **realizó la acción**, **fue la af
 Los enlaces **Quitar de grupos**, **Revisar bloqueo de esta cuenta** y **Anonimizar esta cuenta** solo aparecen con el permiso de cada herramienta y si la cuenta no está protegida. Nunca se ofrecen para superusuarios ni para la propia cuenta; quien no es superusuario tampoco los ve para cuentas con acceso administrativo. Además se conservan las exclusiones configuradas de bloqueo y anonimización. Quitar de grupos y anonimizar abren sus formularios con la cuenta rellenada. El bloqueo abre una revisión de **esa cuenta expresamente elegida**, aunque tenga actividad reciente, sin aplicar el filtro de inactividad. Abrir cualquiera de esos enlaces no cambia la cuenta.
 
 Para bloquear hay que seleccionar y confirmar, escribir el número desde el umbral configurado y superar una nueva comprobación de los datos de la cuenta, sus protecciones y los permisos. Una cuenta que cambie después de la revisión se omite; nunca se sustituye por otra. El bloqueo se guarda mediante la API de Joomla, cierra las sesiones y se anota en el registro. La ficha no elimina, anonimiza ni reasigna contenido por sí misma.
+## Exportar cuentas a CSV
+
+La herramienta **Exportar cuentas a CSV** requiere el permiso `usertools.export`. Permite filtrar por grupo (y subgrupos), estado e inactividad; para las cuentas sin accesos registrados puede utilizar la fecha de alta. El archivo incluye ID, usuario, nombre, **grupos asignados directamente con su ID**, fecha de último acceso, alta, estado, activación pendiente (cuenta bloqueada que nunca ha accedido y tiene token de activación) y existencia de un método de autenticación multifactor (MFA) configurado, sin sus secretos. El **correo electrónico es opcional y viene desmarcado**; al exportarlo queda constancia en el registro de acciones, sin guardar direcciones en ese registro. El CSV es UTF-8, usa punto y coma y protege contra fórmulas al abrirlo en una hoja de cálculo. Debe custodiarse como información personal.
+
+![Exportar cuentas a CSV: filtros por grupo, inactividad y estado, con el correo opcional](docs/screenshots/26-exportar-cuentas.jpg)
 
 ## Comparar una lista de usuarios
 
@@ -115,6 +123,16 @@ La herramienta no envía el correo de bienvenida del plugin de usuarios de Jooml
 
 En la portada, «Revisar cuentas inactivas». Elige el plazo en días, si se incluyen quienes nunca accedieron (con el plazo contado desde su registro) y las exclusiones. Busca, marca solo las cuentas que quieres suspender y confirma. No hay cuentas marcadas de entrada, y «Seleccionar todos» solo afecta a las filas visibles con el filtro. Se omiten las cuentas ya bloqueadas y las que tienen una sesión reciente.
 
+## Deshacer bloqueos
+
+Desde la 2026.10.19, **Deshacer bloqueos** desbloquea de una vez las cuentas que bloqueó una tanda, tras revisarlas. Una tanda es una ejecución real de la tarea programada o una revisión manual («Comparar una lista» o «Revisar usuarios inactivos») que bloqueó alguna cuenta. Hasta ahora había que desbloquearlas a mano, una a una, en Usuarios.
+
+1. **Elige la tanda** en la lista de las más recientes, o pulsa **«Deshacer estos bloqueos»** en el resultado de una revisión manual o en el informe de una ejecución.
+2. **Revisa**: se ofrecen, marcadas, solo las cuentas que **siguen bloqueadas y no han cambiado** desde la tanda (mismo nombre de usuario y último acceso, y sin anonimizar). Las demás aparecen aparte con el motivo. Quien no es superusuario nunca puede desbloquear cuentas con acceso a la administración.
+3. **Confirma** y, a partir del umbral configurado, escribe el número de cuentas. Cada cuenta se vuelve a comprobar justo antes de desbloquearla y la que haya cambiado se omite.
+
+El desbloqueo usa la API de usuarios de Joomla y queda en el **registro de acciones de usuarios** con la tanda que deshace. Requiere el permiso propio *Deshacer bloqueos*. Las tandas manuales se guardan desde la 2026.10.19 en la subcarpeta usertools-batches de la carpeta de registros de Joomla, con la misma protección y retención que los informes de la tarea.
+
 ## Eliminar usuarios inactivos
 
 En la portada, «Revisar cuentas para eliminar». Es la única herramienta que **borra** cuentas, y el borrado no se puede deshacer; para impedir el acceso sin borrar, usa la revisión de inactivos.
@@ -135,6 +153,8 @@ Cada eliminación queda en el **registro de acciones de usuarios** con el ID, el
 ## Añadir cuentas a grupos en bloque
 
 Desde **User Tools → Añadir cuentas a grupos** se pueden añadir usuarios existentes a grupos sin eliminar sus pertenencias actuales. Introduce una lista de usuarios o correos y un grupo de destino, o pares `usuario;#ID` en líneas independientes. Los grupos se identifican por `#ID` o **ruta completa** (por ejemplo `Public/Registered`); los títulos aislados o rutas duplicadas se rechazan. La revisión muestra qué se añadiría, qué ya existe y qué se excluye. Solo se pueden asignar grupos sin acceso a administración y no se modifican administradores, superusuarios ni la cuenta del operador. Debes confirmar y escribir el número de cuentas. El guardado usa la API de Joomla, comprueba el cierre de sesiones y advierte si permanecen abiertas o no se puede verificar su cierre. Si falla el cierre, puede reintentarse desde el resultado **sin volver a asignar grupos ni duplicar registros**. Cada asignación queda registrada y las listas grandes continúan por tandas.
+
+![Añadir cuentas a grupos: revisión con las asignaciones que se harán, las que ya existían y las rechazadas](docs/screenshots/25-anadir-grupos-revision.jpg)
 
 ## Anonimizar cuentas
 
@@ -196,7 +216,7 @@ Desde la 2026.10.6, el panel **Usuarios** de la administración (el icono de pan
 - **Tareas programadas de User Tools**, con modo (simulación o real), última ejecución, resultado (enlazado con su informe) y próxima ejecución.
 - **Avisos**: plugin de tareas deshabilitado o no instalado, ninguna tarea habilitada, una tarea detenida por el límite de seguridad, fallida o con un informe sin finalizar desde hace más de una hora, una tarea que sigue en simulación más de 14 días después de crearla y, desde la 2026.10.15, las comprobaciones del [diagnóstico de accesos](#diagnóstico-de-accesos) que conviene revisar, solo para quien puede verlo.
 
-Desde la 2026.10.14, las cifras se presentan como «Inactivas para revisar» y «Bloqueadas para revisar»: son cuentas candidatas, no acciones automáticas, y cada tarjeta enlaza con su revisión. Cada tarea muestra su modo, el resultado de la última ejecución con enlace al informe y las fechas con su etiqueta; si no tiene próxima ejecución, se explica por qué. Cuando alguna tarea está en simulación, una nota recuerda que la simulación no modifica cuentas. Al pie aparecen la fecha de actualización y cómo funciona la caché.
+Desde la 2026.10.14, las cifras se presentan como «Inactivas para revisar» y «Bloqueadas para revisar»: son cuentas candidatas, no acciones automáticas, y cada tarjeta enlaza con su revisión. Cada tarea muestra su modo, el resultado de la última ejecución con enlace al informe y las fechas con su etiqueta; si no tiene próxima ejecución, se explica por qué. Cuando alguna tarea está en simulación, una nota recuerda que la simulación no modifica cuentas. Al pie aparecen la fecha de actualización y cómo funciona la caché. Desde la 2026.10.17, el módulo incluye además accesos directos a cada herramienta para la que tienes permiso.
 
 Las cifras usan exactamente las mismas reglas que las herramientas, así que coinciden con lo que verás al abrirlas. Se calculan como mucho cada **10 minutos** y se recalculan en cuanto una herramienta o una tarea cambia cuentas, o se guardan las Opciones.
 
