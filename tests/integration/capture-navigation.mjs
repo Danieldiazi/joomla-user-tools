@@ -18,7 +18,10 @@ try {
   await page.locator('button[type="submit"]').first().click();
   await page.locator('input[name="passwd"]').waitFor({ state: 'detached' });
   const home = base + '/administrator/index.php?option=com_usertools&view=home';
-  const capture = async name => page.screenshot({ path: resolve(output, name), type: 'jpeg', quality: 78, fullPage: true });
+  const capture = async name => {
+    await page.evaluate(() => document.fonts.ready);
+    return page.screenshot({ path: resolve(output, name), type: 'jpeg', quality: 78, fullPage: true });
+  };
   await page.goto(home);
   await page.locator('[data-ut-category=""]').waitFor();
   await capture('01-portada.jpg');

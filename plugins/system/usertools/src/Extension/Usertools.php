@@ -64,7 +64,8 @@ final class Usertools extends CMSPlugin implements SubscriberInterface
             // Keep category links pointing to their landing pages while marking their native path.
             if ($itemView === 'home' && !$item->hasChildren() && $active !== null && $section === $active) {
                 for ($node = $item; $node instanceof MenuItem; $node = $node->getParent()) {
-                    $node->active = true;
+                    // Joomla's native renderer uses this flag on its AllowDynamicProperties menu objects.
+                    $node->active = true; // @phpstan-ignore property.notFound (The native active flag is dynamic in Joomla 6.)
                 }
             }
         }
