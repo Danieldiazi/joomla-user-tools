@@ -7,6 +7,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Herramienta | Qué hace |
 |---|---|
 | Comparar una lista | Propone bloquear las cuentas ausentes de la lista completa, salvo las protegidas, y permite crear los usuarios nuevos que selecciones. |
+| Exportar cuentas a CSV | Descarga las cuentas y sus grupos, fechas, estado y MFA, con filtros y correo opcional bajo un permiso propio. |
 | Revisar usuarios inactivos | Busca cuentas inactivas para que selecciones cuáles bloquear. |
 | Anonimizar cuentas | Sustituye los datos personales de las cuentas de una lista, de todas las inactivas o de un grupo, sin eliminarlas. Permanente, con revisión y número escrito. Disponible desde 2026.10.17. |
 | Eliminar usuarios inactivos | Permite seleccionar y borrar definitivamente cuentas inactivas. Por defecto lista solo las ya bloqueadas. Disponible desde 2026.10.5. |
@@ -34,6 +35,7 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 - [Instalación y actualizaciones](#instalación-y-actualizaciones)
 - [Comparar una lista de usuarios](#comparar-una-lista-de-usuarios)
 - [Revisar usuarios inactivos](#revisar-usuarios-inactivos)
+- [Exportar cuentas a CSV](#exportar-cuentas-a-csv)
 - [Eliminar usuarios inactivos](#eliminar-usuarios-inactivos)
 - [Anonimizar cuentas](#anonimizar-cuentas)
 - [Tarea programada e informes](#tarea-programada-por-inactividad)
@@ -65,6 +67,10 @@ Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tool
 A partir de la 2026.10.3, Joomla avisa de las versiones nuevas en Sistema → Actualizar → Extensiones, como con cualquier otra extensión: el paquete declara un servidor de actualizaciones que apunta a la última release de GitHub. Para actualizar, instala el paquete nuevo encima; no desinstales el componente. Al actualizar desde versiones anteriores, las exclusiones guardadas se migran solas.
 
 El instalador comprueba las versiones mínimas, registra la extensión en el registro de acciones de usuarios y crea la plantilla de correo «User Tools: cuenta creada». Al desinstalar avisa de que los informes de tareas se conservan en la carpeta de registros.
+
+## Exportar cuentas a CSV
+
+La herramienta **Exportar cuentas a CSV** requiere el permiso `usertools.export`. Permite filtrar por grupo (y subgrupos), estado e inactividad; para las cuentas sin accesos registrados puede utilizar la fecha de alta. El archivo incluye ID, usuario, nombre, **grupos asignados directamente con su ID**, fecha de último acceso, alta, estado, activación pendiente y existencia de un método de autenticación multifactor (MFA) configurado, sin sus secretos. El **correo electrónico es opcional y viene desmarcado**; al exportarlo queda constancia en el registro de acciones, sin guardar direcciones en ese registro. El CSV es UTF-8, usa punto y coma y protege contra fórmulas al abrirlo en una hoja de cálculo. Debe custodiarse como información personal.
 
 ## Comparar una lista de usuarios
 

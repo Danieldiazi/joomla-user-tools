@@ -7,6 +7,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Tool | What it does |
 |---|---|
 | Compare a list | Proposes blocking accounts missing from the complete list, except protected accounts, and lets you create selected new users. |
+| Export accounts to CSV | Downloads accounts, groups, dates, status and MFA with filters and optional email under its own permission. |
 | Review inactive users | Finds inactive accounts so you can select which ones to block. |
 | Anonymise accounts | Replaces the personal data of the accounts in a list, of every inactive account or of a group, without deleting them. Permanent, with a review and a typed number. Available since 2026.10.17. |
 | Delete inactive users | Lets you select and permanently delete inactive accounts. By default, only blocked accounts are listed. Available since 2026.10.5. |
@@ -34,6 +35,7 @@ The home screen groups the tools into four sections, each with its explanation a
 - [Installation and updates](#installation-and-updates)
 - [Compare a user list](#compare-a-user-list)
 - [Review inactive users](#review-inactive-users)
+- [Export accounts to CSV](#export-accounts-to-csv)
 - [Delete inactive users](#delete-inactive-users)
 - [Anonymise accounts](#anonymise-accounts)
 - [Scheduled inactivity task and reports](#scheduled-inactivity-task)
@@ -65,6 +67,10 @@ Download **pkg_usertools-VERSION.zip** from the [latest release](https://github.
 Since 2026.10.3, Joomla notifies you of new versions under System → Update → Extensions, like any other extension: the package declares an update server pointing to the latest GitHub release. To update, install the new package over the existing installation; do not uninstall the component. Saved exclusions migrate automatically when updating from earlier versions.
 
 The installer checks minimum versions, registers the extension with the User Actions Log and creates the “User Tools: account created” mail template. On uninstall, it warns that task reports remain in the logs directory.
+
+## Export accounts to CSV
+
+**Export accounts to CSV** requires the `usertools.export` permission. It supports group/descendant, status and inactivity filters; never-visited accounts may be filtered by registration date. The file contains ID, username, name, **direct group memberships with their IDs**, last visit, registration, status, pending activation and whether an MFA method is configured, without exposing secrets. **Email is optional and unchecked by default**; including it creates a User Actions Log entry without logging the addresses. CSV is UTF-8 with semicolons and spreadsheet formula protection. Handle the file as personal data.
 
 ## Compare a user list
 
