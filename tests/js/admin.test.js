@@ -310,3 +310,20 @@ test('stylesheet: plain table wrappers hide vertical overflow, height-limited on
   }
   assert.equal(style('tall').maxHeight, '40rem');
 });
+
+test('add accounts to groups: the target group is hidden and not sent in pairs mode', async () => {
+  const doc = await load(`<form data-ut-addgroups-form>
+    <input type="radio" name="mode" value="single" checked><input type="radio" name="mode" value="pairs">
+    <div data-ut-ag-group><label for="g">Group</label><input id="g" name="group" value="#2"></div></form>`);
+  const [single, pairs] = doc.querySelectorAll('input[name="mode"]');
+  const wrapper = doc.querySelector('[data-ut-ag-group]');
+  assert.equal(wrapper.hidden, false);
+  pairs.checked = true;
+  change(pairs);
+  assert.equal(wrapper.hidden, true);
+  assert.equal(doc.getElementById('g').disabled, true, 'a hidden value is not submitted');
+  single.checked = true;
+  change(single);
+  assert.equal(wrapper.hidden, false);
+  assert.equal(doc.getElementById('g').disabled, false);
+});

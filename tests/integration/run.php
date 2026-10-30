@@ -1276,7 +1276,8 @@ $agReview = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'pa
 Test::check(substr_count($agReview, 'data-ut-addgroups-status="add"') === 3
     && str_contains($agReview, 'data-ut-addgroups-status="duplicate"')
     && str_contains($agReview, 'data-ut-addgroups-status="protected"')
-    && str_contains($agReview, 'data-ut-addgroups-status="unknown"'),
+    && str_contains($agReview, 'data-ut-addgroups-status="unknown"')
+    && (bool) preg_match('/data-ut-addgroups-summary>2 accounts will be changed\.\s*Check the reasons/', $agReview),
     'review identifies additions, duplicates, protected accounts/groups and unknown accounts');
 Test::check($groupsOf('ag_one') === $beforeOne && $groupsOf('ag_two') === $beforeTwo,
     'bulk group assignment preview makes no changes');
@@ -1309,7 +1310,8 @@ Test::check(!in_array('UT anon G', $groupsOf('ag_backend'), true)
 $again = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
     'group' => '#' . $agTarget, 'lines' => "ag_one\nag_two"], 'data-ut-addgroups-form');
 Test::check(str_contains($again, 'data-ut-addgroups-none')
-    && substr_count($again, 'data-ut-addgroups-status="existing"') === 2,
+    && substr_count($again, 'data-ut-addgroups-status="existing"') === 2
+    && (bool) preg_match('/data-ut-addgroups-summary>No account will be changed\.\s*2 assignments already existed\.\s*Check the reasons/', $again),
     'second preview detects that memberships already exist and cannot reapply them');
 $noPrivilege = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
     'group' => '#8', 'lines' => "ag_one"], 'data-ut-addgroups-form');

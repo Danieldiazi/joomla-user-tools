@@ -388,6 +388,20 @@
       start();
     });
 
+    // "Add accounts to groups": the target group field only applies to the single-group mode.
+    document.querySelectorAll('[data-ut-addgroups-form]').forEach((form) => {
+      const wrapper = form.querySelector('[data-ut-ag-group]');
+      const modes = [...form.querySelectorAll('input[name="mode"]')];
+      if (!wrapper || !modes.length) return;
+      const sync = () => {
+        const pairs = modes.some((mode) => mode.checked && mode.value === 'pairs');
+        wrapper.hidden = pairs;
+        wrapper.querySelector('input').disabled = pairs;
+      };
+      modes.forEach((mode) => mode.addEventListener('change', sync));
+      sync();
+    });
+
     document.querySelectorAll('[data-ut-copy]').forEach((button) => {
       button.addEventListener('click', async () => {
         try {

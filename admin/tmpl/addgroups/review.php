@@ -16,7 +16,10 @@ $counts = array_count_values(array_column($review['rows'], 'status'));
 <div class="ut-app">
   <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'review', 'label' => 'COM_USERTOOLS_ADDGROUPS_TITLE'], $layouts) ?>
   <h2 class="h3"><?= Text::_('COM_USERTOOLS_ADDGROUPS_REVIEW') ?></h2>
-  <p><?= Text::sprintf('COM_USERTOOLS_ADDGROUPS_REVIEW_HELP', (int) $review['count'], (int) ($counts[BulkGroupAssignments::EXISTING] ?? 0)) ?></p>
+  <?php $existing = (int) ($counts[BulkGroupAssignments::EXISTING] ?? 0); ?>
+  <p data-ut-addgroups-summary><?= Text::plural('COM_USERTOOLS_ADDGROUPS_REVIEW_ACCOUNTS', (int) $review['count']) ?>
+    <?php if ($existing > 0) : ?><?= Text::plural('COM_USERTOOLS_ADDGROUPS_REVIEW_EXISTING', $existing) ?><?php endif; ?>
+    <?= Text::_('COM_USERTOOLS_ADDGROUPS_REVIEW_CHECK') ?></p>
   <section class="card ut-card"><div class="card-body"><div class="table-responsive">
     <table class="table table-striped table-sm" id="ut-addgroups-table">
       <thead><tr><th scope="col"><?= Text::_('COM_USERTOOLS_USERNAME') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_ADDGROUPS_GROUP') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_STATE') ?></th></tr></thead>
