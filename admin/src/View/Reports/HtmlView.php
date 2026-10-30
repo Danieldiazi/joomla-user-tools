@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * @package     UserTools
+ * @copyright   Copyright (C) 2026 Danieldiazi
+ * @license     GNU General Public License version 2 or later; see LICENSE
+ */
+
 namespace Danieldiazi\Component\Usertools\Administrator\View\Reports;
 
 \defined('_JEXEC') or die;
