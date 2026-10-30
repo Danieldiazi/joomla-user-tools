@@ -8,6 +8,10 @@ These shared screenshots show the Spanish interface on Joomla 6.2.0. Each captio
 
 ![User Tools home screen grouped into sections: review accounts, groups and access levels, automation and monitoring, and delete or anonymise accounts (2026.10.19, Spanish interface)](screenshots/01-portada.jpg)
 
+![Account profile: account details, groups in their tree with the intermediate group, effective access levels and why, authored content, recent action log and links to the tools (2026.10.20, Spanish interface)](screenshots/28-ficha-persona.jpg)
+
+![Account profile: review of blocking that account, with confirmation and no inactivity filter (2026.10.20, Spanish interface)](screenshots/29-ficha-revision-bloqueo.jpg)
+
 ![Comparison: list and exclusions](screenshots/02-comparacion-lista.jpg)
 
 ![Comparison: review changes, with «tick all» and emails built from the username (2026.10.11, Spanish interface)](screenshots/03-comparacion-revision.jpg)

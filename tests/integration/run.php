@@ -222,6 +222,8 @@ Test::check($cards[1] === ['profile', 'compare', 'export', 'inactive', 'unblock'
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
+Test::check(!preg_match('/<span class="icon-(address-card)"/', $home) && str_contains($home, '<span class="icon-vcard" aria-hidden="true"></span> Account profile'),
+    'the profile card uses an icon that Joomla provides');
 Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 16 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
@@ -531,7 +533,8 @@ Test::check(str_contains($dashboard, 'aria-label="Quick links"')
     && str_contains($dashboard, 'Content by access level')
     && str_contains($dashboard, 'Content by age')
     && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=move"/', $dashboard) === 1
-    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=export"/', $dashboard) === 1,
+    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=export"/', $dashboard) === 1
+    && preg_match_all('/href="[^"]*option=com_usertools(?:&amp;|&)view=profile"/', $dashboard) === 1,
     'dashboard shortcuts are translated and not duplicated');
 Test::check(str_contains($dashboard, 'data-ut-dashboard-task=') && preg_match('/<dl\b[^>]*>\s*<div\b[^>]*>\s*<dt\b/', $dashboard) === 1,
     'tasks expose labelled dates without squeezing five table columns');

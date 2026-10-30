@@ -84,6 +84,10 @@ The recent log distinguishes whether the account **performed the action**, **was
 The **Remove from groups**, **Review blocking this account** and **Anonymise this account** links appear only with each tool’s own permission and when the account is not protected. They are never offered for Super Users or the operator’s own account; a non-Super User also never sees them for administrator accounts. Configured blocking and anonymisation exclusions remain in force. Group removal and anonymisation open their forms with the account filled in. Blocking opens a review of **that explicitly selected account**, even if recently active, without applying the inactivity filter. Opening any of these links does not change the account.
 
 Blocking still requires selection and confirmation, the typed count from the configured threshold and fresh checks of the account’s reviewed details, protections and operator permissions. An account that changes after review is skipped, never replaced. The block is saved through Joomla’s API, closes sessions and is audited. The profile does not itself delete, anonymise or reassign content.
+![Account profile: account details, groups in their tree, effective levels, authored content, recent log and available actions (Spanish interface)](docs/screenshots/28-ficha-persona.jpg)
+
+![Reviewing the block of one account from its profile (Spanish interface)](docs/screenshots/29-ficha-revision-bloqueo.jpg)
+
 ## Export accounts to CSV
 
 **Export accounts to CSV** requires the `usertools.export` permission. It supports group/descendant, status and inactivity filters; never-visited accounts may be filtered by registration date. The file contains ID, username, name, **direct group memberships with their IDs**, last visit, registration, status, pending activation (a blocked account that has never logged in and has an activation token) and whether an MFA method is configured, without exposing secrets. **Email is optional and unchecked by default**; including it creates a User Actions Log entry without logging the addresses. CSV is UTF-8 with semicolons and spreadsheet formula protection. Handle the file as personal data.

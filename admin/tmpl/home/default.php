@@ -23,7 +23,7 @@ $states = [
 // section with no card is left out. Badges carry text, never colour alone.
 $sections = [
     'accounts' => ['COM_USERTOOLS_HOME_SECTION_ACCOUNTS', 'COM_USERTOOLS_HOME_SECTION_ACCOUNTS_DESC', [
-        ['usertools.profile', 'profile', 'COM_USERTOOLS_PROFILE_TITLE', 'COM_USERTOOLS_PROFILE_HOME_DESC', 'COM_USERTOOLS_PROFILE_OPEN', 'read', 'address-card'],
+        ['usertools.profile', 'profile', 'COM_USERTOOLS_PROFILE_TITLE', 'COM_USERTOOLS_PROFILE_HOME_DESC', 'COM_USERTOOLS_PROFILE_OPEN', 'read', 'vcard'],
         ['usertools.compare', 'compare', 'COM_USERTOOLS_COMPARE_TITLE', 'COM_USERTOOLS_COMPARE_HOME_DESC', 'COM_USERTOOLS_COMPARE_START', '', 'list'],
         ['usertools.export', 'export', 'COM_USERTOOLS_EXPORT_TITLE', 'COM_USERTOOLS_EXPORT_HOME_DESC', 'COM_USERTOOLS_EXPORT_START', 'read', 'download'],
         ['usertools.inactive', 'inactive', 'COM_USERTOOLS_INACTIVE_TITLE', 'COM_USERTOOLS_INACTIVE_HOME_DESC', 'COM_USERTOOLS_INACTIVE_START', '', 'clock'],

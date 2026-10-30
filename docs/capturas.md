@@ -8,6 +8,10 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cad
 
 ![Portada de User Tools agrupada en secciones: revisar cuentas, grupos y niveles de acceso, automatización y seguimiento, y eliminar o anonimizar cuentas (2026.10.19)](screenshots/01-portada.jpg)
 
+![Ficha de una persona: datos de la cuenta, grupos en su árbol con el grupo intermedio, niveles de acceso efectivos y por qué, contenido creado, registro de acciones reciente y enlaces a las herramientas (2026.10.20)](screenshots/28-ficha-persona.jpg)
+
+![Ficha de una persona: revisión del bloqueo de esa cuenta, con confirmación y sin filtro de inactividad (2026.10.20)](screenshots/29-ficha-revision-bloqueo.jpg)
+
 ![Comparación: lista y exclusiones](screenshots/02-comparacion-lista.jpg)
 
 ![Comparación: revisión de cambios, con «marcar todas» y el correo generado a partir del nombre de usuario (2026.10.11)](screenshots/03-comparacion-revision.jpg)
