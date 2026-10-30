@@ -126,6 +126,8 @@ Each deletion is written to the **User Actions Log** with the account ID, userna
 
 Open **User Tools → Add accounts to groups** to add existing accounts to groups without removing other memberships. Enter usernames or emails and one target group, or `username;#ID` pairs on separate lines. Identify groups by `#ID` or a **full path** (for example `Public/Registered`); bare titles or duplicate paths are rejected. The preview distinguishes additions, existing memberships and exclusions. Only groups without administrator access can be assigned, and administrator accounts, Super Users and the operator are protected. Confirm and type the number of accounts. Changes use Joomla's User API, verify session closure and warn if sessions remain open or cannot be checked. Session closure can be retried from the result **without repeating memberships or their audit entries**. Every assignment is logged and large batches are resumable.
 
+![Add accounts to groups: review with the assignments to be made, the existing ones and the refused ones (Spanish interface)](docs/screenshots/25-anadir-grupos-revision.jpg)
+
 ## Anonymise accounts
 
 Since 2026.10.17, **Anonymise accounts** replaces the personal data of several accounts at once without deleting them. Joomla only does this one account at a time, from a removal request in Users → Privacy that the person has to confirm by email. It is **permanent**: it cannot be undone.
@@ -186,7 +188,7 @@ Since 2026.10.6, the administrator **Users** dashboard (the dashboard icon next 
 - **User Tools scheduled tasks**, including mode (dry run or real), last run, result (linked to its report) and next run.
 - **Notices**: task plugin disabled or missing, no enabled task, a task stopped by the safety limit, a failed task or a report unfinished for more than an hour, tasks still in dry-run mode more than 14 days after creation and, since 2026.10.15, the [access diagnosis](#access-diagnosis) checks worth reviewing, only for users who can see it.
 
-Since 2026.10.14, the counts are shown as “Inactive accounts to review” and “Blocked accounts to review”: they are candidate accounts, not automatic actions, and each card links to its review. Each task shows its mode, the result of its last run with a link to the report, and labelled dates; if it has no next run, the module says why. When any task is a dry run, a note explains that dry runs do not change accounts. The footer shows the update time and how the cache works.
+Since 2026.10.14, the counts are shown as “Inactive accounts to review” and “Blocked accounts to review”: they are candidate accounts, not automatic actions, and each card links to its review. Each task shows its mode, the result of its last run with a link to the report, and labelled dates; if it has no next run, the module says why. When any task is a dry run, a note explains that dry runs do not change accounts. The footer shows the update time and how the cache works. Since 2026.10.17, the module also includes shortcuts to each tool you are allowed to use.
 
 Counts use the same rules as the tools, so they match what you see when opening them. They are calculated at most every **10 minutes**, and recalculated as soon as a tool or task changes accounts, or Options are saved.
 

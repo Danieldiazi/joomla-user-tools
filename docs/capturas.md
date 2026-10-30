@@ -4,9 +4,9 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, la portada de 2026.10.13, la del panel de Usuarios de 2026.10.14 las de diagnóstico de accesos y contenido por antigüedad de 2026.10.15 y las de mover grupos de 2026.10.16. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, la del panel de Usuarios de 2026.10.14, las de diagnóstico de accesos y contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, y la portada y las de añadir cuentas a grupos de 2026.10.19. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
-![Portada de User Tools agrupada en secciones: revisar cuentas, grupos y niveles, automatización y eliminar cuentas (2026.10.13)](screenshots/01-portada.jpg)
+![Portada de User Tools agrupada en secciones: revisar cuentas, grupos y niveles de acceso, automatización y seguimiento, y eliminar o anonimizar cuentas (2026.10.19)](screenshots/01-portada.jpg)
 
 ![Comparación: lista y exclusiones](screenshots/02-comparacion-lista.jpg)
 
@@ -23,6 +23,10 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cad
 ![Eliminar inactivos: plazo, cuentas listadas y exclusiones (2026.10.5)](screenshots/11-eliminar-plazo.jpg)
 
 ![Eliminar inactivos: selección de cuentas y confirmación (2026.10.5)](screenshots/12-eliminar-seleccion.jpg)
+
+![Añadir cuentas a grupos: pares usuario;grupo con rutas completas (2026.10.19)](screenshots/24-anadir-grupos-lista.jpg)
+
+![Añadir cuentas a grupos: revisión con las asignaciones que se harán, una que ya existía, una cuenta protegida, un usuario inexistente y un grupo con acceso a la administración rechazado (2026.10.19)](screenshots/25-anadir-grupos-revision.jpg)
 
 ![Quitar de grupos: elegir la cuenta (2026.10.9)](screenshots/15-quitar-grupos-cuenta.jpg)
 
