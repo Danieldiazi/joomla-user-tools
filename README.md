@@ -82,6 +82,8 @@ Las herramientas que cambian cuentas o grupos tienen un **recorrido guiado** de 
 
 El instalador crea los recorridos y los actualiza en cada versión; si cambias su estado, nivel de acceso o idioma en Sistema → Recorridos guiados, se respeta. Al desinstalar se eliminan.
 
+![Recorrido guiado de «Comparar una lista»: paso que explica la lista vigente](docs/screenshots/30-recorrido-guiado.jpg)
+
 ## Ficha de una persona
 
 Desde la portada, abre **Ficha de una persona** y busca por usuario o correo electrónico, sin distinguir mayúsculas. También se puede abrir una cuenta por su ID. La consulta requiere el permiso propio `usertools.profile` y no guarda cambios en la cuenta, sus grupos ni los borradores de otras herramientas.

@@ -82,6 +82,8 @@ The tools that change accounts or groups have a Joomla **guided tour** that expl
 
 The installer creates the tours and updates them with each version; if you change their status, access level or language in System → Guided Tours, that is kept. Uninstalling removes them.
 
+![Guided tour of “Compare a list”: the step that explains the current list (Spanish interface)](docs/screenshots/30-recorrido-guiado.jpg)
+
 ## Account profile
 
 From the home screen, open **Account profile** and search by username or email address, case-insensitively. An account can also be opened by ID. This requires the dedicated `usertools.profile` permission and never saves changes to the account, its groups or other tools’ drafts.
