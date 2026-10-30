@@ -420,7 +420,7 @@ php tests/verify-build.php 2026.10.5 dist
 
 Generates the five installable ZIPs (`pkg_usertools`, `com_usertools`, `plg_task_usertools`, `mod_usertools` and `mod_usertools_groups`), `SHA256SUMS.txt` and `updates.xml`. On Windows, `scripts\build.ps1` calls the same script.
 
-To publish, create a GitHub release with a **vYYYY.M.REVISION** tag on `main` (Releases → Draft a new release → Choose a tag → Publish release). GitHub Actions runs tests, builds packages with that version in their manifests, and attaches them to the release with `SHA256SUMS.txt` and `updates.xml`. Existing installations receive updates through the update server. Prerelease suffixes are not supported.
+Before publishing, update the version number in `com_usertools.xml`, `plugins/task/usertools/usertools.xml`, `modules/mod_usertools/mod_usertools.xml`, `modules/mod_usertools_groups/mod_usertools_groups.xml`, `package/pkg_usertools.xml` and `media/joomla.asset.json` in the same pull request. Check that all six values match, build without `--version`, verify the packages and merge with green CI. Then create a GitHub release with the **vYYYY.M.REVISION** tag on the commit in `main` that contains that version (Releases → Draft a new release → Choose a tag → Publish release). Creating the tag does not change the manifests: if it does not match them, publishing fails and rerunning the same job does not fix it. GitHub Actions runs tests, builds packages with that version in their manifests, and attaches them to the release with `SHA256SUMS.txt` and `updates.xml`. Existing installations receive updates through the update server. Prerelease suffixes are not supported.
 
 ## References
 

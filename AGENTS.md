@@ -117,6 +117,11 @@ Estas referencias usan la ruta `next`, cuyo contenido puede cambiar. Contrasta s
   - `package/pkg_usertools.xml`
   - `media/joomla.asset.json`
 - No se reutiliza un número que ya tenga release.
+- **Antes de recomendar una versión o una etiqueta**: consulta las releases y etiquetas existentes y verifica la versión real del commit que se va a publicar. No basta con elegir el siguiente número.
+- **Preparar primero, etiquetar después**: actualiza los seis archivos en la misma rama y pull request, comprueba que sus valores coinciden, construye sin `--version` y ejecuta `php tests/verify-build.php VERSIÓN dist`. Fusiona la pull request con CI en verde antes de crear la etiqueta sobre ese commit de `main`.
+- **Comprobar el commit etiquetado**: `vAAAA.M.REVISIÓN` debe coincidir con los seis valores guardados en ese commit. Crear una etiqueta o pasar `--version` al constructor no actualiza los archivos del repositorio. No desactives la validación de etiquetas para publicar.
+- **Si la publicación falla por versiones distintas**: corrige los archivos mediante una pull request y comprueba el commit al que apunta la etiqueta antes de volver a publicar. Reejecutar el trabajo sobre el mismo commit incorrecto vuelve a fallar; cambiar solo el título de la release tampoco lo corrige. Conserva las etiquetas de versiones ya distribuidas.
+- **Verificar la publicación**: no des la release por terminada hasta que el trabajo haya finalizado correctamente y estén adjuntos los cinco ZIP, `SHA256SUMS.txt` y `updates.xml`, con la misma versión. Una página de release creada sin paquetes no confirma una publicación correcta.
 
 ## Pruebas
 
