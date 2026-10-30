@@ -4,7 +4,7 @@
 
 Dudas habituales sobre **Joomla User Tools**. Para la descripción completa de cada herramienta, consulta el [README](README.md).
 
-**Índice:** [General](#general) · [Comparación de listas](#comparación-de-listas) · [Altas y contraseñas](#altas-y-contraseñas) · [Inactividad y tarea programada](#inactividad-y-tarea-programada) · [Resultados e informes](#resultados-e-informes) · [Módulo de grupos en el sitio](#módulo-de-grupos-en-el-sitio) · [Quitar de grupos](#quitar-de-grupos) · [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso) · [Instalación y actualización](#instalación-y-actualización)
+**Índice:** [General](#general) · [Ficha de una persona](#ficha-de-una-persona) · [Comparación de listas](#comparación-de-listas) · [Altas y contraseñas](#altas-y-contraseñas) · [Inactividad y tarea programada](#inactividad-y-tarea-programada) · [Resultados e informes](#resultados-e-informes) · [Módulo de grupos en el sitio](#módulo-de-grupos-en-el-sitio) · [Quitar de grupos](#quitar-de-grupos) · [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso) · [Instalación y actualización](#instalación-y-actualización)
 
 ## General
 
@@ -69,6 +69,28 @@ En el **panel de Usuarios**, el módulo User Tools muestra enlaces individuales 
 ### ¿Puedo añadir muchos usuarios a grupos sin quitarles los actuales?
 
 Sí. Usa **Añadir cuentas a grupos** con lista y grupo único, o pares `usuario;#ID`. Se revisan cambios y duplicados antes de confirmar, y no se modifican administradores ni se asignan grupos con acceso a la administración. Los grupos se indican por ID o ruta completa sin ambigüedad.
+
+## Ficha de una persona
+
+### ¿Consultar una ficha cambia algo?
+
+No. Reúne los grupos, accesos, estado, fechas, contenido creado y actividad reciente de una cuenta. Buscar por usuario o correo y abrir sus enlaces no modifica cuentas. Hace falta el permiso propio `usertools.profile`.
+
+### ¿Puedo ver el registro de acciones con ese permiso?
+
+No. Joomla lo reserva a superusuarios y la ficha respeta esa restricción. Cuando puedes verlo, distingue a la cuenta como autora de la acción o como afectada, ofrece hasta 50 coincidencias entre los 1000 candidatos recientes por actor o elemento y enlaza a cada entrada. No muestra mensajes originales que pudieran contener datos privados.
+
+### ¿Por qué algunas cifras no tienen enlace al listado por autor?
+
+Joomla permite filtrar artículos por autor, pero no ofrece ese filtro en los listados de categorías y contactos. La ficha muestra sus cifras y explica esa limitación. Cuenta todos los estados, incluida la papelera, dentro de los tipos y niveles que tienes permiso para consultar.
+
+### ¿El enlace para bloquear aplica el filtro de inactividad?
+
+No: has elegido expresamente una cuenta desde su ficha. El enlace solo abre la revisión de esa cuenta y no la bloquea al pulsarlo. Hay que confirmar y escribir el número desde el umbral configurado. La cuenta se vuelve a comprobar antes de guardar; si cambió, se omite sin sustituirla por otra. Las exclusiones siguen vigentes.
+
+### ¿Por qué no aparecen enlaces para actuar sobre una cuenta?
+
+Se necesita el permiso de la herramienta correspondiente. La propia cuenta y los superusuarios nunca tienen esos enlaces; un operador sin permisos de superusuario tampoco puede actuar sobre cuentas administrativas. El bloqueo no se ofrece si la cuenta ya está bloqueada, y se respetan las exclusiones de bloqueo y anonimización. La ficha solo muestra si hay MFA configurada, nunca sus secretos, métodos ni códigos.
 
 ## Comparación de listas
 

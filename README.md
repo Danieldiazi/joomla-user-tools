@@ -6,6 +6,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 
 | Herramienta | Qué hace |
 |---|---|
+| Ficha de una persona | Consulta identidad, grupos, accesos, contenido y actividad de una cuenta; ofrece enlaces protegidos a sus herramientas. Solo lectura. |
 | Comparar una lista | Propone bloquear las cuentas ausentes de la lista completa, salvo las protegidas, y permite crear los usuarios nuevos que selecciones. |
 | Revisar usuarios inactivos | Busca cuentas inactivas para que selecciones cuáles bloquear. |
 | Anonimizar cuentas | Sustituye los datos personales de las cuentas de una lista, de todas las inactivas o de un grupo, sin eliminarlas. Permanente, con revisión y número escrito. Disponible desde 2026.10.17. |
@@ -32,6 +33,7 @@ La portada agrupa las herramientas en cuatro secciones, con su explicación siem
 ## Índice
 
 - [Instalación y actualizaciones](#instalación-y-actualizaciones)
+- [Ficha de una persona](#ficha-de-una-persona)
 - [Comparar una lista de usuarios](#comparar-una-lista-de-usuarios)
 - [Revisar usuarios inactivos](#revisar-usuarios-inactivos)
 - [Eliminar usuarios inactivos](#eliminar-usuarios-inactivos)
@@ -65,6 +67,20 @@ Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tool
 A partir de la 2026.10.3, Joomla avisa de las versiones nuevas en Sistema → Actualizar → Extensiones, como con cualquier otra extensión: el paquete declara un servidor de actualizaciones que apunta a la última release de GitHub. Para actualizar, instala el paquete nuevo encima; no desinstales el componente. Al actualizar desde versiones anteriores, las exclusiones guardadas se migran solas.
 
 El instalador comprueba las versiones mínimas, registra la extensión en el registro de acciones de usuarios y crea la plantilla de correo «User Tools: cuenta creada». Al desinstalar avisa de que los informes de tareas se conservan en la carpeta de registros.
+
+## Ficha de una persona
+
+Desde la portada, abre **Ficha de una persona** y busca por usuario o correo electrónico, sin distinguir mayúsculas. También se puede abrir una cuenta por su ID. La consulta requiere el permiso propio `usertools.profile` y no guarda cambios en la cuenta, sus grupos ni los borradores de otras herramientas.
+
+La ficha reúne identidad, estado, último acceso y alta en UTC, acceso a la administración, condición de superusuario y si hay verificación en varios pasos configurada. Nunca muestra contraseñas, secretos, métodos ni códigos de recuperación. Los grupos se presentan en su árbol: los grupos intermedios aparecen atenuados y con una indicación de que no están asignados. Los niveles de acceso efectivos son los que concede Joomla y se explica si vienen de un grupo asignado, de uno de sus antecesores o de una asignación individual.
+
+El contenido se cuenta por autor: artículos, contactos y categorías por extensión, incluidos los estados archivados y la papelera. Solo se muestran tipos que puedes gestionar y elementos de niveles accesibles para ti; los superusuarios pueden consultar todos. Los artículos enlazan al listado de Joomla filtrado por el autor. Categorías y contactos no tienen ese filtro en Joomla, por lo que se indica el límite y no se ofrece un enlace que parezca filtrar por autor.
+
+El registro reciente distingue si la cuenta **realizó la acción**, **fue la afectada** o ambas cosas. Se muestran hasta 50 coincidencias entre los 1000 candidatos recientes por actor o elemento; no es un historial exhaustivo. Cada fecha abre la entrada concreta del registro de Joomla. Esta sección conserva la restricción de Joomla a superusuarios; `usertools.profile` no concede acceso al registro. Los mensajes originales de otras extensiones no se vuelcan en la ficha.
+
+Los enlaces **Quitar de grupos**, **Revisar bloqueo de esta cuenta** y **Anonimizar esta cuenta** solo aparecen con el permiso de cada herramienta y si la cuenta no está protegida. Nunca se ofrecen para superusuarios ni para la propia cuenta; quien no es superusuario tampoco los ve para cuentas con acceso administrativo. Además se conservan las exclusiones configuradas de bloqueo y anonimización. Quitar de grupos y anonimizar abren sus formularios con la cuenta rellenada. El bloqueo abre una revisión de **esa cuenta expresamente elegida**, aunque tenga actividad reciente, sin aplicar el filtro de inactividad. Abrir cualquiera de esos enlaces no cambia la cuenta.
+
+Para bloquear hay que seleccionar y confirmar, escribir el número desde el umbral configurado y superar una nueva comprobación de los datos de la cuenta, sus protecciones y los permisos. Una cuenta que cambie después de la revisión se omite; nunca se sustituye por otra. El bloqueo se guarda mediante la API de Joomla, cierra las sesiones y se anota en el registro. La ficha no elimina, anonimiza ni reasigna contenido por sí misma.
 
 ## Comparar una lista de usuarios
 

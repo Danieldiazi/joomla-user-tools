@@ -53,7 +53,7 @@ class HtmlView extends BaseHtmlView
         } else {
             $this->setLayout('default');
         }
-        $this->prepareDocument('COM_USERTOOLS_INACTIVE');
+        $this->prepareDocument(!empty($this->review['singleAccount']) ? 'COM_USERTOOLS_PROFILE_BLOCK_HEADING' : 'COM_USERTOOLS_INACTIVE');
         parent::display($tpl);
     }
 }

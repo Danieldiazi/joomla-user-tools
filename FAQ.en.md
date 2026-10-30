@@ -4,7 +4,7 @@
 
 Common questions about **Joomla User Tools**. For a complete description of each tool, see the [README](README.en.md).
 
-**Contents:** [General](#general) · [List comparison](#list-comparison) · [Accounts and passwords](#accounts-and-passwords) · [Inactivity and scheduled tasks](#inactivity-and-scheduled-tasks) · [Results and reports](#results-and-reports) · [Groups module on the site](#groups-module-on-the-site) · [Remove from groups](#remove-from-groups) · [Groups and access levels](#groups-and-access-levels) · [Installation and updates](#installation-and-updates)
+**Contents:** [General](#general) · [Account profile](#account-profile) · [List comparison](#list-comparison) · [Accounts and passwords](#accounts-and-passwords) · [Inactivity and scheduled tasks](#inactivity-and-scheduled-tasks) · [Results and reports](#results-and-reports) · [Groups module on the site](#groups-module-on-the-site) · [Remove from groups](#remove-from-groups) · [Groups and access levels](#groups-and-access-levels) · [Installation and updates](#installation-and-updates)
 
 ## General
 
@@ -69,6 +69,28 @@ On the **Users dashboard**, the User Tools module shows individual links to the 
 ### Can I add many accounts to groups without removing current memberships?
 
 Yes. **Add accounts to groups** accepts a list and a single group, or `username;#ID` pairs. It reviews changes and duplicates before confirmation and prevents administrator account changes or assignment of backend-access groups. Use unambiguous group IDs or full paths.
+
+## Account profile
+
+### Does viewing a profile change anything?
+
+No. It brings together an account’s groups, access levels, status, dates, authored content and recent activity. Searching by username or email and opening its links never changes accounts. The dedicated `usertools.profile` permission is required.
+
+### Does that permission let me see the User Actions Log?
+
+No. Joomla restricts it to Super Users and the profile keeps that restriction. When you can view it, the profile distinguishes the account as the action’s actor or affected user, shows up to 50 matches among the 1000 recent actor/item candidates and links each entry. It does not show original message payloads that could contain private data.
+
+### Why do some counts have no author-filter link?
+
+Joomla can filter articles by author but has no such filter in its category and contact lists. The profile shows their counts and explains the limitation. It counts all states, including the trash, within the types and viewing levels you are allowed to access.
+
+### Does the block link apply the inactivity filter?
+
+No: you explicitly selected one account from its profile. The link only opens that account’s review; clicking it does not block anything. Confirmation and the typed count from the configured threshold are still required. The account is checked again before saving; if it changed, it is skipped without substitution. Exclusions remain in force.
+
+### Why are there no action links for an account?
+
+Each link needs its tool’s own permission. The operator’s own account and Super Users never have these links; a non-Super User also cannot act on administrator accounts. Blocking is not offered when the account is already blocked, and blocking and anonymisation exclusions are respected. The profile only shows whether MFA is configured, never its secrets, methods or codes.
 
 ## List comparison
 

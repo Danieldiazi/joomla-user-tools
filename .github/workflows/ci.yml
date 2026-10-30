@@ -124,6 +124,29 @@ jobs:
         run: |
           UT_URL=http://127.0.0.1:8090 UT_JOOMLA="$RUNNER_TEMP/site" UT_ADMIN_USER=admin UT_ADMIN_PASS="$ADMIN_PASS" \
             UT_MAILS="$RUNNER_TEMP/mails" php tests/integration/run.php
+      - uses: actions/setup-node@v4
+        if: matrix.database == 'mysql' && github.event_name == 'pull_request'
+        with:
+          node-version: '22'
+      - name: Capture account profiles in Joomla
+        if: matrix.database == 'mysql' && github.event_name == 'pull_request'
+        env:
+          UT_URL: http://127.0.0.1:8090
+          UT_ADMIN_USER: admin
+          UT_ADMIN_PASS: ${{ env.ADMIN_PASS }}
+          UT_SCREENSHOTS: ${{ runner.temp }}/profile-screenshots
+        run: |
+          npm install --no-save --package-lock=false --ignore-scripts playwright@1.64.1
+          npx playwright install --with-deps chromium
+          node tests/integration/capture-profile.mjs
+      - name: Upload profile screenshots
+        if: always() && matrix.database == 'mysql' && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: profile-screenshots-${{ github.sha }}
+          path: ${{ runner.temp }}/profile-screenshots/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Logs on failure
         if: failure()
         run: |

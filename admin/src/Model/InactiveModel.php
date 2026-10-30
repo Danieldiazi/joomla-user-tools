@@ -11,6 +11,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Model;
 \defined('_JEXEC') or die;
 
 use Danieldiazi\Component\Usertools\Administrator\Service\Exclusions;
+use Danieldiazi\Component\Usertools\Administrator\Service\AccountProfile;
 use Danieldiazi\Component\Usertools\Administrator\Service\InactiveSelection;
 use Danieldiazi\Component\Usertools\Administrator\Service\InactivityPolicy;
 use Danieldiazi\Component\Usertools\Administrator\Service\Operator;
@@ -28,6 +29,24 @@ class InactiveModel extends BaseDatabaseModel
     private const DRAFT   = 'com_usertools.inactive.draft';
     private const PREVIEW = 'com_usertools.inactive.preview';
     private const RESULT  = 'com_usertools.inactive.result';
+
+    /** Explicit single-account review from a profile, independent of inactivity filters. */
+    public function reviewAccount(int $id): void
+    {
+        if (!$this->identity()->authorise('usertools.profile', 'com_usertools')) {
+            throw new UserFacingException('COM_USERTOOLS_PROFILE_ACTION_UNAVAILABLE');
+        }
+        $account = Toolkit::directory()->users([$id])[$id] ?? null;
+        $exclusions = Toolkit::settings()->exclusions(Settings::INACTIVE);
+        if (!$account || $account->block !== 0 || $exclusions->protects($account, $this->operator())) {
+            throw new UserFacingException('COM_USERTOOLS_PROFILE_ACTION_UNAVAILABLE');
+        }
+        $this->session()->set(self::PREVIEW, $this->newPreview([
+            'account' => $id, 'accountState' => AccountProfile::fingerprint($account),
+            'cutoff' => '', 'includeNever' => false, 'exclusions' => $exclusions->toArray(),
+            'signature' => $this->signature($exclusions, ['account', $id]), 'ids' => [$id], 'selected' => [$id],
+        ]));
+    }
 
     /** @return array{days: int, includeNever: bool, exclusions: Exclusions} */
     public function getDraft(): array
@@ -68,30 +87,35 @@ class InactiveModel extends BaseDatabaseModel
     {
         $preview = $this->validPreview(self::PREVIEW);
         $settings = Toolkit::settings();
-        $current  = $this->signature($settings->exclusions(Settings::INACTIVE), [$settings->inactiveDays(), $settings->inactiveIncludeNever()]);
-        if ($preview && ($preview['signature'] ?? '') !== $current) {
+        $single = (int) ($preview['account'] ?? 0) > 0;
+        $current = $this->signature($settings->exclusions(Settings::INACTIVE), $single
+            ? ['account', (int) $preview['account']] : [$settings->inactiveDays(), $settings->inactiveIncludeNever()]);
+        if ($preview && (($preview['signature'] ?? '') !== $current
+            || ($single && !$this->identity()->authorise('usertools.profile', 'com_usertools')))) {
             $this->session()->set(self::PREVIEW, []);
             return null;
         }
         return $preview;
     }
 
-    /** @return array{candidates: list<UserRecord>, cutoff: string, selected: list<int>, threshold: int, nonce: string} */
+    /** @return array{candidates: list<UserRecord>, cutoff: string, selected: list<int>, threshold: int, nonce: string, singleAccount: int} */
     public function getReview(): array
     {
         $preview = $this->getPreview();
         if (!$preview) {
             throw new UserFacingException('COM_USERTOOLS_ERROR_PREVIEW_EXPIRED');
         }
-        $cutoff  = new \DateTimeImmutable($preview['cutoff'], new \DateTimeZone('UTC'));
+        $cutoff  = new \DateTimeImmutable($preview['cutoff'] ?: 'now', new \DateTimeZone('UTC'));
         $offered = array_fill_keys($preview['ids'], true);
-        $fresh   = $this->candidates(Exclusions::fromArray($preview['exclusions']), $cutoff, (bool) $preview['includeNever']);
+        $fresh = !empty($preview['account']) ? $this->accountCandidates($preview)
+            : $this->candidates(Exclusions::fromArray($preview['exclusions']), $cutoff, (bool) $preview['includeNever']);
         return [
             'candidates' => array_values(array_filter($fresh, fn (UserRecord $u) => isset($offered[$u->id]))),
             'cutoff'     => $preview['cutoff'],
             'selected'   => array_map('intval', (array) $preview['selected']),
             'threshold'  => Toolkit::settings()->confirmThreshold(),
             'nonce'      => $preview['nonce'],
+            'singleAccount' => (int) ($preview['account'] ?? 0),
         ];
     }
 
@@ -119,10 +143,12 @@ class InactiveModel extends BaseDatabaseModel
         $this->checkTypedCount(\count($selected), $input);
         $this->session()->set(self::PREVIEW, []);
         $exclusions   = Exclusions::fromArray($preview['exclusions']);
-        $cutoff       = new \DateTimeImmutable($preview['cutoff'], new \DateTimeZone('UTC'));
+        $cutoff       = new \DateTimeImmutable($preview['cutoff'] ?: 'now', new \DateTimeZone('UTC'));
         $includeNever = (bool) $preview['includeNever'];
         $operator     = $this->operator();
-        $fresh        = array_map(fn (UserRecord $u) => $u->id, $this->candidates($exclusions, $cutoff, $includeNever));
+        $single = !empty($preview['account']);
+        $fresh = array_map(fn (UserRecord $u) => $u->id, $single ? $this->accountCandidates($preview)
+            : $this->candidates($exclusions, $cutoff, $includeNever));
         $eligible     = InactiveSelection::eligibleIds($selected, $preview['ids'], $fresh);
         $result       = ['blocked' => [], 'errors' => [], 'skipped' => 0];
         $blocker      = Toolkit::blocker();
@@ -130,8 +156,10 @@ class InactiveModel extends BaseDatabaseModel
         $window       = Toolkit::sessionWindow();
         foreach ($eligible as $id) {
             $outcome = $blocker->block($id, $exclusions, $operator,
-                fn (object $user) => InactivityPolicy::eligible($user, $cutoff, $includeNever)
-                    && !$directory->withRecentSession([$id], time() - $window), 'COM_USERTOOLS_TOOL_INACTIVE');
+                fn (object $user) => $single ? AccountProfile::fingerprint($user) === $preview['accountState']
+                    : InactivityPolicy::eligible($user, $cutoff, $includeNever)
+                        && !$directory->withRecentSession([$id], time() - $window),
+                $single ? 'COM_USERTOOLS_PROFILE_TITLE' : 'COM_USERTOOLS_TOOL_INACTIVE');
             $this->collect($result, $outcome, $id);
         }
         $result['skipped'] = \count($selected) - \count($result['blocked']) - \count($result['errors']);
@@ -165,6 +193,16 @@ class InactiveModel extends BaseDatabaseModel
         }
         $active = $directory->withRecentSession(array_keys($matches), time() - Toolkit::sessionWindow());
         return array_values(array_diff_key($matches, $active));
+    }
+
+    /** @param array<string, mixed> $preview @return list<UserRecord> */
+    private function accountCandidates(array $preview): array
+    {
+        $id = (int) $preview['account'];
+        $account = Toolkit::directory()->users([$id])[$id] ?? null;
+        return $account && $account->block === 0
+            && !Exclusions::fromArray($preview['exclusions'])->protects($account, $this->operator())
+            && AccountProfile::fingerprint($account) === $preview['accountState'] ? [$account] : [];
     }
 
     /**

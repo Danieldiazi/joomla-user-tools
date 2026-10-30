@@ -20,6 +20,24 @@ class InactiveController extends DisplayController
 
     private const PERMISSION = 'usertools.inactive';
 
+    /** A profile link opens a review of exactly one account; it never blocks on GET. */
+    public function account(): void
+    {
+        $identity = $this->app->getIdentity();
+        if (!$this->checkToken('get', false) || !$identity->authorise(self::PERMISSION, 'com_usertools')
+            || !$identity->authorise('usertools.profile', 'com_usertools')) {
+            throw new \Joomla\CMS\Access\Exception\NotAllowed(\Joomla\CMS\Language\Text::_('JERROR_ALERTNOAUTHOR'), 403);
+        }
+        $this->app->setHeader('Cache-Control', 'no-store, private', true);
+        try {
+            $this->model()->reviewAccount($this->input->getInt('account', 0));
+            $this->go('view=inactive&layout=review');
+        } catch (UserFacingException $e) {
+            $this->warn($e);
+            $this->go('view=profile&account=' . $this->input->getInt('account', 0));
+        }
+    }
+
     public function search(): void
     {
         $this->guard(self::PERMISSION);
