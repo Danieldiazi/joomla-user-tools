@@ -3,6 +3,7 @@
 namespace Danieldiazi\Tests;
 
 use Danieldiazi\Component\Usertools\Administrator\Service\AccountGroupAdder;
+use Danieldiazi\Component\Usertools\Administrator\Service\AccountRegrouper;
 use Danieldiazi\Component\Usertools\Administrator\Service\ActionLogger;
 use Danieldiazi\Component\Usertools\Administrator\Service\BulkGroupAssignments as Plan;
 use Danieldiazi\Component\Usertools\Administrator\Service\Operator;
@@ -95,14 +96,61 @@ final class BulkGroupAssignmentsTest extends TestCase
         $logger = new ActionLogger(static function (array $messages, string $key) use (&$keys): void {
             $keys[] = [$key, $messages[0]['group'] ?? ''];
         });
-        $writer = new AccountGroupAdder($factory, $logger);
+        $closed = [];
+        $writer = new AccountGroupAdder($factory, $logger, static function (int $id) use (&$closed): string {
+            $closed[] = $id;
+            return AccountRegrouper::SESSIONS_CLOSED;
+        });
         $operator = new Operator(9, true, 'admin');
-        $this->assertSame(AccountGroupAdder::ADDED, $writer->add(41, 'alice', [2], [11, 12], $operator, true));
+        $this->assertSame(['status' => AccountGroupAdder::ADDED, 'sessions' => AccountRegrouper::SESSIONS_CLOSED], $writer->add(41, 'alice', [2], [11, 12], $operator, true));
         $this->assertSame([2, 11, 12], array_values($user->groups));
         $this->assertTrue($user->saved);
         $this->assertSame([['COM_USERTOOLS_ACTION_LOG_GROUP_ADDED', '#11'],
             ['COM_USERTOOLS_ACTION_LOG_GROUP_ADDED', '#12']], $keys);
-        $this->assertSame(AccountGroupAdder::CHANGED, $writer->add(41, 'alice', [2], [11], $operator, true));
+        $this->assertSame(['status' => AccountGroupAdder::CHANGED, 'sessions' => ''], $writer->add(41, 'alice', [2], [11], $operator, true));
+        $this->assertSame([41], $closed, 'session closure occurs once after the successful save only');
         $this->assertCount(2, $keys, 'stale preview never writes a duplicate audit record');
+    }
+
+    public function testSessionFailuresAreReportedWithoutReapplyingMemberships(): void
+    {
+        foreach (['open', 'unknown', 'exception'] as $scenario) {
+            $user = new class () {
+                public int $id = 41;
+                public string $username = 'alice';
+                public array $groups = [2 => 2];
+                public int $saves = 0;
+                public function authorise(string $permission): bool { return false; }
+                public function save(bool $updateOnly): bool { $this->saves++; return true; }
+            };
+            $factory = new class ($user) implements UserFactoryInterface {
+                public function __construct(private object $user) {}
+                public function loadUserById(int $id) { return $this->user; }
+                public function loadUserByUsername(string $name) { return $this->user; }
+            };
+            $logs = [];
+            $logger = new ActionLogger(static function (array $messages, string $key) use (&$logs): void {
+                $logs[] = $key;
+            });
+            $calls = 0;
+            $writer = new AccountGroupAdder($factory, $logger, static function (int $id) use ($scenario, &$calls): string {
+                $calls++;
+                if ($scenario === 'exception') {
+                    throw new \RuntimeException('session backend unavailable');
+                }
+                return $scenario;
+            });
+            $result = $writer->add(41, 'alice', [2], [11], new Operator(9, true, 'admin'), true);
+            $this->assertSame(['status' => AccountGroupAdder::ADDED,
+                'sessions' => $scenario === 'exception' ? AccountRegrouper::SESSIONS_OPEN : $scenario], $result);
+            $this->assertSame(1, $user->saves);
+            $this->assertSame(1, $calls);
+            $this->assertSame(['COM_USERTOOLS_ACTION_LOG_GROUP_ADDED'], $logs);
+            $this->assertSame(['status' => AccountGroupAdder::CHANGED, 'sessions' => ''],
+                $writer->add(41, 'alice', [2], [11], new Operator(9, true, 'admin'), true));
+            $this->assertSame(1, $user->saves, 'session problem must not trigger duplicate group writes');
+            $this->assertSame(1, $calls, 'a stale retry does not close sessions by rewriting groups');
+            $this->assertCount(1, $logs, 'membership is audited exactly once despite the session problem');
+        }
     }
 }

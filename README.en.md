@@ -118,7 +118,7 @@ Each deletion is written to the **User Actions Log** with the account ID, userna
 
 ## Bulk add accounts to groups
 
-Open **User Tools → Add accounts to groups** to add existing accounts to groups without removing other memberships. Enter usernames or emails and one target group, or `username;#ID` pairs on separate lines. Identify groups by `#ID` or a **full path** (for example `Public/Registered`); bare titles or duplicate paths are rejected. The preview distinguishes additions, existing memberships and exclusions. Only groups without administrator access can be assigned, and administrator accounts, Super Users and the operator are protected. Confirm and type the number of accounts. Changes use Joomla's User API, close sessions, log every assignment and proceed in resumable batches.
+Open **User Tools → Add accounts to groups** to add existing accounts to groups without removing other memberships. Enter usernames or emails and one target group, or `username;#ID` pairs on separate lines. Identify groups by `#ID` or a **full path** (for example `Public/Registered`); bare titles or duplicate paths are rejected. The preview distinguishes additions, existing memberships and exclusions. Only groups without administrator access can be assigned, and administrator accounts, Super Users and the operator are protected. Confirm and type the number of accounts. Changes use Joomla's User API, verify session closure and warn if sessions remain open or cannot be checked. Session closure can be retried from the result **without repeating memberships or their audit entries**. Every assignment is logged and large batches are resumable.
 
 ## Anonymise accounts
 

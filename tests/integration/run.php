@@ -1287,6 +1287,10 @@ $agDone = $admin->submit($agUrl . '&layout=review',
 for ($i = 0; $i < 15 && str_contains($agDone, 'data-ut-addgroups-next'); $i++) {
     $agDone = $admin->submit($agUrl . '&layout=progress', ['task' => 'addgroups.next'], 'data-ut-addgroups-next');
 }
+Test::check(substr_count($agDone, 'data-ut-addgroups-session="closed"') === 2
+    && !str_contains($agDone, 'data-ut-addgroups-sessions="open"')
+    && !str_contains($agDone, 'data-ut-addgroups-sessions="unknown"'),
+    'group memberships are saved and session closure is verified for each changed account');
 Test::check(str_contains($agDone, 'data-ut-addgroups-result="added"')
     && in_array('UT anon G', $groupsOf('ag_one'), true)
     && in_array('UT anon G sub', $groupsOf('ag_one'), true)
@@ -1322,6 +1326,8 @@ Test::check(substr_count($delegatedReview, 'data-ut-addgroups-status="add"') ===
     'delegated preview permits an ordinary account but never a backend account');
 $delegatedDone = $delegate->submit($agUrl . '&layout=review',
     ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-addgroups-apply');
+Test::check(str_contains($delegatedDone, 'data-ut-addgroups-session="closed"'),
+    'delegated group addition reports verified session closure');
 Test::check(str_contains($delegatedDone, 'data-ut-addgroups-result="added"')
     && in_array('UT anon G sub', $groupsOf('ag_two'), true)
     && !in_array('UT anon G sub', $groupsOf('ag_backend'), true),
