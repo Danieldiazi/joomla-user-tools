@@ -19,8 +19,8 @@ $state = [
 ][$this->pluginState];
 ?>
 <div class="ut-app ut-narrow">
-  <div class="alert alert-<?= $state[0] ?>"><?= Text::_($state[1]) ?></div>
-  <section class="card"><div class="card-body">
+  <div class="alert alert-<?= $state[0] ?>" data-ut-tour="state"><?= Text::_($state[1]) ?></div>
+  <section class="card" data-ut-tour="instructions"><div class="card-body">
     <h2 class="h4"><?= Text::_('COM_USERTOOLS_SCHEDULE_HEADING') ?></h2>
     <ol class="ut-instructions">
       <li><strong><?= Text::_('COM_USERTOOLS_SCHEDULE_STEP1') ?></strong><p><?= Text::_('COM_USERTOOLS_SCHEDULE_STEP1_DESC') ?></p>

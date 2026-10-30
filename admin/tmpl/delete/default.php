@@ -22,11 +22,11 @@ $steps   = ['setup' => 'COM_USERTOOLS_STEP_PERIOD', 'review' => 'COM_USERTOOLS_S
   <?= LayoutHelper::render('usertools.steps', ['steps' => $steps, 'current' => 'setup', 'label' => 'COM_USERTOOLS_DELETE_PROGRESS'], $layouts) ?>
   <h2 class="h3"><?= Text::_('COM_USERTOOLS_DELETE_SETUP_HEADING') ?></h2>
   <p class="lead"><?= Text::_('COM_USERTOOLS_DELETE_SETUP_INTRO') ?></p>
-  <div class="alert alert-warning"><?= Text::_('COM_USERTOOLS_DELETE_IRREVERSIBLE') ?></div>
+  <div class="alert alert-warning" data-ut-tour="warning"><?= Text::_('COM_USERTOOLS_DELETE_IRREVERSIBLE') ?></div>
   <form method="post" action="<?= Route::_('index.php?option=com_usertools&view=delete') ?>">
     <div class="row g-4">
       <div class="col-lg-6">
-        <div class="card ut-card"><div class="card-body">
+        <div class="card ut-card" data-ut-tour="period"><div class="card-body">
           <h3 class="h5"><?= Text::_('COM_USERTOOLS_PERIOD_HEADING') ?></h3>
           <label class="form-label" for="ut-days"><?= Text::_('COM_USERTOOLS_DAYS_LABEL') ?></label>
           <input class="form-control ut-count-input" id="ut-days" type="number" name="days" value="<?= (int) $this->draft['days'] ?>" min="<?= InactivityPolicy::MIN_DAYS ?>" max="<?= InactivityPolicy::MAX_DAYS ?>" required>
@@ -53,7 +53,7 @@ $steps   = ['setup' => 'COM_USERTOOLS_STEP_PERIOD', 'review' => 'COM_USERTOOLS_S
         <?= LayoutHelper::render('usertools.exclusions', ['exclusions' => $this->draft['exclusions'], 'groups' => $this->groups, 'idPrefix' => 'ut-delete', 'saveNote' => 'COM_USERTOOLS_EXCLUSIONS_SAVED_ON_SEARCH', 'title' => 'COM_USERTOOLS_EXCLUSIONS_DELETE_TITLE'], $layouts) ?>
       </div>
     </div>
-    <div class="ut-actions">
+    <div class="ut-actions" data-ut-tour="actions">
       <a class="btn btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools') ?>"><?= Text::_('JCANCEL') ?></a>
       <button class="btn btn-primary" name="task" value="delete.search"><?= Text::_('COM_USERTOOLS_SEARCH_INACTIVE') ?></button>
     </div>

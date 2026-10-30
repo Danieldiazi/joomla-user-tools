@@ -68,6 +68,14 @@ Yes. Review screens use JavaScript to manage checkboxes and submit selections.
 
 Automated tests cover lists of 1,800 users. Review selections are submitted in a single JSON field to avoid PHP's `max_input_vars` limit on large lists.
 
+### Are there guided tours of the tools?
+
+Yes, of the ones that change accounts or groups. Open them with the **Guided tour** button, next to Help, on the first screen of each one; they only explain and apply nothing. Details in the [README](README.en.md#guided-tours).
+
+### Why does “Show all tours” list tours of tools I cannot use?
+
+Joomla only restricts tours by access level, not by each tool's permissions, so that list shows every User Tools tour to anyone who can open the component. Following one grants no access: the screen responds with a permission error. To hide them, change their access level or unpublish them in System → Guided Tours; updates keep that.
+
 ### Where are the shortcuts to each tool?
 
 On the **Users dashboard**, the User Tools module shows individual links to the tools you are allowed to use, alongside its indicators and the link to open the full component.

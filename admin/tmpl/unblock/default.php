@@ -20,8 +20,8 @@ $layouts = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
   <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'setup', 'label' => 'COM_USERTOOLS_UNBLOCK_PROGRESS'], $layouts) ?>
   <h2 class="h3"><?= Text::_('COM_USERTOOLS_UNBLOCK_CHOOSE') ?></h2>
   <p class="lead"><?= Text::_('COM_USERTOOLS_UNBLOCK_INTRO') ?></p>
-  <div class="alert alert-info"><?= Text::_('COM_USERTOOLS_UNBLOCK_RULES') ?></div>
-  <section class="card ut-card"><div class="card-body">
+  <div class="alert alert-info" data-ut-tour="rules"><?= Text::_('COM_USERTOOLS_UNBLOCK_RULES') ?></div>
+  <section class="card ut-card" data-ut-tour="batches"><div class="card-body">
   <?php if ($this->batches) : ?>
     <div class="ut-table-scroll"><table class="table table-sm table-striped" data-ut-unblock-batches><thead><tr>
       <th scope="col"><?= Text::_('COM_USERTOOLS_UNBLOCK_BATCH') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_UNBLOCK_BLOCKED_COUNT') ?></th><th scope="col"><span class="visually-hidden"><?= Text::_('COM_USERTOOLS_UNBLOCK_ACTION') ?></span></th></tr></thead><tbody>

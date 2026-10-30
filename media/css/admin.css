@@ -66,3 +66,5 @@
 /* Account profiles keep long identities and translated actions within narrow viewports. */
 .ut-profile{overflow-wrap:anywhere}
 .ut-profile .ut-actions .btn{max-width:100%;white-space:normal}
+/* Joomla's tours script only reacts to clicks on the button itself, not on its icon. */
+.button-start-guidedtour>[class^="icon-"]{pointer-events:none}
