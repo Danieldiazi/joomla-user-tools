@@ -36,6 +36,9 @@ class AddgroupsModel extends BaseDatabaseModel
     /** @param array<string, mixed> $input */
     public function preview(array $input): void
     {
+        if ($this->getJob()) {
+            throw new UserFacingException('COM_USERTOOLS_ERROR_JOB_PENDING');
+        }
         $mode = (string) ($input['mode'] ?? 'single');
         $lines = trim((string) ($input['lines'] ?? ''));
         $group = trim((string) ($input['group'] ?? ''));
@@ -81,6 +84,9 @@ class AddgroupsModel extends BaseDatabaseModel
     public function apply(array $input): bool
     {
         $p = $this->getReview();
+        if ($this->getJob()) {
+            throw new UserFacingException('COM_USERTOOLS_ERROR_JOB_PENDING');
+        }
         if (!hash_equals((string) $p['nonce'], (string) ($input['preview'] ?? ''))
             || (int) ($input['confirm'] ?? 0) !== 1) {
             throw new UserFacingException('COM_USERTOOLS_ERROR_PREVIEW_EXPIRED');
