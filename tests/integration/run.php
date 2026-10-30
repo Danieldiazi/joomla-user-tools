@@ -1718,6 +1718,13 @@ $admin->submit('index.php?option=com_usertools&view=inactive&layout=review',
     ['task' => 'inactive.suspend', 'selection_ready' => 1, 'selected' => json_encode([$profileId]), 'confirm' => 1, 'confirm_count' => '1'], 'data-ut-suspension-form');
 Test::check(!$site->blocked('profile_subject') && !$site->blocked('profile_other'),
     'a single-account block skips a changed account and never substitutes another');
+// A Super User may "manage" an uninstalled component: a missing content table must not break the profile.
+$site->q('ALTER TABLE #__contact_details RENAME TO #__contact_details_off');
+$noContacts = $admin->get($profileUrl . '&account=' . $profileId);
+$site->q('ALTER TABLE #__contact_details_off RENAME TO #__contact_details');
+Test::check(str_contains($noContacts, 'data-ut-profile-account') && !str_contains($noContacts, 'data-ut-profile-content="contacts"')
+    && str_contains($noContacts, 'data-ut-profile-content="articles"'),
+    'a content table that does not exist is left out instead of breaking the profile');
 $profilePage = $admin->get($profileUrl . '&account=' . $profileId);
 $admin->get($profileAction($profilePage, 'block'));
 $refusedSingle = $admin->submit('index.php?option=com_usertools&view=inactive&layout=review',

@@ -38,8 +38,11 @@ final class AccountProfileReader
     {
         $db = $this->db;
         $result = [];
+        // A Super User passes core.manage even for an uninstalled component: only query tables that exist.
+        $existing = array_flip(array_map('strval', $db->getTableList()));
+        $prefix = $db->getPrefix();
         foreach (['articles' => ['#__content', 'com_content'], 'contacts' => ['#__contact_details', 'com_contact']] as $kind => [$table, $component]) {
-            if (!$canManage($component)) {
+            if (!isset($existing[str_replace('#__', $prefix, $table)]) || !$canManage($component)) {
                 continue;
             }
             $query = $db->createQuery()->select('COUNT(*)')->from($db->quoteName($table, 'a'))
