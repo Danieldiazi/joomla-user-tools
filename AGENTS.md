@@ -7,6 +7,7 @@ Guía para agentes de código (Copilot, Codex, Claude y similares) y para cualqu
 User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y PostgreSQL) que gestiona cuentas de usuario. Tiene siete herramientas y cuatro pantallas de consulta:
 
 - **Comparar una lista**: bloquea las cuentas que no están en una lista vigente y da de alta las nuevas.
+- **Exportar cuentas a CSV**: solo lectura, permiso `usertools.export`, token GET y `Cache-Control: no-store`. `ExportModel` carga cuentas y grupos con `UserDirectory`, flags de activación/MFA con `AccountExportReader` (consultas globales, sin N+1), filtra con `AccountExport` y genera `CsvExport` seguro frente a fórmulas. El correo no se incluye por defecto; si se solicita, se registra la acción sin almacenar las direcciones.
 - **Revisar usuarios inactivos**: bloquea las cuentas seleccionadas.
 - **Eliminar usuarios inactivos**: borra las cuentas seleccionadas.
 - **Anonimizar cuentas**: sustituye los datos personales de las cuentas elegidas por lista, inactividad o grupo, sin eliminarlas. Usa los eventos de privacidad de Joomla (`onPrivacyCanRemoveData`/`onPrivacyRemoveData`) con una solicitud sin guardar, y borra además perfil, notas y valores de campos personalizados. La lógica está en `AnonymizeSelection` y la escritura en `AccountAnonymizer`; permiso `usertools.anonymize`.
