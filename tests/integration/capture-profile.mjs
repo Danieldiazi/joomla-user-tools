@@ -32,9 +32,19 @@ try {
   if (!blockLink) throw new Error('The demo account needs a block-review link');
   await page.screenshot({ path: resolve(output, '24-ficha-persona.jpg'), type: 'jpeg', quality: 82, fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
-  const fits = await page.locator('.ut-app').evaluate(el => el.scrollWidth <= el.clientWidth + 1);
-  if (!fits) throw new Error('The profile overflows its narrow layout');
+  const layout = await page.evaluate(() => {
+    const app = document.querySelector('.ut-app');
+    return { viewport: innerWidth, documentWidth: document.documentElement.scrollWidth,
+      appWidth: app.clientWidth, appScrollWidth: app.scrollWidth,
+      outsideViewport: [...app.querySelectorAll('*')].filter(el => !el.closest('.ut-table-scroll')).map(el => {
+        const box = el.getBoundingClientRect();
+        return { tag: el.tagName, className: el.className, left: box.left, right: box.right };
+      }).filter(box => box.left < -1 || box.right > innerWidth + 1).slice(0,20) };
+  });
+  const fits = layout.documentWidth <= layout.viewport + 1;
+  await writeFile(resolve(output, 'layout.json'), JSON.stringify(layout, null, 2));
   await page.screenshot({ path: resolve(output, 'profile-mobile.png'), fullPage: true });
+  if (!fits) throw new Error('The profile overflows the narrow viewport');
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
   await page.screenshot({ path: resolve(output, 'profile-large-text.png'), fullPage: true });

@@ -55,8 +55,10 @@ class HtmlView extends BaseHtmlView
         if (!preg_match('/^com_[a-z0-9_]+$/D', $component)) {
             return Text::_('COM_USERTOOLS_PROFILE_OTHER_SOURCE');
         }
-        Toolkit::app()->getLanguage()->load($component . '.sys', JPATH_ADMINISTRATOR);
-        return Text::_(strtoupper($component));
+        $language = Toolkit::app()->getLanguage();
+        $language->load($component . '.sys', JPATH_ADMINISTRATOR);
+        $key = strtoupper($component);
+        return $language->hasKey($key) ? Text::_($key) : Text::_('COM_USERTOOLS_PROFILE_OTHER_SOURCE');
     }
 
     public function groupTitle(int $id): string
