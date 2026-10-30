@@ -1334,5 +1334,34 @@ Test::check(str_contains($delegatedDone, 'data-ut-addgroups-result="added"')
     'delegated group assignment uses the same protection at write time');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
+// A second assignment must not replace the pending accounts and checkpoint of a >20-account job.
+$bulkNames = [];
+for ($n = 1; $n <= 21; $n++) {
+    $name = sprintf('ag_batch_%02d', $n);
+    $bulkNames[] = $name;
+    $site->addUser($name, 'Registered');
+}
+$admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+    'group' => '#' . $agTarget, 'lines' => implode("\n", $bulkNames)], 'data-ut-addgroups-form');
+$bulkProgress = $admin->submit($agUrl . '&layout=review',
+    ['task' => 'addgroups.apply', 'confirm' => 1, 'confirm_count' => '21'], 'data-ut-addgroups-apply');
+Test::check(str_contains($bulkProgress, 'data-ut-addgroups-next'),
+    'group assignment of 21 accounts leaves a resumable batch');
+$blockedSecond = $admin->submit($agUrl, ['task' => 'addgroups.preview', 'mode' => 'single',
+    'group' => '#' . $agChild, 'lines' => "ag_batch_21"], 'data-ut-addgroups-form');
+Test::check(str_contains($blockedSecond, 'data-ut-addgroups-next')
+    && !in_array('UT anon G', $groupsOf('ag_batch_21'), true)
+    && !in_array('UT anon G sub', $groupsOf('ag_batch_21'), true),
+    'starting another assignment redirects to original pending job instead of replacing it');
+$bulkComplete = $admin->submit($agUrl . '&layout=progress',
+    ['task' => 'addgroups.next'], 'data-ut-addgroups-next');
+$allAdded = true;
+foreach ($bulkNames as $name) {
+    $allAdded = $allAdded && in_array('UT anon G', $groupsOf($name), true);
+}
+Test::check(str_contains($bulkComplete, 'data-ut-addgroups-result="added"')
+    && $allAdded && !in_array('UT anon G sub', $groupsOf('ag_batch_21'), true),
+    'resuming still processes all 21 original users and never applies the rejected second job');
+
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);
