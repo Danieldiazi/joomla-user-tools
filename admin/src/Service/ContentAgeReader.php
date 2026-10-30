@@ -24,12 +24,25 @@ final class ContentAgeReader
     private const TRASHED = -2;
 
     /**
-     * Kinds of item: table, columns and the screens to open. Only articles for now; more kinds with a
-     * modification date (categories, contacts, news feeds) can be added here.
+     * Kinds of item with a creation and a modification date: table, columns, the component that
+     * manages them and the screens to open. A new kind is declared here and nowhere else. Modules,
+     * menu items and plugins are left out on purpose: Joomla stores no modification date for them.
+     * `category` is the column joined to #__categories (the parent, for categories themselves) and
+     * `scope` limits the rows of a shared table.
      */
     public const KINDS = [
-        'articles' => ['table' => '#__content', 'state' => 'state', 'category' => 'catid', 'label' => 'COM_USERTOOLS_USAGE_ARTICLES', 'asset' => 'com_content',
+        'articles' => ['table' => '#__content', 'title' => 'title', 'state' => 'state', 'category' => 'catid', 'created' => 'created', 'modified' => 'modified',
+            'author' => 'created_by', 'label' => 'COM_USERTOOLS_USAGE_ARTICLES', 'asset' => 'com_content',
             'item' => 'com_content.article.{id}', 'edit' => 'index.php?option=com_content&task=article.edit&id={id}'],
+        'categories' => ['table' => '#__categories', 'title' => 'title', 'state' => 'published', 'category' => 'parent_id', 'created' => 'created_time', 'modified' => 'modified_time',
+            'author' => 'created_user_id', 'scope' => ['extension', 'com_content'], 'label' => 'COM_USERTOOLS_AGE_KIND_CATEGORIES', 'categoryLabel' => 'COM_USERTOOLS_AGE_PARENT_CATEGORY', 'asset' => 'com_content',
+            'item' => 'com_content.category.{id}', 'edit' => 'index.php?option=com_categories&task=category.edit&id={id}&extension=com_content'],
+        'contacts' => ['table' => '#__contact_details', 'title' => 'name', 'state' => 'published', 'category' => 'catid', 'created' => 'created', 'modified' => 'modified',
+            'author' => 'created_by', 'label' => 'COM_USERTOOLS_USAGE_CONTACTS', 'asset' => 'com_contact',
+            'item' => 'com_contact.contact.{id}', 'edit' => 'index.php?option=com_contact&task=contact.edit&id={id}'],
+        'newsfeeds' => ['table' => '#__newsfeeds', 'title' => 'name', 'state' => 'published', 'category' => 'catid', 'created' => 'created', 'modified' => 'modified',
+            'author' => 'created_by', 'label' => 'COM_USERTOOLS_USAGE_NEWSFEEDS', 'asset' => 'com_newsfeeds',
+            'item' => 'com_newsfeeds.newsfeed.{id}', 'edit' => 'index.php?option=com_newsfeeds&task=newsfeed.edit&id={id}'],
     ];
 
     /** @param list<int>|null $viewLevels allowed viewing levels; null only for a global Super User */
@@ -53,7 +66,7 @@ final class ContentAgeReader
     public function counts(string $kind, int $level = 0): array
     {
         $db    = $this->db;
-        $year  = 'EXTRACT(YEAR FROM ' . $this->dateColumn() . ')';
+        $year  = 'EXTRACT(YEAR FROM ' . $this->dateColumn($kind) . ')';
         $query = $this->base($kind, $level)
             ->select([$year . ' AS ' . $db->quoteName('yr'), 'COUNT(*) AS ' . $db->quoteName('total')])
             ->group($year);
@@ -67,7 +80,7 @@ final class ContentAgeReader
     /** Number of items last modified in a year. */
     public function count(string $kind, int $year, int $level = 0): int
     {
-        $query = $this->inYear($this->base($kind, $level), $year)->select('COUNT(*)');
+        $query = $this->inYear($this->base($kind, $level), $kind, $year)->select('COUNT(*)');
         return (int) $this->db->setQuery($query)->loadResult();
     }
 
@@ -80,21 +93,23 @@ final class ContentAgeReader
     {
         $db     = $this->db;
         $source = self::KINDS[$kind];
-        $query  = $this->inYear($this->base($kind, $level), $year)
+        $query  = $this->inYear($this->base($kind, $level), $kind, $year)
             ->select([
-                $db->quoteName('a.id'), $db->quoteName('a.created_by'), $db->quoteName('a.title'), $db->quoteName('a.access'), $db->quoteName('a.created'), $db->quoteName('a.modified'),
-                $db->quoteName('a.' . $source['state'], 'state'), $db->quoteName('c.title', 'category'), $db->quoteName('u.name', 'author'),
-                $db->quoteName('l.title', 'level'),
+                $db->quoteName('a.id'), $db->quoteName('a.' . $source['author'], 'created_by'), $db->quoteName('a.' . $source['title'], 'title'), $db->quoteName('a.access'),
+                $db->quoteName('a.' . $source['created'], 'created'), $db->quoteName('a.' . $source['modified'], 'modified'),
+                $db->quoteName('a.' . $source['state'], 'state'), $db->quoteName('c.title', 'category'), $db->quoteName('c.parent_id', 'category_parent'),
+                $db->quoteName('u.name', 'author'), $db->quoteName('l.title', 'level'),
             ])
-            ->join('LEFT', $db->quoteName('#__users', 'u'), $db->quoteName('u.id') . ' = ' . $db->quoteName('a.created_by'))
+            ->join('LEFT', $db->quoteName('#__users', 'u'), $db->quoteName('u.id') . ' = ' . $db->quoteName('a.' . $source['author']))
             ->join('LEFT', $db->quoteName('#__viewlevels', 'l'), $db->quoteName('l.id') . ' = ' . $db->quoteName('a.access'))
-            ->order([$this->dateColumn(), $db->quoteName('a.id')]);
+            ->order([$this->dateColumn($kind), $db->quoteName('a.id')]);
         $items = [];
         foreach ($db->setQuery($query, $offset, $limit)->loadObjectList() as $row) {
             $items[] = [
                 'id'       => (int) $row->id,
                 'title'    => (string) $row->title,
-                'category' => (string) ($row->category ?? ''),
+                // A top-level category hangs from Joomla's hidden root: it has no parent to show.
+                'category' => (int) ($row->category_parent ?? 0) === 0 ? '' : (string) ($row->category ?? ''),
                 'level'    => (string) ($row->level ?? ''),
                 'access'   => (int) $row->access,
                 'author'   => (string) ($row->author ?? ''),
@@ -107,10 +122,11 @@ final class ContentAgeReader
         return $items;
     }
 
-    private function dateColumn(): string
+    private function dateColumn(string $kind): string
     {
-        $db = $this->db;
-        return 'COALESCE(' . $db->quoteName('a.modified') . ', ' . $db->quoteName('a.created') . ')';
+        $db     = $this->db;
+        $source = self::KINDS[$kind];
+        return 'COALESCE(' . $db->quoteName('a.' . $source['modified']) . ', ' . $db->quoteName('a.' . $source['created']) . ')';
     }
 
     private function base(string $kind, int $level): QueryInterface
@@ -126,6 +142,10 @@ final class ContentAgeReader
             ->join('LEFT', $db->quoteName('#__categories', 'c'), $db->quoteName('c.id') . ' = ' . $db->quoteName('a.' . $source['category']))
             ->where($db->quoteName('a.' . $source['state']) . ' <> :trashed')
             ->bind(':trashed', $trashed, ParameterType::INTEGER);
+        if (isset($source['scope'])) {
+            [$column, $value] = $source['scope'];
+            $query->where($db->quoteName('a.' . $column) . ' = :scope')->bind(':scope', $value);
+        }
         // Match Joomla's administrator article list: component access does not grant access to
         // every article or category. Keep the same scope for counts, pages and CSV exports.
         if ($this->viewLevels !== null) {
@@ -143,10 +163,10 @@ final class ContentAgeReader
         return $query;
     }
 
-    private function inYear(QueryInterface $query, int $year): QueryInterface
+    private function inYear(QueryInterface $query, string $kind, int $year): QueryInterface
     {
         [$start, $end] = ContentAge::bounds($year);
-        return $query->where($this->dateColumn() . ' >= :start')->where($this->dateColumn() . ' < :end')
+        return $query->where($this->dateColumn($kind) . ' >= :start')->where($this->dateColumn($kind) . ' < :end')
             ->bind(':start', $start)->bind(':end', $end);
     }
 }

@@ -316,7 +316,11 @@ It requires the *View groups, levels and content by level* permission. Super Use
 
 ### How do I see the articles nobody has touched for years?
 
-With **Content by age**, since 2026.10.15. It shows a table by year based on the last modification date, and each number opens the list of those articles with a link to edit them. Details in the [README](README.en.md#content-by-age).
+With **Content by age**, since 2026.10.15. It shows a table by year based on the last modification date, and each number opens the list of those articles with a link to edit them. It also counts article categories, contacts and news feeds. Details in the [README](README.en.md#content-by-age).
+
+### Why are modules, menus and plugins not shown?
+
+Because Joomla does not store when they were last modified, and without that date they cannot be split by year. Only kinds with both a creation and a modification date are shown.
 
 ### Why the modification date and not the creation date?
 
@@ -328,7 +332,7 @@ Archived ones are, with their status shown in the list, because they are often e
 
 ### Why can I see the numbers but not open the list?
 
-The list shows titles, so besides the *View content by age* permission you need to be able to manage articles in Joomla. Counts, lists and CSV exports also respect the authorized viewing levels of the article and its category. Edit-own permission only offers links for articles owned by the current user.
+The list shows titles, so besides the *View content by age* permission you need to be able to manage that kind in Joomla (articles and categories in Content, contacts in Contacts, feeds in News Feeds). Counts, lists and CSV exports also respect the authorized viewing levels of the item and its category. Edit-own permission only offers links for items created by the current user.
 
 ## Access diagnosis
 

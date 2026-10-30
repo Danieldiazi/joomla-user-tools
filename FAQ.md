@@ -316,7 +316,11 @@ Requiere el permiso *Ver grupos, niveles y contenido por nivel*. Los superusuari
 
 ### ¿Cómo veo los artículos que llevan años sin tocarse?
 
-Con **Contenido por antigüedad**, desde la 2026.10.15. Muestra una tabla por años según la fecha de última modificación, y cada cifra abre la lista de esos artículos con enlace para editarlos. Detalles en el [README](README.md#contenido-por-antigüedad).
+Con **Contenido por antigüedad**, desde la 2026.10.15. Muestra una tabla por años según la fecha de última modificación, y cada cifra abre la lista de esos artículos con enlace para editarlos. Cuenta también categorías de artículos, contactos y canales de noticias. Detalles en el [README](README.md#contenido-por-antigüedad).
+
+### ¿Por qué no aparecen los módulos, los menús ni los plugins?
+
+Porque Joomla no guarda cuándo se modificaron por última vez, y sin esa fecha no se pueden repartir por años. Solo aparecen los tipos con fecha de creación y de modificación.
 
 ### ¿Por qué se usa la fecha de modificación y no la de creación?
 
@@ -328,7 +332,7 @@ Los archivados sí, con su estado visible en la lista, porque suelen ser justo l
 
 ### ¿Por qué veo las cifras pero no puedo abrir la lista?
 
-La lista muestra títulos, así que además del permiso *Ver contenido por antigüedad* hace falta poder gestionar los artículos en Joomla. Además, las cifras, las listas y los CSV respetan los niveles de acceso autorizados del artículo y su categoría. El permiso de editar propios solo ofrece enlaces para artículos del usuario actual.
+La lista muestra títulos, así que además del permiso *Ver contenido por antigüedad* hace falta poder gestionar ese tipo en Joomla (artículos y categorías en Contenido, contactos en Contactos, canales en Canales de noticias). Además, las cifras, las listas y los CSV respetan los niveles de acceso autorizados del elemento y su categoría. El permiso de editar propios solo ofrece enlaces para elementos creados por el usuario actual.
 
 ## Diagnóstico de accesos
 
