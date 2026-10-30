@@ -6,7 +6,7 @@
   <copyright>(C) 2026 Danieldiazi</copyright>
   <license>GPL-2.0-or-later</license>
   <authorUrl>https://github.com/Danieldiazi/joomla-user-tools</authorUrl>
-  <version>2026.10.17</version>
+  <version>2026.10.18</version>
   <description>MOD_USERTOOLS_GROUPS_XML_DESCRIPTION</description>
   <namespace path="src">Danieldiazi\Module\UsertoolsGroups</namespace>
   <files>
