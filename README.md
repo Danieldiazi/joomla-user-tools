@@ -102,7 +102,7 @@ Al abrir una herramienta, revisión, resultado o informe, su categoría permanec
 
 El paquete incluye **Sistema - User Tools**, que integra el filtrado y la categoría activa con el menú de Joomla. Se habilita al instalarlo por primera vez, también al actualizar desde una versión sin ese plugin. Si después lo deshabilitas, las siguientes actualizaciones respetan tu decisión y la portada avisa. Para recuperar el filtrado y la categoría activa, habilítalo en **Sistema → Gestionar → Plugins**. Los permisos de las pantallas siguen comprobándose en el servidor.
 
-Las [capturas reales de la navegación](docs/capturas.md) muestran la portada, las cuatro categorías y el panel en inglés, tomadas en el Joomla desechable de CI.
+La [galería de capturas](docs/capturas.md) muestra la portada, las cuatro categorías con el menú desplegado y el panel de Usuarios.
 
 ## Ficha de una persona
 
@@ -261,7 +261,7 @@ Las cifras usan exactamente las mismas reglas que las herramientas, así que coi
 
 El módulo respeta los permisos: solo lo ve quien puede acceder a User Tools, las cifras solo aparecen a quien tiene permiso de revisar o eliminar inactivos, y las tareas solo a quien puede ver sus resultados. Se configura como cualquier módulo de administración (Contenido → Módulos del sitio de administración, «User Tools»): puedes moverlo a otro panel, cambiarle el título o despublicarlo. Las actualizaciones no vuelven a colocarlo si lo has movido o despublicado.
 
-![Módulo User Tools en el panel de Usuarios (interfaz en inglés)](docs/screenshots/13-panel-usuarios.jpg)
+![Módulo User Tools en el panel de Usuarios](docs/screenshots/13-panel-usuarios.jpg)
 
 ## Módulo de grupos de usuarios en el sitio
 

@@ -102,7 +102,7 @@ The category stays marked in the menu when opening a tool, review, result or rep
 
 The package includes **System - User Tools**, which integrates permission filtering and the active category with Joomla's menu. It is enabled when first installed, including upgrades from a version without this plugin. If you subsequently disable it, later updates respect that choice and the home screen displays a notice. Enable it under **System → Manage → Plugins** to restore filtering and active categories. Screen permissions are still enforced on the server.
 
-The [real navigation screenshots](docs/screenshots.en.md) show the home screen, four categories and dashboard in English, captured on the disposable Joomla CI site.
+The [screenshot gallery](docs/screenshots.en.md) shows the home screen, the four categories with the menu expanded and the Users dashboard (Spanish interface).
 
 ## Account profile
 
@@ -261,9 +261,7 @@ Counts use the same rules as the tools, so they match what you see when opening 
 
 The module respects permissions: only users with access to User Tools can see it; counts require inactivity review or deletion permission, and tasks require task-results permission. Configure it like any administrator module (Content → Administrator Modules, “User Tools”): move it to another dashboard, rename or unpublish it. Updates do not reposition a moved or unpublished module.
 
-This dashboard screenshot shows the English interface. Earlier screenshots elsewhere retain the Spanish interface.
-
-![User Tools module on the Users dashboard (English interface)](docs/screenshots/13-panel-usuarios.jpg)
+![User Tools module on the Users dashboard (Spanish interface)](docs/screenshots/13-panel-usuarios.jpg)
 
 ## User groups module on the site
 
