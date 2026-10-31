@@ -7,6 +7,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Tool | What it does |
 |---|---|
 | Account profile | Reviews account identity, groups, access, content and activity, with protected links to its tools. Read only. |
+| Explain content access | Explains why an account can or cannot view, edit or publish an article or category, with every condition preventing it. Read only. |
 | Compare a list | Proposes blocking accounts missing from the complete list, except protected accounts, and lets you create selected new users. |
 | Export accounts to CSV | Downloads accounts, groups, dates, status and MFA with filters and optional email under its own permission. |
 | Review inactive users | Finds inactive accounts so you can select which ones to block. |
@@ -37,6 +38,7 @@ The home screen and Components menu organise tools into **Review accounts**, **G
 - [Category navigation](#category-navigation)
 - [Guided tours](#guided-tours)
 - [Account profile](#account-profile)
+- [Explain content access](#explain-content-access)
 - [Export accounts to CSV](#export-accounts-to-csv)
 - [Compare a user list](#compare-a-user-list)
 - [Review inactive users](#review-inactive-users)
@@ -91,7 +93,7 @@ Under **Components → User Tools**, open **Home** or one of the home screen's f
 
 | Category | Tools |
 |---|---|
-| Review accounts | Account profile, compare a list, export accounts, review inactive users and undo blocks. |
+| Review accounts | Account profile, explain content access, compare a list, export accounts, review inactive users and undo blocks. |
 | Groups and access levels | Add and remove memberships, move groups, groups/levels, content by access level, content by age and diagnosis. |
 | Automation and follow-up | Automatic blocking configuration and results/reports. |
 | Delete and anonymise accounts | Both permanent tools, with their warnings and confirmations. |
@@ -117,9 +119,29 @@ The recent log distinguishes whether the account **performed the action**, **was
 The **Remove from groups**, **Review blocking this account** and **Anonymise this account** links appear only with each tool’s own permission and when the account is not protected. They are never offered for Super Users or the operator’s own account; a non-Super User also never sees them for administrator accounts. Configured blocking and anonymisation exclusions remain in force. Group removal and anonymisation open their forms with the account filled in. Blocking opens a review of **that explicitly selected account**, even if recently active, without applying the inactivity filter. Opening any of these links does not change the account.
 
 Blocking still requires selection and confirmation, the typed count from the configured threshold and fresh checks of the account’s reviewed details, protections and operator permissions. An account that changes after review is skipped, never replaced. The block is saved through Joomla’s API, closes sessions and is audited. The profile does not itself delete, anonymise or reassign content.
+
+With the [Explain content access](#explain-content-access) permission, the profile also offers **Explain its access to content**, which opens that screen with the account chosen.
+
 ![Account profile: account details, groups in their tree, effective levels, authored content, recent log and available actions (Spanish interface)](docs/screenshots/28-ficha-persona.jpg)
 
 ![Reviewing the block of one account from its profile (Spanish interface)](docs/screenshots/29-ficha-revision-bloqueo.jpg)
+
+## Explain content access
+
+When someone says “I cannot see (or edit) this article”, **Explain content access** gathers on one screen the conditions Joomla applies to that account and that content, and shows which ones are not met. Open it from the home screen or, with the account already chosen, from its **Account profile**. It is read only: it does not sign in as the account, change its session, groups, permissions or content, and does not run any publishing to try it.
+
+Choose the account (username, email or ID), an **article** or an **article category** by ID, what to check (**view**, **edit** or **publish**) and where: viewing is checked on the site; editing and publishing, in the administrator or on the site (categories only in the administrator). Each check says **Met**, **Not met** or **Information**, with the condition involved and where it is set, and every impediment is shown at once. For example: “The account has the level, but the article is not published yet” or “It can edit its own content, but it is not the author of this one”.
+
+- **View**: account status and site login permission; the article's status (published or archived), publishing dates and published category; the access level of the article **and** of its category, as Joomla requires. Whoever can edit or change the status also sees unpublished or out-of-date items, as in Joomla. A blocked account, or one without site login, is checked as a visitor. For a category, its publishing, that of its parent categories and its level.
+- **Menu items**: separately, it lists the menu items linking directly to the content and whether the account has their level. They do not change the result: the content can be reachable even if a given menu item is not, and the other way round.
+- **Edit**: administrator (or site) login and access to Content, and the effective permission Joomla resolves on the item, with inheritance: **Edit** or **Edit Own**, checking authorship. It also warns if another account has it open for editing.
+- **Publish**: without workflows, the **Edit State** permission. With workflows enabled, the transitions available from the current stage that the account may run and whether any of them publishes; **Edit State** alone is not enough.
+
+Joomla computes the permissions for the account (`User::authorise`): there is no second permission list that could disagree. Super Users also see where there is an **explicit denial** (action, item and group); everyone else sees a general hint of where permissions are set.
+
+It requires its own *Explain content access* permission (`usertools.explain`), plus the account profile one and being able to manage articles in Joomla. Only items the operator can see are explained: if their level or their category's level is not among the operator's, the answer is the same as for a missing ID and no title is shown.
+
+**Not checked**: what Joomla or an extension decides outside these rules is listed separately, for example plugins adding restrictions, the language on multilingual sites, the unauthorised links option or the conditions of workflow plugins. A “Yes” does not guarantee that any URL will work. For now it covers articles and article categories only.
 
 ## Export accounts to CSV
 

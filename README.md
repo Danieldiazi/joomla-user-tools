@@ -7,6 +7,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Herramienta | Qué hace |
 |---|---|
 | Ficha de una persona | Consulta identidad, grupos, accesos, contenido y actividad de una cuenta; ofrece enlaces protegidos a sus herramientas. Solo lectura. |
+| Explicar acceso a contenido | Explica por qué una cuenta puede o no ver, editar o publicar un artículo o una categoría, con todas las condiciones que lo impiden. Solo lectura. |
 | Comparar una lista | Propone bloquear las cuentas ausentes de la lista completa, salvo las protegidas, y permite crear los usuarios nuevos que selecciones. |
 | Exportar cuentas a CSV | Descarga las cuentas y sus grupos, fechas, estado y MFA, con filtros y correo opcional bajo un permiso propio. |
 | Revisar usuarios inactivos | Busca cuentas inactivas para que selecciones cuáles bloquear. |
@@ -37,6 +38,7 @@ La portada y el menú de Componentes organizan las herramientas en **Revisar cue
 - [Navegación por categorías](#navegación-por-categorías)
 - [Recorridos guiados](#recorridos-guiados)
 - [Ficha de una persona](#ficha-de-una-persona)
+- [Explicar acceso a contenido](#explicar-acceso-a-contenido)
 - [Exportar cuentas a CSV](#exportar-cuentas-a-csv)
 - [Comparar una lista de usuarios](#comparar-una-lista-de-usuarios)
 - [Revisar usuarios inactivos](#revisar-usuarios-inactivos)
@@ -91,7 +93,7 @@ En **Componentes → User Tools** puedes abrir **Inicio** o una de las cuatro ca
 
 | Categoría | Herramientas |
 |---|---|
-| Revisar cuentas | Ficha de una persona, comparar lista, exportar cuentas, revisar inactivos y deshacer bloqueos. |
+| Revisar cuentas | Ficha de una persona, explicar acceso a contenido, comparar lista, exportar cuentas, revisar inactivos y deshacer bloqueos. |
 | Grupos y niveles de acceso | Añadir y quitar de grupos, mover grupos, grupos/niveles, contenido por nivel, contenido por antigüedad y diagnóstico. |
 | Automatización y seguimiento | Configuración del bloqueo automático y resultados/informes. |
 | Eliminar y anonimizar cuentas | Las dos herramientas permanentes, con sus advertencias y confirmaciones. |
@@ -117,9 +119,28 @@ El registro reciente distingue si la cuenta **realizó la acción**, **fue la af
 Los enlaces **Quitar de grupos**, **Revisar bloqueo de esta cuenta** y **Anonimizar esta cuenta** solo aparecen con el permiso de cada herramienta y si la cuenta no está protegida. Nunca se ofrecen para superusuarios ni para la propia cuenta; quien no es superusuario tampoco los ve para cuentas con acceso administrativo. Además se conservan las exclusiones configuradas de bloqueo y anonimización. Quitar de grupos y anonimizar abren sus formularios con la cuenta rellenada. El bloqueo abre una revisión de **esa cuenta expresamente elegida**, aunque tenga actividad reciente, sin aplicar el filtro de inactividad. Abrir cualquiera de esos enlaces no cambia la cuenta.
 
 Para bloquear hay que seleccionar y confirmar, escribir el número desde el umbral configurado y superar una nueva comprobación de los datos de la cuenta, sus protecciones y los permisos. Una cuenta que cambie después de la revisión se omite; nunca se sustituye por otra. El bloqueo se guarda mediante la API de Joomla, cierra las sesiones y se anota en el registro. La ficha no elimina, anonimiza ni reasigna contenido por sí misma.
+
+Con el permiso de [Explicar acceso a contenido](#explicar-acceso-a-contenido), la ficha ofrece además **Explicar su acceso a un contenido**, que abre esa pantalla con la cuenta elegida.
 ![Ficha de una persona: datos de la cuenta, grupos en su árbol, niveles efectivos, contenido creado, registro reciente y acciones disponibles](docs/screenshots/28-ficha-persona.jpg)
 
 ![Revisar el bloqueo de una cuenta desde su ficha](docs/screenshots/29-ficha-revision-bloqueo.jpg)
+
+## Explicar acceso a contenido
+
+Cuando alguien dice «no puedo ver (o editar) este artículo», **Explicar acceso a contenido** reúne en una pantalla las condiciones que Joomla aplica a esa cuenta y a ese contenido, y señala cuáles no se cumplen. Se abre desde la portada o, con la cuenta ya elegida, desde su **Ficha de una persona**. Solo lee: no inicia sesión como la cuenta, no cambia su sesión, sus grupos, los permisos ni el contenido, y no ejecuta ninguna publicación para probar.
+
+Elige la cuenta (usuario, correo o ID), un **artículo** o una **categoría de artículos** por su ID, qué quieres comprobar (**ver**, **editar** o **publicar**) y dónde: ver se comprueba en el sitio; editar y publicar, en la administración o en el sitio (las categorías solo en la administración). Cada comprobación dice **Cumple**, **No cumple** o **Información**, con la condición que interviene y dónde se configura, y se muestran todos los impedimentos a la vez. Por ejemplo: «La cuenta tiene el nivel, pero el artículo aún no está publicado» o «Puede editar sus propios contenidos, pero no es la autora de este».
+
+- **Ver**: estado de la cuenta y permiso de acceso al sitio; estado del artículo (publicado o archivado), fechas de publicación y categoría publicada; nivel de acceso del artículo **y** de su categoría, como exige Joomla. Quien puede editar o cambiar el estado ve también los no publicados o fuera de fecha, igual que en Joomla. Una cuenta bloqueada o sin acceso al sitio se comprueba como visitante. Para una categoría, su publicación, la de sus categorías superiores y su nivel.
+- **Elementos de menú**: aparte, lista los elementos de menú que enlazan directamente al contenido y si la cuenta tiene su nivel. No cambian el resultado: el contenido puede ser accesible aunque un menú concreto no lo sea, y al revés.
+- **Editar**: acceso a la administración (o al sitio) y a Contenido, y el permiso efectivo que resuelve Joomla sobre el elemento, con herencia: **Editar** o **Editar propios**, comprobando la autoría. También avisa si otra cuenta lo tiene abierto para editar.
+- **Publicar**: sin flujos de trabajo, el permiso **Cambiar estado**. Con flujos de trabajo activados, las transiciones disponibles desde la etapa actual que la cuenta puede ejecutar y si alguna publica; **Cambiar estado** por sí solo no basta.
+
+Los permisos los calcula Joomla para la cuenta (`User::authorise`): no hay una segunda lista de permisos que pueda discrepar. Los superusuarios ven además dónde hay una **denegación explícita** (acción, elemento y grupo); el resto ve una indicación general de dónde se configuran los permisos.
+
+Requiere el permiso propio *Explicar acceso a contenido* (`usertools.explain`), además del de la ficha de una persona y de poder gestionar los artículos en Joomla. Solo se explican elementos que quien consulta puede ver: si su nivel o el de su categoría no está entre los suyos, la respuesta es la misma que para un ID inexistente y no se muestra el título.
+
+**No comprobado**: lo que Joomla o una extensión deciden fuera de estas reglas aparece en una lista aparte, por ejemplo plugins que añaden restricciones, el idioma en sitios multilingües, la opción de enlaces no autorizados o las condiciones de los plugins de flujo de trabajo. Un «Sí» no garantiza que cualquier dirección funcione. De momento solo cubre artículos y categorías de artículos.
 
 ## Exportar cuentas a CSV
 

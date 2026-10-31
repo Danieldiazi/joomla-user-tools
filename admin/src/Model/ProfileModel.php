@@ -60,6 +60,7 @@ class ProfileModel extends BaseDatabaseModel
             'levels' => AccountProfile::levels($groups, $directory->viewLevels(), $account,
                 array_values(array_map('intval', Toolkit::users()->loadUserById($id)->getAuthorisedViewLevels()))),
             'mfa' => $reader->mfaConfigured($id), 'actions' => $actions,
+            'explain' => (bool) $identity->authorise('usertools.explain', 'com_usertools'),
             'content' => $reader->content($id, fn (string $component): bool => (bool) $identity->authorise('core.manage', $component),
                 $logsAllowed ? null : array_values(array_map('intval', $identity->getAuthorisedViewLevels()))),
             'logsAllowed' => $logsAllowed, 'logs' => $logsAllowed ? $reader->logs($id) : [],
