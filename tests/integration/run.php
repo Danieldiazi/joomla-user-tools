@@ -1922,6 +1922,19 @@ $xpHidden = $addArticle('xp-hidden', $xpNow, 1, $xpHiddenLevel);
 $page = $xp($delegate, 'explain_member', $xpHidden, 'view');
 Test::check(str_contains($page, 'data-ut-explain-error') && !str_contains($page, 'UT xp-hidden') && !str_contains($page, 'data-ut-explain-result'),
     'a delegate cannot explain content it could not see, and its title is not shown');
+// Menu items the delegate cannot see are left out, so their titles are never revealed.
+$xpMenu = $site->q("SELECT * FROM #__menu WHERE client_id = 0 AND id > 1 ORDER BY id")[0];
+foreach (['UT explain secret menu' => $xpHiddenLevel, 'UT explain open menu' => 1] as $title => $level) {
+    $menuRow = array_replace($xpMenu, ['title' => $title, 'alias' => strtolower(str_replace(' ', '-', $title)), 'path' => strtolower(str_replace(' ', '-', $title)),
+        'link' => 'index.php?option=com_content&view=article&id=' . $xpPublic, 'access' => $level, 'home' => 0, 'published' => 1, 'lft' => 900010 + $level, 'rgt' => 900011 + $level]);
+    unset($menuRow['id']);
+    $site->q('INSERT INTO #__menu ("' . implode('", "', array_keys($menuRow)) . '") VALUES (' . implode(', ', array_fill(0, count($menuRow), '?')) . ')', array_values($menuRow));
+}
+$page = $xp($delegate, 'explain_member', $xpPublic, 'view');
+Test::check(str_contains($page, 'UT explain open menu') && !str_contains($page, 'UT explain secret menu'), 'a delegate sees only the menu items within its own levels');
+$page = $xp($admin, 'explain_member', $xpPublic, 'view');
+Test::check(str_contains($page, 'UT explain open menu') && str_contains($page, 'UT explain secret menu'), 'a Super User sees every related menu item');
+$site->q("DELETE FROM #__menu WHERE title IN ('UT explain secret menu', 'UT explain open menu')");
 // A parent category the delegate cannot see keeps its state but never shows its title.
 $xpCategory = $site->q('SELECT * FROM #__categories WHERE id = ?', [$ageCategory])[0];
 $xpInsertCategory = function (array $values) use ($site, $xpCategory): int {

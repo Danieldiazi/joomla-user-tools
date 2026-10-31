@@ -49,14 +49,15 @@ class ExplainModel extends BaseDatabaseModel
         }
         $superUser = (bool) $operator->authorise('core.admin');
         $reader = new AccessExplanationReader(Toolkit::db(), Toolkit::users());
-        $row = $reader->item($type, $item, $superUser ? null : array_values(array_map('intval', $operator->getAuthorisedViewLevels())));
+        $levels = $superUser ? null : array_values(array_map('intval', $operator->getAuthorisedViewLevels()));
+        $row = $reader->item($type, $item, $levels);
         if ($row === null) {
             // Missing and hidden items give the same answer, so the screen never confirms that a hidden item exists.
             throw new UserFacingException('COM_USERTOOLS_EXPLAIN_ERROR_ITEM');
         }
         $now = (new \DateTimeImmutable('now', new \DateTimeZone('UTC')))->format('Y-m-d H:i:s');
         // Where a denial is configured is shown only to whoever may see Joomla's permission settings.
-        $facts = $reader->facts($account, $row, $superUser, $now);
+        $facts = $reader->facts($account, $row, $superUser, $now, $levels);
         return AccessExplanation::explain($action, $context, $facts) + ['item' => $row, 'denials' => $facts['denials'], 'now' => $now];
     }
 
