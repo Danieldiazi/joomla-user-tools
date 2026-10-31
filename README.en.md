@@ -143,6 +143,8 @@ It requires its own *Explain content access* permission (`usertools.explain`), p
 
 **Not checked**: what Joomla or an extension decides outside these rules is listed separately, for example plugins adding restrictions, the language on multilingual sites, the unauthorised links option or the conditions of workflow plugins. A “Yes” does not guarantee that any URL will work. For now it covers articles and article categories only.
 
+![Explain content access: why an account cannot publish an article (Spanish interface)](docs/screenshots/35-explicar-acceso.jpg)
+
 ## Export accounts to CSV
 
 **Export accounts to CSV** requires the `usertools.export` permission. It supports group/descendant, status and inactivity filters; never-visited accounts may be filtered by registration date. The file contains ID, username, name, **direct group memberships with their IDs**, last visit, registration, status, pending activation (a blocked account that has never logged in and has an activation token) and whether an MFA method is configured, without exposing secrets. **Email is optional and unchecked by default**; including it creates a User Actions Log entry without logging the addresses. CSV is UTF-8 with semicolons and spreadsheet formula protection. Handle the file as personal data.

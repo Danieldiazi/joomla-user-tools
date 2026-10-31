@@ -4,13 +4,13 @@
 
 [Back to the README](../README.en.md)
 
-These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, access diagnosis and the content by age list in 2026.10.15, move groups in 2026.10.16, add accounts to groups, export accounts and undo blocks in 2026.10.19, the account profile in 2026.10.20, and the home screen, the menu categories, the Users dashboard, the content by age table with its four kinds and the guided tour in 2026.10.21. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
+These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, access diagnosis and the content by age list in 2026.10.15, move groups in 2026.10.16, add accounts to groups, export accounts and undo blocks in 2026.10.19, the account profile in 2026.10.20, the content by age table with its four kinds, the automation, groups and delete categories and the guided tour in 2026.10.21, and the home screen, the “Review accounts” category, the Users dashboard and the access explanation in the version after 2026.10.21. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
 Besides these screenshots, CI checks keyboard order, menu expansion and the active category, and saves captures at 200% text size, with a dark preference and at 390 px width. The cards fit at 390 px, but Joomla’s overall header produces a document width of 600 px; the template has not been altered to hide this. This does not establish WCAG conformance or replace screen-reader testing.
 
-![User Tools home screen with its four categories and all permitted tools, and the Components → User Tools menu expanded with Home active (2026.10.21, Spanish interface)](screenshots/01-portada.jpg)
+![User Tools home screen with its four categories and all permitted tools, and the Components → User Tools menu expanded with Home active (after 2026.10.21, Spanish interface)](screenshots/01-portada.jpg)
 
-![“Review accounts” category, marked in the menu, with its five tools (2026.10.21, Spanish interface)](screenshots/31-menu-cuentas.jpg)
+![“Review accounts” category, marked in the menu, with its six tools (after 2026.10.21, Spanish interface)](screenshots/31-menu-cuentas.jpg)
 
 ![“Groups and access levels” category, marked in the menu, with its seven tools (2026.10.21, Spanish interface)](screenshots/32-menu-grupos.jpg)
 
@@ -21,6 +21,8 @@ Besides these screenshots, CI checks keyboard order, menu expansion and the acti
 ![Account profile: account details, groups in their tree with the intermediate group, effective access levels and why, authored content, recent action log and links to the tools (2026.10.20, Spanish interface)](screenshots/28-ficha-persona.jpg)
 
 ![Account profile: review of blocking that account, with confirmation and no inactivity filter (2026.10.20, Spanish interface)](screenshots/29-ficha-revision-bloqueo.jpg)
+
+![Explain content access: why an account cannot publish an article, with every unmet condition at once (after 2026.10.21, Spanish interface)](screenshots/35-explicar-acceso.jpg)
 
 ![Comparison: list and exclusions](screenshots/02-comparacion-lista.jpg)
 
@@ -60,7 +62,7 @@ Besides these screenshots, CI checks keyboard order, menu expansion and the acti
 
 ![Task report details](screenshots/10-informe-tarea.jpg)
 
-![User Tools module on the Users dashboard: diagnosis notice, accounts to review, tasks with their mode and result, and shortcuts grouped by the same categories as the menu (2026.10.21, Spanish interface)](screenshots/13-panel-usuarios.jpg)
+![User Tools module on the Users dashboard: diagnosis notice, accounts to review, tasks with their mode and result, and shortcuts grouped by the same categories as the menu (after 2026.10.21, Spanish interface)](screenshots/13-panel-usuarios.jpg)
 
 ![Groups and access levels: groups by level matrix, CSV export and summary by level (2026.10.11, Spanish interface)](screenshots/14-grupos-niveles.jpg)
 

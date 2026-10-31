@@ -142,6 +142,8 @@ Requiere el permiso propio *Explicar acceso a contenido* (`usertools.explain`), 
 
 **No comprobado**: lo que Joomla o una extensión deciden fuera de estas reglas aparece en una lista aparte, por ejemplo plugins que añaden restricciones, el idioma en sitios multilingües, la opción de enlaces no autorizados o las condiciones de los plugins de flujo de trabajo. Un «Sí» no garantiza que cualquier dirección funcione. De momento solo cubre artículos y categorías de artículos.
 
+![Explicar acceso a contenido: por qué una cuenta no puede publicar un artículo](docs/screenshots/35-explicar-acceso.jpg)
+
 ## Exportar cuentas a CSV
 
 La herramienta **Exportar cuentas a CSV** requiere el permiso `usertools.export`. Permite filtrar por grupo (y subgrupos), estado e inactividad; para las cuentas sin accesos registrados puede utilizar la fecha de alta. El archivo incluye ID, usuario, nombre, **grupos asignados directamente con su ID**, fecha de último acceso, alta, estado, activación pendiente (cuenta bloqueada que nunca ha accedido y tiene token de activación) y existencia de un método de autenticación multifactor (MFA) configurado, sin sus secretos. El **correo electrónico es opcional y viene desmarcado**; al exportarlo queda constancia en el registro de acciones, sin guardar direcciones en ese registro. El CSV es UTF-8, usa punto y coma y protege contra fórmulas al abrirlo en una hoja de cálculo. Debe custodiarse como información personal.
