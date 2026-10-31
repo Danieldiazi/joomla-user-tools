@@ -20,6 +20,7 @@ final class Navigation
     public const PERMISSIONS = [
         'home' => 'core.manage',
         'profile' => 'usertools.profile',
+        'explain' => 'usertools.explain',
         'compare' => 'usertools.compare',
         'export' => 'usertools.export',
         'inactive' => 'usertools.inactive',
@@ -53,6 +54,7 @@ final class Navigation
      */
     public const TOOLS = [
         'profile' => ['accounts', 'COM_USERTOOLS_PROFILE_TITLE', 'COM_USERTOOLS_PROFILE_HOME_DESC', 'COM_USERTOOLS_PROFILE_OPEN', 'read', 'vcard'],
+        'explain' => ['accounts', 'COM_USERTOOLS_EXPLAIN_TITLE', 'COM_USERTOOLS_EXPLAIN_HOME_DESC', 'COM_USERTOOLS_EXPLAIN_START', 'read', 'question-circle'],
         'compare' => ['accounts', 'COM_USERTOOLS_COMPARE_TITLE', 'COM_USERTOOLS_COMPARE_HOME_DESC', 'COM_USERTOOLS_COMPARE_START', '', 'list'],
         'export' => ['accounts', 'COM_USERTOOLS_EXPORT_TITLE', 'COM_USERTOOLS_EXPORT_HOME_DESC', 'COM_USERTOOLS_EXPORT_START', 'read', 'download'],
         'inactive' => ['accounts', 'COM_USERTOOLS_INACTIVE_TITLE', 'COM_USERTOOLS_INACTIVE_HOME_DESC', 'COM_USERTOOLS_INACTIVE_START', '', 'clock'],

@@ -4,13 +4,13 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos y la lista de contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, las de añadir cuentas a grupos, exportar cuentas y deshacer bloqueos de 2026.10.19, las de la ficha de una persona de 2026.10.20, y la portada, las categorías del menú, el panel de Usuarios, la tabla de contenido por antigüedad con sus cuatro tipos y el recorrido guiado, de 2026.10.21. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos y la lista de contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, las de añadir cuentas a grupos, exportar cuentas y deshacer bloqueos de 2026.10.19, las de la ficha de una persona de 2026.10.20, la tabla de contenido por antigüedad con sus cuatro tipos, las categorías de automatización, grupos y eliminación, y el recorrido guiado, de 2026.10.21, y la portada, la categoría «Revisar cuentas», el panel de Usuarios y la explicación de acceso, de la versión siguiente a 2026.10.21. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
 Además de estas capturas, la CI comprueba el orden de teclado, el despliegue del menú y la categoría activa, y guarda capturas a texto al 200 %, con preferencia oscura y a 390 px de ancho. Las tarjetas caben a 390 px, pero la cabecera general de Joomla genera un ancho de documento de 600 px; no se ha alterado la plantilla para ocultarlo. Esto no acredita conformidad WCAG ni sustituye pruebas con lector de pantalla.
 
-![Portada de User Tools con sus cuatro categorías y todas las herramientas permitidas, y el menú Componentes → User Tools desplegado con Inicio activo (2026.10.21)](screenshots/01-portada.jpg)
+![Portada de User Tools con sus cuatro categorías y todas las herramientas permitidas, y el menú Componentes → User Tools desplegado con Inicio activo (posterior a 2026.10.21)](screenshots/01-portada.jpg)
 
-![Categoría «Revisar cuentas», señalada en el menú, con sus cinco herramientas (2026.10.21)](screenshots/31-menu-cuentas.jpg)
+![Categoría «Revisar cuentas», señalada en el menú, con sus seis herramientas (posterior a 2026.10.21)](screenshots/31-menu-cuentas.jpg)
 
 ![Categoría «Grupos y niveles de acceso», señalada en el menú, con sus siete herramientas (2026.10.21)](screenshots/32-menu-grupos.jpg)
 
@@ -21,6 +21,8 @@ Además de estas capturas, la CI comprueba el orden de teclado, el despliegue de
 ![Ficha de una persona: datos de la cuenta, grupos en su árbol con el grupo intermedio, niveles de acceso efectivos y por qué, contenido creado, registro de acciones reciente y enlaces a las herramientas (2026.10.20)](screenshots/28-ficha-persona.jpg)
 
 ![Ficha de una persona: revisión del bloqueo de esa cuenta, con confirmación y sin filtro de inactividad (2026.10.20)](screenshots/29-ficha-revision-bloqueo.jpg)
+
+![Explicar acceso a contenido: por qué una cuenta no puede publicar un artículo, con todas las condiciones que no cumple a la vez (posterior a 2026.10.21)](screenshots/35-explicar-acceso.jpg)
 
 ![Comparación: lista y exclusiones](screenshots/02-comparacion-lista.jpg)
 
@@ -60,7 +62,7 @@ Además de estas capturas, la CI comprueba el orden de teclado, el despliegue de
 
 ![Detalle de un informe de tarea](screenshots/10-informe-tarea.jpg)
 
-![Módulo User Tools en el panel de Usuarios: aviso del diagnóstico, cuentas para revisar, tareas con su modo y resultado, y accesos directos agrupados por las mismas categorías del menú (2026.10.21)](screenshots/13-panel-usuarios.jpg)
+![Módulo User Tools en el panel de Usuarios: aviso del diagnóstico, cuentas para revisar, tareas con su modo y resultado, y accesos directos agrupados por las mismas categorías del menú (posterior a 2026.10.21)](screenshots/13-panel-usuarios.jpg)
 
 ![Grupos y niveles de acceso: matriz de grupos por nivel, exportación CSV y resumen por nivel (2026.10.11)](screenshots/14-grupos-niveles.jpg)
 

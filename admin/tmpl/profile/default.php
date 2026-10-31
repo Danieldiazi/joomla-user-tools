@@ -99,6 +99,10 @@ $profile = $this->profile;
       <?php else : ?><p><?= Text::_('COM_USERTOOLS_PROFILE_LOGS_NONE') ?></p><?php endif; ?>
     <?php endif; ?>
   </div></section>
+  <?php if (!empty($profile['explain'])) : ?>
+  <p data-ut-profile-explain><a class="btn btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools&view=explain&account=' . (int) $account->id) ?>"><span class="icon-question-circle" aria-hidden="true"></span> <?= Text::_('COM_USERTOOLS_PROFILE_EXPLAIN') ?></a>
+    <span class="form-text"><?= Text::_('COM_USERTOOLS_PROFILE_EXPLAIN_DESC') ?></span></p>
+  <?php endif; ?>
   <?php if (in_array(true, $profile['actions'], true)) : ?>
   <section class="card ut-card" aria-labelledby="ut-profile-actions"><div class="card-body">
     <h2 class="h4" id="ut-profile-actions"><?= Text::_('COM_USERTOOLS_PROFILE_ACTIONS') ?></h2>

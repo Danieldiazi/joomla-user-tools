@@ -58,7 +58,7 @@ No. List comparison, manual inactivity review, inactivity deletion and **each** 
 
 ### Who can use it?
 
-Super Users and users with the corresponding delegated permissions under **Options → Permissions**. There are separate permissions for comparison and blocking, account creation, inactivity review, inactivity deletion, viewing task results, removing from groups, viewing groups, levels and content by level, viewing content by age and viewing the access diagnosis. Deletion is restricted to Super Users until you explicitly grant it to others. Access to the component also requires `core.manage`.
+Super Users and users with the corresponding delegated permissions under **Options → Permissions**. There are separate permissions for viewing profiles, explaining content access, comparison and blocking, account creation, inactivity review, inactivity deletion, viewing task results, removing from groups, viewing groups, levels and content by level, viewing content by age and viewing the access diagnosis. Deletion is restricted to Super Users until you explicitly grant it to others. Access to the component also requires `core.manage`.
 
 ### Does it need JavaScript?
 
@@ -105,6 +105,18 @@ No: you explicitly selected one account from its profile. The link only opens th
 ### Why are there no action links for an account?
 
 Each link needs its tool’s own permission. The operator’s own account and Super Users never have these links; a non-Super User also cannot act on administrator accounts. Blocking is not offered when the account is already blocked, and blocking and anonymisation exclusions are respected. The profile only shows whether MFA is configured, never its secrets, methods or codes.
+
+### How do I find out why someone cannot view or edit an article?
+
+With **Explain content access**, also from their profile. Choose the account, the article or category by ID and whether to check viewing, editing or publishing. It shows each condition Joomla applies (account status, levels of the article and its category, publishing and dates, permissions with inheritance, edit own, workflow) and marks every one that fails at once. It changes nothing and does not sign in as the account. Details in the [README](README.en.md#explain-content-access).
+
+### Why does it say “Yes” and the person still cannot reach the article?
+
+The explanation is about the content. A menu item may have another access level or be unpublished, and you will see that in the menu item list. There are also conditions the screen does not model, listed as **not checked**: plugins with their own restrictions, the language on multilingual sites or the conditions of workflow plugins.
+
+### Why can I not see which group has the denial?
+
+Where an explicit denial is set is shown only to Super Users, like Joomla's permission settings. Everyone else sees the result and a hint of where it is set. Content you could not see yourself is not explained either: the answer is the same as for a missing ID.
 
 ## List comparison
 

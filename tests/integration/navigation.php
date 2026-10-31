@@ -58,7 +58,7 @@ if ($menuPackage !== '') {
 $menuHome = $admin->get('index.php?option=com_usertools&view=home');
 Test::check(array_keys(utMenuLinks($menuHome)) === ['', 'accounts', 'groups', 'automation', 'delete'],
     'the real Joomla administrator menu renders Home and the four categories in order');
-foreach (['accounts' => ['profile', 'compare', 'export', 'inactive', 'unblock'],
+foreach (['accounts' => ['profile', 'explain', 'compare', 'export', 'inactive', 'unblock'],
     'groups' => ['addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose'],
     'automation' => ['schedule', 'reports'], 'delete' => ['delete', 'anonymize']] as $category => $expected) {
     [$categoryCode, $categoryPage, $categoryHeaders] = $admin->request('index.php?option=com_usertools&view=home&section=' . $category);

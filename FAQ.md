@@ -58,7 +58,7 @@ No. La comparación de listas, la revisión manual por inactividad, la eliminaci
 
 ### ¿Quién puede usarlo?
 
-Los superusuarios y los usuarios con los permisos delegados correspondientes en **Opciones → Permisos**. Hay permisos separados para comparar listas y bloquear, crear cuentas, revisar usuarios inactivos, eliminar usuarios inactivos, consultar resultados de tareas, quitar de grupos, ver grupos, niveles y contenido por nivel, ver contenido por antigüedad y ver el diagnóstico de accesos. El de eliminar no se concede a nadie más que a los superusuarios hasta que lo des expresamente. El acceso al componente también requiere `core.manage`.
+Los superusuarios y los usuarios con los permisos delegados correspondientes en **Opciones → Permisos**. Hay permisos separados para consultar fichas, explicar el acceso a contenido, comparar listas y bloquear, crear cuentas, revisar usuarios inactivos, eliminar usuarios inactivos, consultar resultados de tareas, quitar de grupos, ver grupos, niveles y contenido por nivel, ver contenido por antigüedad y ver el diagnóstico de accesos. El de eliminar no se concede a nadie más que a los superusuarios hasta que lo des expresamente. El acceso al componente también requiere `core.manage`.
 
 ### ¿Necesita JavaScript?
 
@@ -105,6 +105,18 @@ No: has elegido expresamente una cuenta desde su ficha. El enlace solo abre la r
 ### ¿Por qué no aparecen enlaces para actuar sobre una cuenta?
 
 Se necesita el permiso de la herramienta correspondiente. La propia cuenta y los superusuarios nunca tienen esos enlaces; un operador sin permisos de superusuario tampoco puede actuar sobre cuentas administrativas. El bloqueo no se ofrece si la cuenta ya está bloqueada, y se respetan las exclusiones de bloqueo y anonimización. La ficha solo muestra si hay MFA configurada, nunca sus secretos, métodos ni códigos.
+
+### ¿Cómo averiguo por qué alguien no puede ver o editar un artículo?
+
+Con **Explicar acceso a contenido**, también desde su ficha. Eliges la cuenta, el artículo o la categoría por su ID y si quieres comprobar ver, editar o publicar. Muestra cada condición que aplica Joomla (estado de la cuenta, niveles del artículo y de su categoría, publicación y fechas, permisos con herencia, edición de propios, flujo de trabajo) y marca todas las que fallan a la vez. No cambia nada ni inicia sesión como la cuenta. Detalles en el [README](README.md#explicar-acceso-a-contenido).
+
+### ¿Por qué dice «Sí» y aun así la persona no llega al artículo?
+
+La explicación se refiere al contenido. Un elemento de menú puede tener otro nivel de acceso o estar despublicado, y lo verás en la lista de elementos de menú. Además hay condiciones que la pantalla no modela y que aparecen como **no comprobado**: plugins con restricciones propias, el idioma en sitios multilingües o las condiciones de los plugins de flujo de trabajo.
+
+### ¿Por qué no veo qué grupo tiene la denegación?
+
+Dónde hay una denegación explícita solo lo ven los superusuarios, como la configuración de permisos de Joomla. Los demás ven el resultado y una indicación de dónde se configura. Tampoco se explica un contenido que no podrías ver tú: la respuesta es la misma que para un ID inexistente.
 
 ## Comparación de listas
 

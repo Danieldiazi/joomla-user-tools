@@ -222,13 +222,13 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['profile', 'compare', 'export', 'inactive', 'unblock', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
+Test::check($cards[1] === ['profile', 'explain', 'compare', 'export', 'inactive', 'unblock', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
 Test::check(!preg_match('/<span class="icon-(address-card)"/', $home) && str_contains($home, '<span class="icon-vcard" aria-hidden="true"></span> Account profile'),
     'the profile card uses an icon that Joomla provides');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 16 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 17 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -1819,6 +1819,137 @@ $site->q('UPDATE #__guidedtours SET published = 0 WHERE id = ?', [(int) $tours['
 $unpublished = $admin->get('index.php?option=com_usertools&view=compare');
 Test::check(!str_contains($unpublished, 'data-ut-tour-start') && !str_contains($unpublished, 'User Tools: compare a list'), 'an unpublished tour is not offered');
 $site->q('UPDATE #__guidedtours SET published = 1 WHERE id = ?', [(int) $tours['compare']['id']]);
+
+Test::section('Explain content access');
+$explainUrl = 'index.php?option=com_usertools&view=explain';
+$xpStatus = function (string $html, string $key): string {
+    return preg_match('/data-ut-explain-check="' . preg_quote($key, '/') . '" data-ut-explain-status="([a-z]+)"/', $html, $m) ? $m[1] : '';
+};
+$xpVerdict = fn (string $html): string => preg_match('/data-ut-explain-verdict="([a-z]+)"/', $html, $m) ? $m[1] : '';
+$xp = fn (Client $client, string $login, int $item, string $do, string $context = '', string $type = 'article'): string
+    => $client->get($explainUrl . '&login=' . rawurlencode($login) . '&type=' . $type . '&item=' . $item . '&do=' . $do . ($context !== '' ? '&context=' . $context : ''));
+$xpMember  = $site->addUser('explain_member', 'Registered');
+$xpAuthor  = $site->addUser('explain_author', 'Author');
+$xpManager = $site->addUser('explain_manager', 'Manager');
+$xpBlocked = $site->addUser('explain_blocked', 'Registered');
+$site->q('UPDATE #__users SET block = 1 WHERE id = ?', [$xpBlocked]);
+$xpNow = gmdate('Y-m-d H:i:s');
+$xpPublic  = $addArticle('xp-public', $xpNow);
+$xpSpecial = $addArticle('xp-special', $xpNow, 1, 3);
+$xpFuture  = $addArticle('xp-future', $xpNow, 1, 2);
+$site->q('UPDATE #__content SET publish_up = ? WHERE id = ?', [gmdate('Y-m-d H:i:s', time() + 86400 * 30), $xpFuture]);
+$xpOwn = $addArticle('xp-own', $xpNow);
+$site->q('UPDATE #__content SET created_by = ? WHERE id = ?', [$xpAuthor, $xpOwn]);
+$xpUsersBefore = $site->q('SELECT id, block, "lastvisitDate", password FROM #__users WHERE id IN (?, ?, ?, ?) ORDER BY id', [$xpMember, $xpAuthor, $xpManager, $xpBlocked]);
+$xpAssetsBefore = $site->q("SELECT rules FROM #__assets WHERE name = 'com_content'")[0]['rules'];
+
+$page = $xp($admin, 'explain_member', $xpPublic, 'view');
+Test::noPhpErrors($page, 'explain content access');
+Test::check($xpVerdict($page) === 'yes' && $xpStatus($page, 'access') === 'pass' && str_contains($page, 'UT xp-public'), 'a member can view a public published article');
+$page = $xp($admin, 'explain_member', $xpSpecial, 'view');
+Test::check($xpVerdict($page) === 'no' && $xpStatus($page, 'access') === 'fail' && $xpStatus($page, 'state') === 'pass' && str_contains($page, 'Special'),
+    'a level the account lacks is named as the reason, alongside what is met');
+$page = $xp($admin, 'explain_member', $xpFuture, 'view');
+Test::check($xpVerdict($page) === 'no' && $xpStatus($page, 'access') === 'pass' && $xpStatus($page, 'dates') === 'fail',
+    'the account has the level, but the article is not published yet');
+$page = $xp($admin, 'explain_blocked', $xpPublic, 'view');
+Test::check($xpVerdict($page) === 'yes' && $xpStatus($page, 'account') === 'info' && $xpStatus($page, 'guest') === 'info', 'a blocked account is checked as a visitor on public content');
+$page = $xp($admin, 'explain_blocked', $xpFuture, 'view');
+Test::check($xpVerdict($page) === 'no' && $xpStatus($page, 'access') === 'fail', 'a blocked account loses its Registered level');
+$page = $xp($admin, 'explain_author', $xpOwn, 'edit', 'site');
+Test::check($xpVerdict($page) === 'yes' && $xpStatus($page, 'permission') === 'pass' && $xpStatus($page, 'login') === 'pass', 'an author can edit its own article on the site');
+$page = $xp($admin, 'explain_author', $xpPublic, 'edit', 'site');
+Test::check($xpVerdict($page) === 'no' && $xpStatus($page, 'permission') === 'fail' && str_contains($page, 'not the author'), '"Edit Own" does not cover articles by someone else');
+$page = $xp($admin, 'explain_author', $xpOwn, 'edit', 'administrator');
+Test::check($xpVerdict($page) === 'no' && $xpStatus($page, 'login') === 'fail', 'an author cannot edit in the administrator without administrator login');
+$page = $xp($admin, 'explain_manager', $xpPublic, 'publish', 'administrator');
+Test::check($xpVerdict($page) === 'yes' && $xpStatus($page, 'permission') === 'pass' && $xpStatus($page, 'manage') === 'pass', 'a manager can publish without workflows');
+// An explicit denial on Content is resolved by Joomla and shown to Super Users.
+$xpRules = json_decode($xpAssetsBefore, true) ?: [];
+$xpRules['core.edit.state'][(string) $gid('Manager')] = 0;
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [json_encode($xpRules)]);
+$page = $xp($admin, 'explain_manager', $xpPublic, 'publish', 'administrator');
+Test::check($xpVerdict($page) === 'no' && $xpStatus($page, 'permission') === 'fail' && str_contains($page, 'data-ut-explain-denials')
+    && str_contains($page, 'core.edit.state') && str_contains($page, 'Manager'), 'an explicit denial is explained with the group and where it is set');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [$xpAssetsBefore]);
+// With workflows, publishing is a transition: core.edit.state alone is not enough.
+$xpContent = $site->q("SELECT extension_id, params FROM #__extensions WHERE type = 'component' AND element = 'com_content'")[0];
+$xpParams = json_decode($xpContent['params'] ?: '{}', true) ?: [];
+$site->q('UPDATE #__extensions SET params = ? WHERE extension_id = ?', [json_encode(['workflow_enabled' => 1] + $xpParams), $xpContent['extension_id']]);
+$xpStage = (int) $site->q('SELECT id FROM #__workflow_stages ORDER BY id')[0]['id'];
+$site->q('INSERT INTO #__workflow_associations (item_id, stage_id, extension) VALUES (?, ?, ?)', [$xpPublic, $xpStage, 'com_content.article']);
+$page = $xp($admin, 'explain_manager', $xpPublic, 'publish', 'administrator');
+$xpWorkflowAllowed = $xpVerdict($page) === 'yes';
+Test::check($xpStatus($page, 'permission') !== '' && str_contains($page, 'Workflows are enabled') && str_contains($page, 'COM_USERTOOLS_EXPLAIN_NOTE_WORKFLOW') === false,
+    'with workflows enabled, publishing is explained through the transitions of the current stage');
+$xpRules['core.execute.transition'][(string) $gid('Manager')] = 0;
+unset($xpRules['core.edit.state']);
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [json_encode($xpRules)]);
+$page = $xp($admin, 'explain_manager', $xpPublic, 'publish', 'administrator');
+Test::check($xpWorkflowAllowed && $xpVerdict($page) === 'no' && $xpStatus($page, 'permission') === 'fail',
+    'denying the transitions prevents publishing even with Edit State');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [$xpAssetsBefore]);
+$site->q('UPDATE #__extensions SET params = ? WHERE extension_id = ?', [$xpContent['params'], $xpContent['extension_id']]);
+// A category view needs it published; an article in an unpublished category is hidden.
+$page = $xp($admin, 'explain_member', $ageCategory, 'view', '', 'category');
+Test::check($xpVerdict($page) === 'yes' && $xpStatus($page, 'parents') === 'pass', 'a published public category can be viewed');
+$site->q('UPDATE #__categories SET published = 0 WHERE id = ?', [$ageCategory]);
+$page = $xp($admin, 'explain_member', $xpPublic, 'view');
+Test::check($xpVerdict($page) === 'no' && $xpStatus($page, 'category') === 'fail' && $xpStatus($page, 'access') === 'pass', 'an unpublished category hides its articles');
+$site->q('UPDATE #__categories SET published = 1 WHERE id = ?', [$ageCategory]);
+$page = $xp($admin, 'explain_member', 999999, 'view');
+Test::check(str_contains($page, 'data-ut-explain-error') && !str_contains($page, 'data-ut-explain-result'), 'an unknown item gives no explanation');
+[$code, $page] = $admin->request($explainUrl . '&login=explain_member&type=category&item=' . $ageCategory . '&do=edit&context=site');
+Test::check($code === 200 && str_contains($page, 'value="administrator" id="ut-explain-context-administrator" checked'), 'an impossible context falls back to one Joomla supports');
+// Delegation: its own permission, the profile permission, and only content the operator may see.
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
+[$code] = $delegate->request($explainUrl);
+Test::check($code === 403, 'the screen needs the "Explain content access" permission (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.explain' => ['6' => 1]])]);
+$page = $xp($delegate, 'explain_member', $xpPublic, 'view');
+Test::check(str_contains($page, 'data-ut-explain-error') && !str_contains($page, 'UT xp-public'), 'without the profile permission no account is explained');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.explain' => ['6' => 1], 'usertools.profile' => ['6' => 1]])]);
+$page = $xp($delegate, 'explain_member', $xpPublic, 'view');
+Test::check($xpVerdict($page) === 'yes' && !str_contains($page, 'data-ut-explain-denials'), 'a delegate gets the explanation without permission details');
+$site->q("INSERT INTO #__viewlevels (title, ordering, rules) VALUES ('UT explain hidden', 97, ?)", [json_encode([$gid('Super Users')])]);
+$xpHiddenLevel = (int) $site->q("SELECT id FROM #__viewlevels WHERE title = 'UT explain hidden'")[0]['id'];
+$xpHidden = $addArticle('xp-hidden', $xpNow, 1, $xpHiddenLevel);
+$page = $xp($delegate, 'explain_member', $xpHidden, 'view');
+Test::check(str_contains($page, 'data-ut-explain-error') && !str_contains($page, 'UT xp-hidden') && !str_contains($page, 'data-ut-explain-result'),
+    'a delegate cannot explain content it could not see, and its title is not shown');
+// A parent category the delegate cannot see keeps its state but never shows its title.
+$xpCategory = $site->q('SELECT * FROM #__categories WHERE id = ?', [$ageCategory])[0];
+$xpInsertCategory = function (array $values) use ($site, $xpCategory): int {
+    $row = array_replace($xpCategory, $values);
+    unset($row['id']);
+    $site->q('INSERT INTO #__categories ("' . implode('", "', array_keys($row)) . '") VALUES (' . implode(', ', array_fill(0, count($row), '?')) . ')', array_values($row));
+    return (int) $site->q('SELECT id FROM #__categories WHERE alias = ?', [$values['alias']])[0]['id'];
+};
+$xpParent = $xpInsertCategory(['title' => 'UT explain secret parent', 'alias' => 'ut-explain-parent', 'path' => 'ut-explain-parent', 'lft' => 900000, 'rgt' => 900003,
+    'level' => 1, 'published' => 0, 'access' => $xpHiddenLevel, 'asset_id' => 0]);
+$xpChild = $xpInsertCategory(['title' => 'UT explain child', 'alias' => 'ut-explain-child', 'path' => 'ut-explain-parent/ut-explain-child', 'lft' => 900001, 'rgt' => 900002,
+    'level' => 2, 'parent_id' => $xpParent, 'published' => 1, 'access' => 1, 'asset_id' => 0]);
+$page = $xp($delegate, 'explain_member', $xpChild, 'view', '', 'category');
+Test::check($xpVerdict($page) === 'no' && $xpStatus($page, 'parents') === 'fail' && !str_contains($page, 'UT explain secret parent') && str_contains($page, 'a parent category you cannot view'),
+    'an unpublished parent the delegate cannot see is reported without its title');
+$page = $xp($admin, 'explain_member', $xpChild, 'view', '', 'category');
+Test::check($xpStatus($page, 'parents') === 'fail' && str_contains($page, 'UT explain secret parent'), 'a Super User sees which parent is unpublished');
+$site->q('DELETE FROM #__categories WHERE id IN (?, ?)', [$xpChild, $xpParent]);
+// An all-digit username is the account it names, not the account with that ID.
+$xpDigits = $site->addUser((string) $xpManager, 'Registered');
+$page = $xp($admin, (string) $xpManager, $xpPublic, 'edit', 'administrator');
+Test::check($xpDigits > 0 && $xpVerdict($page) === 'no' && $xpStatus($page, 'login') === 'fail' && str_contains($page, 'Can ' . $xpManager . ' edit'),
+    'an all-digit username wins over the account with that ID');
+$page = $xp($admin, 'explain_manager', $xpPublic, 'edit', 'administrator');
+Test::check($xpVerdict($page) === 'yes', 'the manager itself can still edit');
+$page = $admin->get($profileUrl . '&account=' . $xpMember);
+Test::check(str_contains($page, 'data-ut-profile-explain') && str_contains($page, 'view=explain&amp;account=' . $xpMember), 'the account profile links to the explanation');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+Test::check($site->q('SELECT id, block, "lastvisitDate", password FROM #__users WHERE id IN (?, ?, ?, ?) ORDER BY id', [$xpMember, $xpAuthor, $xpManager, $xpBlocked]) === $xpUsersBefore
+    && $site->sessions($xpMember) === 0 && $site->sessions($xpManager) === 0, 'explaining changes no account and opens no session');
+$site->q("DELETE FROM #__workflow_associations WHERE item_id = ? AND extension = 'com_content.article'", [$xpPublic]);
+$site->q("DELETE FROM #__content WHERE alias LIKE 'ut-age-xp-%'");
+$site->q("DELETE FROM #__viewlevels WHERE title = 'UT explain hidden'");
 
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);
