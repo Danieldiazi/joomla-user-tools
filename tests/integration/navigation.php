@@ -107,7 +107,7 @@ $emptyHome = $menuDelegate->get('index.php?option=com_usertools&view=home');
 Test::check(array_keys(utMenuLinks($emptyHome)) === [''] && !str_contains($emptyHome, 'data-ut-home-card='),
     'component access alone shows Home without empty categories or tools');
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 0], 'usertools.profile' => ['6' => 1]])]);
-$withdrawnMenu = $menuDelegate->get('index.php?option=com_users&view=users');
+$withdrawnMenu = $menuDelegate->get('index.php');
 [$withdrawnHome] = $menuDelegate->request('index.php?option=com_usertools&view=home');
 Test::check(utMenuLinks($withdrawnMenu) === [] && $withdrawnHome === 403,
     'withdrawing component access removes its entire menu and denies its direct home URL');

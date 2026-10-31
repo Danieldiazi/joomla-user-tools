@@ -1802,7 +1802,10 @@ foreach ($tourViews as $view => $count) {
     $page   = $admin->get('index.php?option=com_usertools&view=' . $view);
     $missing = array_filter($steps, fn (array $step): bool => (int) $step['type'] !== 0
         || !preg_match('/^\[data-ut-tour="([a-z]+)"\]$/', (string) $step['target'], $m) || !str_contains($page, 'data-ut-tour="' . $m[1] . '"'));
-    utCheckCategory($page, \Danieldiazi\Component\Usertools\Administrator\Service\Navigation::categoryForView($view), $view . ' with its guided tour');
+    utCheckCategory($page, match ($view) {
+        'addgroups', 'ungroup', 'move' => 'groups', 'delete', 'anonymize' => 'delete',
+        'schedule' => 'automation', default => 'accounts',
+    }, $view . ' with its guided tour');
     Test::check(count($steps) === $count && !$missing, "the $view tour only explains, and every step finds its target on the screen");
     Test::check(str_contains($page, 'button-start-guidedtour" data-id="' . $tourId . '" data-ut-tour-start="' . $view . '"'), "the $view screen offers its tour next to Help");
 }
