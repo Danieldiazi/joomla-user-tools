@@ -37,7 +37,7 @@ $menuComponent = (int) $site->q("SELECT extension_id FROM #__extensions WHERE el
 $menuRows = fn (): array => $site->q('SELECT id, parent_id, title, link FROM #__menu WHERE component_id = ? AND client_id = 1 ORDER BY lft', [$menuComponent]);
 $menuPlugin = fn (): array => $site->q("SELECT extension_id, enabled, custom_data FROM #__extensions WHERE element = 'usertools' AND type = 'plugin' AND folder = 'system'");
 Test::check(count($menuRows()) === 6 && (int) ($menuPlugin()[0]['enabled'] ?? 0) === 1,
-    'fresh package installs one root, five submenu entries and enables the navigation plugin');
+    'fresh or upgraded package has one root, five submenu entries and an enabled navigation plugin');
 $menuPackage = glob(__DIR__ . '/../../dist/pkg_usertools-*.zip')[0] ?? '';
 Test::check($menuPackage !== '', 'the package is available for update tests');
 if ($menuPackage !== '') {
@@ -102,6 +102,15 @@ Test::check(array_keys(utMenuLinks($changedHome)) === ['', 'groups'] && !str_con
     'changing permissions changes the menu and home on the next request');
 [$withdrawnCategory] = $menuDelegate->request('index.php?option=com_usertools&view=home&section=accounts');
 Test::check($withdrawnCategory === 403, 'withdrawing the last tool permission withdraws category access');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
+$emptyHome = $menuDelegate->get('index.php?option=com_usertools&view=home');
+Test::check(array_keys(utMenuLinks($emptyHome)) === [''] && !str_contains($emptyHome, 'data-ut-home-card='),
+    'component access alone shows Home without empty categories or tools');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 0], 'usertools.profile' => ['6' => 1]])]);
+$withdrawnMenu = $menuDelegate->get('index.php?option=com_users&view=users');
+[$withdrawnHome] = $menuDelegate->request('index.php?option=com_usertools&view=home');
+Test::check(utMenuLinks($withdrawnMenu) === [] && $withdrawnHome === 403,
+    'withdrawing component access removes its entire menu and denies its direct home URL');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_scheduler'", [$menuSchedulerRules]);
 $outsidePage = $admin->get('index.php?option=com_users&view=users');

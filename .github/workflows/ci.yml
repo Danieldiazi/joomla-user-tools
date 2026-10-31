@@ -107,6 +107,12 @@ jobs:
           php "$RUNNER_TEMP/site/installation/joomla.php" install -n --site-name=CI --admin-user="CI Admin" --admin-username=admin \
             --admin-password="$ADMIN_PASS" --admin-email=admin@example.test --db-type=$DBTYPE --db-host=127.0.0.1 \
             --db-user=joomla --db-pass=joomla --db-name=joomla --db-prefix=ci_
+      - name: Install the published single-link package before upgrading
+        if: matrix.php == '8.4'
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/legacy.zip" "https://github.com/Danieldiazi/joomla-user-tools/releases/download/v2026.10.20/pkg_usertools-2026.10.20.zip"
+          php "$RUNNER_TEMP/site/cli/joomla.php" extension:install --path="$RUNNER_TEMP/legacy.zip"
+          UT_JOOMLA="$RUNNER_TEMP/site" php tests/integration/navigation-legacy.php
       - name: Install the current build
         run: |
           php scripts/build.php --output=dist

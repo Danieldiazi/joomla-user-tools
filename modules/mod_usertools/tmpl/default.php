@@ -9,20 +9,14 @@
 \defined('_JEXEC') or die;
 
 use Joomla\CMS\HTML\HTMLHelper;
-use Joomla\CMS\Factory;
-use Danieldiazi\Component\Usertools\Administrator\Controller\DisplayController;
 use Danieldiazi\Component\Usertools\Administrator\Service\Navigation;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 
 /**
  * @var array<string, mixed>|null $summary
- * @var bool                      $canDelete
+ * @var array<string, array<string, mixed>> $sections
  */
-$identity = Factory::getApplication()->getIdentity();
-$sections = Navigation::sections(static fn (string $permission): bool =>
-    $identity !== null && DisplayController::allowed($identity, $permission)
-);
 $e    = fn ($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $date = fn (?string $utc) => $utc ? HTMLHelper::_('date', $utc, Text::_('DATE_FORMAT_LC5')) : Text::_('MOD_USERTOOLS_NEVER');
 $statusBadge = [
