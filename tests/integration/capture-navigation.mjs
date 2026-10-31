@@ -12,6 +12,15 @@ await mkdir(output, { recursive: true });
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, colorScheme: 'light' });
+  // Joomla may auto-start its welcome tour on the dashboard after signing in; its sessionStorage state
+  // would send the next page back to the dashboard. Clear it before any page script runs.
+  await page.addInitScript(() => {
+    try {
+      for (const key of ['tourId', 'tourToken', 'autoTourId', 'currentStepId', 'previousStepUrl']) sessionStorage.removeItem(key);
+    } catch {
+      // Storage may be unavailable; the capture then behaves as before.
+    }
+  });
   await page.goto(base + '/administrator/index.php');
   await page.locator('input[name="username"]').fill(user);
   await page.locator('input[name="passwd"]').fill(password);
@@ -26,8 +35,8 @@ try {
   await page.locator('[data-ut-category=""]').waitFor();
   await capture('01-portada.jpg');
   for (const [category, name] of [
-    ['accounts', '30-menu-cuentas.jpg'], ['groups', '31-menu-grupos.jpg'],
-    ['automation', '32-menu-automatizacion.jpg'], ['delete', '33-menu-eliminacion.jpg'],
+    ['accounts', '31-menu-cuentas.jpg'], ['groups', '32-menu-grupos.jpg'],
+    ['automation', '33-menu-automatizacion.jpg'], ['delete', '34-menu-eliminacion.jpg'],
   ]) {
     await page.goto(home + '&section=' + category);
     await page.locator('[data-ut-category="' + category + '"]').waitFor();

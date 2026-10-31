@@ -296,22 +296,30 @@ class Pkg_UsertoolsInstallerScript extends InstallerScript
         }
     }
 
-    /** Enable the new menu integration once; later updates preserve an explicit disable. */
+    /**
+     * Enable the menu integration once; later updates preserve an explicit disable. A missing or
+     * unsaved plugin is reported, never fatal: the rest of the installation must still run, and the
+     * home screen warns while the plugin is disabled.
+     */
     private function enableNavigationPlugin(DatabaseInterface $db): void
     {
-        $table = new Extension($db);
-        if (!$table->load(['type' => 'plugin', 'folder' => 'system', 'element' => 'usertools'])) {
-            throw new \RuntimeException(Text::_('PKG_USERTOOLS_ERROR_NAVIGATION'));
-        }
-        $data = new Registry($table->custom_data);
-        if ($data->get('navigation_initialized', false)) {
-            return;
-        }
-        $table->enabled = 1;
-        $data->set('navigation_initialized', true);
-        $table->custom_data = $data->toString();
-        if (!$table->store()) {
-            throw new \RuntimeException(Text::_('PKG_USERTOOLS_ERROR_NAVIGATION'));
+        try {
+            $table = new Extension($db);
+            if (!$table->load(['type' => 'plugin', 'folder' => 'system', 'element' => 'usertools'])) {
+                throw new \RuntimeException('missing');
+            }
+            $data = new Registry($table->custom_data);
+            if ($data->get('navigation_initialized', false)) {
+                return;
+            }
+            $table->enabled = 1;
+            $data->set('navigation_initialized', true);
+            $table->custom_data = $data->toString();
+            if (!$table->store()) {
+                throw new \RuntimeException('store');
+            }
+        } catch (\Throwable) {
+            Factory::getApplication()->enqueueMessage(Text::_('PKG_USERTOOLS_ERROR_NAVIGATION'), 'warning');
         }
     }
 
