@@ -97,7 +97,7 @@ $actions = ['view' => 'COM_USERTOOLS_EXPLAIN_ACTION_VIEW', 'edit' => 'COM_USERTO
       <?php if ($result['menus']) : ?>
       <ul class="list-unstyled" data-ut-explain-menus>
         <?php foreach ($result['menus'] as $menu) : ?>
-        <li class="mb-1"><span class="badge text-bg-<?= $badge[$menu['status']] ?>"><?= $this->statusLabel($menu['status']) ?></span>
+        <li class="mb-1" data-ut-explain-menu="<?= $this->escape($menu['status']) ?>"><span class="badge text-bg-<?= $badge[$menu['status']] ?>"><?= $this->statusLabel($menu['status']) ?></span>
           <?= $this->escape($menu['title']) ?>: <?= $this->checkText($menu) ?></li>
         <?php endforeach; ?>
       </ul>
