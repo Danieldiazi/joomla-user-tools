@@ -172,15 +172,29 @@
       sync();
     });
 
-    // Remove from groups: suggestions while typing the account.
+    // Account selector (profile, explain, remove from groups): suggestions while typing, labelled
+    // "username — Name (email) · ID n". Choosing one sends its ID in the hidden field; editing the
+    // text afterwards clears it, so the server resolves the typed text and never guesses.
     document.querySelectorAll('[data-ut-account-search]').forEach((field) => {
       const list = document.getElementById(field.getAttribute('list'));
+      const hidden = field.closest('[data-ut-account-picker]')?.querySelector('[data-ut-account-id]');
+      const min = Number(field.dataset.utAccountMin || 2);
+      const ids = new Map();
       let timer = 0;
       let last = '';
+      const sync = () => {
+        if (!hidden) return;
+        const id = ids.get(field.value);
+        hidden.value = id ? String(id) : '0';
+      };
+      const preset = hidden ? Number(hidden.value) : 0;
+      if (preset > 0) ids.set(field.value, preset);
+      field.addEventListener('change', sync);
       field.addEventListener('input', () => {
+        sync();
         clearTimeout(timer);
         const term = field.value.trim();
-        if (term.length < 2 || term === last) return;
+        if (term.length < min || term === last || ids.has(field.value)) return;
         timer = setTimeout(async () => {
           last = term;
           try {
@@ -190,12 +204,12 @@
             if (!response.ok) return;
             const accounts = await response.json();
             list.replaceChildren(...accounts.map((account) => {
+              ids.set(account.label, account.id);
               const option = document.createElement('option');
-              option.value = account.username;
-              option.label = [account.name, account.email].filter(Boolean).join(' · ');
+              option.value = account.label;
               return option;
             }));
-          } catch (e) { /* Suggestions are a convenience: the full username or email still works. */ }
+          } catch (e) { /* Suggestions are a convenience: the exact username, email or ID still works. */ }
         }, 250);
       });
     });

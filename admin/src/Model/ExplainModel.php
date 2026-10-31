@@ -11,6 +11,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Model;
 \defined('_JEXEC') or die;
 
 use Danieldiazi\Component\Usertools\Administrator\Service\AccessExplanation;
+use Danieldiazi\Component\Usertools\Administrator\Service\AccountIdentity;
 use Danieldiazi\Component\Usertools\Administrator\Service\AccessExplanationReader;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
@@ -24,22 +25,18 @@ use Joomla\CMS\User\User;
  */
 class ExplainModel extends BaseDatabaseModel
 {
-    /** @return array{id: int, username: string, name: string} */
+    /**
+     * The account typed or chosen. Several matches are returned as candidates, never resolved to the first.
+     *
+     * @return array{status: string, id: int, candidates: list<array{id: int, username: string, name: string, email: string, blocked: bool}>}
+     */
     public function account(string $login, int $id): array
     {
-        $login = trim($login);
-        if ($login !== '') {
-            // An exact username or email wins, so an all-digit username is never read as another account's ID.
-            $id = Toolkit::directory()->findId($login);
-            if ($id < 1 && ctype_digit($login)) {
-                $id = (int) $login;
-            }
-        }
-        $record = $id > 0 ? (Toolkit::directory()->users([$id])[$id] ?? null) : null;
-        if ($record === null) {
+        $match = Toolkit::directory()->pick($login, $id);
+        if ($match['status'] === AccountIdentity::NONE) {
             throw new UserFacingException('COM_USERTOOLS_PROFILE_NOT_FOUND');
         }
-        return ['id' => $record->id, 'username' => $record->username, 'name' => $record->name];
+        return $match;
     }
 
     /** @return array<string, mixed> the explanation, plus the item it refers to */

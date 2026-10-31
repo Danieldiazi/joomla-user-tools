@@ -19,7 +19,7 @@ $result  = $this->result;
 ?>
 <div class="ut-app ut-narrow">
   <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'result', 'label' => 'COM_USERTOOLS_UNGROUP_PROGRESS'], $layouts) ?>
-  <div class="alert alert-success" data-ut-ungroup-done><?= Text::sprintf('COM_USERTOOLS_UNGROUP_DONE', $this->escape($result['username']), $this->escape(implode(', ', $result['removed']))) ?></div>
+  <div class="alert alert-success" data-ut-ungroup-done><?= Text::sprintf('COM_USERTOOLS_UNGROUP_DONE', $this->escape($result['username']) . ' (ID ' . (int) $result['id'] . ')', $this->escape(implode(', ', $result['removed']))) ?></div>
   <?php if (($result['sessions'] ?? '') === 'open') : ?>
   <div class="alert alert-danger" data-ut-sessions="open">
     <p><?= Text::_('COM_USERTOOLS_UNGROUP_SESSIONS_OPEN') ?></p>

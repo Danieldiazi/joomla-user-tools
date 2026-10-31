@@ -108,7 +108,13 @@ La [galería de capturas](docs/capturas.md) muestra la portada, las cuatro categ
 
 ## Ficha de una persona
 
-Desde la portada, abre **Ficha de una persona** y busca por usuario o correo electrónico, sin distinguir mayúsculas. También se puede abrir una cuenta por su ID. La consulta requiere el permiso propio `usertools.profile` y no guarda cambios en la cuenta, sus grupos ni los borradores de otras herramientas.
+Desde la portada, abre **Ficha de una persona** y elige la cuenta. La consulta requiere el permiso propio `usertools.profile` y no guarda cambios en la cuenta, sus grupos ni los borradores de otras herramientas.
+
+### Elegir la cuenta
+
+La ficha, **Explicar acceso a contenido** y **Quitar de grupos** usan el mismo selector. Mientras escribes al menos dos caracteres del usuario, el nombre, el correo o el ID, aparecen hasta 10 cuentas con el formato `usuario — Nombre (correo) · ID 245`, para distinguir a dos personas con el mismo nombre. Al elegir una se envía su ID; si después cambias el texto, se vuelve a buscar lo que escribas. También puedes escribir el usuario, el correo o el ID completos, sin distinguir mayúsculas.
+
+Nunca se elige una cuenta por el orden de los resultados: si lo escrito coincide con varias (por ejemplo, el usuario de una y el correo de otra, o un usuario formado solo por cifras que es también el ID de otra cuenta), la pantalla las lista y no continúa hasta que eliges una. Las sugerencias solo se ofrecen a quien puede usar esa herramienta, exigen el token del formulario, no se guardan en caché y no cambian nada. Quitar de grupos no sugiere tu propia cuenta.
 
 La ficha reúne identidad, estado, último acceso y alta en UTC, acceso a la administración, condición de superusuario y si hay verificación en varios pasos configurada. Nunca muestra contraseñas, secretos, métodos ni códigos de recuperación. Los grupos se presentan en su árbol: los grupos intermedios aparecen atenuados y con una indicación de que no están asignados. Los niveles de acceso efectivos son los que concede Joomla y se explica si vienen de un grupo asignado, de uno de sus antecesores o de una asignación individual.
 
@@ -312,7 +318,7 @@ La lista se obtiene con un número fijo de consultas, sea cual sea el tamaño de
 
 Desde la 2026.10.9, **Quitar de grupos** saca una cuenta de los grupos que elijas y, si lo pides, también de todos los grupos que cuelgan de ellos: hijos, nietos y siguientes. El lote de Joomla («Quitar del grupo» en Usuarios) solo quita del grupo exacto que eliges y no enseña antes los grupos de la cuenta.
 
-1. **Cuenta**: escribe parte del usuario, el nombre o el correo y elige la cuenta en la lista que aparece mientras escribes. También vale el usuario o el correo completos, sin distinguir mayúsculas.
+1. **Cuenta**: escribe parte del usuario, el nombre, el correo o el ID y elige la cuenta en la lista que aparece mientras escribes (véase [Elegir la cuenta](#elegir-la-cuenta)). También vale el usuario, el correo o el ID completos, sin distinguir mayúsculas. Los pasos siguientes muestran el usuario y el ID de la cuenta elegida.
 2. **Grupos**: aparecen los grupos a los que pertenece la cuenta, todos marcados y en su árbol. Desde la 2026.10.16, los grupos intermedios en los que la cuenta no está se muestran sin casilla y con la nota «la cuenta no está en este grupo», para que cada grupo cuelgue de su padre real. Desmarca los que debe dejar. Al desmarcar un grupo del que cuelgan otros grupos de la cuenta aparece a su lado **«y sus subgrupos»**: si lo marcas, se desmarcan solos los que cuelgan de él y se indica por qué. Cada grupo se decide por separado, así que puedes hacerlo con varios sin que se deshagan entre sí; si desmarcas «y sus subgrupos» o vuelves a marcar el grupo, sus subgrupos recuperan su estado. Los grupos padre no se tocan nunca.
 3. **Revisar**: cada grupo de la cuenta con «Se quita» o «Se mantiene», y por qué grupo se quita uno por «y sus subgrupos». No se cambia nada hasta confirmar. La revisión es de un solo uso y caduca a los 15 minutos.
 4. **Resultado**: los grupos que conserva la cuenta y enlaces a su ficha y al registro de acciones.

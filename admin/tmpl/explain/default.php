@@ -9,7 +9,9 @@
 \defined('_JEXEC') or die;
 
 use Danieldiazi\Component\Usertools\Administrator\Service\AccessExplanation;
+use Danieldiazi\Component\Usertools\Administrator\Service\AccountIdentity;
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
 
 /** @var \Danieldiazi\Component\Usertools\Administrator\View\Explain\HtmlView $this */
@@ -24,9 +26,8 @@ $actions = ['view' => 'COM_USERTOOLS_EXPLAIN_ACTION_VIEW', 'edit' => 'COM_USERTO
       <input type="hidden" name="option" value="com_usertools"><input type="hidden" name="view" value="explain">
       <div class="row g-3">
         <div class="col-md-6">
-          <label class="form-label" for="ut-explain-login"><?= Text::_('COM_USERTOOLS_EXPLAIN_ACCOUNT') ?></label>
-          <input class="form-control" type="text" name="login" id="ut-explain-login" required maxlength="255" autocomplete="off" value="<?= $this->escape($this->login) ?>" aria-describedby="ut-explain-login-help">
-          <div class="form-text" id="ut-explain-login-help"><?= Text::_('COM_USERTOOLS_EXPLAIN_ACCOUNT_HELP') ?></div>
+          <?= LayoutHelper::render('usertools.account', ['id' => 'ut-explain-login', 'tool' => 'explain', 'login' => $this->login, 'account' => $this->account['id'] ?? 0,
+            'candidates' => $this->candidates, 'label' => 'COM_USERTOOLS_EXPLAIN_ACCOUNT', 'help' => 'COM_USERTOOLS_EXPLAIN_ACCOUNT_HELP', 'required' => true], JPATH_ADMINISTRATOR . '/components/com_usertools/layouts') ?>
         </div>
         <div class="col-md-6">
           <label class="form-label" for="ut-explain-do"><?= Text::_('COM_USERTOOLS_EXPLAIN_ACTION') ?></label>
@@ -67,6 +68,7 @@ $actions = ['view' => 'COM_USERTOOLS_EXPLAIN_ACTION_VIEW', 'edit' => 'COM_USERTO
   <section class="card ut-card" aria-labelledby="ut-explain-heading" data-ut-explain-result data-ut-explain-verdict="<?= $this->escape($result['verdict']) ?>">
     <div class="card-body">
       <h2 class="h4" id="ut-explain-heading"><?= Text::sprintf('COM_USERTOOLS_EXPLAIN_HEADING', $this->escape($this->account['username']), Text::_('COM_USERTOOLS_EXPLAIN_VERB_' . strtoupper($this->action)), $this->escape($item['title']), (int) $item['id']) ?></h2>
+      <p class="text-body-secondary" data-ut-explain-account><?= Text::sprintf('COM_USERTOOLS_ACCOUNT_LABEL', ...array_map(fn ($v) => $this->escape((string) $v), AccountIdentity::labelParts($this->account))) ?></p>
       <div class="alert alert-<?= $yes ? 'success' : 'danger' ?>" role="status">
         <strong><?= Text::_($yes ? 'COM_USERTOOLS_EXPLAIN_VERDICT_YES' : 'COM_USERTOOLS_EXPLAIN_VERDICT_NO') ?></strong>
         <?= Text::_($yes ? 'COM_USERTOOLS_EXPLAIN_VERDICT_YES_DESC' : 'COM_USERTOOLS_EXPLAIN_VERDICT_NO_DESC') ?>

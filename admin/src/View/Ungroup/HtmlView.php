@@ -22,8 +22,8 @@ class HtmlView extends BaseHtmlView
 {
     use ViewTrait;
 
-    /** @var array{login: string, account: int, removed: list<int>, recursive: list<int>} */
-    public array $draft = ['login' => '', 'account' => 0, 'removed' => [], 'recursive' => []];
+    /** @var array{login: string, account: int, removed: list<int>, recursive: list<int>, candidates: list<array<string, mixed>>} */
+    public array $draft = ['login' => '', 'account' => 0, 'removed' => [], 'recursive' => [], 'candidates' => []];
     /** @var array<string, mixed> */
     public array $selection = [];
     /** @var array<string, mixed> */
@@ -63,7 +63,8 @@ class HtmlView extends BaseHtmlView
                 $requested = Toolkit::app()->getInput()->getInt('account', 0);
                 if ($requested > 0) {
                     $account = Toolkit::directory()->users([$requested])[$requested] ?? null;
-                    $this->draft['login'] = $account ? $account->username : '';
+                    $this->draft['login']   = $account ? $account->username : '';
+                    $this->draft['account'] = $account ? $account->id : 0;
                 }
             }
         } catch (UserFacingException $e) {

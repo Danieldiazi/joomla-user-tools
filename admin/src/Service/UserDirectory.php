@@ -261,45 +261,99 @@ final class UserDirectory
         return $counts;
     }
 
-    /** Account id by username or email (case-insensitive on every database), or 0. */
+    /**
+     * Account id by exact username or email (case-insensitive on every database), or 0. Returns 0
+     * when the text names more than one account: the username of one and the email of another.
+     */
     public function findId(string $login): int
     {
-        $login = trim($login);
-        if ($login === '') {
-            return 0;
-        }
-        $db    = $this->db;
-        $query = $db->createQuery()->select($db->quoteName('id'))->from($db->quoteName('#__users'))
-            ->where('(LOWER(' . $db->quoteName('username') . ') = LOWER(:login) OR LOWER(' . $db->quoteName('email') . ') = LOWER(:email))')
-            ->bind(':login', $login)
-            ->bind(':email', $login)
-            ->order($db->quoteName('id'));
-        return (int) $db->setQuery($query, 0, 1)->loadResult();
+        $match = AccountIdentity::decide($this->matches($login, false));
+        return $match['status'] === AccountIdentity::ONE ? $match['id'] : 0;
     }
 
     /**
-     * Accounts whose username, name or email contains the text (case-insensitive on every database),
-     * exact usernames first.
+     * Who a typed login names: exact username, exact email or, for an all-digit text, the ID.
      *
-     * @return list<array{username: string, name: string, email: string, blocked: bool}>
+     * @return array{status: string, id: int, candidates: list<array{id: int, username: string, name: string, email: string, blocked: bool}>}
+     */
+    public function resolve(string $login): array
+    {
+        return AccountIdentity::decide($this->matches($login, true));
+    }
+
+    /**
+     * The account a single-account tool works on: the chosen ID when there is one (a suggestion or
+     * an explicit choice), otherwise the typed login if it names exactly one account.
+     *
+     * @return array{status: string, id: int, candidates: list<array{id: int, username: string, name: string, email: string, blocked: bool}>}
+     */
+    public function pick(string $login, int $account): array
+    {
+        $record = $account > 0 ? ($this->users([$account])[$account] ?? null) : null;
+        // The chosen ID is trusted only while the visible text still names that account: a page
+        // without JavaScript keeps the hidden ID when someone types another account.
+        if ($record !== null && !AccountIdentity::describes($login, $record->id, $record->username, $record->email)) {
+            $record = null;
+            $account = 0;
+        }
+        if ($account > 0) {
+            return $record === null
+                ? AccountIdentity::decide([])
+                : AccountIdentity::decide([['id' => $record->id, 'username' => $record->username, 'name' => $record->name, 'email' => $record->email, 'blocked' => $record->block === 1]]);
+        }
+        return $this->resolve($login);
+    }
+
+    /** @return list<array{id: int, username: string, name: string, email: string, blocked: bool}> */
+    private function matches(string $login, bool $byId): array
+    {
+        $login = trim($login);
+        if ($login === '') {
+            return [];
+        }
+        $db    = $this->db;
+        $id    = $byId && ctype_digit($login) ? (int) $login : 0;
+        $query = $db->createQuery()->select($db->quoteName(['id', 'username', 'name', 'email', 'block']))->from($db->quoteName('#__users'))
+            ->where('(LOWER(' . $db->quoteName('username') . ') = LOWER(:login) OR LOWER(' . $db->quoteName('email') . ') = LOWER(:email) OR '
+                . $db->quoteName('id') . ' = :id)')
+            ->bind(':login', $login)
+            ->bind(':email', $login)
+            ->bind(':id', $id, ParameterType::INTEGER)
+            ->order($db->quoteName('id'));
+        $rows = [];
+        foreach ($db->setQuery($query, 0, AccountIdentity::SUGGESTIONS)->loadObjectList() as $row) {
+            $rows[] = ['id' => (int) $row->id, 'username' => (string) $row->username, 'name' => (string) $row->name, 'email' => (string) $row->email, 'blocked' => (int) $row->block === 1];
+        }
+        return $rows;
+    }
+
+    /**
+     * Accounts whose username, name or email contains the text, or whose ID is the text
+     * (case-insensitive on every database), exact usernames and IDs first.
+     *
+     * @return list<array{id: int, username: string, name: string, email: string, blocked: bool}>
      */
     public function search(string $text, int $limit): array
     {
         $db      = $this->db;
         $escaped = '%' . str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], mb_strtolower($text)) . '%';
         $exact   = mb_strtolower($text);
+        $id      = ctype_digit($text) ? (int) $text : 0;
         $query   = $db->createQuery()
-            ->select($db->quoteName(['username', 'name', 'email', 'block']))
+            ->select($db->quoteName(['id', 'username', 'name', 'email', 'block']))
             ->from($db->quoteName('#__users'))
-            ->where('(LOWER(' . $db->quoteName('username') . ') LIKE :u OR LOWER(' . $db->quoteName('name') . ') LIKE :n OR LOWER(' . $db->quoteName('email') . ') LIKE :e)')
+            ->where('(LOWER(' . $db->quoteName('username') . ') LIKE :u OR LOWER(' . $db->quoteName('name') . ') LIKE :n OR LOWER(' . $db->quoteName('email') . ') LIKE :e OR '
+                . $db->quoteName('id') . ' = :id)')
             ->bind(':u', $escaped)
             ->bind(':n', $escaped)
             ->bind(':e', $escaped)
-            ->order('CASE WHEN LOWER(' . $db->quoteName('username') . ') = ' . $db->quote($exact) . ' THEN 0 ELSE 1 END')
-            ->order($db->quoteName('username'));
+            ->bind(':id', $id, ParameterType::INTEGER)
+            ->order('CASE WHEN ' . $db->quoteName('id') . ' = ' . $id . ' OR LOWER(' . $db->quoteName('username') . ') = ' . $db->quote($exact) . ' THEN 0 ELSE 1 END')
+            ->order($db->quoteName('username'))
+            ->order($db->quoteName('id'));
         $rows = [];
         foreach ($db->setQuery($query, 0, max(1, $limit))->loadObjectList() as $row) {
-            $rows[] = ['username' => (string) $row->username, 'name' => (string) $row->name, 'email' => (string) $row->email, 'blocked' => (int) $row->block === 1];
+            $rows[] = ['id' => (int) $row->id, 'username' => (string) $row->username, 'name' => (string) $row->name, 'email' => (string) $row->email, 'blocked' => (int) $row->block === 1];
         }
         return $rows;
     }

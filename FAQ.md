@@ -88,7 +88,11 @@ Sí. Usa **Añadir cuentas a grupos** con lista y grupo único, o pares `usuario
 
 ### ¿Consultar una ficha cambia algo?
 
-No. Reúne los grupos, accesos, estado, fechas, contenido creado y actividad reciente de una cuenta. Buscar por usuario o correo y abrir sus enlaces no modifica cuentas. Hace falta el permiso propio `usertools.profile`.
+No. Reúne los grupos, accesos, estado, fechas, contenido creado y actividad reciente de una cuenta. Buscar por usuario, nombre, correo o ID y abrir sus enlaces no modifica cuentas. Hace falta el permiso propio `usertools.profile`.
+
+### ¿Qué pasa si lo que escribo coincide con varias cuentas?
+
+No se elige ninguna por su cuenta. Si el texto es, por ejemplo, el usuario de una cuenta y el correo de otra, la ficha, la explicación de acceso y quitar de grupos muestran las coincidencias con `usuario — Nombre (correo) · ID` y esperan a que elijas una. Al elegir una sugerencia mientras escribes se usa su ID, así que dos personas con el mismo nombre no se confunden. Más detalles en [Elegir la cuenta](README.md#elegir-la-cuenta).
 
 ### ¿Puedo ver el registro de acciones con ese permiso?
 
