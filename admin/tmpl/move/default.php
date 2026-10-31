@@ -20,7 +20,7 @@ $chosen  = array_flip($this->draft['groups']);
 <div class="ut-app ut-narrow">
   <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'setup', 'label' => 'COM_USERTOOLS_MOVE_PROGRESS'], $layouts) ?>
   <p class="lead"><?= Text::_('COM_USERTOOLS_MOVE_INTRO') ?></p>
-  <div class="alert alert-warning" data-ut-move-rules>
+  <div class="alert alert-warning" data-ut-move-rules data-ut-tour="rules">
     <p class="mb-1"><strong><?= Text::_('COM_USERTOOLS_MOVE_RULES_HEADING') ?></strong></p>
     <ul class="mb-0">
       <li><?= Text::_('COM_USERTOOLS_MOVE_RULE_INHERIT') ?></li>
@@ -29,7 +29,7 @@ $chosen  = array_flip($this->draft['groups']);
     </ul>
   </div>
   <form method="post" action="<?= Route::_('index.php?option=com_usertools&view=move') ?>" data-ut-move-form>
-    <section class="card ut-card"><div class="card-body">
+    <section class="card ut-card" data-ut-tour="groups"><div class="card-body">
       <fieldset class="mb-0">
         <legend class="h5"><?= Text::_('COM_USERTOOLS_MOVE_GROUPS_LEGEND') ?></legend>
         <p class="form-text"><?= Text::_('COM_USERTOOLS_MOVE_GROUPS_HELP') ?></p>
@@ -50,7 +50,7 @@ $chosen  = array_flip($this->draft['groups']);
         <?php endforeach; ?>
       </fieldset>
     </div></section>
-    <section class="card ut-card"><div class="card-body">
+    <section class="card ut-card" data-ut-tour="target"><div class="card-body">
       <label class="form-label h5" for="ut-move-target"><?= Text::_('COM_USERTOOLS_MOVE_TARGET') ?></label>
       <select class="form-select" name="target" id="ut-move-target" aria-describedby="ut-move-target-help" required>
         <option value=""><?= Text::_('COM_USERTOOLS_MOVE_TARGET_CHOOSE') ?></option>
@@ -61,7 +61,7 @@ $chosen  = array_flip($this->draft['groups']);
       </select>
       <p class="form-text mb-0" id="ut-move-target-help"><?= Text::_('COM_USERTOOLS_MOVE_TARGET_HELP') ?></p>
     </div></section>
-    <div class="ut-actions">
+    <div class="ut-actions" data-ut-tour="actions">
       <button class="btn btn-primary" name="task" value="move.preview"><?= Text::_('COM_USERTOOLS_MOVE_PREVIEW') ?></button>
     </div>
     <?= HTMLHelper::_('form.token') ?>

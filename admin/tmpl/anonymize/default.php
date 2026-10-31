@@ -23,7 +23,7 @@ $source  = $draft['source'];
   <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'setup', 'label' => 'COM_USERTOOLS_ANONYMIZE_PROGRESS'], $layouts) ?>
   <h2 class="h3"><?= Text::_('COM_USERTOOLS_ANONYMIZE_SETUP_HEADING') ?></h2>
   <p class="lead"><?= Text::_('COM_USERTOOLS_ANONYMIZE_INTRO') ?></p>
-  <div class="alert alert-warning" data-ut-anonymize-what>
+  <div class="alert alert-warning" data-ut-anonymize-what data-ut-tour="warning">
     <p class="mb-1"><strong><?= Text::_('COM_USERTOOLS_PERMANENT') ?>.</strong> <?= Text::_('COM_USERTOOLS_ANONYMIZE_IRREVERSIBLE') ?></p>
     <ul class="mb-0">
       <li><?= Text::_('COM_USERTOOLS_ANONYMIZE_WHAT_CHANGES') ?></li>
@@ -46,7 +46,7 @@ $source  = $draft['source'];
   <form method="post" action="<?= Route::_('index.php?option=com_usertools&view=anonymize') ?>" data-ut-anonymize-form>
     <div class="row g-4">
       <div class="col-lg-6">
-        <fieldset class="card ut-card"><div class="card-body">
+        <fieldset class="card ut-card" data-ut-tour="source"><div class="card-body">
           <legend class="h5"><?= Text::_('COM_USERTOOLS_ANONYMIZE_SOURCE') ?></legend>
 
           <div class="form-check mb-3">
@@ -103,7 +103,7 @@ $source  = $draft['source'];
         <?= LayoutHelper::render('usertools.exclusions', ['exclusions' => $draft['exclusions'], 'groups' => $this->groups, 'idPrefix' => 'ut-anonymize', 'saveNote' => 'COM_USERTOOLS_EXCLUSIONS_SAVED_ON_SEARCH', 'title' => 'COM_USERTOOLS_EXCLUSIONS_ANONYMIZE_TITLE'], $layouts) ?>
       </div>
     </div>
-    <div class="ut-actions">
+    <div class="ut-actions" data-ut-tour="actions">
       <a class="btn btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools') ?>"><?= Text::_('JCANCEL') ?></a>
       <button class="btn btn-primary" name="task" value="anonymize.search"<?= $this->pluginReady ? '' : ' disabled' ?>><?= Text::_('COM_USERTOOLS_ANONYMIZE_SEARCH') ?></button>
     </div>

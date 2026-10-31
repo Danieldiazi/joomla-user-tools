@@ -4,7 +4,7 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos y la lista de contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, las del panel de Usuarios, añadir cuentas a grupos, exportar cuentas y deshacer bloqueos de 2026.10.19, la portada y las de la ficha de una persona de 2026.10.20, y la tabla de contenido por antigüedad con sus cuatro tipos, de la versión siguiente a 2026.10.20. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos y la lista de contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, las del panel de Usuarios, añadir cuentas a grupos, exportar cuentas y deshacer bloqueos de 2026.10.19, la portada y las de la ficha de una persona de 2026.10.20, y la tabla de contenido por antigüedad con sus cuatro tipos y el recorrido guiado, de la versión siguiente a 2026.10.20. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
 ![Portada de User Tools agrupada en secciones: revisar cuentas (con la ficha de una persona, la exportación y deshacer bloqueos), grupos y niveles de acceso, automatización y seguimiento, y eliminar o anonimizar cuentas (2026.10.20)](screenshots/01-portada.jpg)
 
@@ -13,6 +13,8 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cad
 ![Ficha de una persona: revisión del bloqueo de esa cuenta, con confirmación y sin filtro de inactividad (2026.10.20)](screenshots/29-ficha-revision-bloqueo.jpg)
 
 ![Comparación: lista y exclusiones](screenshots/02-comparacion-lista.jpg)
+
+![Recorrido guiado de «Comparar una lista»: el paso que explica la lista vigente, abierto con el botón «Recorrido guiado» junto a Ayuda (posterior a 2026.10.20)](screenshots/30-recorrido-guiado.jpg)
 
 ![Comparación: revisión de cambios, con «marcar todas» y el correo generado a partir del nombre de usuario (2026.10.11)](screenshots/03-comparacion-revision.jpg)
 

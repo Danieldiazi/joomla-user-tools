@@ -35,6 +35,7 @@ La portada y el menú de Componentes organizan las herramientas en **Revisar cue
 
 - [Instalación y actualizaciones](#instalación-y-actualizaciones)
 - [Navegación por categorías](#navegación-por-categorías)
+- [Recorridos guiados](#recorridos-guiados)
 - [Ficha de una persona](#ficha-de-una-persona)
 - [Exportar cuentas a CSV](#exportar-cuentas-a-csv)
 - [Comparar una lista de usuarios](#comparar-una-lista-de-usuarios)
@@ -70,7 +71,19 @@ Descarga de la [última release](https://github.com/Danieldiazi/joomla-user-tool
 
 A partir de la 2026.10.3, Joomla avisa de las versiones nuevas en Sistema → Actualizar → Extensiones, como con cualquier otra extensión: el paquete declara un servidor de actualizaciones que apunta a la última release de GitHub. Para actualizar, instala el paquete nuevo encima; no desinstales el componente. Al actualizar desde versiones anteriores, las exclusiones guardadas se migran solas.
 
-El instalador comprueba las versiones mínimas, registra la extensión en el registro de acciones de usuarios y crea la plantilla de correo «User Tools: cuenta creada». Al desinstalar avisa de que los informes de tareas se conservan en la carpeta de registros.
+El instalador comprueba las versiones mínimas, registra la extensión en el registro de acciones de usuarios y crea la plantilla de correo «User Tools: cuenta creada» y los [recorridos guiados](#recorridos-guiados). Al desinstalar elimina los recorridos y avisa de que los informes de tareas se conservan en la carpeta de registros.
+
+## Recorridos guiados
+
+Las herramientas que cambian cuentas o grupos tienen un **recorrido guiado** de Joomla que explica su pantalla paso a paso: para qué sirve, qué se elige, qué se revisa antes de aplicar y qué protecciones tiene. Los tienen Comparar una lista, Revisar usuarios inactivos, Deshacer bloqueos, Eliminar usuarios inactivos, Anonimizar cuentas, Añadir cuentas a grupos, Quitar de grupos, Mover grupos y Tarea programada.
+
+- **Cómo se abre**: con el botón **Recorrido guiado**, junto a Ayuda, en la primera pantalla de cada herramienta. Solo aparece si puedes usar esa herramienta y si los recorridos guiados de Joomla están activados (componente «Recorridos guiados» y plugin «Sistema - Plugin Recorridos guiados»).
+- **Qué hace**: solo explica. Ningún paso pulsa botones, rellena campos ni aplica cambios; puedes cerrarlo en cualquier momento. Se maneja con el teclado y nunca se abre solo.
+- **Dónde más aparecen**: Joomla solo permite limitar un recorrido por nivel de acceso, no por los permisos de cada herramienta. Por eso no se ofrecen en el menú «Hacer un recorrido» de las pantallas de User Tools, pero sí figuran en «Mostrar todos los recorridos» para quien pueda entrar en User Tools. Seguirlos no da acceso a nada: la pantalla de una herramienta sin permiso responde con un error de permisos.
+
+El instalador crea los recorridos y los actualiza en cada versión; si cambias su estado, nivel de acceso o idioma en Sistema → Recorridos guiados, se respeta. Al desinstalar se eliminan.
+
+![Recorrido guiado de «Comparar una lista»: paso que explica la lista vigente](docs/screenshots/30-recorrido-guiado.jpg)
 
 ## Navegación por categorías
 

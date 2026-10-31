@@ -4,7 +4,7 @@
 
 [Back to the README](../README.en.md)
 
-These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, access diagnosis and the content by age list in 2026.10.15, move groups in 2026.10.16, the Users dashboard, add accounts to groups, export accounts and undo blocks in 2026.10.19, the home screen and the account profile in 2026.10.20, and the content by age table with its four kinds in the version after 2026.10.20. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
+These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, access diagnosis and the content by age list in 2026.10.15, move groups in 2026.10.16, the Users dashboard, add accounts to groups, export accounts and undo blocks in 2026.10.19, the home screen and the account profile in 2026.10.20, and the content by age table with its four kinds and the guided tour in the version after 2026.10.20. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
 ![User Tools home screen grouped into sections: review accounts (with the account profile, export and undo blocks), groups and access levels, automation and monitoring, and delete or anonymise accounts (2026.10.20, Spanish interface)](screenshots/01-portada.jpg)
 
@@ -13,6 +13,8 @@ These shared screenshots show the Spanish interface on Joomla 6.2.0. Each captio
 ![Account profile: review of blocking that account, with confirmation and no inactivity filter (2026.10.20, Spanish interface)](screenshots/29-ficha-revision-bloqueo.jpg)
 
 ![Comparison: list and exclusions](screenshots/02-comparacion-lista.jpg)
+
+![Guided tour of “Compare a list”: the step that explains the current list, opened with the “Guided tour” button next to Help (after 2026.10.20, Spanish interface)](screenshots/30-recorrido-guiado.jpg)
 
 ![Comparison: review changes, with «tick all» and emails built from the username (2026.10.11, Spanish interface)](screenshots/03-comparacion-revision.jpg)
 

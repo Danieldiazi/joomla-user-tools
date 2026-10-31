@@ -22,7 +22,8 @@ if ($code !== 0) {
 }
 $menuCount = (int) $database->query("SELECT COUNT(*) FROM {$prefix}menu WHERE client_id = 1 AND link LIKE 'index.php?option=com_usertools%'")->fetchColumn();
 $pluginCount = (int) $database->query("SELECT COUNT(*) FROM {$prefix}extensions WHERE type = 'plugin' AND folder = 'system' AND element = 'usertools'")->fetchColumn();
-if ($menuCount !== 0 || $pluginCount !== 0) {
-    throw new RuntimeException('Uninstall left User Tools navigation links or its system plugin behind.');
+$tourCount = (int) $database->query("SELECT COUNT(*) FROM {$prefix}guidedtours WHERE uid LIKE 'com_usertools.tour-%'")->fetchColumn();
+if ($menuCount !== 0 || $pluginCount !== 0 || $tourCount !== 0) {
+    throw new RuntimeException('Uninstall left User Tools navigation links or its system plugin or guided tours behind.');
 }
-echo "Navigation uninstall verified: no orphan menu links or system plugin.\n";
+echo "Navigation uninstall verified: no orphan menu links, system plugin or guided tours.\n";

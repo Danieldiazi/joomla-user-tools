@@ -8,11 +8,13 @@
 
 /**
  * Package installer: checks versions, migrates options from 2026.10.2 and earlier, registers the
- * extension in the User Actions Log and creates the "account created" mail template.
+ * extension in the User Actions Log, creates the "account created" mail template and writes the
+ * guided tours of the tools.
  */
 
 \defined('_JEXEC') or die;
 
+use Danieldiazi\Component\Usertools\Administrator\Service\GuidedTours;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Installer\InstallerAdapter;
 use Joomla\CMS\Installer\InstallerScript;
@@ -60,6 +62,7 @@ class Pkg_UsertoolsInstallerScript extends InstallerScript
         $this->registerActionLog($db);
         $this->createMailTemplate();
         $this->publishDashboardModule($db);
+        $this->writeTours($db);
         if ($type !== 'update') {
             $this->enablePlugin($db);
         }
@@ -81,9 +84,80 @@ class Pkg_UsertoolsInstallerScript extends InstallerScript
                 ->where($db->quoteName('template_id') . ' = ' . $db->quote(self::MAIL_TEMPLATE)))->execute();
         } catch (\Throwable) {
         }
+        $this->removeTours($db);
         $logs = rtrim((string) Factory::getApplication()->get('log_path', JPATH_ADMINISTRATOR . '/logs'), '/\\') . '/usertools-reports';
         Factory::getApplication()->enqueueMessage(Text::sprintf('PKG_USERTOOLS_UNINSTALLED', htmlspecialchars($logs, ENT_QUOTES, 'UTF-8')));
         return true;
+    }
+
+    /**
+     * Creates or refreshes the guided tours. A tour keeps its published state, access level and
+     * language if an administrator changed them; its texts, screen and steps are replaced, and it
+     * never starts on its own. Tours of tools that no longer have one are removed.
+     */
+    private function writeTours(DatabaseInterface $db): void
+    {
+        // The component was installed just before, but its namespace may not be registered yet.
+        $definitions = JPATH_ADMINISTRATOR . '/components/com_usertools/src/Service/GuidedTours.php';
+        if (!class_exists(GuidedTours::class) && is_file($definitions)) {
+            require_once $definitions;
+        }
+        if (!class_exists(GuidedTours::class)) {
+            return;
+        }
+        try {
+            $now  = Factory::getDate()->toSql();
+            $user = (int) (Factory::getApplication()->getIdentity()->id ?? 0);
+            $uids = [];
+            foreach (array_keys(GuidedTours::TOURS) as $position => $view) {
+                $tour   = GuidedTours::tour($view, $position);
+                $uids[] = $tour['uid'];
+                $id     = (int) $db->setQuery($db->createQuery()->select($db->quoteName('id'))->from($db->quoteName('#__guidedtours'))
+                    ->where($db->quoteName('uid') . ' = ' . $db->quote($tour['uid'])), 0, 1)->loadResult();
+                $row = (object) ($tour + ['modified' => $now, 'modified_by' => $user]);
+                if ($id > 0) {
+                    $row->id = $id;
+                    $db->updateObject('#__guidedtours', $row, 'id');
+                    $db->setQuery($db->createQuery()->delete($db->quoteName('#__guidedtour_steps'))
+                        ->where($db->quoteName('tour_id') . ' = ' . $id))->execute();
+                } else {
+                    $row->created    = $now;
+                    $row->created_by = $user;
+                    $row->published  = 1;
+                    $row->language   = '*';
+                    $row->access     = 1;
+                    $row->note       = '';
+                    $db->insertObject('#__guidedtours', $row, 'id');
+                    $id = (int) $row->id;
+                }
+                foreach (GuidedTours::steps($view) as $step) {
+                    $stepRow = (object) ($step + ['tour_id' => $id, 'published' => 1, 'interactive_type' => 1, 'language' => '*', 'note' => '', 'params' => '{}',
+                        'created' => $now, 'created_by' => $user, 'modified' => $now, 'modified_by' => $user]);
+                    $db->insertObject('#__guidedtour_steps', $stepRow);
+                }
+            }
+            $this->removeTours($db, $uids);
+        } catch (\Throwable) {
+            // Tours are a help: a site without com_guidedtours still gets every tool.
+        }
+    }
+
+    /** @param list<string> $keep uids still in use */
+    private function removeTours(DatabaseInterface $db, array $keep = []): void
+    {
+        try {
+            $query = $db->createQuery()->select($db->quoteName('id'))->from($db->quoteName('#__guidedtours'))
+                ->where($db->quoteName('uid') . ' LIKE ' . $db->quote('com_usertools.tour-%'));
+            if ($keep) {
+                $query->whereNotIn($db->quoteName('uid'), $keep, \Joomla\Database\ParameterType::STRING);
+            }
+            $ids = array_map('intval', $db->setQuery($query)->loadColumn());
+            if ($ids) {
+                $db->setQuery($db->createQuery()->delete($db->quoteName('#__guidedtour_steps'))->whereIn($db->quoteName('tour_id'), $ids))->execute();
+                $db->setQuery($db->createQuery()->delete($db->quoteName('#__guidedtours'))->whereIn($db->quoteName('id'), $ids))->execute();
+            }
+        } catch (\Throwable) {
+        }
     }
 
     /** Options of 2026.10.2 and earlier: compare settings at top level, inactivity settings nested. */

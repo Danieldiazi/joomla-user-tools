@@ -23,6 +23,15 @@ function utMenuLinks(string $html): array
     return $links;
 }
 
+/** Assert the native active leaf after real MVC redirects, not just the landing pages. */
+function utCheckCategory(string $html, string $category, string $context): void
+{
+    $active = array_keys(array_filter(utMenuLinks($html), static fn (array $link): bool => $link['active']));
+    Test::check($active === [$category], $context . ' keeps exactly its category active');
+    Test::check(str_contains($html, 'Back to ') && str_contains($html, 'User Tools home'),
+        $context . ' keeps both category and complete-home navigation');
+}
+
 Test::section('Category menu: install, upgrade, permissions and native active path');
 $menuComponent = (int) $site->q("SELECT extension_id FROM #__extensions WHERE element = 'com_usertools' AND type = 'component'")[0]['extension_id'];
 $menuRows = fn (): array => $site->q('SELECT id, parent_id, title, link FROM #__menu WHERE component_id = ? AND client_id = 1 ORDER BY lft', [$menuComponent]);

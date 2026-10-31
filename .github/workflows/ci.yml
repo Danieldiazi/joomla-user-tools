@@ -65,12 +65,13 @@ jobs:
         run: JOOMLA_PATH="$RUNNER_TEMP/joomla" vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 
   integration:
-    name: Joomla ${{ matrix.database }}
+    name: Joomla ${{ matrix.database }} (PHP ${{ matrix.php }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         database: [postgresql, mysql]
+        php: ['8.3', '8.4']
     services:
       postgres:
         image: postgres:16
@@ -93,7 +94,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: ${{ matrix.php }}
           extensions: zip, intl, mbstring, gd, pdo_pgsql, pgsql, pdo_mysql, mysqli
           coverage: none
       - name: Install Joomla ${{ env.JOOMLA_VERSION }}
@@ -125,11 +126,11 @@ jobs:
           UT_URL=http://127.0.0.1:8090 UT_JOOMLA="$RUNNER_TEMP/site" UT_ADMIN_USER=admin UT_ADMIN_PASS="$ADMIN_PASS" \
             UT_MAILS="$RUNNER_TEMP/mails" php tests/integration/run.php
       - uses: actions/setup-node@v4
-        if: matrix.database == 'mysql' && github.event_name == 'pull_request'
+        if: matrix.database == 'mysql' && matrix.php == '8.3' && github.event_name == 'pull_request'
         with:
           node-version: '22'
       - name: Capture profiles and category navigation in Joomla
-        if: matrix.database == 'mysql' && github.event_name == 'pull_request'
+        if: matrix.database == 'mysql' && matrix.php == '8.3' && github.event_name == 'pull_request'
         env:
           UT_URL: http://127.0.0.1:8090
           UT_ADMIN_USER: admin
@@ -141,7 +142,7 @@ jobs:
           node tests/integration/capture-profile.mjs
           node tests/integration/capture-navigation.mjs
       - name: Upload profile screenshots
-        if: always() && matrix.database == 'mysql' && github.event_name == 'pull_request'
+        if: always() && matrix.database == 'mysql' && matrix.php == '8.3' && github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: profile-screenshots-${{ github.sha }}

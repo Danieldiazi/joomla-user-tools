@@ -20,7 +20,7 @@ $groups     = $displayData['groups'];
 $prefix     = $displayData['idPrefix'];
 $e          = fn ($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 ?>
-<div class="card ut-card" data-ut-exclusions>
+<div class="card ut-card" data-ut-exclusions data-ut-tour="exclusions">
   <div class="card-body">
     <h3 class="h5"><?= Text::_($displayData['title'] ?? 'COM_USERTOOLS_EXCLUSIONS_TITLE') ?></h3>
     <input type="hidden" name="protect_admins" value="0">
