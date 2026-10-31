@@ -105,9 +105,10 @@ final class AccessExplanationReader
      *
      * @param array<string, mixed> $item from item()
      * @param bool                 $withRules whether to list explicit denials (only for operators who may see permissions)
+     * @param list<int>|null       $operatorLevels null only for a global Super User; menu items outside them are left out
      * @return array<string, mixed>
      */
-    public function facts(int $accountId, array $item, bool $withRules, string $now): array
+    public function facts(int $accountId, array $item, bool $withRules, string $now, ?array $operatorLevels = null): array
     {
         $user = $this->users->loadUserById($accountId);
         if ((int) $user->id !== $accountId || $accountId < 1) {
@@ -130,7 +131,7 @@ final class AccessExplanationReader
             'can'          => $can,
             'denials'      => $withRules ? $this->denials($user, $asset) : null,
             'workflow'     => $item['type'] === 'article' ? $this->workflow($user, (int) $item['id']) : null,
-            'menus'        => $this->menus($item['type'], (int) $item['id']),
+            'menus'        => $this->menus($item['type'], (int) $item['id'], $operatorLevels),
             'now'          => $now,
         ];
     }
@@ -238,23 +239,36 @@ final class AccessExplanationReader
         return ['stage' => Text::_((string) $stage->title), 'transitions' => $transitions];
     }
 
-    /** @return list<array{title: string, access: int, published: int}> */
-    private function menus(string $type, int $id): array
+    /**
+     * Site menu items that link straight to the item, limited to the levels the operator can see, so their
+     * titles are never revealed to someone who could not view them; hidden ones are treated as missing.
+     *
+     * @param list<int>|null $operatorLevels
+     * @return list<array{title: string, access: int, published: int}>
+     */
+    private function menus(string $type, int $id, ?array $operatorLevels): array
     {
+        if ($operatorLevels === []) {
+            return [];
+        }
         $db = $this->db;
         $client = 0;
         $trashed = -2;
         $links = $type === 'article'
             ? ['index.php?option=com_content&view=article&id=' . $id]
             : ['index.php?option=com_content&view=category&id=' . $id, 'index.php?option=com_content&view=category&layout=blog&id=' . $id];
-        $rows = [];
-        foreach ($db->setQuery($db->createQuery()
+        $query = $db->createQuery()
             ->select([$db->quoteName('title'), $db->quoteName('access'), $db->quoteName('published')])
             ->from($db->quoteName('#__menu'))
             ->where([$db->quoteName('client_id') . ' = :client', $db->quoteName('published') . ' <> :trashed'])
             ->whereIn($db->quoteName('link'), $links, ParameterType::STRING)
             ->bind(':client', $client, ParameterType::INTEGER)->bind(':trashed', $trashed, ParameterType::INTEGER)
-            ->order($db->quoteName('lft')), 0, self::MENU_LIMIT)->loadObjectList() as $row) {
+            ->order($db->quoteName('lft'));
+        if ($operatorLevels !== null) {
+            $query->whereIn($db->quoteName('access'), $operatorLevels);
+        }
+        $rows = [];
+        foreach ($db->setQuery($query, 0, self::MENU_LIMIT)->loadObjectList() as $row) {
             $rows[] = ['title' => (string) $row->title, 'access' => (int) $row->access, 'published' => (int) $row->published];
         }
         return $rows;
