@@ -29,7 +29,11 @@ class ExplainModel extends BaseDatabaseModel
     {
         $login = trim($login);
         if ($login !== '') {
-            $id = ctype_digit($login) ? (int) $login : Toolkit::directory()->findId($login);
+            // An exact username or email wins, so an all-digit username is never read as another account's ID.
+            $id = Toolkit::directory()->findId($login);
+            if ($id < 1 && ctype_digit($login)) {
+                $id = (int) $login;
+            }
         }
         $record = $id > 0 ? (Toolkit::directory()->users([$id])[$id] ?? null) : null;
         if ($record === null) {

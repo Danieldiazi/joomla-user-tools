@@ -84,12 +84,14 @@ final class AccessExplanationReader
         $rgt = (int) $row->rgt;
         $ancestors = [];
         foreach ($db->setQuery($db->createQuery()
-            ->select([$db->quoteName('title'), $db->quoteName('published')])
+            ->select([$db->quoteName('title'), $db->quoteName('published'), $db->quoteName('access')])
             ->from($db->quoteName('#__categories'))
-            ->where([$db->quoteName('lft') . ' < :lft', $db->quoteName('rgt') . ' > :rgt', $db->quoteName('parent_id') . ' > 0'])
-            ->bind(':lft', $lft, ParameterType::INTEGER)->bind(':rgt', $rgt, ParameterType::INTEGER)
+            ->where([$db->quoteName('extension') . ' = :parentExtension', $db->quoteName('lft') . ' < :lft', $db->quoteName('rgt') . ' > :rgt', $db->quoteName('parent_id') . ' > 0'])
+            ->bind(':parentExtension', $extension)->bind(':lft', $lft, ParameterType::INTEGER)->bind(':rgt', $rgt, ParameterType::INTEGER)
             ->order($db->quoteName('lft')))->loadObjectList() as $parent) {
-            $ancestors[] = ['published' => (int) $parent->published, 'title' => (string) $parent->title];
+            // A parent the operator may not see keeps its state, never its title.
+            $ancestors[] = ['published' => (int) $parent->published, 'title' => $this->visible([(int) $parent->access], $operatorLevels)
+                ? (string) $parent->title : Text::_('COM_USERTOOLS_EXPLAIN_HIDDEN_PARENT')];
         }
         return [
             'type' => 'category', 'id' => (int) $row->id, 'title' => (string) $row->title, 'state' => (int) $row->published, 'access' => (int) $row->access,

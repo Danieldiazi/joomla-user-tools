@@ -1917,6 +1917,31 @@ $xpHidden = $addArticle('xp-hidden', $xpNow, 1, $xpHiddenLevel);
 $page = $xp($delegate, 'explain_member', $xpHidden, 'view');
 Test::check(str_contains($page, 'data-ut-explain-error') && !str_contains($page, 'UT xp-hidden') && !str_contains($page, 'data-ut-explain-result'),
     'a delegate cannot explain content it could not see, and its title is not shown');
+// A parent category the delegate cannot see keeps its state but never shows its title.
+$xpCategory = $site->q('SELECT * FROM #__categories WHERE id = ?', [$ageCategory])[0];
+$xpInsertCategory = function (array $values) use ($site, $xpCategory): int {
+    $row = array_replace($xpCategory, $values);
+    unset($row['id']);
+    $site->q('INSERT INTO #__categories ("' . implode('", "', array_keys($row)) . '") VALUES (' . implode(', ', array_fill(0, count($row), '?')) . ')', array_values($row));
+    return (int) $site->q('SELECT id FROM #__categories WHERE alias = ?', [$values['alias']])[0]['id'];
+};
+$xpParent = $xpInsertCategory(['title' => 'UT explain secret parent', 'alias' => 'ut-explain-parent', 'path' => 'ut-explain-parent', 'lft' => 900000, 'rgt' => 900003,
+    'level' => 1, 'published' => 0, 'access' => $xpHiddenLevel, 'asset_id' => 0]);
+$xpChild = $xpInsertCategory(['title' => 'UT explain child', 'alias' => 'ut-explain-child', 'path' => 'ut-explain-parent/ut-explain-child', 'lft' => 900001, 'rgt' => 900002,
+    'level' => 2, 'parent_id' => $xpParent, 'published' => 1, 'access' => 1, 'asset_id' => 0]);
+$page = $xp($delegate, 'explain_member', $xpChild, 'view', '', 'category');
+Test::check($xpVerdict($page) === 'no' && $xpStatus($page, 'parents') === 'fail' && !str_contains($page, 'UT explain secret parent') && str_contains($page, 'a parent category you cannot view'),
+    'an unpublished parent the delegate cannot see is reported without its title');
+$page = $xp($admin, 'explain_member', $xpChild, 'view', '', 'category');
+Test::check($xpStatus($page, 'parents') === 'fail' && str_contains($page, 'UT explain secret parent'), 'a Super User sees which parent is unpublished');
+$site->q('DELETE FROM #__categories WHERE id IN (?, ?)', [$xpChild, $xpParent]);
+// An all-digit username is the account it names, not the account with that ID.
+$xpDigits = $site->addUser((string) $xpManager, 'Registered');
+$page = $xp($admin, (string) $xpManager, $xpPublic, 'edit', 'administrator');
+Test::check($xpDigits > 0 && $xpVerdict($page) === 'no' && $xpStatus($page, 'login') === 'fail' && str_contains($page, 'Can ' . $xpManager . ' edit'),
+    'an all-digit username wins over the account with that ID');
+$page = $xp($admin, 'explain_manager', $xpPublic, 'edit', 'administrator');
+Test::check($xpVerdict($page) === 'yes', 'the manager itself can still edit');
 $page = $admin->get($profileUrl . '&account=' . $xpMember);
 Test::check(str_contains($page, 'data-ut-profile-explain') && str_contains($page, 'view=explain&amp;account=' . $xpMember), 'the account profile links to the explanation');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
