@@ -4,9 +4,21 @@
 
 [Back to the README](../README.en.md)
 
-These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, access diagnosis and the content by age list in 2026.10.15, move groups in 2026.10.16, the Users dashboard, add accounts to groups, export accounts and undo blocks in 2026.10.19, the home screen and the account profile in 2026.10.20, and the content by age table with its four kinds and the guided tour in the version after 2026.10.20. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
+The earlier screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, access diagnosis and the content by age list in 2026.10.15, move groups in 2026.10.16, add accounts to groups, export accounts and undo blocks in 2026.10.19, the account profile in 2026.10.20, and the content by age table with its four kinds and the guided tour in the version after 2026.10.20. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
-![User Tools home screen grouped into sections: review accounts (with the account profile, export and undo blocks), groups and access levels, automation and monitoring, and delete or anonymise accounts (2026.10.20, Spanish interface)](screenshots/01-portada.jpg)
+The home screen, four categories and Users dashboard were captured on **31 October 2026** on the disposable Joomla 6.2.0 CI site, with the **English interface** and fictional data, using the changes in PR #57 after 2026.10.20. Both galleries share these images. They do not represent a new published release.
+
+CI checks keyboard order, menu expansion and the active category. Images were inspected at 200% text size, with a dark preference and at 390 px width. The cards fit at 390 px, but Joomla’s overall header produces a document width of 600 px. The template has not been altered to hide this. This does not establish WCAG conformance or replace screen-reader testing.
+
+![Complete User Tools home and native menu, with four categories and all permitted tools (English, PR #57)](screenshots/01-portada.jpg)
+
+![Review accounts: active category and its five tools (English, PR #57)](screenshots/30-menu-cuentas.jpg)
+
+![Groups and access levels: active category and its seven tools (English, PR #57)](screenshots/31-menu-grupos.jpg)
+
+![Automation and follow-up: task configuration and results (English, PR #57)](screenshots/32-menu-automatizacion.jpg)
+
+![Delete and anonymise accounts: visible permanent warnings and active category (English, PR #57)](screenshots/33-menu-eliminacion.jpg)
 
 ![Account profile: account details, groups in their tree with the intermediate group, effective access levels and why, authored content, recent action log and links to the tools (2026.10.20, Spanish interface)](screenshots/28-ficha-persona.jpg)
 
@@ -50,7 +62,7 @@ These shared screenshots show the Spanish interface on Joomla 6.2.0. Each captio
 
 ![Task report details](screenshots/10-informe-tarea.jpg)
 
-![User Tools module on the Users dashboard: accounts to review with a link to their review, tasks with their mode, result and dates, and shortcuts to the tools you may use (2026.10.19, Spanish interface)](screenshots/13-panel-usuarios.jpg)
+![Users dashboard with account summary, tasks and shortcuts grouped by the shared catalogue (English, PR #57)](screenshots/13-panel-usuarios.jpg)
 
 ![Groups and access levels: groups by level matrix, CSV export and summary by level (2026.10.11, Spanish interface)](screenshots/14-grupos-niveles.jpg)
 

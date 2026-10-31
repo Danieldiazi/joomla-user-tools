@@ -102,6 +102,8 @@ The category stays marked in the menu when opening a tool, review, result or rep
 
 The package includes **System - User Tools**, which integrates permission filtering and the active category with Joomla's menu. It is enabled when first installed, including upgrades from a version without this plugin. If you subsequently disable it, later updates respect that choice and the home screen displays a notice. Enable it under **System → Manage → Plugins** to restore filtering and active categories. Screen permissions are still enforced on the server.
 
+The [real navigation screenshots](docs/screenshots.en.md) show the home screen, four categories and dashboard in English, captured on the disposable Joomla CI site.
+
 ## Account profile
 
 From the home screen, open **Account profile** and search by username or email address, case-insensitively. An account can also be opened by ID. This requires the dedicated `usertools.profile` permission and never saves changes to the account, its groups or other tools’ drafts.
@@ -259,9 +261,9 @@ Counts use the same rules as the tools, so they match what you see when opening 
 
 The module respects permissions: only users with access to User Tools can see it; counts require inactivity review or deletion permission, and tasks require task-results permission. Configure it like any administrator module (Content → Administrator Modules, “User Tools”): move it to another dashboard, rename or unpublish it. Updates do not reposition a moved or unpublished module.
 
-The shared screenshots show the Spanish interface.
+This dashboard screenshot shows the English interface. Earlier screenshots elsewhere retain the Spanish interface.
 
-![User Tools module on the Users dashboard](docs/screenshots/13-panel-usuarios.jpg)
+![User Tools module on the Users dashboard (English interface)](docs/screenshots/13-panel-usuarios.jpg)
 
 ## User groups module on the site
 
@@ -464,6 +466,7 @@ Structure:
 - `admin/src/Service/`: domain logic shared with the plugin.
 - `media/`: CSS and JS loaded through Web Asset Manager (`joomla.asset.json`).
 - `plugins/task/usertools/`: task plugin.
+- `plugins/system/usertools/`: category and permission integration with the administrator menu.
 - `modules/mod_usertools/`: Users dashboard summary module.
 - `modules/mod_usertools_groups/`: site module that lists groups and members.
 - `package/`: package manifest, installation script and languages.
@@ -479,7 +482,7 @@ JOOMLA_PATH=/path/to/joomla-6 vendor/bin/phpstan analyse   # static analysis, le
 
 The end-to-end test `tests/integration/run.php` exercises the flows against a real disposable Joomla 6 site: comparison, emailed password setup through login, temporary passwords, delegated permissions, inactivity review and deletion, task safety limit, reports, CSV, action logging and the site groups module. See the file header for instructions; use `tests/integration/smtp-sink.php` as the test mail server.
 
-GitHub Actions runs unit tests (PHP 8.3 and 8.4), JavaScript, PHPStan and end-to-end tests with PostgreSQL and MySQL on each push and pull request.
+GitHub Actions runs unit tests, JavaScript, PHPStan and end-to-end tests with PostgreSQL and MySQL on PHP 8.3 and 8.4 on each push and pull request. PHP 8.3 tests a fresh installation; PHP 8.4 first installs the published 2026.10.20 package and upgrades it. Repeated updates, permission withdrawal and uninstallation without orphan links or tours are also checked.
 
 ## Building and publishing
 

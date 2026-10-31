@@ -102,6 +102,8 @@ Al abrir una herramienta, revisión, resultado o informe, su categoría permanec
 
 El paquete incluye **Sistema - User Tools**, que integra el filtrado y la categoría activa con el menú de Joomla. Se habilita al instalarlo por primera vez, también al actualizar desde una versión sin ese plugin. Si después lo deshabilitas, las siguientes actualizaciones respetan tu decisión y la portada avisa. Para recuperar el filtrado y la categoría activa, habilítalo en **Sistema → Gestionar → Plugins**. Los permisos de las pantallas siguen comprobándose en el servidor.
 
+Las [capturas reales de la navegación](docs/capturas.md) muestran la portada, las cuatro categorías y el panel en inglés, tomadas en el Joomla desechable de CI.
+
 ## Ficha de una persona
 
 Desde la portada, abre **Ficha de una persona** y busca por usuario o correo electrónico, sin distinguir mayúsculas. También se puede abrir una cuenta por su ID. La consulta requiere el permiso propio `usertools.profile` y no guarda cambios en la cuenta, sus grupos ni los borradores de otras herramientas.
@@ -259,7 +261,7 @@ Las cifras usan exactamente las mismas reglas que las herramientas, así que coi
 
 El módulo respeta los permisos: solo lo ve quien puede acceder a User Tools, las cifras solo aparecen a quien tiene permiso de revisar o eliminar inactivos, y las tareas solo a quien puede ver sus resultados. Se configura como cualquier módulo de administración (Contenido → Módulos del sitio de administración, «User Tools»): puedes moverlo a otro panel, cambiarle el título o despublicarlo. Las actualizaciones no vuelven a colocarlo si lo has movido o despublicado.
 
-![Módulo User Tools en el panel de Usuarios](docs/screenshots/13-panel-usuarios.jpg)
+![Módulo User Tools en el panel de Usuarios (interfaz en inglés)](docs/screenshots/13-panel-usuarios.jpg)
 
 ## Módulo de grupos de usuarios en el sitio
 
@@ -462,6 +464,7 @@ Estructura:
 - `admin/src/Service/`: lógica de dominio compartida con el plugin.
 - `media/`: CSS y JS cargados con el gestor de recursos web (`joomla.asset.json`).
 - `plugins/task/usertools/`: plugin de tareas.
+- `plugins/system/usertools/`: integración del menú por categorías y permisos.
 - `modules/mod_usertools/`: módulo de resumen del panel de Usuarios.
 - `modules/mod_usertools_groups/`: módulo del sitio que lista grupos y miembros.
 - `package/`: manifiesto del paquete, script de instalación e idiomas.
@@ -477,7 +480,7 @@ JOOMLA_PATH=/ruta/a/joomla-6 vendor/bin/phpstan analyse   # análisis estático,
 
 La prueba de extremo a extremo `tests/integration/run.php` recorre todos los flujos contra un Joomla 6 real y desechable: comparación, altas por correo hasta elegir la contraseña y entrar, contraseñas temporales, permisos delegados, revisión y eliminación de inactivos, tarea con límite de seguridad, informes, CSV, registro de acciones y el módulo de grupos del sitio. Instrucciones de uso en la cabecera del fichero; usa `tests/integration/smtp-sink.php` como servidor de correo de pruebas.
 
-GitHub Actions ejecuta en cada push y pull request las pruebas unitarias (PHP 8.3 y 8.4), JavaScript, PHPStan y la prueba de extremo a extremo con PostgreSQL y con MySQL.
+GitHub Actions ejecuta en cada push y pull request las pruebas unitarias, JavaScript, PHPStan y la prueba de extremo a extremo con PostgreSQL y MySQL en PHP 8.3 y 8.4. En PHP 8.3 prueba una instalación nueva; en PHP 8.4 instala primero el paquete publicado 2026.10.20 y lo actualiza. También comprueba actualizaciones repetidas, retirada de permisos y desinstalación sin enlaces ni recorridos huérfanos.
 
 ## Construcción y publicación
 
