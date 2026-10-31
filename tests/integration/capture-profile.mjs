@@ -12,6 +12,16 @@ await mkdir(output, { recursive: true });
 const browser = await chromium.launch();
 try {
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 }, colorScheme: 'light' });
+  // Joomla may auto-start its own guided tour on the dashboard after signing in. The tour keeps its
+  // state in sessionStorage and, on the next page, sends the browser back to the tour's screen, so the
+  // capture would wait for User Tools on the dashboard. Clear that state before any page script runs.
+  await page.addInitScript(() => {
+    try {
+      for (const key of ['tourId', 'tourToken', 'autoTourId', 'currentStepId', 'previousStepUrl']) sessionStorage.removeItem(key);
+    } catch {
+      // Storage may be unavailable; the capture then behaves as before.
+    }
+  });
   await page.goto(`${base}/administrator/index.php`);
   await page.locator('input[name="username"]').fill(user);
   await page.locator('input[name="passwd"]').fill(password);
