@@ -4,19 +4,19 @@
 
 [Back to the README](../README.en.md)
 
-These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, access diagnosis and the content by age list in 2026.10.15, move groups in 2026.10.16, add accounts to groups, export accounts and undo blocks in 2026.10.19, the account profile in 2026.10.20, and the home screen, the menu categories, the Users dashboard, the content by age table with its four kinds and the guided tour in the version after 2026.10.20. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
+These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, access diagnosis and the content by age list in 2026.10.15, move groups in 2026.10.16, add accounts to groups, export accounts and undo blocks in 2026.10.19, the account profile in 2026.10.20, and the home screen, the menu categories, the Users dashboard, the content by age table with its four kinds and the guided tour in 2026.10.21. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
 Besides these screenshots, CI checks keyboard order, menu expansion and the active category, and saves captures at 200% text size, with a dark preference and at 390 px width. The cards fit at 390 px, but Joomla’s overall header produces a document width of 600 px; the template has not been altered to hide this. This does not establish WCAG conformance or replace screen-reader testing.
 
-![User Tools home screen with its four categories and all permitted tools, and the Components → User Tools menu expanded with Home active (after 2026.10.20, Spanish interface)](screenshots/01-portada.jpg)
+![User Tools home screen with its four categories and all permitted tools, and the Components → User Tools menu expanded with Home active (2026.10.21, Spanish interface)](screenshots/01-portada.jpg)
 
-![“Review accounts” category, marked in the menu, with its five tools (after 2026.10.20, Spanish interface)](screenshots/31-menu-cuentas.jpg)
+![“Review accounts” category, marked in the menu, with its five tools (2026.10.21, Spanish interface)](screenshots/31-menu-cuentas.jpg)
 
-![“Groups and access levels” category, marked in the menu, with its seven tools (after 2026.10.20, Spanish interface)](screenshots/32-menu-grupos.jpg)
+![“Groups and access levels” category, marked in the menu, with its seven tools (2026.10.21, Spanish interface)](screenshots/32-menu-grupos.jpg)
 
-![“Automation and follow-up” category: automatic inactivity blocking, with its plugin status, and task results (after 2026.10.20, Spanish interface)](screenshots/33-menu-automatizacion.jpg)
+![“Automation and follow-up” category: automatic inactivity blocking, with its plugin status, and task results (2026.10.21, Spanish interface)](screenshots/33-menu-automatizacion.jpg)
 
-![“Delete and anonymise accounts” category, with the “Permanent” badge and the cannot-be-undone warning on each tool (after 2026.10.20, Spanish interface)](screenshots/34-menu-eliminacion.jpg)
+![“Delete and anonymise accounts” category, with the “Permanent” badge and the cannot-be-undone warning on each tool (2026.10.21, Spanish interface)](screenshots/34-menu-eliminacion.jpg)
 
 ![Account profile: account details, groups in their tree with the intermediate group, effective access levels and why, authored content, recent action log and links to the tools (2026.10.20, Spanish interface)](screenshots/28-ficha-persona.jpg)
 
@@ -24,7 +24,7 @@ Besides these screenshots, CI checks keyboard order, menu expansion and the acti
 
 ![Comparison: list and exclusions](screenshots/02-comparacion-lista.jpg)
 
-![Guided tour of “Compare a list”: the step that explains the current list, opened with the “Guided tour” button next to Help (after 2026.10.20, Spanish interface)](screenshots/30-recorrido-guiado.jpg)
+![Guided tour of “Compare a list”: the step that explains the current list, opened with the “Guided tour” button next to Help (2026.10.21, Spanish interface)](screenshots/30-recorrido-guiado.jpg)
 
 ![Comparison: review changes, with «tick all» and emails built from the username (2026.10.11, Spanish interface)](screenshots/03-comparacion-revision.jpg)
 
@@ -60,7 +60,7 @@ Besides these screenshots, CI checks keyboard order, menu expansion and the acti
 
 ![Task report details](screenshots/10-informe-tarea.jpg)
 
-![User Tools module on the Users dashboard: diagnosis notice, accounts to review, tasks with their mode and result, and shortcuts grouped by the same categories as the menu (after 2026.10.20, Spanish interface)](screenshots/13-panel-usuarios.jpg)
+![User Tools module on the Users dashboard: diagnosis notice, accounts to review, tasks with their mode and result, and shortcuts grouped by the same categories as the menu (2026.10.21, Spanish interface)](screenshots/13-panel-usuarios.jpg)
 
 ![Groups and access levels: groups by level matrix, CSV export and summary by level (2026.10.11, Spanish interface)](screenshots/14-grupos-niveles.jpg)
 
@@ -72,6 +72,6 @@ Besides these screenshots, CI checks keyboard order, menu expansion and the acti
 
 ![Access diagnosis: summary with the type of each check and the details of each one, with what was found, why it matters and how to review it (2026.10.15, Spanish interface)](screenshots/19-diagnostico.jpg)
 
-![Content by age: articles, article categories, contacts and news feeds by year of last modification, with an access level filter (after 2026.10.20, Spanish interface)](screenshots/20-contenido-antiguedad.jpg)
+![Content by age: articles, article categories, contacts and news feeds by year of last modification, with an access level filter (2026.10.21, Spanish interface)](screenshots/20-contenido-antiguedad.jpg)
 
 ![Content by age: list of one year's articles, with a link to edit them (2026.10.15, Spanish interface)](screenshots/21-contenido-antiguedad-lista.jpg)
