@@ -9,6 +9,7 @@
 \defined('_JEXEC') or die;
 
 use Joomla\CMS\Language\Text;
+use Joomla\CMS\Layout\LayoutHelper;
 use Joomla\CMS\Router\Route;
 use Joomla\CMS\Session\Session;
 
@@ -20,11 +21,9 @@ $profile = $this->profile;
   <form method="get" action="<?= Route::_('index.php') ?>" class="card ut-card" data-ut-profile-search>
     <div class="card-body">
       <input type="hidden" name="option" value="com_usertools"><input type="hidden" name="view" value="profile">
-      <label class="form-label" for="ut-profile-login"><?= Text::_('COM_USERTOOLS_PROFILE_LOGIN') ?></label>
-      <div class="d-flex flex-wrap gap-2">
-        <input class="form-control ut-filter" type="search" name="login" id="ut-profile-login" required maxlength="255" autocomplete="off" value="<?= $this->escape($this->login) ?>">
-        <button class="btn btn-primary" type="submit"><?= Text::_('COM_USERTOOLS_PROFILE_OPEN') ?></button>
-      </div>
+      <?= LayoutHelper::render('usertools.account', ['id' => 'ut-profile-login', 'tool' => 'profile', 'login' => $this->login, 'account' => $this->accountId,
+        'candidates' => $this->candidates, 'label' => 'COM_USERTOOLS_PROFILE_LOGIN', 'help' => 'COM_USERTOOLS_ACCOUNT_HELP', 'required' => true], JPATH_ADMINISTRATOR . '/components/com_usertools/layouts') ?>
+      <button class="btn btn-primary mt-3" type="submit"><?= Text::_('COM_USERTOOLS_PROFILE_OPEN') ?></button>
     </div>
   </form>
   <?php if ($this->error !== '') : ?><div class="alert alert-warning" role="alert" data-ut-profile-error><?= $this->escape($this->error) ?></div><?php endif; ?>

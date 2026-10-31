@@ -23,7 +23,7 @@ $recursive = array_flip($this->selection['recursive']);
 <div class="ut-app ut-narrow">
   <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'groups', 'label' => 'COM_USERTOOLS_UNGROUP_PROGRESS'], $layouts) ?>
   <h2 class="h3"><?= Text::sprintf('COM_USERTOOLS_UNGROUP_GROUPS_HEADING', $this->escape($account->username)) ?></h2>
-  <p class="text-body-secondary"><?= $this->escape($account->name) ?> · <?= $this->escape($account->email) ?>
+  <p class="text-body-secondary" data-ut-ungroup-account="<?= (int) $account->id ?>"><?= $this->escape($account->name) ?> · <?= $this->escape($account->email) ?> · ID <?= (int) $account->id ?>
     <?php if ($account->block) : ?> · <span class="badge text-bg-secondary"><?= Text::_('COM_USERTOOLS_UNGROUP_BLOCKED') ?></span><?php endif; ?></p>
   <form method="post" action="<?= Route::_('index.php?option=com_usertools&view=ungroup') ?>" data-ut-ungroup-groups>
     <section class="card ut-card"><div class="card-body">

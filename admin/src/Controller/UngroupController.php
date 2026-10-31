@@ -13,7 +13,6 @@ namespace Danieldiazi\Component\Usertools\Administrator\Controller;
 use Danieldiazi\Component\Usertools\Administrator\Model\UngroupModel;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
-use Joomla\CMS\Access\Exception\NotAllowed;
 use Joomla\CMS\Language\Text;
 
 /** Actions of "Remove from groups": account → groups → review → result. */
@@ -23,25 +22,11 @@ class UngroupController extends DisplayController
 
     private const PERMISSION = 'usertools.ungroup';
 
-    /** Account suggestions while typing (GET, JSON). Needs the form token and the tool permission. */
-    public function suggest(): void
-    {
-        if (!$this->checkToken('get', false) || !$this->app->getIdentity()->authorise(self::PERMISSION, 'com_usertools')) {
-            throw new NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
-        }
-        $app = Toolkit::app();
-        $app->setHeader('Content-Type', 'application/json; charset=utf-8', true);
-        $app->setHeader('Cache-Control', 'no-store, private', true);
-        $app->sendHeaders();
-        echo json_encode($this->model()->suggest($this->input->getString('q', '')), JSON_UNESCAPED_UNICODE);
-        $app->close();
-    }
-
     public function choose(): void
     {
         $this->guard(self::PERMISSION);
         try {
-            $this->model()->choose(['login' => $this->input->post->getString('login', '')]);
+            $this->model()->choose(['login' => $this->input->post->getString('login', ''), 'account' => $this->input->post->getInt('account', 0)]);
             $this->go('view=ungroup&layout=groups');
         } catch (UserFacingException $e) {
             $this->warn($e);

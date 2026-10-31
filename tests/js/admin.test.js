@@ -152,22 +152,42 @@ test('remove from groups: "and its subgroups" is decided per group and cascades 
   assert.deepEqual(sent('[data-ut-subgroups]'), [2, 3], 'Author keeps "and its subgroups" although Registered\'s cascade covers it');
 });
 
-test('remove from groups: account suggestions fill the list while typing', async () => {
-  const doc = await load('<input data-ut-account-search="index.php?option=com_usertools&task=ungroup.suggest&abc=1" list="ut-list"><datalist id="ut-list"></datalist>');
+test('account selector: suggestions show the full identity and send the chosen ID', async () => {
+  const doc = await load('<div data-ut-account-picker><input data-ut-account-search="index.php?option=com_usertools&task=accounts.suggest&tool=ungroup&abc=1" data-ut-account-min="2" list="ut-list"><datalist id="ut-list"></datalist><input type="hidden" name="account" value="0" data-ut-account-id></div>');
   const win = doc.defaultView;
   const asked = [];
-  win.fetch = async (url) => { asked.push(String(url)); return { ok: true, json: async () => [{ username: 'ana', name: 'Ana Pérez', email: 'ana@example.test' }, { username: 'anabel', name: '', email: 'b@example.test' }] }; };
+  const twins = [{ id: 12, label: 'ana — Ana Pérez (ana@example.test) · ID 12' }, { id: 31, label: 'ana2 — Ana Pérez (<b>@example.test) · ID 31' }];
+  win.fetch = async (url) => { asked.push(String(url)); return { ok: true, json: async () => twins }; };
   const field = doc.querySelector('[data-ut-account-search]');
+  const hidden = doc.querySelector('[data-ut-account-id]');
   field.value = 'a';
   input(field);
   field.value = 'an';
   input(field);
   await new Promise((resolve) => setTimeout(resolve, 400));
   assert.equal(asked.length, 1, 'one request after the pause, none for a single letter');
-  assert.match(asked[0], /task=ungroup\.suggest/);
+  assert.match(asked[0], /task=accounts\.suggest&tool=ungroup/);
   assert.match(asked[0], /q=an/);
   const options = [...doc.querySelectorAll('#ut-list option')];
-  assert.deepEqual(options.map((o) => [o.value, o.label]), [['ana', 'Ana Pérez · ana@example.test'], ['anabel', 'b@example.test']]);
+  assert.deepEqual(options.map((o) => o.value), twins.map((t) => t.label), 'two people with the same name are told apart by username, email and ID');
+  assert.equal(doc.querySelectorAll('#ut-list b').length, 0, 'labels are text, never HTML');
+  field.value = twins[1].label;
+  input(field);
+  assert.equal(hidden.value, '31', 'choosing a suggestion sends its ID');
+  field.value = 'ana2';
+  input(field);
+  assert.equal(hidden.value, '0', 'editing the text clears the chosen ID, so the server resolves what was typed');
+});
+
+test('account selector: a preselected account keeps its ID until the text changes', async () => {
+  const doc = await load('<div data-ut-account-picker><input data-ut-account-search="x?y=1" list="l" value="12"><datalist id="l"></datalist><input type="hidden" value="40" data-ut-account-id></div>');
+  const field = doc.querySelector('[data-ut-account-search]');
+  const hidden = doc.querySelector('[data-ut-account-id]');
+  change(field);
+  assert.equal(hidden.value, '40', 'an all-digit username opened from the profile keeps that account');
+  field.value = '13';
+  input(field);
+  assert.equal(hidden.value, '0');
 });
 
 const newAccounts = (names, extra = '') => `<form data-ut-review><input type="hidden" data-ut-registrations value="{}"><input type="hidden" data-ut-ready value="0">

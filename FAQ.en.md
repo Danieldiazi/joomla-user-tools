@@ -88,7 +88,11 @@ Yes. **Add accounts to groups** accepts a list and a single group, or `username;
 
 ### Does viewing a profile change anything?
 
-No. It brings together an account’s groups, access levels, status, dates, authored content and recent activity. Searching by username or email and opening its links never changes accounts. The dedicated `usertools.profile` permission is required.
+No. It brings together an account’s groups, access levels, status, dates, authored content and recent activity. Searching by username, name, email or ID and opening its links never changes accounts. The dedicated `usertools.profile` permission is required.
+
+### What happens if what I type matches several accounts?
+
+None is chosen for you. If the text is, for example, the username of one account and the email of another, the profile, the access explanation and remove from groups list the matches as `username — Name (email) · ID` and wait for you to choose one. Choosing a suggestion while typing uses its ID, so two people with the same name are not confused. More details in [Choosing the account](README.en.md#choosing-the-account).
 
 ### Does that permission let me see the User Actions Log?
 

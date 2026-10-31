@@ -992,16 +992,21 @@ $select = fn (Client $client, array $keep, array $subgroups = []): string => $cl
     ['task' => 'ungroup.select', 'keep' => array_map($gid, $keep), 'recursive' => array_map($gid, $subgroups)], 'data-ut-ungroup-groups');
 $apply = fn (Client $client): string => $client->submit($ungroupUrl . '&layout=review', ['task' => 'ungroup.apply', 'confirm' => 1], 'data-ut-ungroup-form');
 
-// Suggestions while typing: token and permission required, no change.
+// Suggestions while typing: token and permission required, no change, the account ID travels with each one.
 $choosePage = $admin->get($ungroupUrl);
 preg_match('/data-ut-account-search="([^"]+)"/', $choosePage, $m);
 $suggestUrl = html_entity_decode($m[1] ?? '', ENT_QUOTES);
-[$code, $json] = $admin->request(preg_replace('#^.*?/administrator/#', '', $suggestUrl) . '&q=UG_O');
-Test::check($code === 200 && in_array('ug_one', array_column((array) json_decode($json, true), 'username'), true), 'typing part of a username suggests the account');
+[$code, $json, $suggestHeaders] = $admin->request(preg_replace('#^.*?/administrator/#', '', $suggestUrl) . '&q=UG_O');
+$suggested = (array) json_decode($json, true);
+Test::check($code === 200 && str_contains($suggestUrl, 'task=accounts.suggest&tool=ungroup') && in_array($site->userId('ug_one'), array_column($suggested, 'id'), true)
+    && str_contains(implode("\n", array_column($suggested, 'label')), 'ug_one — ') && str_contains($suggestHeaders['cache-control'] ?? '', 'no-store'),
+    'typing part of a username suggests the account with its full label and ID, never cached');
 [, $mine] = $admin->request(preg_replace('#^.*?/administrator/#', '', $suggestUrl) . '&q=' . rawurlencode(getenv('UT_ADMIN_USER') ?: 'admin'));
-Test::check(!in_array(getenv('UT_ADMIN_USER') ?: 'admin', array_column((array) json_decode($mine, true), 'username'), true), 'the operator\'s own account is never suggested');
-[$code] = $admin->request('index.php?option=com_usertools&task=ungroup.suggest&q=ug_');
+Test::check(!in_array($site->userId(getenv('UT_ADMIN_USER') ?: 'admin'), array_column((array) json_decode($mine, true), 'id'), true), 'the operator\'s own account is never suggested');
+[$code] = $admin->request('index.php?option=com_usertools&task=accounts.suggest&tool=ungroup&q=ug_');
 Test::check($code === 403, 'suggestions need the form token (got ' . $code . ')');
+[, $short] = $admin->request(preg_replace('#^.*?/administrator/#', '', $suggestUrl) . '&q=u');
+Test::check(json_decode($short, true) === [], 'a single character returns no personal data');
 
 // Editor sits under Registered > Author, which the account is not in: those two are shown without a
 // checkbox, so Editor hangs from its real parent instead of looking like a child of Guest.
@@ -1935,11 +1940,14 @@ Test::check($xpVerdict($page) === 'no' && $xpStatus($page, 'parents') === 'fail'
 $page = $xp($admin, 'explain_member', $xpChild, 'view', '', 'category');
 Test::check($xpStatus($page, 'parents') === 'fail' && str_contains($page, 'UT explain secret parent'), 'a Super User sees which parent is unpublished');
 $site->q('DELETE FROM #__categories WHERE id IN (?, ?)', [$xpChild, $xpParent]);
-// An all-digit username is the account it names, not the account with that ID.
+// An all-digit username that is also another account's ID is ambiguous: the operator chooses, nothing is guessed.
 $xpDigits = $site->addUser((string) $xpManager, 'Registered');
 $page = $xp($admin, (string) $xpManager, $xpPublic, 'edit', 'administrator');
-Test::check($xpDigits > 0 && $xpVerdict($page) === 'no' && $xpStatus($page, 'login') === 'fail' && str_contains($page, 'Can ' . $xpManager . ' edit'),
-    'an all-digit username wins over the account with that ID');
+Test::check($xpDigits > 0 && !str_contains($page, 'data-ut-explain-result') && str_contains($page, 'value="' . $xpDigits . '"') && str_contains($page, 'value="' . $xpManager . '"'),
+    'an all-digit username that is another account\'s ID asks which account is meant');
+$page = $admin->get($explainUrl . '&login=' . $xpManager . '&account=' . $xpDigits . '&type=article&item=' . $xpPublic . '&do=edit&context=administrator');
+Test::check($xpVerdict($page) === 'no' && $xpStatus($page, 'login') === 'fail' && str_contains($page, 'Can ' . $xpManager . ' edit'),
+    'choosing the account with that username explains that account');
 $page = $xp($admin, 'explain_manager', $xpPublic, 'edit', 'administrator');
 Test::check($xpVerdict($page) === 'yes', 'the manager itself can still edit');
 $page = $admin->get($profileUrl . '&account=' . $xpMember);
@@ -1950,6 +1958,41 @@ Test::check($site->q('SELECT id, block, "lastvisitDate", password FROM #__users 
 $site->q("DELETE FROM #__workflow_associations WHERE item_id = ? AND extension = 'com_content.article'", [$xpPublic]);
 $site->q("DELETE FROM #__content WHERE alias LIKE 'ut-age-xp-%'");
 $site->q("DELETE FROM #__viewlevels WHERE title = 'UT explain hidden'");
+
+Test::section('Unambiguous account selection');
+$twinA = $site->addUser('twin_a', 'Registered');
+$twinB = $site->addUser('twin_b', 'Registered');
+// The username of one account is the email of another: typing it must never pick either silently.
+$site->q('UPDATE #__users SET email = ? WHERE id = ?', ['twin_a', $twinB]);
+$site->q('UPDATE #__users SET name = ? WHERE id IN (?, ?)', ['Twin <b>Same</b>', $twinA, $twinB]);
+$page = $admin->get($profileUrl . '&login=twin_a');
+Test::check(str_contains($page, 'data-ut-account-candidates') && !str_contains($page, 'data-ut-profile-account=') && str_contains($page, 'value="' . $twinA . '"')
+    && str_contains($page, 'value="' . $twinB . '"') && str_contains($page, 'Twin &lt;b&gt;Same&lt;/b&gt;') && !str_contains($page, 'Twin <b>Same</b>'),
+    'the profile lists both accounts, escaped, and opens neither');
+$page = $admin->get($profileUrl . '&login=twin_a&account=' . $twinB);
+Test::check(str_contains($page, 'data-ut-profile-account="' . $twinB . '"'), 'choosing one of them opens exactly that account');
+$page = $admin->get($profileUrl . '&login=ug_one&account=' . $twinB);
+Test::check(str_contains($page, 'data-ut-profile-account="' . $site->userId('ug_one') . '"'), 'a stale chosen ID never overrides another typed account');
+$page = $admin->get($profileUrl . '&login=' . $twinA);
+Test::check(str_contains($page, 'data-ut-profile-account="' . $twinA . '"'), 'an ID that is nobody\'s username opens that account');
+$page = $choose($admin, 'twin_a');
+Test::check(str_contains($page, 'data-ut-account-candidates') && str_contains($page, 'Several accounts match'), 'remove from groups asks to choose instead of taking the first account');
+$page = $admin->submit($ungroupUrl, ['task' => 'ungroup.choose', 'login' => 'twin_a', 'account' => $twinB], 'data-ut-ungroup-choose');
+Test::check(str_contains($page, 'data-ut-ungroup-account="' . $twinB . '"'), 'the explicit choice carries its ID into the groups step');
+$page = $xp($admin, 'twin_a', $xpPublic, 'view');
+Test::check(str_contains($page, 'data-ut-account-candidates') && !str_contains($page, 'data-ut-explain-result'), 'the explanation also refuses to guess');
+// Suggestions per tool follow that tool's permissions.
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.profile' => ['6' => 1]])]);
+$profilePage = $delegate->get($profileUrl);
+preg_match('/data-ut-account-search="([^"]+)"/', $profilePage, $m);
+$profileSuggest = preg_replace('#^.*?/administrator/#', '', html_entity_decode($m[1] ?? '', ENT_QUOTES));
+[$code, $json] = $delegate->request($profileSuggest . '&q=twin');
+Test::check($code === 200 && count((array) json_decode($json, true)) === 2, 'a delegate with the profile permission gets both twins as suggestions');
+[$code] = $delegate->request(str_replace('tool=profile', 'tool=ungroup', $profileSuggest) . '&q=twin');
+Test::check($code === 403, 'but not the suggestions of a tool it cannot use (got ' . $code . ')');
+[$code] = $delegate->request(str_replace('tool=profile', 'tool=explain', $profileSuggest) . '&q=twin');
+Test::check($code === 403, 'nor of the explanation without its permission (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);

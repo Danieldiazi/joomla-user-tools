@@ -108,7 +108,13 @@ The [screenshot gallery](docs/screenshots.en.md) shows the home screen, the four
 
 ## Account profile
 
-From the home screen, open **Account profile** and search by username or email address, case-insensitively. An account can also be opened by ID. This requires the dedicated `usertools.profile` permission and never saves changes to the account, its groups or other tools’ drafts.
+From the home screen, open **Account profile** and choose the account. This requires the dedicated `usertools.profile` permission and never saves changes to the account, its groups or other tools’ drafts.
+
+### Choosing the account
+
+The profile, **Explain content access** and **Remove from groups** use the same selector. As you type at least two characters of the username, name, email or ID, up to 10 accounts appear in the format `username — Name (email) · ID 245`, so two people with the same name can be told apart. Choosing one sends its ID; if you then change the text, whatever you type is searched again. You can also type the full username, email or ID, case-insensitively.
+
+An account is never chosen by the order of the results: if the text matches several (for example, the username of one and the email of another, or an all-digit username that is also another account’s ID), the screen lists them and does not continue until you choose one. Suggestions are only offered to people who can use that tool, require the form token, are never cached and change nothing. Remove from groups does not suggest your own account.
 
 The profile brings together identity, status, last visit and registration in UTC, administrator access, Super User status and whether multi-factor authentication is configured. It never shows passwords, secrets, methods or recovery codes. Groups appear in their tree: intermediate groups are muted and explicitly identified as not directly assigned. Effective viewing levels are those granted by Joomla, with explanations for assigned groups, their ancestors and individual assignments.
 
@@ -313,7 +319,7 @@ The list is read with a fixed number of queries, whatever the size of the group.
 
 Since 2026.10.9, **Remove from groups** takes an account out of the groups you choose and, if you ask, also out of every group below them: children, grandchildren and so on. Joomla's batch (“Remove from group” in Users) only removes the exact group you choose and does not show the account's groups first.
 
-1. **Account**: type part of the username, name or email and pick the account from the list that appears while you type. The full username or email also works, not case-sensitive.
+1. **Account**: type part of the username, name, email or ID and pick the account from the list that appears while you type (see [Choosing the account](#choosing-the-account)). The full username, email or ID also works, not case-sensitive. The following steps show the chosen account’s username and ID.
 2. **Groups**: the groups the account belongs to are shown, all ticked and in their tree. Since 2026.10.16, intermediate groups the account is not in are shown without a checkbox and with the note “the account is not in this group”, so each group sits under its real parent. Untick those it should leave. When you untick a group that other groups of the account sit under, **“and its subgroups”** appears next to it: tick it and the groups below it are unticked, with the reason shown. Each group is decided on its own, so you can do it with several groups without one undoing another; untick “and its subgroups” or tick the group again and its subgroups get their state back. Parent groups are never touched.
 3. **Review**: each group of the account as “Removed” or “Kept”, and which group causes a removal through “and its subgroups”. Nothing changes until you confirm. The review is single-use and expires after 15 minutes.
 4. **Result**: the groups the account keeps, with links to its user record and the action log.

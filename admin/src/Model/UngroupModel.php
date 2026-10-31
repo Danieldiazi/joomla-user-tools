@@ -12,6 +12,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Model;
 
 use Danieldiazi\Component\Usertools\Administrator\Service\AccountRegrouper;
 use Danieldiazi\Component\Usertools\Administrator\Service\GroupRemoval;
+use Danieldiazi\Component\Usertools\Administrator\Service\AccountIdentity;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserRecord;
@@ -30,14 +31,12 @@ class UngroupModel extends BaseDatabaseModel
     private const PREVIEW = 'com_usertools.ungroup.preview';
     private const RESULT  = 'com_usertools.ungroup.result';
 
-    /** Accounts offered while typing. */
-    public const SUGGESTIONS = 10;
-
-    /** @return array{login: string, account: int, removed: list<int>, recursive: list<int>} */
+    /** @return array{login: string, account: int, removed: list<int>, recursive: list<int>, candidates: list<array<string, mixed>>} */
     public function getDraft(): array
     {
         $draft = (array) $this->session()->get(self::DRAFT, []);
         return [
+            'candidates' => array_values((array) ($draft['candidates'] ?? [])),
             'login'     => (string) ($draft['login'] ?? ''),
             'account'   => (int) ($draft['account'] ?? 0),
             'removed'   => array_map('intval', (array) ($draft['removed'] ?? [])),
@@ -53,23 +52,6 @@ class UngroupModel extends BaseDatabaseModel
     }
 
     /**
-     * Accounts whose username, name or email contains the text, for the account field.
-     *
-     * @return list<array{username: string, name: string, email: string, blocked: bool}>
-     */
-    public function suggest(string $text): array
-    {
-        $text = trim($text);
-        if (mb_strlen($text) < 2) {
-            return [];
-        }
-        // The operator's own account is never offered: it cannot be chosen.
-        $own = (string) $this->identity()->username;
-        $all = Toolkit::directory()->search($text, self::SUGGESTIONS + 1);
-        return \array_slice(array_values(array_filter($all, fn (array $row) => $row['username'] !== $own)), 0, self::SUGGESTIONS);
-    }
-
-    /**
      * Step 1: the account. Refusals that do not depend on the groups are shown at once.
      *
      * @param array<string, mixed> $input
@@ -79,7 +61,13 @@ class UngroupModel extends BaseDatabaseModel
         $login = trim((string) ($input['login'] ?? ''));
         $this->session()->set(self::DRAFT, ['login' => $login]);
         $this->session()->set(self::PREVIEW, []);
-        $account = $this->account(Toolkit::directory()->findId($login));
+        $match = Toolkit::directory()->pick($login, (int) ($input['account'] ?? 0));
+        if ($match['status'] === AccountIdentity::AMBIGUOUS) {
+            // Several accounts match: the operator chooses one explicitly, never the first row.
+            $this->session()->set(self::DRAFT, ['login' => $login, 'candidates' => $match['candidates']]);
+            throw new UserFacingException('COM_USERTOOLS_ACCOUNT_AMBIGUOUS', [$login]);
+        }
+        $account = $this->account($match['id']);
         if ($account === null) {
             throw new UserFacingException('COM_USERTOOLS_UNGROUP_ERROR_ACCOUNT', [$login]);
         }

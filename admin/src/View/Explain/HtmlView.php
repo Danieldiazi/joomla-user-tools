@@ -12,6 +12,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\View\Explain;
 
 use Danieldiazi\Component\Usertools\Administrator\Model\ExplainModel;
 use Danieldiazi\Component\Usertools\Administrator\Service\AccessExplanation;
+use Danieldiazi\Component\Usertools\Administrator\Service\AccountIdentity;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Danieldiazi\Component\Usertools\Administrator\View\ViewTrait;
@@ -29,8 +30,10 @@ class HtmlView extends BaseHtmlView
     public int $item = 0;
     public string $action = 'view';
     public string $context = 'site';
-    /** @var array{id: int, username: string, name: string}|null */
+    /** @var array{id: int, username: string, name: string, email: string, blocked: bool}|null */
     public ?array $account = null;
+    /** @var list<array<string, mixed>> */
+    public array $candidates = [];
     /** @var array<string, mixed>|null */
     public ?array $result = null;
     public string $error = '';
@@ -54,7 +57,12 @@ class HtmlView extends BaseHtmlView
                 throw new UserFacingException('COM_USERTOOLS_EXPLAIN_ERROR_PROFILE');
             }
             if ($this->login !== '' || $accountId > 0) {
-                $this->account = $model->account($this->login, $accountId);
+                $match = $model->account($this->login, $accountId);
+                if ($match['status'] === AccountIdentity::AMBIGUOUS) {
+                    $this->candidates = $match['candidates'];
+                    throw new UserFacingException('COM_USERTOOLS_ACCOUNT_AMBIGUOUS', [$this->login]);
+                }
+                $this->account = $match['candidates'][0];
                 $this->login   = $this->account['username'];
                 if ($this->item > 0) {
                     $this->result = $model->explain($this->account['id'], $this->type, $this->item, $this->action, $this->context);

@@ -11,6 +11,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\View\Profile;
 \defined('_JEXEC') or die;
 
 use Danieldiazi\Component\Usertools\Administrator\Model\ProfileModel;
+use Danieldiazi\Component\Usertools\Administrator\Service\AccountIdentity;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Danieldiazi\Component\Usertools\Administrator\View\ViewTrait;
@@ -24,6 +25,9 @@ class HtmlView extends BaseHtmlView
     /** @var array<string, mixed>|null */
     public ?array $profile = null;
     public string $login = '';
+    public int $accountId = 0;
+    /** @var list<array<string, mixed>> */
+    public array $candidates = [];
     public string $error = '';
 
     public function display($tpl = null): void
@@ -34,12 +38,22 @@ class HtmlView extends BaseHtmlView
         $this->login = trim($input->getString('login', ''));
         $id = $input->getInt('account', 0);
         try {
-            if ($this->login !== '') {
-                $id = $model->findAccount($this->login);
+            if ($this->login !== '' || $id > 0) {
+                $match = $model->pickAccount($this->login, $id);
+                $this->candidates = $match['candidates'];
+                $id = $match['id'];
+                if ($match['status'] === AccountIdentity::AMBIGUOUS) {
+                    throw new UserFacingException('COM_USERTOOLS_ACCOUNT_AMBIGUOUS', [$this->login]);
+                }
+                $this->candidates = [];
             }
             $this->profile = $model->getProfile($id);
+            if ($this->profile) {
+                $this->accountId = (int) $this->profile['account']->id;
+                $this->login     = (string) $this->profile['account']->username;
+            }
         } catch (UserFacingException $e) {
-            $this->error = Text::_($e->key());
+            $this->error = Text::sprintf($e->key(), ...$e->arguments());
         }
         $this->setLayout('default');
         $this->prepareDocument('COM_USERTOOLS_PROFILE_TITLE');

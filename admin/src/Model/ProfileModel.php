@@ -10,6 +10,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Model;
 
 \defined('_JEXEC') or die;
 
+use Danieldiazi\Component\Usertools\Administrator\Service\AccountIdentity;
 use Danieldiazi\Component\Usertools\Administrator\Service\AccountProfile;
 use Danieldiazi\Component\Usertools\Administrator\Service\AccountProfileReader;
 use Danieldiazi\Component\Usertools\Administrator\Service\GroupRemoval;
@@ -22,13 +23,18 @@ use Joomla\CMS\MVC\Model\BaseDatabaseModel;
 /** Stateless account lookup. Reading a profile never saves an account or changes a tool draft. */
 class ProfileModel extends BaseDatabaseModel
 {
-    public function findAccount(string $login): int
+    /**
+     * The account typed or chosen. Several matches are returned as candidates, never resolved to the first.
+     *
+     * @return array{status: string, id: int, candidates: list<array{id: int, username: string, name: string, email: string, blocked: bool}>}
+     */
+    public function pickAccount(string $login, int $account): array
     {
-        $id = Toolkit::directory()->findId($login);
-        if ($id < 1) {
+        $match = Toolkit::directory()->pick($login, $account);
+        if ($match['status'] === AccountIdentity::NONE) {
             throw new UserFacingException('COM_USERTOOLS_PROFILE_NOT_FOUND');
         }
-        return $id;
+        return $match;
     }
 
     /** @return array<string, mixed>|null */
