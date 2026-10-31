@@ -7,7 +7,7 @@ namespace Joomla\CMS\User {
         public int $id = 1;
         public string $username = 'operator';
         public array $permissions = ['core.manage' => true, 'core.admin' => true];
-        public function authorise($permission, $asset = null) { return $this->permissions[$permission] ?? false; }
+        public function authorise($permission, $asset = null) { return $this->permissions[($asset ?? 'global') . ':' . $permission] ?? $this->permissions[$permission] ?? false; }
     }
 }
 namespace Joomla\Session { interface SessionInterface {} }
@@ -108,6 +108,28 @@ namespace {
             $identity->permissions[$permission] = false;
         }
     }
+    // Category pages cannot expand a single tool permission into access to other categories.
+    $savedPermissions = $identity->permissions;
+    $identity->permissions = ['core.manage' => true, 'usertools.profile' => true,
+        'com_scheduler:core.manage' => false, 'core.admin' => false];
+    foreach (['accounts' => 0, 'groups' => 403, 'automation' => 403, 'delete' => 403, 'invented' => 404] as $section => $code) {
+        $input = new class($section) {
+            public function __construct(private string $section) {}
+            public function getCmd($name, $default = '') { return ['view' => 'home', 'section' => $this->section][$name] ?? $default; }
+            public function set($name, $value) {}
+        };
+        $controller = new \Danieldiazi\Component\Usertools\Administrator\Controller\DisplayController($app, $input);
+        try {
+            $controller->display();
+            check($code === 0 && $controller->rendered, 'Only the permitted category renders');
+        } catch (\RuntimeException $e) {
+            check($code !== 0 && $e->getCode() === $code && !$controller->rendered, 'Invalid or forbidden category denied');
+        }
+    }
+    check(!\Danieldiazi\Component\Usertools\Administrator\Controller\DisplayController::allowed(
+        $identity, \Danieldiazi\Component\Usertools\Administrator\Service\Navigation::SCHEDULER_MANAGE
+    ), 'Component manage permission does not grant scheduler manage permission');
+    $identity->permissions = $savedPermissions;
     // The stand-in identity starts as a Super User; the loop above took that away for "move".
     $identity->permissions['core.admin'] = true;
 

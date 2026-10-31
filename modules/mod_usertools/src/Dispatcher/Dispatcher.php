@@ -10,6 +10,8 @@ namespace Danieldiazi\Module\Usertools\Administrator\Dispatcher;
 
 \defined('_JEXEC') or die;
 
+use Danieldiazi\Component\Usertools\Administrator\Controller\DisplayController;
+use Danieldiazi\Component\Usertools\Administrator\Service\Navigation;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Dispatcher\AbstractModuleDispatcher;
@@ -29,6 +31,7 @@ class Dispatcher extends AbstractModuleDispatcher
         }
         // Registers the component namespace so its services can be used here.
         $app->bootComponent('com_usertools');
+        $app->getLanguage()->load('com_usertools', JPATH_ADMINISTRATOR . '/components/com_usertools');
         parent::dispatch();
     }
 
@@ -42,7 +45,7 @@ class Dispatcher extends AbstractModuleDispatcher
         } catch (\Throwable) {
             $data['summary'] = null;
         }
-        $data['canDelete'] = $user->authorise('usertools.delete', 'com_usertools');
+        $data['sections'] = Navigation::sections(static fn (string $permission): bool => DisplayController::allowed($user, $permission));
         return $data;
     }
 }

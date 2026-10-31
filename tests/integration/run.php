@@ -193,6 +193,10 @@ if (!$quoted) {
 }
 
 Test::section('Setup');
+// Keep native tours installed but prevent welcome-tour redirects during browser captures.
+$site->q('UPDATE #__guidedtours SET autostart = 0');
+// The disposable site does not send statistics or display the first-run telemetry prompt.
+$site->q("UPDATE #__extensions SET enabled = 0 WHERE type = 'plugin' AND folder = 'system' AND element = 'stats'");
 $site->cli('config:set live_site=' . escapeshellarg($url) . ' error_reporting=maximum mailer=smtp smtphost=127.0.0.1 smtpport=2525 smtpauth=false smtpsecure=none mailonline=true session_metadata=true');
 // Remove what a previous run left behind.
 $previous = array_column($site->q("SELECT id FROM #__users WHERE email LIKE '%@example.test' AND username <> ?", [getenv('UT_ADMIN_USER') ?: 'admin']), 'id');
@@ -229,11 +233,13 @@ Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_c
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
 $admin->get('index.php?option=com_config&view=component&component=com_usertools');
+require __DIR__ . '/navigation.php';
 
 Test::section('Comparison: preview, Super Users always protected, reinforced confirmation');
 $review = $admin->submit('index.php?option=com_usertools&view=compare', [
     'task' => 'compare.preview', 'names' => "ana\nLUIS\ndelegate\nnuevo1\nnuevo2", 'protect_admins' => 0, 'excluded' => '', 'excluded_groups' => [],
 ]);
+utCheckCategory($review, 'accounts', 'comparison review');
 $block = substr($review, (int) strpos($review, 'id="ut-block-table"'));
 $block = substr($block, 0, (int) strpos($block, '</table>'));
 Test::check(str_contains($block, '>baja<') && str_contains($block, '>servicio<') && str_contains($block, '>mgr<'), 'review proposes baja, servicio and mgr');
@@ -255,6 +261,7 @@ $denied = $admin->submit('index.php?option=com_usertools&view=compare&layout=rev
 Test::check(str_contains($denied, 'type the number of affected accounts: ' . $toBlock) && !$site->blocked('baja'), 'a wrong typed number blocks nothing');
 array_map('unlink', glob($mails . '/*.eml') ?: []);
 $result = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', $fields + ['confirm_count' => (string) $toBlock], 'data-ut-review');
+utCheckCategory($result, 'accounts', 'comparison result');
 Test::check(str_contains($result, 'Operation finished'), 'comparison applied');
 Test::check($site->blocked('baja') && $site->blocked('servicio') && $site->blocked('mgr') && !$site->blocked('admin') && !$site->blocked('super2'), 'only the reviewed accounts were blocked');
 Test::check($site->sessions($site->userId('baja')) === 0, 'blocking closed the open sessions of the account');
@@ -449,6 +456,7 @@ $list = $admin->get('index.php?option=com_usertools&view=reports&filter_mode=rea
 preg_match('/report_id=([0-9]{14}-[a-f0-9]{24})/', $list, $rid);
 Test::check(isset($rid[1]), 'filters find the completed real run');
 $detail = $admin->get('index.php?option=com_usertools&view=report&report_id=' . ($rid[1] ?? ''));
+utCheckCategory($detail, 'automation', 'task report detail');
 Test::check(str_contains($detail, '>stale1<') && str_contains($detail, 'Skipped accounts by reason'), 'report lists blocked accounts and summarises skipped ones');
 [$code, $csv, $headers] = $admin->request('index.php?option=com_usertools&task=reports.export&report_id=' . ($rid[1] ?? ''));
 Test::check($code === 200 && str_starts_with($csv, "\xEF\xBB\xBF") && str_contains($csv, 'stale1') && str_contains($headers['content-type'] ?? '', 'text/csv'), 'CSV export works');
@@ -870,6 +878,7 @@ $categoryAgeList = $admin->get($ageUrl . '&layout=list&kind=categories&year=2012
 Test::check(str_contains($categoryAgeList, 'data-ut-age-list-total="1"') && str_contains($categoryAgeList, '>' . htmlspecialchars($ageCategoryTitle) . '</a>')
     && str_contains($categoryAgeList, 'option=com_categories&amp;task=category.edit&amp;id=' . $ageCategory . '&amp;extension=com_content')
     && str_contains($categoryAgeList, 'Parent category'), 'the list of categories links to their edit screen and names the parent column');
+utCheckCategory($categoryAgeList, 'groups', 'content age category list');
 $contactAgeList = $admin->get($ageUrl . '&layout=list&kind=contacts&year=2011');
 Test::check(str_contains($contactAgeList, 'data-ut-age-list-total="1"') && str_contains($contactAgeList, 'option=com_contact&amp;task=contact.edit&amp;id=' . $ageContact)
     && str_contains($contactAgeList, 'UT age contact'), 'the list of contacts uses their name and links to their edit screen');
@@ -1793,6 +1802,10 @@ foreach ($tourViews as $view => $count) {
     $page   = $admin->get('index.php?option=com_usertools&view=' . $view);
     $missing = array_filter($steps, fn (array $step): bool => (int) $step['type'] !== 0
         || !preg_match('/^\[data-ut-tour="([a-z]+)"\]$/', (string) $step['target'], $m) || !str_contains($page, 'data-ut-tour="' . $m[1] . '"'));
+    utCheckCategory($page, match ($view) {
+        'addgroups', 'ungroup', 'move' => 'groups', 'delete', 'anonymize' => 'delete',
+        'schedule' => 'automation', default => 'accounts',
+    }, $view . ' with its guided tour');
     Test::check(count($steps) === $count && !$missing, "the $view tour only explains, and every step finds its target on the screen");
     Test::check(str_contains($page, 'button-start-guidedtour" data-id="' . $tourId . '" data-ut-tour-start="' . $view . '"'), "the $view screen offers its tour next to Help");
 }

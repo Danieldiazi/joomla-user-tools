@@ -13,6 +13,7 @@
   <blockChildUninstall>true</blockChildUninstall>
   <files folder="packages">
     <file type="component" id="com_usertools">com_usertools.zip</file>
+    <file type="plugin" id="usertools" group="system">plg_system_usertools.zip</file>
     <file type="plugin" id="usertools" group="task">plg_task_usertools.zip</file>
     <file type="module" id="mod_usertools" client="administrator">mod_usertools.zip</file>
     <file type="module" id="mod_usertools_groups" client="site">mod_usertools_groups.zip</file>

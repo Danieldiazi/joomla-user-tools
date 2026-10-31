@@ -4,9 +4,19 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos y la lista de contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, las del panel de Usuarios, añadir cuentas a grupos, exportar cuentas y deshacer bloqueos de 2026.10.19, la portada y las de la ficha de una persona de 2026.10.20, y la tabla de contenido por antigüedad con sus cuatro tipos y el recorrido guiado, de la versión siguiente a 2026.10.20. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos y la lista de contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, las de añadir cuentas a grupos, exportar cuentas y deshacer bloqueos de 2026.10.19, las de la ficha de una persona de 2026.10.20, y la portada, las categorías del menú, el panel de Usuarios, la tabla de contenido por antigüedad con sus cuatro tipos y el recorrido guiado, de la versión siguiente a 2026.10.20. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
-![Portada de User Tools agrupada en secciones: revisar cuentas (con la ficha de una persona, la exportación y deshacer bloqueos), grupos y niveles de acceso, automatización y seguimiento, y eliminar o anonimizar cuentas (2026.10.20)](screenshots/01-portada.jpg)
+Además de estas capturas, la CI comprueba el orden de teclado, el despliegue del menú y la categoría activa, y guarda capturas a texto al 200 %, con preferencia oscura y a 390 px de ancho. Las tarjetas caben a 390 px, pero la cabecera general de Joomla genera un ancho de documento de 600 px; no se ha alterado la plantilla para ocultarlo. Esto no acredita conformidad WCAG ni sustituye pruebas con lector de pantalla.
+
+![Portada de User Tools con sus cuatro categorías y todas las herramientas permitidas, y el menú Componentes → User Tools desplegado con Inicio activo (posterior a 2026.10.20)](screenshots/01-portada.jpg)
+
+![Categoría «Revisar cuentas», señalada en el menú, con sus cinco herramientas (posterior a 2026.10.20)](screenshots/31-menu-cuentas.jpg)
+
+![Categoría «Grupos y niveles de acceso», señalada en el menú, con sus siete herramientas (posterior a 2026.10.20)](screenshots/32-menu-grupos.jpg)
+
+![Categoría «Automatización y seguimiento»: bloqueo automático por inactividad, con el estado de su plugin, y resultados de tareas (posterior a 2026.10.20)](screenshots/33-menu-automatizacion.jpg)
+
+![Categoría «Eliminar y anonimizar cuentas», con la marca «Permanente» y el aviso de que no se puede deshacer en cada herramienta (posterior a 2026.10.20)](screenshots/34-menu-eliminacion.jpg)
 
 ![Ficha de una persona: datos de la cuenta, grupos en su árbol con el grupo intermedio, niveles de acceso efectivos y por qué, contenido creado, registro de acciones reciente y enlaces a las herramientas (2026.10.20)](screenshots/28-ficha-persona.jpg)
 
@@ -50,7 +60,7 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cad
 
 ![Detalle de un informe de tarea](screenshots/10-informe-tarea.jpg)
 
-![Módulo User Tools en el panel de Usuarios: cuentas para revisar con enlace a su revisión, tareas con su modo, resultado y fechas, y accesos directos a las herramientas permitidas (2026.10.19)](screenshots/13-panel-usuarios.jpg)
+![Módulo User Tools en el panel de Usuarios: aviso del diagnóstico, cuentas para revisar, tareas con su modo y resultado, y accesos directos agrupados por las mismas categorías del menú (posterior a 2026.10.20)](screenshots/13-panel-usuarios.jpg)
 
 ![Grupos y niveles de acceso: matriz de grupos por nivel, exportación CSV y resumen por nivel (2026.10.11)](screenshots/14-grupos-niveles.jpg)
 

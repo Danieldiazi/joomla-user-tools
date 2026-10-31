@@ -3,6 +3,7 @@
 namespace Danieldiazi\Tests;
 
 use Danieldiazi\Component\Usertools\Administrator\Service\GuidedTours;
+use Danieldiazi\Component\Usertools\Administrator\Service\Navigation;
 use PHPUnit\Framework\TestCase;
 
 final class GuidedToursTest extends TestCase
@@ -12,9 +13,8 @@ final class GuidedToursTest extends TestCase
     public function testToursExplainTheToolsThatChangeAccountsOrGroups(): void
     {
         $this->assertSame(['compare', 'inactive', 'unblock', 'delete', 'anonymize', 'addgroups', 'ungroup', 'move', 'schedule'], array_keys(GuidedTours::TOURS));
-        $controller = (string) file_get_contents(self::ROOT . '/admin/src/Controller/DisplayController.php');
         foreach (array_keys(GuidedTours::TOURS) as $position => $view) {
-            $this->assertMatchesRegularExpression("/'" . $view . "'\\s*=>/", $controller, $view . ' is a screen with its own permission');
+            $this->assertArrayHasKey($view, Navigation::PERMISSIONS, $view . ' is a screen with its own permission');
             $tour = GuidedTours::tour($view, $position);
             $this->assertSame(0, $tour['autostart'], 'a tour never starts on its own');
             $this->assertSame('com_usertools.tour-' . $view, $tour['uid']);

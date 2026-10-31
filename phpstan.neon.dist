@@ -4,6 +4,7 @@ parameters:
   paths:
     - admin/src
     - plugins/task/usertools/src
+    - plugins/system/usertools/src
     - modules/mod_usertools/src
     - modules/mod_usertools_groups/src
     - package/script.php

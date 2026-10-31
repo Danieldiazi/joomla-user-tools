@@ -65,12 +65,13 @@ jobs:
         run: JOOMLA_PATH="$RUNNER_TEMP/joomla" vendor/bin/phpstan analyse --no-progress --memory-limit=1G
 
   integration:
-    name: Joomla ${{ matrix.database }}
+    name: Joomla ${{ matrix.database }} (PHP ${{ matrix.php }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         database: [postgresql, mysql]
+        php: ['8.3', '8.4']
     services:
       postgres:
         image: postgres:16
@@ -93,7 +94,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.3'
+          php-version: ${{ matrix.php }}
           extensions: zip, intl, mbstring, gd, pdo_pgsql, pgsql, pdo_mysql, mysqli
           coverage: none
       - name: Install Joomla ${{ env.JOOMLA_VERSION }}
@@ -106,6 +107,12 @@ jobs:
           php "$RUNNER_TEMP/site/installation/joomla.php" install -n --site-name=CI --admin-user="CI Admin" --admin-username=admin \
             --admin-password="$ADMIN_PASS" --admin-email=admin@example.test --db-type=$DBTYPE --db-host=127.0.0.1 \
             --db-user=joomla --db-pass=joomla --db-name=joomla --db-prefix=ci_
+      - name: Install the published single-link package before upgrading
+        if: matrix.php == '8.4'
+        run: |
+          curl -sSfL -o "$RUNNER_TEMP/legacy.zip" "https://github.com/Danieldiazi/joomla-user-tools/releases/download/v2026.10.20/pkg_usertools-2026.10.20.zip"
+          php "$RUNNER_TEMP/site/cli/joomla.php" extension:install --path="$RUNNER_TEMP/legacy.zip"
+          UT_JOOMLA="$RUNNER_TEMP/site" php tests/integration/navigation-legacy.php
       - name: Install the current build
         run: |
           php scripts/build.php --output=dist
@@ -125,11 +132,11 @@ jobs:
           UT_URL=http://127.0.0.1:8090 UT_JOOMLA="$RUNNER_TEMP/site" UT_ADMIN_USER=admin UT_ADMIN_PASS="$ADMIN_PASS" \
             UT_MAILS="$RUNNER_TEMP/mails" php tests/integration/run.php
       - uses: actions/setup-node@v4
-        if: matrix.database == 'mysql' && github.event_name == 'pull_request'
+        if: matrix.database == 'mysql' && matrix.php == '8.3' && github.event_name == 'pull_request'
         with:
           node-version: '22'
-      - name: Capture account profiles in Joomla
-        if: matrix.database == 'mysql' && github.event_name == 'pull_request'
+      - name: Capture profiles and category navigation in Joomla
+        if: matrix.database == 'mysql' && matrix.php == '8.3' && github.event_name == 'pull_request'
         env:
           UT_URL: http://127.0.0.1:8090
           UT_ADMIN_USER: admin
@@ -139,14 +146,19 @@ jobs:
           npm install --no-save --package-lock=false --ignore-scripts playwright@1.64.1
           npx playwright install --with-deps chromium
           node tests/integration/capture-profile.mjs
+          node tests/integration/capture-navigation.mjs
       - name: Upload profile screenshots
-        if: always() && matrix.database == 'mysql' && github.event_name == 'pull_request'
+        if: always() && matrix.database == 'mysql' && matrix.php == '8.3' && github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
           name: profile-screenshots-${{ github.sha }}
           path: ${{ runner.temp }}/profile-screenshots/
           if-no-files-found: ignore
           retention-days: 7
+      - name: Verify package uninstall removes navigation
+        env:
+          UT_JOOMLA: ${{ runner.temp }}/site
+        run: php tests/integration/navigation-uninstall.php
       - name: Logs on failure
         if: failure()
         run: |

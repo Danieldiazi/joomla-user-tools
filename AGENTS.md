@@ -25,7 +25,9 @@ User Tools es un paquete para **Joomla 6** (PHP ≥ 8.3, MySQL/MariaDB y Postgre
 
 Además, un módulo de administración resume en el panel de Usuarios las cuentas pendientes, el estado de las tareas y los avisos, y un módulo del sitio lista los grupos de un usuario o los miembros de un grupo.
 
-Se distribuye como un paquete con el componente `com_usertools`, el plugin `plg_task_usertools`, el módulo de administración `mod_usertools` y el módulo del sitio `mod_usertools_groups`.
+La navegación de categorías se define en `Navigation`: permisos por vista, categorías y metadatos de herramientas. La reutilizan portada, módulo del panel y plugin `system/usertools`. Los submenús se instalan desde el manifiesto; el evento público `onPreprocessMenuItems` filtra por permisos y marca la categoría activa. No dupliques catálogos ni reglas en plantillas. `schedule` comprueba `core.manage` en `com_scheduler`; `move` sigue comprobando `core.admin` global. Las categorías desconocidas devuelven 404 y las vacías para la identidad, 403.
+
+Se distribuye como un paquete con el componente `com_usertools`, los plugins `plg_task_usertools` y `plg_system_usertools`, el módulo de administración `mod_usertools` y el módulo del sitio `mod_usertools_groups`.
 
 ## Estructura
 
@@ -113,19 +115,20 @@ Estas referencias usan la ruta `next`, cuyo contenido puede cambiar. Contrasta s
 ## Versiones
 
 - La numeración es **año.mes.revisión**, sin cero inicial en el mes: 2026.10.5; el mes siguiente empieza en 2026.11.0.
-- Cada versión nueva cambia el número en **seis sitios**:
+- Cada versión nueva cambia el número en **siete sitios**:
   - `com_usertools.xml`
   - `plugins/task/usertools/usertools.xml`
+  - `plugins/system/usertools/usertools.xml`
   - `modules/mod_usertools/mod_usertools.xml`
   - `modules/mod_usertools_groups/mod_usertools_groups.xml`
   - `package/pkg_usertools.xml`
   - `media/joomla.asset.json`
 - No se reutiliza un número que ya tenga release.
 - **Antes de recomendar una versión o una etiqueta**: consulta las releases y etiquetas existentes y verifica la versión real del commit que se va a publicar. No basta con elegir el siguiente número.
-- **Preparar primero, etiquetar después**: actualiza los seis archivos en la misma rama y pull request, comprueba que sus valores coinciden, construye sin `--version` y ejecuta `php tests/verify-build.php VERSIÓN dist`. Fusiona la pull request con CI en verde antes de crear la etiqueta sobre ese commit de `main`.
-- **Comprobar el commit etiquetado**: `vAAAA.M.REVISIÓN` debe coincidir con los seis valores guardados en ese commit. Crear una etiqueta o pasar `--version` al constructor no actualiza los archivos del repositorio. No desactives la validación de etiquetas para publicar.
+- **Preparar primero, etiquetar después**: actualiza los siete archivos en la misma rama y pull request, comprueba que sus valores coinciden, construye sin `--version` y ejecuta `php tests/verify-build.php VERSIÓN dist`. Fusiona la pull request con CI en verde antes de crear la etiqueta sobre ese commit de `main`.
+- **Comprobar el commit etiquetado**: `vAAAA.M.REVISIÓN` debe coincidir con los siete valores guardados en ese commit. Crear una etiqueta o pasar `--version` al constructor no actualiza los archivos del repositorio. No desactives la validación de etiquetas para publicar.
 - **Si la publicación falla por versiones distintas**: corrige los archivos mediante una pull request y comprueba el commit al que apunta la etiqueta antes de volver a publicar. Reejecutar el trabajo sobre el mismo commit incorrecto vuelve a fallar; cambiar solo el título de la release tampoco lo corrige. Conserva las etiquetas de versiones ya distribuidas.
-- **Verificar la publicación**: no des la release por terminada hasta que el trabajo haya finalizado correctamente y estén adjuntos los cinco ZIP, `SHA256SUMS.txt` y `updates.xml`, con la misma versión. Una página de release creada sin paquetes no confirma una publicación correcta.
+- **Verificar la publicación**: no des la release por terminada hasta que el trabajo haya finalizado correctamente y estén adjuntos los seis ZIP, `SHA256SUMS.txt` y `updates.xml`, con la misma versión. Una página de release creada sin paquetes no confirma una publicación correcta.
 
 ## Pruebas
 
@@ -161,6 +164,7 @@ Consulta antes de publicar los [requisitos del JED](https://extensions.joomla.or
 
 - Trabaja en una rama y abre una pull request contra `main`. No hagas push directo a `main`.
 - La CI debe estar en verde antes de fusionar.
+- La integración de navegación se habilita una sola vez por plugin instalado; su marcador vive en `custom_data` de la propia extensión de sistema, no en el marcador del módulo. Conservar una deshabilitación posterior y verificar instalación, actualización desde el menú antiguo, repetición sin duplicados y desinstalación. `tests/integration/navigation-uninstall.php` se ejecuta al final, después de las capturas.
 - **Sin enlaces a sesiones de agentes**: no incluyas URL de sesiones (por ejemplo `https://claude.ai/code/session_…`) ni líneas `Claude-Session:` en commits, descripciones de pull request, issues ni comentarios. La atribución se limita a `Co-Authored-By` en los commits y a una línea «Generated with Claude Code» en las pull requests.
 - La release la publica una persona: crea en GitHub una release con la etiqueta `vAAAA.M.REVISIÓN` sobre `main`. GitHub Actions construye y adjunta los paquetes y el `updates.xml`. La etiqueta debe coincidir con la versión de los manifiestos del commit etiquetado; si no coincide, la publicación falla.
 - Actualiza README y FAQ cuando cambie lo que ve o configura el usuario. Si cambian las pantallas, renueva las capturas de `docs/screenshots/`.

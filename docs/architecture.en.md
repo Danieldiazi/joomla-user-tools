@@ -150,3 +150,11 @@ These are limits of the current implementation, not guarantees of complete audit
 Commands are in [Development](../README.en.md#development) and [Building and publishing](../README.en.md#building-and-publishing). The header of [tests/integration/run.php](../tests/integration/run.php) explains how to test against a disposable Joomla site: these tests create, block and delete accounts.
 
 [CI](../.github/workflows/ci.yml) combines PHPUnit on PHP 8.3/8.4, JavaScript with jsdom, PHPStan and HTTP flows against Joomla with MySQL/PostgreSQL. Those HTTP flows do not run a browser or replace visual checks.
+
+## Category navigation
+
+`Navigation` centralises view permissions and the category/tool catalogue. `DisplayController` validates view and category access; `Home/HtmlView` filters the home screen with the same catalogue, and the dashboard module reuses it for shortcut names, order and grouping. The `report` detail belongs to the reports category. `ViewTrait` adds a category return link while keeping Home.
+
+The manifest installs Home and four category submenu entries. The `system/usertools` plugin listens to the public `onPreprocessMenuItems` event, checks current permissions and removes only forbidden User Tools links. It marks the active path through native menu nodes without changing link destinations. It also runs outside the component and does not depend on Atum DOM or CSS.
+
+Permission to configure tasks is checked on `com_scheduler`; moving groups keeps global `core.admin`. The plugin does not replace controller checks. The package enables it once and records the marker on that extension; subsequent updates preserve an explicit disable. The builder, ZIP verification and release include the system plugin. Integration tests cover installation, upgrades, permissions, active paths and uninstallation; captures use the disposable Joomla site.

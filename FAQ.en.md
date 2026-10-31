@@ -370,13 +370,21 @@ It requires the *View the access diagnosis* permission. Super Users have it; gra
 
 ## Installation and updates
 
+### How do I open a User Tools category directly?
+
+Expand **Components → User Tools**: Home keeps the complete home screen and the other four entries open individual categories. Only categories containing tools you may use appear. Dashboard shortcuts follow the same classification; a visible category grants no extra permissions. See [category navigation](README.en.md#category-navigation).
+
+### Why is a category missing or the current tool not marked?
+
+A category disappears when you have no permission for any of its tools. Task configuration also requires permission to manage Joomla's scheduler. If filtering or the active category is not working, check that **System - User Tools** is enabled under Plugins. The package enables it once when first added; later updates preserve an explicit disable. Direct URLs still require their screen permissions.
+
 ### Which Joomla version is required?
 
 Joomla 6. Documentation screenshots were taken on Joomla 6.2.0.
 
 ### Which file should I install?
 
-**pkg_usertools-VERSION.zip** from the [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest). It installs or updates the component, plugin, dashboard module and site groups module together. Separate `com_usertools`, `plg_task_usertools`, `mod_usertools` and `mod_usertools_groups` ZIPs are for separate installations and must use the same version.
+**pkg_usertools-VERSION.zip** from the [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest). It installs or updates the component, task and navigation plugins, dashboard module and site groups module together. Separate `com_usertools`, `plg_task_usertools`, `plg_system_usertools`, `mod_usertools` and `mod_usertools_groups` ZIPs are for separate installations and must use the same version. The component needs the system plugin to filter its menu and mark the active category.
 
 ### How do I update without losing settings?
 

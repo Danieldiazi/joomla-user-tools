@@ -11,6 +11,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Controller;
 \defined('_JEXEC') or die;
 
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
+use Danieldiazi\Component\Usertools\Administrator\Service\Navigation;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\Controller\BaseController;
 
@@ -20,34 +21,19 @@ class DisplayController extends BaseController
     protected $default_view = 'home';
 
     /** Views for global Super Users only: checked on the root asset, never on the component's own rules. */
-    public const SUPER_USERS = 'core.admin';
+    public const SUPER_USERS = Navigation::SUPER_USERS;
 
     /** Permission required by each view; the component itself already requires core.manage. */
-    public const PERMISSIONS = [
-        'home'     => 'core.manage',
-        'profile'  => 'usertools.profile',
-        'compare'  => 'usertools.compare',
-        'export'   => 'usertools.export',
-        'inactive' => 'usertools.inactive',
-        'unblock'  => 'usertools.unblock',
-        'delete'   => 'usertools.delete',
-        'schedule' => 'core.manage',
-        'reports'  => 'usertools.reports',
-        'report'   => 'usertools.reports',
-        'access'   => 'usertools.access',
-        'usage'    => 'usertools.access',
-        'ungroup'  => 'usertools.ungroup',
-        'diagnose' => 'usertools.diagnose',
-        'age'      => 'usertools.content',
-        'move'     => self::SUPER_USERS,
-        'addgroups' => 'usertools.addgroups',
-        'anonymize' => 'usertools.anonymize',
-    ];
+    public const PERMISSIONS = Navigation::PERMISSIONS;
 
     /** Whether the user has a permission of PERMISSIONS (SUPER_USERS means a global Super User). */
     public static function allowed(\Joomla\CMS\User\User $user, string $permission): bool
     {
-        return $permission === self::SUPER_USERS ? (bool) $user->authorise('core.admin') : (bool) $user->authorise($permission, 'com_usertools');
+        return match ($permission) {
+            self::SUPER_USERS => (bool) $user->authorise('core.admin'),
+            Navigation::SCHEDULER_MANAGE => (bool) $user->authorise('core.manage', 'com_scheduler'),
+            default => (bool) $user->authorise($permission, 'com_usertools'),
+        };
     }
 
     /**
@@ -64,6 +50,17 @@ class DisplayController extends BaseController
         }
         if (!self::allowed($this->app->getIdentity(), self::PERMISSIONS[$view])) {
             throw new \Joomla\CMS\Access\Exception\NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+        }
+        if ($view === 'home') {
+            $section = $this->input->getCmd('section', '');
+            if (!\is_string($section) || ($section !== '' && !isset(Navigation::CATEGORIES[$section]))) {
+                throw new \RuntimeException(Text::_('COM_USERTOOLS_ERROR_CATEGORY'), 404);
+            }
+            if ($section !== '' && !isset(Navigation::sections(
+                fn (string $permission): bool => self::allowed($this->app->getIdentity(), $permission)
+            )[$section])) {
+                throw new \Joomla\CMS\Access\Exception\NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+            }
         }
         // Reviews and one-time passwords must never be cached by the browser or a proxy.
         Toolkit::app()->setHeader('Cache-Control', 'no-store, private', true);

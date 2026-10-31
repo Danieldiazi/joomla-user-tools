@@ -150,3 +150,11 @@ Estos son límites de la implementación actual, no garantías de auditoría com
 Los comandos están en [Desarrollo](../README.md#desarrollo) y [Construcción y publicación](../README.md#construcción-y-publicación). La cabecera de [tests/integration/run.php](../tests/integration/run.php) explica cómo ejecutar las pruebas contra un Joomla desechable: crean, bloquean y borran cuentas.
 
 La [CI](../.github/workflows/ci.yml) combina PHPUnit en PHP 8.3/8.4, JavaScript con jsdom, PHPStan y flujos HTTP contra Joomla con MySQL/PostgreSQL. Esos flujos HTTP no ejecutan un navegador ni sustituyen una revisión visual.
+
+## Navegación por categorías
+
+`Navigation` concentra permisos por vista y el catálogo de categorías/herramientas. `DisplayController` valida el acceso a la vista y a la categoría; `Home/HtmlView` filtra la portada con el mismo catálogo, y el módulo del panel lo reutiliza para nombres, orden y grupos de accesos directos. El detalle `report` pertenece a la categoría de informes. `ViewTrait` añade el retorno a la categoría y conserva Inicio.
+
+El manifiesto instala Inicio y cuatro submenús de categoría. El plugin `system/usertools` escucha el evento público `onPreprocessMenuItems`, comprueba los permisos vigentes y retira solo enlaces de User Tools no permitidos. Marca la ruta activa mediante los nodos nativos sin cambiar el destino de sus enlaces. Funciona también fuera del componente y no depende del DOM o CSS de Atum.
+
+El permiso de configurar tareas se comprueba en `com_scheduler`; mover grupos conserva `core.admin` global. El plugin no sustituye las comprobaciones del controlador. El paquete lo habilita una vez y guarda el marcador en los datos de esa extensión; después respeta una deshabilitación explícita. El constructor, la verificación de ZIP y la publicación incluyen el plugin de sistema. Las pruebas de integración cubren instalación, actualización, permisos, ruta activa y desinstalación; la captura usa el Joomla desechable.

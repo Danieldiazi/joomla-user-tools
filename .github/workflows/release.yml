@@ -69,7 +69,7 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           version="${GITHUB_REF_NAME#v}"
-          assets=("dist/pkg_usertools-$version.zip" "dist/com_usertools-$version.zip" "dist/plg_task_usertools-$version.zip" "dist/mod_usertools-$version.zip" "dist/mod_usertools_groups-$version.zip" dist/SHA256SUMS.txt dist/updates.xml)
+          assets=("dist/pkg_usertools-$version.zip" "dist/com_usertools-$version.zip" "dist/plg_task_usertools-$version.zip" "dist/plg_system_usertools-$version.zip" "dist/mod_usertools-$version.zip" "dist/mod_usertools_groups-$version.zip" dist/SHA256SUMS.txt dist/updates.xml)
           if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
             gh release upload "$GITHUB_REF_NAME" "${assets[@]}" --clobber
           else

@@ -9,36 +9,14 @@
 \defined('_JEXEC') or die;
 
 use Joomla\CMS\HTML\HTMLHelper;
-use Joomla\CMS\Factory;
-use Danieldiazi\Component\Usertools\Administrator\Controller\DisplayController;
+use Danieldiazi\Component\Usertools\Administrator\Service\Navigation;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 
 /**
  * @var array<string, mixed>|null $summary
- * @var bool                      $canDelete
+ * @var array<string, array<string, mixed>> $sections
  */
-$identity = Factory::getApplication()->getIdentity();
-$links = [
-    ['usertools.profile', 'profile', 'MOD_USERTOOLS_LINK_PROFILE'],
-    ['usertools.compare', 'compare', 'MOD_USERTOOLS_LINK_COMPARE'],
-    ['usertools.export', 'export', 'MOD_USERTOOLS_LINK_EXPORT'],
-    ['usertools.inactive', 'inactive', 'MOD_USERTOOLS_LINK_INACTIVE'],
-    ['usertools.unblock', 'unblock', 'MOD_USERTOOLS_LINK_UNBLOCK'],
-    ['usertools.addgroups', 'addgroups', 'MOD_USERTOOLS_LINK_ADDGROUPS'],
-    ['usertools.ungroup', 'ungroup', 'MOD_USERTOOLS_LINK_UNGROUP'],
-    ['usertools.access', 'access', 'MOD_USERTOOLS_LINK_ACCESS'],
-    ['usertools.access', 'usage', 'MOD_USERTOOLS_LINK_USAGE'],
-    ['usertools.content', 'age', 'MOD_USERTOOLS_LINK_AGE'],
-    ['usertools.diagnose', 'diagnose', 'MOD_USERTOOLS_LINK_DIAGNOSE'],
-    ['usertools.reports', 'reports', 'MOD_USERTOOLS_LINK_REPORTS'],
-    ['usertools.delete', 'delete', 'MOD_USERTOOLS_LINK_DELETE'],
-    ['usertools.anonymize', 'anonymize', 'MOD_USERTOOLS_LINK_ANONYMIZE'],
-];
-$links[] = ['core.admin', 'move', 'MOD_USERTOOLS_LINK_MOVE'];
-$links = array_values(array_filter($links, static fn (array $link): bool =>
-    $identity !== null && DisplayController::allowed($identity, $link[0])
-));
 $e    = fn ($s) => htmlspecialchars((string) $s, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 $date = fn (?string $utc) => $utc ? HTMLHelper::_('date', $utc, Text::_('DATE_FORMAT_LC5')) : Text::_('MOD_USERTOOLS_NEVER');
 $statusBadge = [
@@ -135,14 +113,19 @@ $statusBadge = [
   </div>
   <?php endif; ?>
 
-  <?php if ($links) : ?>
+  <?php if ($sections) : ?>
   <nav class="mb-3" aria-label="<?= Text::_('MOD_USERTOOLS_QUICK_LINKS') ?>">
     <h3 class="fs-6 fw-semibold mb-2"><?= Text::_('MOD_USERTOOLS_QUICK_LINKS') ?></h3>
-    <div class="d-flex flex-wrap gap-2">
-      <?php foreach ($links as [, $view, $label]) : ?>
-      <a class="btn btn-sm btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools&view=' . $view) ?>"><?= Text::_($label) ?></a>
-      <?php endforeach; ?>
+    <?php foreach ($sections as $category => $section) : ?>
+    <div class="mb-3" data-ut-dashboard-links-category="<?= $e($category) ?>">
+      <h4 class="fs-6 mb-2"><a href="<?= Route::_(Navigation::categoryLink($category)) ?>"><?= Text::_($section['title']) ?></a></h4>
+      <div class="d-flex flex-wrap gap-2">
+        <?php foreach ($section['tools'] as $view => $tool) : ?>
+        <a class="btn btn-sm btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools&view=' . $view) ?>"><?= Text::_($tool[1]) ?></a>
+        <?php endforeach; ?>
+      </div>
     </div>
+    <?php endforeach; ?>
   </nav>
   <?php endif; ?>
 

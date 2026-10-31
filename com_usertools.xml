@@ -16,6 +16,13 @@
   </media>
   <administration>
     <menu link="option=com_usertools" img="class:users">COM_USERTOOLS</menu>
+    <submenu>
+      <menu view="home">COM_USERTOOLS_MENU_HOME</menu>
+      <menu link="option=com_usertools&amp;view=home&amp;section=accounts">COM_USERTOOLS_HOME_SECTION_ACCOUNTS</menu>
+      <menu link="option=com_usertools&amp;view=home&amp;section=groups">COM_USERTOOLS_HOME_SECTION_GROUPS</menu>
+      <menu link="option=com_usertools&amp;view=home&amp;section=automation">COM_USERTOOLS_HOME_SECTION_AUTOMATION</menu>
+      <menu link="option=com_usertools&amp;view=home&amp;section=delete">COM_USERTOOLS_HOME_SECTION_DELETE</menu>
+    </submenu>
     <files folder="admin">
       <filename>access.xml</filename>
       <filename>config.xml</filename>

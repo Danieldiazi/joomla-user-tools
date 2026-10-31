@@ -370,13 +370,21 @@ Requiere el permiso *Ver el diagnóstico de accesos*. Los superusuarios lo tiene
 
 ## Instalación y actualización
 
+### ¿Cómo abro directamente una categoría de User Tools?
+
+Despliega **Componentes → User Tools**: Inicio conserva la portada completa y las otras cuatro entradas abren cada categoría. Solo aparecen las categorías con herramientas que puedes usar. Los accesos del panel siguen la misma clasificación; una categoría visible no concede permisos adicionales. Consulta la [navegación por categorías](README.md#navegación-por-categorías).
+
+### ¿Por qué falta una categoría o no queda señalada la herramienta?
+
+Una categoría desaparece cuando no tienes permiso para ninguna de sus herramientas. La configuración de tareas exige además acceso al programador de Joomla. Si el filtrado o la categoría activa no funcionan, comprueba que **Sistema - User Tools** esté habilitado en Plugins. El paquete lo activa una vez al incorporarlo; las actualizaciones posteriores respetan que lo deshabilites. Abrir directamente una URL sigue exigiendo sus permisos.
+
 ### ¿Qué versión de Joomla necesito?
 
 Joomla 6. Las capturas de la documentación se han tomado en Joomla 6.2.0.
 
 ### ¿Qué fichero instalo?
 
-**pkg_usertools-VERSIÓN.zip** de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest). Instala o actualiza el componente, el plugin, el módulo del panel y el módulo de grupos del sitio a la vez. Los ZIP sueltos `com_usertools`, `plg_task_usertools`, `mod_usertools` y `mod_usertools_groups` son para instalaciones separadas; deben corresponder a la misma versión.
+**pkg_usertools-VERSIÓN.zip** de la [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest). Instala o actualiza el componente, los plugins de tareas y navegación, el módulo del panel y el módulo de grupos del sitio a la vez. Los ZIP sueltos `com_usertools`, `plg_task_usertools`, `plg_system_usertools`, `mod_usertools` y `mod_usertools_groups` son para instalaciones separadas; deben corresponder a la misma versión. El componente necesita el plugin de sistema para filtrar su menú y señalar la categoría activa.
 
 ### ¿Cómo actualizo sin perder la configuración?
 
