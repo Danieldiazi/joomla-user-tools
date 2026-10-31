@@ -691,6 +691,14 @@ Test::check(str_contains($editorLine, 'Inherited from group «Author»'), 'cells
 [$code, $pairs] = $admin->request(preg_replace('#^.*/administrator/#', '', $exportUrl('pairs')));
 Test::check($code === 200 && str_contains($pairs, $editorId . ';Editor;"Public / Registered / Author / Editor";' . $authorsLevel . ';"UT level authors";Inherited;Author'), 'one row per group and level, with the parent it comes from');
 Test::check(!str_contains($pairs, ';"UT level empty";'), 'levels a group does not have are left out');
+// Group titles go through the same protection: a leading invisible space does not hide a formula.
+$site->q('UPDATE #__usergroups SET title = ? WHERE id = ?', ["\u{200B}=1+1;\"x\"", $editorId]);
+[, $hostilePairs] = $admin->request(preg_replace('#^.*/administrator/#', '', $exportUrl('pairs')));
+$site->q('UPDATE #__usergroups SET title = ? WHERE id = ?', ['Editor', $editorId]);
+$pairRows = array_map(static fn (string $line): array => str_getcsv($line, ';', '"', ''), array_values(array_filter(preg_split('/\R/', substr($hostilePairs, 3)) ?: [], static fn (string $l): bool => $l !== '')));
+$editorPairs = array_values(array_filter($pairRows, static fn (array $row): bool => ($row[0] ?? '') === (string) $editorId));
+Test::check($editorPairs !== [] && ($editorPairs[0][1] ?? '') === "'\u{200B}=1+1;\"x\"" && count(array_unique(array_map('count', $pairRows))) === 1,
+    'a group title that could run as a formula is exported whole behind an apostrophe, without adding columns');
 $tokenless = preg_replace('/&(amp;)?[0-9a-f]{32}=1/', '', $exportUrl('matrix'));
 [, $refused, $refusedHeaders] = $admin->request(preg_replace('#^.*/administrator/#', '', $tokenless));
 Test::check(!str_starts_with($refusedHeaders['content-type'] ?? '', 'text/csv') && !str_contains($refused, '"UT level authors"'), 'without the token there is no CSV');
@@ -1571,6 +1579,9 @@ $xpOther = $site->addUser('xp_other', 'Registered', '', $old);
 $site->q('UPDATE #__users SET "block" = 1, "activation" = ? WHERE id = ?', ['test-pending-activation', $xpChild]);
 $site->q('INSERT INTO #__user_mfa ("user_id", "title", "method", "options", "created_on") VALUES (?, ?, ?, ?, ?)',
     [$xpBase, 'Test MFA', 'totp', '{}', gmdate('Y-m-d H:i:s')]);
+// A name that a spreadsheet could run as a formula once it trims the leading space, with a separator and quotes.
+$xpHostileName = ' =HYPERLINK("http://example.test";"open");x';
+$site->q('UPDATE #__users SET name = ? WHERE id = ?', [$xpHostileName, $xpBase]);
 $token = Client::token($exportPage);
 $csvPath = 'index.php?option=com_usertools&task=export.download&group=' . $xpGroup . '&subgroups=1&status=all&days=0&' . $token . '=1';
 [$status, $csv, $headers] = $admin->request($csvPath);
@@ -1585,6 +1596,8 @@ Test::check($status === 200 && str_starts_with($csv, "\xEF\xBB\xBF")
     && str_contains((string) ($headers['cache-control'] ?? ''), 'no-store')
     && str_contains((string) ($headers['content-disposition'] ?? ''), 'attachment'),
     'download is UTF-8 CSV with private no-store response headers');
+Test::check(($csvById[$xpBase][2] ?? '') === "'" . $xpHostileName && count(array_unique(array_map('count', $csvRows))) === 1,
+    'a name that could run as a formula is exported whole behind an apostrophe, without adding columns');
 Test::check(isset($csvById[$xpBase], $csvById[$xpChild]) && !isset($csvById[$xpOther]),
     'group with descendants exports only direct and descendant memberships');
 Test::check(count($csvRows[0] ?? []) === 9 && !str_contains($csv, '@example.test'),

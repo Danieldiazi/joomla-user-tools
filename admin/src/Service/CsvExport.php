@@ -34,13 +34,31 @@ final class CsvExport
         return $csv;
     }
 
-    /** Usernames such as "=HYPERLINK(...)" must not run as formulas when the file is opened. */
+    /**
+     * Characters a spreadsheet may skip, trim or normalise before deciding whether a cell is a formula:
+     * whitespace and line breaks, control characters, Unicode spaces and invisible format characters
+     * (zero-width spaces, joiners, bidi marks, BOM).
+     */
+    private const IGNORABLE = '[\s\p{Z}\p{Cc}\p{Cf}]';
+
+    /** Characters that start a formula in Excel, LibreOffice Calc or Google Sheets, with their full-width forms. */
+    private const TRIGGERS = '[=+\-@\x{FF1D}\x{FF0B}\x{FF0D}\x{FF20}]';
+
+    /**
+     * Neutralises cells that a spreadsheet could run as a formula, such as a username "=HYPERLINK(...)",
+     * also when ignorable characters come first (" =1+1" is evaluated by LibreOffice when it trims spaces).
+     * The cell is prefixed with an apostrophe, which keeps the whole original value visible as text; nothing
+     * is removed. Plain numbers ("-5", "+34", "1.5") are left as they are: they cannot be formulas.
+     * Cells starting with a tab or a line break are prefixed too. Invalid UTF-8 is always prefixed.
+     * Separators, quotes and line breaks inside a cell are quoted by fputcsv(), so they never add columns or rows.
+     */
     public static function cell(mixed $value): string
     {
         $value = (string) ($value ?? '');
-        if ($value !== '' && strpbrk($value[0], "=+-@\t\r") !== false) {
-            return "'" . $value;
+        if ($value === '' || preg_match('/^[+-]?(\d+([.,]\d+)?|[.,]\d+)$/', $value) === 1) {
+            return $value;
         }
-        return $value;
+        $risky = preg_match('/^(' . self::IGNORABLE . '*' . self::TRIGGERS . '|[\t\r\n])/u', $value);
+        return $risky === 0 ? $value : "'" . $value;
     }
 }
