@@ -131,7 +131,7 @@ final class RecordsTest extends TestCase
         $csv = CsvExport::build(['Usuario', 'Motivo'], [['=HYPERLINK("x")', 'ok;sí'], ['+1', '@a'], ['-2', "\tb"]]);
         $this->assertStringStartsWith("\xEF\xBB\xBF", $csv);
         $this->assertStringContainsString("'=HYPERLINK", $csv);
-        $this->assertStringContainsString("'+1;'@a", $csv);
+        $this->assertStringContainsString("+1;'@a", $csv, 'a plain number is not a formula');
         $this->assertStringContainsString('"ok;sí"', $csv);
         $this->assertSame('ana', CsvExport::cell('ana'));
     }

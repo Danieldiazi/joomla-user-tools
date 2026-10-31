@@ -10,6 +10,12 @@ Dudas habituales sobre **Joomla User Tools**. Para la descripción completa de c
 
 Sí, con **Exportar cuentas a CSV**. Se filtra por grupo, subgrupos, estado e inactividad. El correo está desactivado por defecto y su exportación se registra. El indicador MFA no revela claves ni códigos. Se necesita el permiso `usertools.export`. Consulta el [README](README.md#exportar-cuentas-a-csv).
 
+### ¿Por qué algunas celdas del CSV empiezan por un apóstrofo?
+
+Para que la hoja de cálculo no ejecute como fórmula un valor que escribió otra persona, por ejemplo un nombre como `=HYPERLINK(...)`. Todas las exportaciones de User Tools añaden un apóstrofo `'` delante de las celdas que empiezan por `=`, `+`, `-` o `@` (o sus formas de ancho completo), también cuando antes hay espacios, tabulaciones, saltos de línea, caracteres de control o invisibles, y delante de las que empiezan por tabulación o salto de línea. No se quita nada: detrás del apóstrofo está el valor original completo. Los números simples, como `-5` o `+34`, no se tocan; la hoja de cálculo puede mostrarlos como número. Los puntos y coma, comillas y saltos de línea dentro de un valor van entrecomillados y nunca crean columnas ni filas nuevas.
+
+El CSV es un formato de intercambio: si lo vuelves a importar en otro sistema, ten en cuenta ese apóstrofo. Se ha comprobado con LibreOffice Calc 24.2, con y sin la opción de recortar espacios, que ninguna celda protegida se evalúa como fórmula. Excel y Google Sheets no se han probado todavía; la protección sigue las reglas que aplican también esas aplicaciones.
+
 ## General
 
 ### ¿Borra usuarios?
