@@ -4,7 +4,7 @@
 
 [Volver al README](../README.md#desarrollo)
 
-Esta guía describe la implementación de 2026.10.5. Está dirigida a quien necesite localizar una regla, seguir una petición o modificar una herramienta. Al cambiar los flujos, la persistencia o las garantías, actualiza también esta guía. Las instrucciones de uso están en el [README](../README.md) y la [FAQ](../FAQ.md).
+Esta guía describe la arquitectura de la rama `main` (no una versión histórica fija). Está dirigida a quien necesite localizar una regla, seguir una petición o modificar una herramienta. Para una ruta de lectura más breve, consulta la [guía para desarrolladores](desarrollo.md). Al cambiar los flujos, la persistencia o las garantías, actualiza también esta guía. Las instrucciones de uso están en el [README](../README.md) y la [FAQ](../FAQ.md).
 
 ## 1. Mapa de responsabilidades
 
@@ -93,7 +93,9 @@ El informe y el registro de acciones son evidencias distintas. La simulación no
 |---|---|
 | Borrador manual | Sesión, en claves de cada herramienta. Conserva entradas para volver a editar; no tiene el plazo propio de 15 minutos de las previsualizaciones. |
 | Previsualización | Sesión; 900 segundos, ligada al actor y a un nonce. Las opciones relevantes se contrastan mediante firma. Se consume antes de aplicar. |
-| Resultado manual | Sesión; 900 segundos y ligado al actor. Las contraseñas temporales se eliminan de la copia guardada. No es un historial persistente. |
+| Resultado manual | Sesión; 900 segundos y ligado al actor. Las contraseñas temporales se eliminan de la copia guardada. No es un historial persistente general. |
+| Trabajo manual por tandas | Sesión, ligado al operador; la comparación, las altas y otras operaciones reanudables guardan avances por cuenta. Una sesión perdida puede impedir continuar lo pendiente; los cambios ya hechos permanecen. |
+| Tandas para deshacer bloqueos | Informes específicos de tandas de bloqueo manual y programado, guardados con `ReportStore` bajo el directorio de logs. Permiten revisar un subconjunto de bloqueos aún elegibles; no son un historial general de todas las operaciones. |
 | Opciones manuales | Parámetros del componente en #__extensions, mediante SettingsStore. Son compartidas por el sitio, con claves separadas por herramienta. Buscar también puede guardar opciones. |
 | Parámetros programados | Configuración de cada tarea de Joomla; sus exclusiones son independientes de las manuales. |
 | Cuentas | Tablas y API de usuarios de Joomla; las operaciones de bloqueo, creación y borrado pasan por esa API para ejecutar eventos. |
@@ -122,7 +124,7 @@ Las operaciones no son atómicas: los cambios ya aplicados permanecen si falla u
 
 ActionLogger descarta excepciones para que un fallo de auditoría no detenga la operación. Por tanto, una cuenta modificada no implica que exista su entrada de registro. Los informes de tareas tienen checkpoints y también pueden quedar incompletos si la ejecución se corta entre guardados.
 
-Los resultados manuales solo conservan la cantidad de omisiones, no una explicación persistente por cuenta. Los informes programados guardan detalles de acciones y protecciones, y resumen las omisiones por motivo. Actualmente no existe un ID común que enlace todas las acciones manuales de un lote.
+Los resultados temporales de las herramientas manuales no constituyen un historial completo por cuenta. Los informes programados registran acciones y protecciones y resumen omisiones por motivo. Las tandas de bloqueo manual se conservan para «Deshacer bloqueos», pero no todas las operaciones manuales comparten un identificador ni un registro persistente unificado.
 
 Estos son límites de la implementación actual, no garantías de auditoría completa o de recuperación automática. Un futuro historial persistente deberá diseñar expresamente esos casos.
 
