@@ -70,7 +70,7 @@ final class Usertools extends CMSPlugin implements SubscriberInterface
      * Run a scheduled inactivity review or blocking operation as the system, never as a
      * visitor who triggered the lazy scheduler. The task persists its initial report before
      * any write, checks the mass-block guard, revalidates each candidate and checkpoints the
-     * report after every CHECKPOINT completed account changes. A crash between checkpoints can
+     * report after every CHECKPOINT processed real-mode candidates. A crash between checkpoints can
      * leave a partial report; successful account changes are not rolled back.
      *
      * @return int Joomla scheduler status (OK or KNOCKOUT); report-write failures also fail the task.
@@ -118,73 +118,10 @@ final class Usertools extends CMSPlugin implements SubscriberInterface
             $report['cutoff'] = $cutoff->format('Y-m-d H:i:s');
             $this->logTask(\sprintf('Start. UTC cutoff %s; dry run: %s', $report['cutoff'], $report['dry_run'] ? 'yes' : 'no'));
 
-            // 1. Classify every account with bulk queries.
-            $directory  = $services['directory'];
-            $candidates = [];
-            foreach ($directory->users() as $user) {
-                if ($user->block === 1) {
-                    continue;
-                }
-                $report['active_accounts']++;
-                $reason = $exclusions->reason($user, $operator);
-                if ($reason !== '') {
-                    $report['protected']++;
-                    $report['users'][] = $this->row($user, 'protected', $reason);
-                } elseif (!InactivityPolicy::eligible($user, $cutoff, $report['include_never'])) {
-                    $this->omit($report, InactivityPolicy::omissionReason($user, $report['include_never']));
-                } else {
-                    $candidates[$user->id] = $user;
-                }
-            }
-            foreach (array_keys($directory->withRecentSession(array_keys($candidates), time() - $services['window'])) as $id) {
-                unset($candidates[$id]);
-                $this->omit($report, 'COM_USERTOOLS_REASON_ACTIVE_SESSION');
-            }
-            $report['candidates'] = \count($candidates);
+            $candidates = $this->classifyCandidates($services, $exclusions, $operator, $cutoff, $report);
+            $candidates = $this->enforceMassBlockGuard($candidates, $guard, $report);
+            $this->processCandidates($candidates, $services, $exclusions, $operator, $cutoff, $store, $reportId, $report);
 
-            // 2. Safety net against mass blocking.
-            if ($guard->exceeded($report['candidates'], $report['active_accounts'])) {
-                $share   = MassBlockGuard::share($report['candidates'], $report['active_accounts']);
-                $report['guard_triggered'] = true;
-                $report['message']         = 'COM_USERTOOLS_REPORT_GUARD_' . ($report['dry_run'] ? 'DRY' : 'STOPPED');
-                $report['guard_share']     = $share;
-                foreach ($candidates as $user) {
-                    $report['users'][] = $this->row($user, $report['dry_run'] ? 'simulated' : 'guarded', 'COM_USERTOOLS_REASON_INACTIVE');
-                }
-                $this->logTask(\sprintf('Mass block guard: %d candidates (%s%% of %d active accounts) exceed %d%%. Nothing was blocked.',
-                    $report['candidates'], $share, $report['active_accounts'], $guard->percent), 'warning');
-                $candidates = [];
-            }
-
-            // 3. Block (or simulate), revalidating each account with a fresh Joomla User.
-            $changes = 0;
-            foreach ($candidates as $user) {
-                if ($report['dry_run']) {
-                    $report['users'][] = $this->row($user, 'simulated', 'COM_USERTOOLS_REASON_INACTIVE');
-                    $this->logTask('Dry run: would block user ID ' . $user->id);
-                    continue;
-                }
-                $outcome = $services['blocker']->block($user->id, $exclusions, $operator,
-                    fn (object $fresh) => InactivityPolicy::eligible($fresh, $cutoff, $report['include_never'])
-                        && !$directory->withRecentSession([$user->id], time() - $services['window']), 'COM_USERTOOLS_TOOL_TASK');
-                if ($outcome['status'] === AccountBlocker::BLOCKED) {
-                    $report['blocked']++;
-                    $report['users'][] = $this->row($user, 'blocked', 'COM_USERTOOLS_REASON_INACTIVE');
-                    $this->logTask('Blocked for inactivity: user ID ' . $user->id);
-                } elseif ($outcome['status'] === AccountBlocker::ERROR) {
-                    $report['errors']++;
-                    $report['users'][] = $this->row($user, 'error', $outcome['reason']);
-                    $this->logTask('Could not block user ID ' . $user->id, 'error');
-                } elseif ($outcome['status'] === AccountBlocker::PROTECTED) {
-                    $report['protected']++;
-                    $report['users'][] = $this->row($user, 'protected', $outcome['reason']);
-                } else {
-                    $this->omit($report, $outcome['reason']);
-                }
-                if (++$changes % self::CHECKPOINT === 0) {
-                    $store->save($reportId, $report);
-                }
-            }
             $stopped = !empty($report['guard_triggered']) && !$report['dry_run'];
             $exit    = $report['errors'] || $stopped ? Status::KNOCKOUT : Status::OK;
             $this->logTask(\sprintf('Summary: candidates=%d; blocked=%d; errors=%d.', $report['candidates'], $report['blocked'], $report['errors']));
@@ -209,6 +146,108 @@ final class Usertools extends CMSPlugin implements SubscriberInterface
             }
         }
         return $exit;
+    }
+
+    /**
+     * Classify enabled accounts, then exclude accounts with a recent session.
+     * Report counters and row order are shared with the scheduler report consumer.
+     *
+     * @param array<string, mixed> $services
+     * @param array<string, mixed> $report
+     * @return array<int, object> Candidate accounts, keyed by Joomla user ID.
+     */
+    private function classifyCandidates(array $services, Exclusions $exclusions, Operator $operator, \DateTimeImmutable $cutoff, array &$report): array
+    {
+        $directory  = $services['directory'];
+        $candidates = [];
+        foreach ($directory->users() as $user) {
+            if ($user->block === 1) {
+                continue;
+            }
+            $report['active_accounts']++;
+            $reason = $exclusions->reason($user, $operator);
+            if ($reason !== '') {
+                $report['protected']++;
+                $report['users'][] = $this->row($user, 'protected', $reason);
+            } elseif (!InactivityPolicy::eligible($user, $cutoff, $report['include_never'])) {
+                $this->omit($report, InactivityPolicy::omissionReason($user, $report['include_never']));
+            } else {
+                $candidates[$user->id] = $user;
+            }
+        }
+        foreach (array_keys($directory->withRecentSession(array_keys($candidates), time() - $services['window'])) as $id) {
+            unset($candidates[$id]);
+            $this->omit($report, 'COM_USERTOOLS_REASON_ACTIVE_SESSION');
+        }
+        $report['candidates'] = \count($candidates);
+        return $candidates;
+    }
+
+    /**
+     * A triggered safety limit records every candidate but prevents any real write.
+     * In dry-run mode those rows remain simulations and the task does not fail.
+     *
+     * @param array<int, object> $candidates
+     * @param array<string, mixed> $report
+     * @return array<int, object>
+     */
+    private function enforceMassBlockGuard(array $candidates, MassBlockGuard $guard, array &$report): array
+    {
+        if ($guard->exceeded($report['candidates'], $report['active_accounts'])) {
+            $share   = MassBlockGuard::share($report['candidates'], $report['active_accounts']);
+            $report['guard_triggered'] = true;
+            $report['message']         = 'COM_USERTOOLS_REPORT_GUARD_' . ($report['dry_run'] ? 'DRY' : 'STOPPED');
+            $report['guard_share']     = $share;
+            foreach ($candidates as $user) {
+                $report['users'][] = $this->row($user, $report['dry_run'] ? 'simulated' : 'guarded', 'COM_USERTOOLS_REASON_INACTIVE');
+            }
+            $this->logTask(\sprintf('Mass block guard: %d candidates (%s%% of %d active accounts) exceed %d%%. Nothing was blocked.',
+                $report['candidates'], $share, $report['active_accounts'], $guard->percent), 'warning');
+            $candidates = [];
+        }
+        return $candidates;
+    }
+
+    /**
+     * Revalidate candidates at write time; in real mode checkpoint after every
+     * CHECKPOINT processed candidates (including errors and protected accounts).
+     * An interrupted run retains earlier writes but may have a stale last report.
+     *
+     * @param array<int, object> $candidates
+     * @param array<string, mixed> $services
+     * @param array<string, mixed> $report
+     */
+    private function processCandidates(array $candidates, array $services, Exclusions $exclusions, Operator $operator, \DateTimeImmutable $cutoff, ReportStore $store, string $reportId, array &$report): void
+    {
+        $directory = $services['directory'];
+        $changes = 0;
+        foreach ($candidates as $user) {
+            if ($report['dry_run']) {
+                $report['users'][] = $this->row($user, 'simulated', 'COM_USERTOOLS_REASON_INACTIVE');
+                $this->logTask('Dry run: would block user ID ' . $user->id);
+                continue;
+            }
+            $outcome = $services['blocker']->block($user->id, $exclusions, $operator,
+                fn (object $fresh) => InactivityPolicy::eligible($fresh, $cutoff, $report['include_never'])
+                    && !$directory->withRecentSession([$user->id], time() - $services['window']), 'COM_USERTOOLS_TOOL_TASK');
+            if ($outcome['status'] === AccountBlocker::BLOCKED) {
+                $report['blocked']++;
+                $report['users'][] = $this->row($user, 'blocked', 'COM_USERTOOLS_REASON_INACTIVE');
+                $this->logTask('Blocked for inactivity: user ID ' . $user->id);
+            } elseif ($outcome['status'] === AccountBlocker::ERROR) {
+                $report['errors']++;
+                $report['users'][] = $this->row($user, 'error', $outcome['reason']);
+                $this->logTask('Could not block user ID ' . $user->id, 'error');
+            } elseif ($outcome['status'] === AccountBlocker::PROTECTED) {
+                $report['protected']++;
+                $report['users'][] = $this->row($user, 'protected', $outcome['reason']);
+            } else {
+                $this->omit($report, $outcome['reason']);
+            }
+            if (++$changes % self::CHECKPOINT === 0) {
+                $store->save($reportId, $report);
+            }
+        }
     }
 
     /** @return array{id: int, username: string, last_visit: ?string, action: string, reason: string} */
