@@ -7,9 +7,10 @@
  */
 
 /**
- * Package installer: checks versions, migrates options from 2026.10.2 and earlier, registers the
- * extension in the User Actions Log, creates the "account created" mail template and writes the
- * guided tours of the tools.
+ * Package installer: checks runtime versions, migrates historical options and sets up integration
+ * with Joomla services (action log, account-creation mail template, dashboard module, system/task
+ * plugins and guided tours). Installation and updates must respect later administrator changes
+ * to module placement, plugin enablement and tour visibility; postflight is deliberately selective.
  */
 
 \defined('_JEXEC') or die;
