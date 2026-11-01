@@ -530,7 +530,7 @@ See the [complete gallery](docs/screenshots.en.md) for the other tools; it inclu
 
 ## Development
 
-See the [architecture map](docs/architecture.en.md) to follow flows, locate responsibilities, understand persistence and choose the relevant tests for each change.
+See the [architecture map](docs/architecture.en.md) to follow flows, locate responsibilities, understand persistence and choose the relevant tests for each change. New contributors can start with the [developer onboarding guide](docs/development.en.md), which includes a complete request walkthrough and security invariants.
 
 Structure:
 
