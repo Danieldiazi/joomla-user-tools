@@ -66,6 +66,15 @@ final class Usertools extends CMSPlugin implements SubscriberInterface
         ];
     }
 
+    /**
+     * Run a scheduled inactivity review or blocking operation as the system, never as a
+     * visitor who triggered the lazy scheduler. The task persists its initial report before
+     * any write, checks the mass-block guard, revalidates each candidate and checkpoints the
+     * report after every CHECKPOINT completed account changes. A crash between checkpoints can
+     * leave a partial report; successful account changes are not rolled back.
+     *
+     * @return int Joomla scheduler status (OK or KNOCKOUT); report-write failures also fail the task.
+     */
     protected function blockInactive(ExecuteTaskEvent $event): int
     {
         $values  = (array) $event->getArgument('params');
