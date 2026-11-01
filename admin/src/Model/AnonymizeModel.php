@@ -27,6 +27,19 @@ use Joomla\CMS\Plugin\PluginHelper;
  * Anonymization of accounts chosen from a list, from inactivity or from a group: search, review and
  * select, anonymize. It cannot be undone, so the operator always types the number of accounts. Large
  * batches continue over several requests; every account is revalidated right before it is anonymized.
+ *
+ * Session contracts:
+ * @phpstan-type AnonymizePreview array{actor: int, expires: int, nonce: string,
+ *     criteria: array<string, mixed>, exclusions: array<string, mixed>,
+ *     fingerprints: array<int, string>, ids: list<int>, selected: list<int>}
+ * @phpstan-type AnonymizeJob array{actor: int, criteria: array<string, mixed>,
+ *     exclusions: array<string, mixed>, pending: array<int, string>, total: int,
+ *     done: list<array<string, mixed>>, cleaned: list<array<string, mixed>>,
+ *     errors: list<array<string, mixed>>, partial: list<array<string, mixed>>, skipped: int}
+ * @phpstan-type AnonymizeResult array{anonymized: list<array<string, mixed>>,
+ *     cleaned: list<array<string, mixed>>, retryCleanup: bool,
+ *     errors: list<array<string, mixed>>, partial: list<array<string, mixed>>,
+ *     skipped: int, total: int, actor?: int, expires?: int}
  */
 class AnonymizeModel extends BaseDatabaseModel
 {
@@ -105,7 +118,13 @@ class AnonymizeModel extends BaseDatabaseModel
         ]));
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * AnonymizePreview: the reviewed IDs and per-account fingerprints are immutable
+     * candidates; selected IDs may be saved while returning to the selection screen.
+     * A newly eligible or changed account is never silently added to that review.
+     *
+     * @return array<string, mixed>|null AnonymizePreview payload, or null on expiry.
+     */
     public function getPreview(): ?array
     {
         return $this->validPreview(self::PREVIEW);
@@ -239,7 +258,13 @@ class AnonymizeModel extends BaseDatabaseModel
         return true;
     }
 
-    /** @return array<string, mixed>|null the batch in progress of the current user */
+    /**
+     * The operator-owned AnonymizeJob. pending contains reviewed ID → fingerprint pairs,
+     * total is the original selection size (not remaining work); done/cleaned/partial/errors
+     * accumulate checkpointed outcomes. This is resumable session state, not an audit log.
+     *
+     * @return array<string, mixed>|null AnonymizeJob payload, or null when not owned/absent.
+     */
     public function getJob(): ?array
     {
         $job = (array) $this->session()->get(self::JOB, []);
@@ -249,7 +274,13 @@ class AnonymizeModel extends BaseDatabaseModel
         return $job;
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * AnonymizeResult is a temporary display snapshot. anonymized means the identity
+     * was verified; cleaned is a cleanup-only retry; partial carries unverified or
+     * pending cleanup. None implies removal of unrelated external data or backups.
+     *
+     * @return array<string, mixed>|null AnonymizeResult payload, or null when expired.
+     */
     public function getResult(): ?array
     {
         return $this->validResult(self::RESULT);
