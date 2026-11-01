@@ -152,6 +152,15 @@ foreach (['es-ES', 'en-GB'] as $tag) {
 }
 $check(array_keys($languages['es-ES']) == array_keys($languages['en-GB']) || !array_diff_key($languages['es-ES'], $languages['en-GB']) && !array_diff_key($languages['en-GB'], $languages['es-ES']), 'es-ES and en-GB have the same keys');
 
+// The JED requires a GPL notice in every distributed PHP file. The inner
+// packages of pkg_usertools are the same ZIPs as the standalone ones.
+foreach ([$com, $plg, $nav, $mod, $grp, $pkg] as $zipFile) {
+    foreach (array_filter($names($zipFile), static fn (string $name): bool => str_ends_with($name, '.php')) as $file) {
+        $check(str_contains((string) $read($zipFile, $file), '@license     GNU General Public License version 2 or later'),
+            basename($zipFile) . ": $file has the GPL licence notice");
+    }
+}
+
 // Guided tours: one language file per tour, named after the tour uid, in both languages.
 foreach (['compare', 'inactive', 'unblock', 'delete', 'anonymize', 'addgroups', 'ungroup', 'move', 'schedule'] as $tour) {
     $tourStrings = [];
