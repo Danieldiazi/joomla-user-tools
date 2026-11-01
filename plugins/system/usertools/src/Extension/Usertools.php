@@ -28,6 +28,11 @@ final class Usertools extends CMSPlugin implements SubscriberInterface
         return ['onPreprocessMenuItems' => 'onPreprocessMenuItems'];
     }
 
+    /**
+     * Filter User Tools administrator-menu links and mark the active category using Joomla's
+     * public menu event. Navigation filtering is a convenience, not an authorization boundary:
+     * DisplayController and each mutating action still validate permissions independently.
+     */
     public function onPreprocessMenuItems(PreprocessMenuItemsEvent $event): void
     {
         $app = $this->getApplication();

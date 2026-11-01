@@ -24,9 +24,16 @@ final class AccountGroupAdder
     }
 
     /**
-     * @param list<int> $before
-     * @param list<int> $targets
-     * @return array{status: string, sessions: string}
+     * Add only the reviewed memberships. A changed account, an unsafe target or a target
+     * that is already assigned is skipped instead of silently applying a different review.
+     * Once saved, a session-closing failure is reported separately: retrying the membership
+     * write could produce a misleading second action.
+     *
+     * @param list<int> $before Group IDs observed during review (checked against the fresh User).
+     * @param list<int> $targets Group IDs approved for addition.
+     * @param bool $safeTarget Whether the caller verified the target groups as non-administrative.
+     * @return array{status: string, sessions: string} ADDED means saved; CHANGED means stale/unsafe
+     *     and unchanged; ERROR means save failed. Sessions can be closed, open or unverifiable.
      */
     public function add(int $id, string $username, array $before, array $targets, Operator $operator, bool $safeTarget): array
     {

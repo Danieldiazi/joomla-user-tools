@@ -10,7 +10,13 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service;
 
 \defined('_JEXEC') or die;
 
-/** Private task reports, readable only through the component. Stored next to Joomla's logs. */
+/**
+ * Persists structured reports for scheduled tasks and recorded manual block batches.
+ * The caller chooses a separate directory under Joomla's log path for each kind of report;
+ * the store itself does not decide which users can read a report. Consumers must enforce the
+ * component's permissions. Files use a PHP denial header and an atomic temporary-file rename,
+ * but reports may be incomplete if a process stops between checkpoints.
+ */
 final class ReportStore
 {
     private const HEADER  = "<?php die('Forbidden.'); ?>\n";
