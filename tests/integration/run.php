@@ -447,6 +447,10 @@ echo $site->cli('scheduler:run --id=' . $taskId) !== '' ? '' : '';
 $reports = $admin->get('index.php?option=com_usertools&view=reports');
 Test::check(str_contains($reports, 'Stopped for safety'), 'the safety limit stopped the real run');
 Test::check(!$site->blocked('stale1'), 'nothing was blocked by the stopped run');
+// The phase refactor must not turn a dry run into a write, even when the mass guard is disabled.
+$site->q('UPDATE #__scheduler_tasks SET params = ? WHERE id = ?', [json_encode(['dry_run' => 1, 'guard_percent' => 0] + $taskParams), $taskId]);
+$site->cli('scheduler:run --id=' . $taskId);
+Test::check(!$site->blocked('stale1') && !$site->blocked('stale6'), 'the dry run leaves eligible accounts unchanged');
 $site->q('UPDATE #__scheduler_tasks SET params = ? WHERE id = ?', [json_encode(['guard_percent' => 0] + $taskParams), $taskId]);
 $site->cli('scheduler:run --id=' . $taskId);
 Test::check($site->blocked('stale1') && $site->blocked('stale6') && !$site->blocked('admin') && !$site->blocked('super2'), 'the real run blocked the stale accounts and no Super User');
