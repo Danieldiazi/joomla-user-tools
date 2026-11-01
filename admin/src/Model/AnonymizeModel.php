@@ -53,7 +53,7 @@ class AnonymizeModel extends BaseDatabaseModel
     /** Typed confirmation from the first account. */
     public const CONFIRM_THRESHOLD = 1;
 
-    /** @return array{source: string, names: string, days: int, includeNever: bool, group: int, subgroups: bool, exclusions: Exclusions} */
+    /** @return array{source: string, names: string, days: int, includeNever: bool, group: int, subgroups: bool, retryCleanup: bool, exclusions: Exclusions} */
     public function getDraft(): array
     {
         $settings = Toolkit::settings();
