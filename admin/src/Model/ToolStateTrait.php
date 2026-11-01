@@ -53,8 +53,8 @@ trait ToolStateTrait
     /**
      * Add an unpredictable one-use token, the current operator ID and a Unix expiry.
      * Payload fields are defined by the tool; the caller must check the nonce and consume
-     * the preview before writing. The array union intentionally cannot overwrite metadata
-     * when the payload happens to carry a metadata key.
+     * the preview before writing. The array union preserves the caller's keys, so callers
+     * must never supply nonce, actor or expires as payload fields.
      *
      * @param array<string, mixed> $values Tool-specific reviewed fields.
      * @return array<string, mixed> Payload with nonce (hex string), actor (user ID), expires (Unix seconds).
