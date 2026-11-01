@@ -36,13 +36,13 @@ class HandoverModel extends BaseDatabaseModel
     private const JOB = 'com_usertools.handover.job';
     private const RESULT = 'com_usertools.handover.result';
 
-    /** @return array{source: int, login: string, candidates: list<array<string, mixed>>, target: int, targetLogin: string, targetCandidates: list<array<string, mixed>>, selected: list<int>} */
+    /** @return array{source: int, login: string, candidates: list<array<string, mixed>>, target: int, targetLogin: string, targetCandidates: list<array<string, mixed>>, selected: list<int>, page: int} */
     public function getDraft(): array
     {
         $d = (array) $this->session()->get(self::DRAFT, []);
         return ['source' => (int) ($d['source'] ?? 0), 'login' => (string) ($d['login'] ?? ''), 'candidates' => (array) ($d['candidates'] ?? []),
             'target' => (int) ($d['target'] ?? 0), 'targetLogin' => (string) ($d['targetLogin'] ?? ''), 'targetCandidates' => (array) ($d['targetCandidates'] ?? []),
-            'selected' => array_map('intval', (array) ($d['selected'] ?? []))];
+            'selected' => array_map('intval', (array) ($d['selected'] ?? [])), 'page' => (int) ($d['page'] ?? 0)];
     }
 
     /** The account profile permission and managing articles are needed besides the tool's own permission. */
@@ -87,9 +87,12 @@ class HandoverModel extends BaseDatabaseModel
      * What the account leaves: its articles (each editable or not by the operator, with its fingerprint),
      * how many there are in all, and other content types that the assistant does not transfer yet.
      *
-     * @return array{source: UserRecord, articles: list<array<string, mixed>>, total: int, others: list<array<string, mixed>>, listUrl: string}
+     * One page of up to ContentHandover::LIMIT articles, so articles beyond the first ones (for example
+     * after many that cannot be edited) can always be reached.
+     *
+     * @return array{source: UserRecord, articles: list<array<string, mixed>>, total: int, others: list<array<string, mixed>>, listUrl: string, page: int, pages: int}
      */
-    public function getInventory(): array
+    public function getInventory(int $page = 0): array
     {
         $this->assertAllowed();
         $source = $this->source();
@@ -98,7 +101,10 @@ class HandoverModel extends BaseDatabaseModel
         $reader = new ContentHandoverReader(Toolkit::db());
         $operator = $this->operator();
         $articles = [];
-        foreach ($reader->articles($source->id, $levels, ContentHandover::LIMIT) as $article) {
+        $total = $reader->count($source->id, $levels);
+        $pages = max(1, (int) ceil($total / ContentHandover::LIMIT));
+        $page = min(max(0, $page), $pages - 1);
+        foreach ($reader->articles($source->id, $levels, ContentHandover::LIMIT, $page * ContentHandover::LIMIT) as $article) {
             $article['fingerprint'] = ContentHandover::fingerprint($article);
             $article['lockedBy'] = \in_array($article['checked_out'], [0, $operator->id], true) ? 0 : $article['checked_out'];
             $article['editable'] = $article['lockedBy'] === 0 && $identity->authorise('core.edit', 'com_content.article.' . $article['id']);
@@ -107,7 +113,7 @@ class HandoverModel extends BaseDatabaseModel
         $others = array_values(array_filter((new AccountProfileReader(Toolkit::db()))->content($source->id,
             fn (string $component): bool => (bool) $identity->authorise('core.manage', $component), $levels),
             static fn (array $row): bool => $row['kind'] !== 'articles' && $row['count'] > 0));
-        return ['source' => $source, 'articles' => $articles, 'total' => $reader->count($source->id, $levels), 'others' => $others,
+        return ['source' => $source, 'articles' => $articles, 'total' => $total, 'others' => $others, 'page' => $page, 'pages' => $pages,
             'listUrl' => \Danieldiazi\Component\Usertools\Administrator\Service\AccountProfile::articleUrl($source->id)];
     }
 
@@ -122,11 +128,12 @@ class HandoverModel extends BaseDatabaseModel
         $login = trim((string) ($input['login'] ?? ''));
         $selected = array_values(array_unique(array_map('intval', (array) ($input['articles'] ?? []))));
         $this->session()->set(self::PREVIEW, []);
-        $this->session()->set(self::DRAFT, ['targetLogin' => $login, 'selected' => $selected, 'target' => 0, 'targetCandidates' => []] + $draft);
-        $inventory = $this->getInventory();
+        $page = max(0, (int) ($input['page'] ?? 0));
+        $this->session()->set(self::DRAFT, ['targetLogin' => $login, 'selected' => $selected, 'target' => 0, 'targetCandidates' => [], 'page' => $page] + $draft);
+        $inventory = $this->getInventory($page);
         $match = Toolkit::directory()->pick($login, (int) ($input['account'] ?? 0));
         if ($match['status'] === AccountIdentity::AMBIGUOUS) {
-            $this->session()->set(self::DRAFT, ['targetLogin' => $login, 'selected' => $selected, 'target' => 0, 'targetCandidates' => $match['candidates']] + $draft);
+            $this->session()->set(self::DRAFT, ['targetLogin' => $login, 'selected' => $selected, 'target' => 0, 'targetCandidates' => $match['candidates'], 'page' => $page] + $draft);
             throw new UserFacingException('COM_USERTOOLS_ACCOUNT_AMBIGUOUS', [$login]);
         }
         $targetId = $match['status'] === AccountIdentity::ONE ? (int) $match['candidates'][0]['id'] : 0;
@@ -135,8 +142,8 @@ class HandoverModel extends BaseDatabaseModel
             throw new UserFacingException($error);
         }
         $chosen = ContentHandover::selection($inventory['articles'], $selected);
-        $this->session()->set(self::DRAFT, ['targetLogin' => $login, 'selected' => $selected, 'target' => $targetId, 'targetCandidates' => []] + $draft);
-        $this->session()->set(self::PREVIEW, $this->newPreview(['source' => $inventory['source']->id, 'target' => $targetId,
+        $this->session()->set(self::DRAFT, ['targetLogin' => $login, 'selected' => $selected, 'target' => $targetId, 'targetCandidates' => [], 'page' => $page] + $draft);
+        $this->session()->set(self::PREVIEW, $this->newPreview(['source' => $inventory['source']->id, 'target' => $targetId, 'page' => $inventory['page'],
             'articles' => $this->reviewed($chosen), 'inventory' => array_column($inventory['articles'], 'id')]));
     }
 
@@ -159,7 +166,7 @@ class HandoverModel extends BaseDatabaseModel
         if (!$p) {
             throw new UserFacingException('COM_USERTOOLS_ERROR_PREVIEW_EXPIRED');
         }
-        $inventory = $this->getInventory();
+        $inventory = $this->getInventory((int) ($p['page'] ?? 0));
         $records = Toolkit::directory()->users([(int) $p['target']]);
         $target = $records[(int) $p['target']] ?? null;
         try {
@@ -214,6 +221,8 @@ class HandoverModel extends BaseDatabaseModel
         if (!$job) {
             throw new UserFacingException('COM_USERTOOLS_ERROR_JOB_MISSING');
         }
+        // Every batch needs the same permissions as the review: a withdrawn one stops the job until it is granted again or discarded.
+        $this->assertAllowed();
         $deadline = (float) ($_SERVER['REQUEST_TIME_FLOAT'] ?? microtime(true)) + Toolkit::settings()->batchSeconds();
         $identity = $this->identity();
         $operator = $this->operator();

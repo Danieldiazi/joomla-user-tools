@@ -38,7 +38,7 @@ class HandoverController extends DisplayController
         $post = $this->input->post;
         try {
             $this->model()->preview(['login' => $post->getString('login', ''), 'account' => $post->getInt('account', 0),
-                'articles' => $post->get('articles', [], 'ARRAY')]);
+                'articles' => $post->get('articles', [], 'ARRAY'), 'page' => $post->getInt('page', 0)]);
             $this->go('view=handover&layout=review');
         } catch (UserFacingException $e) {
             $this->warn($e);

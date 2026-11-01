@@ -2064,6 +2064,37 @@ Test::check(!str_contains($hoNoProfile, 'data-ut-handover-source') && str_contai
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.reassign' => ['6' => 1], 'usertools.profile' => ['6' => 1]])]);
 $hoDelegate = $delegate->submit($hoUrl, ['task' => 'handover.source', 'login' => 'ho_editor'], 'data-ut-handover-source');
 Test::check(str_contains($hoDelegate, 'data-ut-handover-account="' . $hoSource . '"'), 'a delegate with both permissions sees the inventory');
+// A resumed handover needs every permission again: one article per request, then the profile permission is withdrawn.
+$site->options(['batch_seconds' => 0]);
+$hoE = $addArticle('ho-e', '2024-03-01 00:00:00');
+$hoF = $addArticle('ho-f', '2024-03-02 00:00:00');
+$site->q('UPDATE #__content SET created_by = ? WHERE id IN (?, ?)', [$hoSource, $hoE, $hoF]);
+$delegate->submit($hoUrl, ['task' => 'handover.source', 'login' => 'ho_editor'], 'data-ut-handover-source');
+$delegate->submit($hoUrl . '&layout=select', ['task' => 'handover.preview', 'login' => 'ho_heir', 'articles' => [$hoE, $hoF]], 'data-ut-handover-select');
+$hoProgress = $delegate->submit($hoUrl . '&layout=review', ['task' => 'handover.apply', 'confirm' => 1, 'confirm_count' => '2'], 'data-ut-handover-apply');
+Test::check(str_contains($hoProgress, 'data-ut-handover-next') && $hoAuthor($hoE) === $hoHeir && $hoAuthor($hoF) === $hoSource, 'a long handover continues in later requests');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.reassign' => ['6' => 1]])]);
+[, $hoResumed] = $delegate->request('index.php?option=com_usertools', ['task' => 'handover.next', Client::token($delegate->get('index.php?option=com_usertools')) => 1]);
+Test::check($hoAuthor($hoF) === $hoSource && str_contains($hoResumed, 'also requires the account profile permission'), 'without the profile permission a pending handover does not continue');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.reassign' => ['6' => 1], 'usertools.profile' => ['6' => 1]])]);
+$delegate->submit($hoUrl . '&layout=progress', ['task' => 'handover.discard'], 'data-ut-handover-next');
+$site->options(['batch_seconds' => 8]);
+// More than one page: the next page can always be reached and handed over on its own.
+for ($n = 1; $n <= 500; $n++) {
+    $site->q('INSERT INTO #__content (title, alias, introtext, "fulltext", state, catid, created, created_by, modified, images, urls, attribs, access, metadesc, metadata, language)'
+        . " VALUES (?, ?, '', '', 1, ?, '2010-05-05 10:00:00', ?, '2024-04-01 00:00:00', '{}', '{}', '{}', 1, '', '{}', '*')", ['UT ho bulk ' . $n, 'ut-ho-bulk-' . $n, $ageCategory, $hoSource]);
+}
+$admin->submit($hoUrl, ['task' => 'handover.source', 'login' => 'ho_editor'], 'data-ut-handover-source');
+$hoFirst = $admin->get($hoUrl . '&layout=select');
+$hoLast = $admin->get($hoUrl . '&layout=select&page=1');
+preg_match_all('/data-ut-handover-article="(\d+)"/', $hoLast, $hoLastIds);
+Test::check(str_contains($hoFirst, 'data-ut-handover-next-page') && substr_count($hoFirst, 'data-ut-handover-article=') === 500 && count($hoLastIds[1]) > 0 && count($hoLastIds[1]) < 500,
+    'a long inventory is split into pages of 500 and the next page lists the rest');
+$hoLastId = (int) end($hoLastIds[1]);
+$admin->submit($hoUrl . '&layout=select&page=1', ['task' => 'handover.preview', 'login' => 'ho_heir', 'articles' => [$hoLastId], 'page' => 1], 'data-ut-handover-select');
+$hoPaged = $hoApply();
+Test::check(str_contains($hoPaged, 'data-ut-handover-total="transferred">1<') && $hoAuthor($hoLastId) === $hoHeir, 'an article on the second page can be handed over');
+$site->q("DELETE FROM #__content WHERE alias LIKE 'ut-ho-bulk-%'");
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
 Test::section('Unambiguous account selection');

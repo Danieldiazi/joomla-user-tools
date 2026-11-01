@@ -20,12 +20,12 @@ final class ContentHandoverReader
 
     /**
      * Articles authored by the account in every state, within the operator's viewing levels (null only
-     * for a global Super User), oldest first, up to $limit.
+     * for a global Super User), oldest first, $limit of them from $offset.
      *
      * @param  list<int>|null $levels
      * @return list<array{id: int, title: string, state: int, catid: int, category: string, alias: string, modified: string, checked_out: int, created_by: int}>
      */
-    public function articles(int $source, ?array $levels, int $limit): array
+    public function articles(int $source, ?array $levels, int $limit, int $offset = 0): array
     {
         $db = $this->db;
         $query = $this->base($source, $levels)
@@ -34,7 +34,7 @@ final class ContentHandoverReader
                 $db->quoteName('a.checked_out'), $db->quoteName('a.created_by')])
             ->order($db->quoteName('a.id'));
         $rows = [];
-        foreach ($db->setQuery($query, 0, $limit)->loadAssocList() as $row) {
+        foreach ($db->setQuery($query, $offset, $limit)->loadAssocList() as $row) {
             $rows[] = ['id' => (int) $row['id'], 'title' => (string) $row['title'], 'state' => (int) $row['state'], 'catid' => (int) $row['catid'],
                 'category' => (string) ($row['category'] ?? ''), 'alias' => (string) ($row['alias'] ?? ''), 'modified' => (string) ($row['modified'] ?? ''),
                 'checked_out' => (int) ($row['checked_out'] ?? 0), 'created_by' => (int) $row['created_by']];

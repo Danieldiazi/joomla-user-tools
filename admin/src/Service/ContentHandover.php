@@ -18,7 +18,7 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service;
  */
 final class ContentHandover
 {
-    /** The inventory lists up to this many articles; the rest are counted and can be handled in a later round. */
+    /** Articles per page of the inventory; the other pages can always be opened and handed over separately. */
     public const LIMIT = 500;
 
     public const TRANSFERRED = 'transferred';

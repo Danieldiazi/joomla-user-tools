@@ -53,7 +53,8 @@ class HtmlView extends BaseHtmlView
         }
         try {
             if ($layout === 'select') {
-                $this->inventory = $model->getInventory();
+                // Other pages of a long inventory are opened with ?page=N; reading them changes nothing.
+                $this->inventory = $model->getInventory(Toolkit::app()->getInput()->getInt('page', $this->draft['page']));
             } elseif ($layout === 'review') {
                 $this->review = $model->getReview();
             } elseif ($layout === 'progress') {

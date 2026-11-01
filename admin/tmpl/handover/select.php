@@ -31,7 +31,13 @@ $editable = array_filter($inventory['articles'], static fn (array $a): bool => $
       <h3 class="h5"><?= Text::plural('COM_USERTOOLS_HANDOVER_ARTICLES', (int) $inventory['total']) ?></h3>
       <?php if ($inventory['articles']) : ?>
       <p><?= Text::_('COM_USERTOOLS_HANDOVER_ARTICLES_HELP') ?> <a href="<?= $this->escape($inventory['listUrl']) ?>" target="_blank" rel="noopener"><?= Text::_('COM_USERTOOLS_HANDOVER_LIST_LINK') ?></a></p>
-      <?php if ($inventory['total'] > count($inventory['articles'])) : ?><p class="alert alert-info" data-ut-handover-more><?= Text::sprintf('COM_USERTOOLS_HANDOVER_MORE', count($inventory['articles']), (int) $inventory['total']) ?></p><?php endif; ?>
+      <?php if ($inventory['pages'] > 1) : ?>
+      <nav class="alert alert-info" aria-label="<?= Text::_('COM_USERTOOLS_HANDOVER_PAGES') ?>" data-ut-handover-pages="<?= (int) $inventory['pages'] ?>">
+        <p class="mb-1"><?= Text::sprintf('COM_USERTOOLS_HANDOVER_PAGE', (int) $inventory['page'] + 1, (int) $inventory['pages'], (int) $inventory['total']) ?></p>
+        <?php if ($inventory['page'] > 0) : ?><a class="me-3" href="<?= Route::_('index.php?option=com_usertools&view=handover&layout=select&page=' . ((int) $inventory['page'] - 1)) ?>"><?= Text::_('COM_USERTOOLS_HANDOVER_PAGE_PREVIOUS') ?></a><?php endif; ?>
+        <?php if ($inventory['page'] < $inventory['pages'] - 1) : ?><a data-ut-handover-next-page href="<?= Route::_('index.php?option=com_usertools&view=handover&layout=select&page=' . ((int) $inventory['page'] + 1)) ?>"><?= Text::_('COM_USERTOOLS_HANDOVER_PAGE_NEXT') ?></a><?php endif; ?>
+      </nav>
+      <?php endif; ?>
       <div class="table-responsive ut-table-scroll">
         <table class="table table-striped table-sm">
           <caption class="visually-hidden"><?= Text::_('COM_USERTOOLS_HANDOVER_ARTICLES_TABLE') ?></caption>
@@ -86,6 +92,7 @@ $editable = array_filter($inventory['articles'], static fn (array $a): bool => $
     <?php else : ?>
     <p class="text-muted" data-ut-handover-nothing><?= Text::_('COM_USERTOOLS_HANDOVER_NOTHING_TO_TRANSFER') ?></p>
     <?php endif; ?>
+    <input type="hidden" name="page" value="<?= (int) $inventory['page'] ?>">
     <?= HTMLHelper::_('form.token') ?>
   </form>
 </div>
