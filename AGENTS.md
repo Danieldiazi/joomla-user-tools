@@ -123,6 +123,7 @@ Estas referencias usan la ruta `next`, cuyo contenido puede cambiar. Contrasta s
   - `FAQ.md` ↔ `FAQ.en.md`.
   - `docs/arquitectura.md` ↔ `docs/architecture.en.md`.
   - `docs/desarrollo.md` ↔ `docs/development.en.md`.
+  - `docs/documentation-audit.md` ↔ `docs/documentation-audit.en.md`.
   - `docs/capturas.md` ↔ `docs/screenshots.en.md`.
 - Todo cambio de instrucciones, comportamiento, requisitos, ejemplos, límites o capturas en uno de estos documentos debe reflejarse en su pareja antes de dar el trabajo por terminado. Una traducción debe conservar el contenido completo, las advertencias y los ejemplos; no sustituirlos por un resumen.
 - Inmediatamente después del título principal, ambas versiones llevan un selector **Español · English**: el idioma actual se destaca y el otro enlaza al documento equivalente mediante una ruta relativa.
