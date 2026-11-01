@@ -174,7 +174,15 @@ class AnonymizeModel extends BaseDatabaseModel
         return $this->step();
     }
 
-    /** Anonymizes the next accounts until the time budget runs out. Returns true when everything is done. */
+    /**
+     * Resumes the operator's anonymization job without expanding the reviewed selection.
+     * Each pending account is checked against its reviewed fingerprint and revalidated on a fresh
+     * Joomla User before writing. The session checkpoint is saved after each processed account;
+     * already completed changes are not rolled back if a later account fails.
+     *
+     * @return bool True when all pending accounts have been processed and a temporary result saved;
+     *              false while more work remains in the current session.
+     */
     public function step(): bool
     {
         $job = $this->getJob();
