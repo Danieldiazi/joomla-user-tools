@@ -11,7 +11,7 @@ use PHPUnit\Framework\TestCase;
 
 final class AccountAnonymizerCleanupTest extends TestCase
 {
-    private function runScenario(bool $already, bool $fail, int $deleted = 1): array
+    private function runScenario(bool $already, bool $fail, int $deleted = 1, array $remaining = ['profile' => 0, 'notes' => 0, 'fields' => 0], array $plugins = ['user', 'consents']): array
     {
         $account = new class ($already) {
             public int $id = 42;
@@ -49,17 +49,17 @@ final class AccountAnonymizerCleanupTest extends TestCase
             new ActionLogger(function (array $messages, string $key) use (&$logged): void {
                 $logged[] = [$key, $messages[0]['id']];
             }),
-            function (object $user) use (&$removed): array {
+            function (object $user) use (&$removed, $plugins): array {
                 $removed++;
                 $user->anonymize();
-                return [true, ''];
+                return [true, '', $plugins];
             },
-            function (int $id) use ($fail, $deleted, &$cleaned): int {
+            function (int $id) use ($fail, $deleted, $remaining, &$cleaned): array {
                 $cleaned++;
                 if ($fail) {
                     throw new \RuntimeException('test failure');
                 }
-                return $deleted;
+                return ['deleted' => $deleted, 'remaining' => $remaining];
             },
         );
         $outcome = $anonymizer->anonymize(42, new Exclusions(), new Operator(1, true), static fn (): bool => true);
@@ -90,4 +90,33 @@ final class AccountAnonymizerCleanupTest extends TestCase
         $this->assertSame([0, 1], [$removed, $cleaned]);
     }
 
+
+    public function testIdentityAndCleanupAreReportedApartAndPluginsAreNeverCalledVerified(): void
+    {
+        [$result] = $this->runScenario(false, false);
+        $this->assertSame(AccountAnonymizer::ANONYMIZED, $result['status']);
+        $this->assertSame(AccountAnonymizer::VERIFIED, $result['identity']);
+        $this->assertSame(['profile' => 'verified', 'notes' => 'verified', 'fields' => 'verified'], $result['cleanup']);
+        $this->assertSame(['user', 'consents'], $result['plugins'], 'the plugins that ran are listed by name only');
+        $this->assertArrayNotHasKey('email', $result, 'no old personal data in the outcome');
+    }
+
+    public function testCleanupIsVerifiedOnlyWhenNothingIsLeftAfterDeleting(): void
+    {
+        [$result, $logged] = $this->runScenario(false, false, 3, ['profile' => 0, 'notes' => 2, 'fields' => 0]);
+        $this->assertSame(AccountAnonymizer::PARTIAL, $result['status'], 'deleting without an error is not enough');
+        $this->assertSame(['profile' => 'verified', 'notes' => 'pending', 'fields' => 'verified'], $result['cleanup']);
+        $this->assertSame(AccountAnonymizer::VERIFIED, $result['identity'], 'the identity is still reported as done');
+        $this->assertSame([['COM_USERTOOLS_ACTION_LOG_ANONYMIZED', 42]], $logged);
+        [$missing] = $this->runScenario(false, false, 1, ['profile' => 0]);
+        $this->assertSame(['profile' => 'verified', 'notes' => 'pending', 'fields' => 'pending'], $missing['cleanup'], 'a source that was not checked is pending');
+        [$failed] = $this->runScenario(false, true);
+        $this->assertSame(['profile' => 'pending', 'notes' => 'pending', 'fields' => 'pending'], $failed['cleanup']);
+    }
+
+    public function testARetryDoesNotRunThePrivacyPluginsAgain(): void
+    {
+        [$result] = $this->runScenario(true, false);
+        $this->assertSame([], $result['plugins']);
+    }
 }

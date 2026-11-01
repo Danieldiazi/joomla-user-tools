@@ -31,6 +31,12 @@ use Joomla\Database\ParameterType;
  *
  * Joomla's plugin leaves the profile fields, the user notes and the custom field values, so they are
  * removed here too. The account itself is kept, so content keeps its author ID.
+ *
+ * The outcome keeps apart what is verified from what is not: the Joomla identity (name, username, email
+ * and block, checked on a freshly loaded account), the additional cleanup that this class does and then
+ * checks source by source, and the privacy plugins that ran, whose effect cannot be verified because a
+ * plugin returning without an error proves nothing. Content, messages, action logs, media, files,
+ * backups and external data are outside its scope.
  */
 final class AccountAnonymizer
 {
@@ -41,12 +47,23 @@ final class AccountAnonymizer
     public const REFUSED    = 'refused';
     public const ERROR      = 'error';
 
-    /** @var \Closure(User): array{0: bool, 1: string} */
+    public const VERIFIED = 'verified';
+    public const PENDING = 'pending';
+
+    /** Additional data removed and then checked here, source by source. */
+    public const SOURCES = ['profile', 'notes', 'fields'];
+
+    /** @var \Closure(User): array{0: bool, 1: string, 2?: list<string>} */
     private \Closure $remove;
-    /** @var \Closure(int): int Number of auxiliary records actually deleted. */
+    /** @var \Closure(int): array{deleted: int, remaining: array<string, int>} */
     private \Closure $cleanup;
 
-    /** @param (callable(User): array{0: bool, 1: string})|null $remove asks the privacy plugins and removes; [removed, refusal] */
+    /**
+     * @param (callable(User): array{0: bool, 1: string, 2?: list<string>})|null $remove asks the privacy plugins and removes;
+     *        [removed, refusal, names of the privacy plugins that ran]
+     * @param (callable(int): array{deleted: int, remaining: array<string, int>})|null $cleanup removes the additional data and
+     *        counts what is left of each source
+     */
     public function __construct(private UserFactoryInterface $users, private ?DatabaseInterface $db, private ActionLogger $log, ?callable $remove = null, ?callable $cleanup = null)
     {
         $this->cleanup = $cleanup !== null ? \Closure::fromCallable($cleanup) : $this->removeExtraData(...);
@@ -66,23 +83,26 @@ final class AccountAnonymizer
             $request->request_type = 'remove';
             $request->status       = 1;
             PluginHelper::importPlugin('privacy', null, true, $dispatcher);
+            // Only the names of the enabled plugins are kept: never their messages, which may hold personal data.
+            $plugins = array_values(array_map(static fn (object $plugin): string => (string) $plugin->name, PluginHelper::getPlugin('privacy')));
             $results = $dispatcher->dispatch('onPrivacyCanRemoveData', new CanRemoveDataEvent('onPrivacyCanRemoveData', [
                 'subject' => $request,
                 'user'    => $user,
             ]))->getArgument('result', []);
             foreach ((array) $results as $status) {
                 if (\is_object($status) && empty($status->canRemove)) {
-                    return [false, (string) ($status->reason ?? '')];
+                    return [false, (string) ($status->reason ?? ''), $plugins];
                 }
             }
             $dispatcher->dispatch('onPrivacyRemoveData', new RemoveDataEvent('onPrivacyRemoveData', ['subject' => $request, 'user' => $user]));
-            return [true, ''];
+            return [true, '', $plugins];
         };
     }
 
     /**
      * @param  callable(object): bool $stillEligible revalidates the review on the fresh User
-     * @return array{status: string, username: string, reason: string, newName?: string, newUsername?: string}
+     * @return array{status: string, username: string, reason: string, newName?: string, newUsername?: string,
+     *     identity?: string, cleanup?: array<string, string>, plugins?: list<string>}
      */
     public function anonymize(int $id, Exclusions $exclusions, Operator $operator, callable $stillEligible): array
     {
@@ -100,8 +120,11 @@ final class AccountAnonymizer
             return ['status' => self::SKIPPED, 'username' => $name, 'reason' => 'COM_USERTOOLS_REASON_NO_LONGER_ELIGIBLE'];
         }
         $already = AnonymizeSelection::isAnonymized($user) && (int) $user->block === 1;
+        $plugins = [];
         try {
-            [$removed, $refusal] = $already ? [true, ''] : ($this->remove)($user);
+            $answer = $already ? [true, ''] : ($this->remove)($user);
+            [$removed, $refusal] = [(bool) $answer[0], (string) $answer[1]];
+            $plugins = array_values(array_map('strval', (array) ($answer[2] ?? [])));
         } catch (\Throwable) {
             [$removed, $refusal] = [false, ''];
         }
@@ -118,25 +141,41 @@ final class AccountAnonymizer
         if (!$already) {
             $this->log->anonymized($id, $operator);
         }
+        $done = ['username' => $name, 'newName' => (string) $after->name, 'newUsername' => (string) $after->username,
+            'identity' => self::VERIFIED, 'plugins' => $plugins];
+        $cleanup = array_fill_keys(self::SOURCES, self::PENDING);
         try {
-            $deleted = ($this->cleanup)($id);
-        } catch (\Throwable $e) {
-            try {
-                Log::add('Additional anonymization cleanup failed for user ID ' . $id, Log::ERROR, 'com_usertools');
-            } catch (\Throwable) {
-                // The cleanup failure is still returned to the caller.
+            $result = ($this->cleanup)($id);
+            foreach (self::SOURCES as $source) {
+                // Verified only when the check after deleting found nothing left of that source.
+                $cleanup[$source] = isset($result['remaining'][$source]) && (int) $result['remaining'][$source] === 0 ? self::VERIFIED : self::PENDING;
             }
-            return ['status' => self::PARTIAL, 'username' => $name, 'reason' => 'COM_USERTOOLS_ANONYMIZE_CLEANUP_INCOMPLETE', 'newName' => (string) $after->name, 'newUsername' => (string) $after->username];
+            $deleted = (int) $result['deleted'];
+        } catch (\Throwable) {
+            $deleted = 0;
+        }
+        if (\in_array(self::PENDING, $cleanup, true)) {
+            try {
+                Log::add('Additional anonymization cleanup is pending for user ID ' . $id, Log::ERROR, 'com_usertools');
+            } catch (\Throwable) {
+                // The pending cleanup is still returned to the caller.
+            }
+            return ['status' => self::PARTIAL, 'reason' => 'COM_USERTOOLS_ANONYMIZE_CLEANUP_INCOMPLETE', 'cleanup' => $cleanup] + $done;
         }
         // A successful no-op retry must not create a misleading cleanup action log entry.
         if ($already && $deleted > 0) {
             $this->log->cleanupCompleted($id, $operator);
         }
-        return ['status' => self::ANONYMIZED, 'username' => $name, 'reason' => '', 'newName' => (string) $after->name, 'newUsername' => (string) $after->username];
+        return ['status' => self::ANONYMIZED, 'reason' => '', 'cleanup' => $cleanup] + $done;
     }
 
-    /** Deletes auxiliary data and returns the number of rows actually removed. */
-    private function removeExtraData(int $id): int
+    /**
+     * Deletes the additional data and then counts what is left of each source, so that "verified" means
+     * checked after deleting, not merely "no exception".
+     *
+     * @return array{deleted: int, remaining: array<string, int>}
+     */
+    private function removeExtraData(int $id): array
     {
         $db      = $this->db ?? throw new \LogicException('Database required for cleanup.');
         $deleted = 0;
@@ -154,6 +193,16 @@ final class AccountAnonymizer
             ->where($db->quoteName('field_id') . ' IN (' . $fields . ')')
             ->bind(':item', $item)->bind(':context', $context))->execute();
         $deleted += $db->getAffectedRows();
-        return $deleted;
+        $remaining = [];
+        foreach (['profile' => '#__user_profiles', 'notes' => '#__user_notes'] as $source => $table) {
+            $remaining[$source] = (int) $db->setQuery($db->createQuery()->select('COUNT(*)')->from($db->quoteName($table))
+                ->where($db->quoteName('user_id') . ' = :id')->bind(':id', $id, ParameterType::INTEGER))->loadResult();
+        }
+        $fields = $db->createQuery()->select($db->quoteName('id'))->from($db->quoteName('#__fields'))
+            ->where($db->quoteName('context') . ' = :context');
+        $remaining['fields'] = (int) $db->setQuery($db->createQuery()->select('COUNT(*)')->from($db->quoteName('#__fields_values'))
+            ->where($db->quoteName('item_id') . ' = :item')->where($db->quoteName('field_id') . ' IN (' . $fields . ')')
+            ->bind(':item', $item)->bind(':context', $context))->loadResult();
+        return ['deleted' => $deleted, 'remaining' => $remaining];
     }
 }
