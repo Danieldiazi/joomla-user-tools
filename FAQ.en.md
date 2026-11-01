@@ -38,6 +38,10 @@ Both are permanent. **Deleting** removes the account: its content is left withou
 
 The account **has already been anonymised and blocked**, and that anonymisation is recorded in the User Actions Log. The result shows **Incomplete cleanup** when profile, notes or custom-field data remains. To remove it, choose **Only retry the cleanup of already anonymised accounts**, select the accounts and confirm. This mode never anonymises new accounts and separately logs the completed cleanup.
 
+### Does “anonymised” mean all their data has been removed?
+
+No. It means the **Joomla identity** (name, username and email) has been replaced and checked, and the account is blocked. Separately, it says whether the **additional cleanup** (profile, notes and custom fields) is checked or pending. Other extensions' privacy plugins are run, but their effect cannot be verified, and content, messages, the action log, files and backups are out of scope. See the [README](README.en.md#anonymise-accounts).
+
 ### Why does no request appear in Users → Privacy when anonymising?
 
 Because nobody asked for one: it is the administrator's decision, not the person's request. User Tools runs the same privacy plugins as a removal request, but does not invent the request. Each anonymisation is written to the User Actions Log with the account ID.

@@ -30,6 +30,7 @@ $source  = $draft['source'];
       <li><?= Text::_('COM_USERTOOLS_ANONYMIZE_WHAT_STAYS') ?></li>
       <li><?= Text::_('COM_USERTOOLS_ANONYMIZE_WHAT_OTHERS') ?></li>
     </ul>
+    <p class="mb-0 mt-2" data-ut-anonymize-limits><?= Text::_('COM_USERTOOLS_ANONYMIZE_LIMITS') ?></p>
   </div>
   <?php if (!$this->pluginReady && empty($draft['retryCleanup'])) : ?>
   <div class="alert alert-danger" data-ut-anonymize-plugin><?= Text::_('COM_USERTOOLS_ANONYMIZE_ERROR_PLUGIN') ?></div>

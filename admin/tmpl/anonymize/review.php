@@ -72,7 +72,7 @@ $skipped    = $review['skipped'];
     <?php endif; ?>
 
     <?php if ($candidates) : ?>
-      <div class="alert alert-danger"><strong><?= Text::_('COM_USERTOOLS_PERMANENT') ?>.</strong> <?= Text::_(!empty($review['criteria']['retryCleanup']) ? 'COM_USERTOOLS_ANONYMIZE_RETRY_ONLY_NOTE' : 'COM_USERTOOLS_ANONYMIZE_WARNING') ?></div>
+      <div class="alert alert-danger"><strong><?= Text::_('COM_USERTOOLS_PERMANENT') ?>.</strong> <?= Text::_(!empty($review['criteria']['retryCleanup']) ? 'COM_USERTOOLS_ANONYMIZE_RETRY_ONLY_NOTE' : 'COM_USERTOOLS_ANONYMIZE_WARNING') ?> <?= Text::_('COM_USERTOOLS_ANONYMIZE_LIMITS') ?></div>
       <?= LayoutHelper::render('usertools.confirm', ['label' => !empty($review['criteria']['retryCleanup']) ? 'COM_USERTOOLS_ANONYMIZE_RETRY_CONFIRM' : 'COM_USERTOOLS_ANONYMIZE_CONFIRM', 'count' => count($review['selected']), 'threshold' => $review['threshold'], 'dynamic' => true, 'help' => !empty($review['criteria']['retryCleanup']) ? 'COM_USERTOOLS_ANONYMIZE_RETRY_TYPE_HELP' : 'COM_USERTOOLS_ANONYMIZE_TYPE_HELP'], $layouts) ?>
     <?php endif; ?>
     <noscript><div class="alert alert-warning"><?= Text::_('COM_USERTOOLS_ERROR_JAVASCRIPT') ?></div></noscript>
