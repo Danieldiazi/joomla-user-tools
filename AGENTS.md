@@ -78,6 +78,21 @@ Si una petición choca con alguna de estas reglas, se señala el conflicto antes
 - **Panel**: todo lo que cambie cuentas u Opciones llama a `Toolkit::clearDashboardCache()`. Las cifras del módulo deben usar las mismas reglas que la herramienta a la que enlazan.
 - **Herramienta nueva**: añade su permiso en `access.xml` (o `DisplayController::SUPER_USERS` si es solo para superusuarios), la vista en `DisplayController::PERMISSIONS`, su pestaña en `config.xml` si tiene opciones, la tarjeta en la portada, su recorrido en `GuidedTours` si cambia cuentas o grupos (con sus atributos `data-ut-tour` y su archivo de idioma en es-ES y en-GB), el controlador en `tests/regression/mvc.php`, una sección en `tests/integration/run.php` y la documentación en README y FAQ.
 
+## Documentación interna y mantenibilidad
+
+Estas reglas sirven tanto a agentes de código como a colaboradores humanos. Una persona que no participó en el desarrollo debe poder localizar una regla, seguir una operación y reconocer sus riesgos **sin consultar conversaciones con agentes**.
+
+- **Explica el porqué, no el PHP evidente**: evita narrar asignaciones, retornos, bucles o llamadas obvias. Comenta decisiones no evidentes, invariantes, alternativas descartadas, limitaciones y razones de seguridad.
+- **Responsabilidades y contratos**: documenta a nivel de clase qué responsabilidad tiene y qué no cubre. En métodos de negocio o con contratos difíciles, usa PHPDoc para condiciones relevantes, parámetros/retornos no inferibles, excepciones y efectos secundarios (cuentas, sesiones, registros, ficheros, correo y persistencia). No añadas PHPDoc de relleno a métodos triviales.
+- **Casos delicados**: explica revalidaciones previas a escrituras, controles de permisos, límites contra operaciones masivas, firmas de previsualización, protección frente a reintentos, tandas reanudables, fallos parciales y la diferencia entre datos verificados e inferidos. Los comentarios no reemplazan pruebas ni protecciones del servidor.
+- **Código legible**: prioriza nombres descriptivos, lógica con responsabilidades acotadas y extracción de métodos cuando facilite comprender un flujo. No ocultes complejidad innecesaria detrás de párrafos de comentarios.
+- **Documentación viva**: ante cambios de flujos, permisos, persistencia, invariantes, integración con Joomla o limitaciones, actualiza en la misma PR `docs/arquitectura.md` y `docs/architecture.en.md`. Comprueba que las afirmaciones existentes sigan siendo ciertas; evita presentar versiones históricas como estado actual.
+- **Incorporación humana**: conserva la guía `docs/desarrollo.md` ↔ `docs/development.en.md`, con las rutas de entrada, un recorrido Controller → Model → Service → Joomla, garantías y comandos de pruebas. Revísala al cambiar la arquitectura.
+- **Revisión en cada PR**: busca comentarios imprecisos, repetidos, contradictorios u obsoletos y PHPDoc que ya no describa el código. Corrígelos en el mismo cambio, sin reformatear o comentar indiscriminadamente archivos ajenos a él.
+- **Idioma**: nombres y comentarios/PHPDoc del código en inglés; documentación técnica destinada a personas, en español e inglés según la sección de documentación bilingüe.
+
+La auditoría inicial y sus hallazgos se registran en la issue #72; prioriza correcciones verificables frente a métricas de cantidad de comentarios.
+
 ## Interfaz, usabilidad y accesibilidad
 
 Estas reglas se aplican a las pantallas del componente y a los módulos. Integrarse con Joomla no significa depender de Atum ni de otra plantilla concreta.
@@ -107,6 +122,7 @@ Estas referencias usan la ruta `next`, cuyo contenido puede cambiar. Contrasta s
   - `README.md` ↔ `README.en.md`.
   - `FAQ.md` ↔ `FAQ.en.md`.
   - `docs/arquitectura.md` ↔ `docs/architecture.en.md`.
+  - `docs/desarrollo.md` ↔ `docs/development.en.md`.
   - `docs/capturas.md` ↔ `docs/screenshots.en.md`.
 - Todo cambio de instrucciones, comportamiento, requisitos, ejemplos, límites o capturas en uno de estos documentos debe reflejarse en su pareja antes de dar el trabajo por terminado. Una traducción debe conservar el contenido completo, las advertencias y los ejemplos; no sustituirlos por un resumen.
 - Inmediatamente después del título principal, ambas versiones llevan un selector **Español · English**: el idioma actual se destaca y el otro enlaza al documento equivalente mediante una ruta relativa.
