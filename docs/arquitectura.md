@@ -104,6 +104,22 @@ El informe y el registro de acciones son evidencias distintas. La simulación no
 | Informes programados | Subcarpeta usertools-reports del directorio de logs. Archivos PHP con cabecera de denegación y cuerpo JSON. Retención configurada en Opciones, aplicada al finalizar tareas. |
 | Contraseña temporal | Se genera en memoria y se muestra en la respuesta de creación. Joomla conserva el hash necesario para autenticar, no la contraseña en claro. |
 
+### Contratos de sesión: previsualización, trabajo y resultado
+
+Estos tres estados no son intercambiables; los campos de negocio se definen en el modelo de cada herramienta y sus estructuras PHPDoc. `ToolStateTrait` únicamente aporta los metadatos y comprobaciones comunes:
+
+| Estado | Metadatos o campos | Significado y límite |
+|---|---|---|
+| Previsualización | `actor` (ID operador), `nonce` (token aleatorio), `expires` (segundos Unix) | Su validez exige operador y caducidad; el controlador/modelo verifica además el token presentado y las reglas de la herramienta. Se consume **antes** de realizar escrituras. |
+| Trabajo reanudable | `actor`, colas pendientes, total original y resultados acumulados | Lo conserva la sesión del operador. Cada cuenta procesada produce un checkpoint; no es una transacción ni permite deshacer cambios completados si se corta la petición. |
+| Resultado temporal | `actor`, `expires` y campos del resultado | Fotografía para mostrar al operador durante 900 segundos. **No** es un historial persistente ni sustituye al registro de acciones. Nunca contiene contraseñas temporales. |
+
+**Comparación** (`CompareModel`): la previsualización almacena `names`, `ids` ofrecidos para bloqueo, `unknown` y una `signature` de las exclusiones. El trabajo guarda las colas `block` y `create`, `total` fijado al aplicar y `processed` como intentos completados, no éxitos. `blocked`, `created` y `errors` acumulan resultados; `blockErrors` separa fallos de bloqueo de omisiones/protecciones. El resultado diferencia `skipped` (ofrecidos que no se bloquearon) de `discarded` (operaciones aún pendientes abandonadas). El campo `batch` puede apuntar a **otro** informe persistente de bloqueos deshacibles. Las contraseñas creadas solo existen en la respuesta inmediata de su tanda, no en el trabajo ni en el resultado guardado.
+
+**Anonimización** (`AnonymizeModel`): la previsualización relaciona `ids` con `fingerprints` de las cuentas vistas y una selección `selected`; cada tanda vuelve a comprobar la identidad actual. `pending` asocia ID y huella de las cuentas pendientes, mientras `total` permanece fijo. `done` recoge identidades anonimizadas, `cleaned` reintentos limitados a limpieza, `partial` verificaciones/limpiezas pendientes, `errors` errores y `skipped` cuentas que no se procesaron por cambios o condiciones. Al terminar, el resultado temporal expone `anonymized`, `cleaned`, `retryCleanup`, `partial`, `errors`, `skipped` y `total`; no garantiza borrado de datos ajenos al alcance documentado.
+
+**Regla de mantenimiento:** al cambiar un campo de sesión, su consumidor o un estado de resultado, actualiza el contrato PHPDoc del modelo, esta sección y su traducción. La forma del array no sustituye las revalidaciones efectivas.
+
 ReportStore valida los IDs de archivo y escribe mediante temporal y renombrado. La propiedad version del informe identifica su formato; no debe confundirse con la versión de la extensión.
 
 ## 5. Reglas que debe preservar cualquier cambio
