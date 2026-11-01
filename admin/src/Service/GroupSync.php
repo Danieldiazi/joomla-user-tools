@@ -36,7 +36,7 @@ final class GroupSync
     /** Up to this many lines are read; a longer list is refused. */
     public const MAX_LINES = 2000;
 
-    /** In a complete list, removing more than this share of the current members asks for an extra confirmation. */
+    /** Removing every managed group from more than this share of the current members asks for an extra confirmation. */
     public const MASS_SHARE = 0.5;
 
     public const CHANGE = 'change';
@@ -97,11 +97,11 @@ final class GroupSync
     /**
      * @param  array<int, object>     $groups
      * @param  array<int, UserRecord> $users
-     * @param  callable(string): bool $emailExists whether an account already uses this address
+     * @param  array<int, UserRecord> $users every account: their usernames and emails are checked in memory
      * @return array{rows: list<array<string, mixed>>, managed: list<int>, protected: list<int>, members: int}
      */
     public static function plan(array $groups, array $users, int $root, string $mode, string $by, string $text,
-        Operator $operator, bool $canCreate, callable $emailExists): array
+        Operator $operator, bool $canCreate): array
     {
         if (!\in_array($mode, [self::PARTIAL, self::FULL], true) || !\in_array($by, [self::BY_ID, self::BY_USERNAME], true)) {
             throw new UserFacingException('COM_USERTOOLS_SYNC_ERROR_INPUT');
@@ -110,8 +110,10 @@ final class GroupSync
         $managed = array_fill_keys($branch['managed'], true);
         $lines = self::lines($text);
         $byName = [];
+        $usedEmails = [];
         foreach ($users as $user) {
             $byName[mb_strtolower($user->username)][] = $user->id;
+            $usedEmails[mb_strtolower($user->email)] = true;
         }
         $rows = [];
         foreach ($lines as [$number, $cells]) {
@@ -132,7 +134,7 @@ final class GroupSync
                 $row['status'] = self::CREATE_NOT_ALLOWED;
             } elseif (!filter_var($row['email'], FILTER_VALIDATE_EMAIL)) {
                 $row['status'] = self::EMAIL_INVALID;
-            } elseif (isset($emails[$email]) || $emailExists($row['email'])) {
+            } elseif (isset($emails[$email]) || isset($usedEmails[$email])) {
                 $row['status'] = self::EMAIL_IN_USE;
             } else {
                 $emails[$email] = true;
@@ -194,17 +196,27 @@ final class GroupSync
     }
 
     /**
-     * Whether a complete list removes so many current members that it needs an extra confirmation.
+     * Current members who lose every managed group: leavers of a complete list and listed accounts
+     * whose row leaves them without any group of the branch.
      *
      * @param list<array<string, mixed>> $rows
      */
-    public static function massive(string $mode, array $rows, int $members): bool
+    public static function leaving(array $rows): int
     {
-        if ($mode !== self::FULL || $members === 0) {
-            return false;
-        }
-        $leaving = \count(array_filter($rows, static fn (array $row): bool => $row['status'] === self::LEAVE));
-        return $leaving > 0 && $leaving > $members * self::MASS_SHARE;
+        return \count(array_filter($rows, static fn (array $row): bool => \in_array($row['status'], [self::CHANGE, self::LEAVE], true)
+            && $row['remove'] && !$row['add'] && !$row['kept']));
+    }
+
+    /**
+     * Whether the list removes the branch from so many current members that it needs an extra confirmation,
+     * in either mode.
+     *
+     * @param list<array<string, mixed>> $rows
+     */
+    public static function massive(array $rows, int $members): bool
+    {
+        $leaving = self::leaving($rows);
+        return $members > 0 && $leaving > 0 && $leaving > $members * self::MASS_SHARE;
     }
 
     /**

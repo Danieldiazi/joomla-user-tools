@@ -62,8 +62,11 @@ final class GroupSyncTest extends TestCase
     /** @return array<string, mixed> */
     private function plan(string $text, string $mode = GroupSync::PARTIAL, string $by = GroupSync::BY_USERNAME, bool $canCreate = true, array $emails = [], int $root = 11): array
     {
-        return GroupSync::plan($this->fixtureGroups(), $this->users(), $root, $mode, $by, $text, new Operator(self::OPERATOR, true, 'operator'), $canCreate,
-            static fn (string $email): bool => \in_array(mb_strtolower($email), $emails, true));
+        $users = $this->users();
+        foreach ($emails as $index => $email) {
+            $users[900 + $index] = new UserRecord(900 + $index, 'holder' . $index, 'Holder', $email, 0, null, null, [2], [2], false, false);
+        }
+        return GroupSync::plan($this->fixtureGroups(), $users, $root, $mode, $by, $text, new Operator(self::OPERATOR, true, 'operator'), $canCreate);
     }
 
     /** @return array<string, array<string, mixed>> rows keyed by username */
@@ -146,7 +149,8 @@ final class GroupSyncTest extends TestCase
 
     public function testNewAccountsNeedPermissionAndAnUnusedValidEmail(): void
     {
-        $rows = $this->plan("nuevo;#12;nuevo@example.test;Nuevo Socio\nsin;#12;no-es-correo\nusado;#12;used@example.test\notro;#12;NUEVO@example.test\nvacio;#12")['rows'];
+        $rows = $this->plan("nuevo;#12;nuevo@example.test;Nuevo Socio\nsin;#12;no-es-correo\nusado;#12;used@example.test\notro;#12;NUEVO@example.test\nvacio;#12\nana2;#12;ANA@example.test")['rows'];
+        self::assertSame(GroupSync::EMAIL_IN_USE, $rows[5]['status'], 'an existing account email, compared in memory without case');
         self::assertSame([GroupSync::CREATE, GroupSync::EMAIL_INVALID, GroupSync::EMAIL_IN_USE, GroupSync::EMAIL_IN_USE, GroupSync::EMAIL_INVALID],
             array_column($this->plan("nuevo;#12;nuevo@example.test;Nuevo Socio\nsin;#12;no-es-correo\nusado;#12;used@example.test\notro;#12;NUEVO@example.test\nvacio;#12", GroupSync::PARTIAL, GroupSync::BY_USERNAME, true, ['used@example.test'])['rows'], 'status'));
         self::assertSame([12], $rows[0]['add']);
@@ -181,9 +185,15 @@ final class GroupSyncTest extends TestCase
     {
         $plan = $this->plan('ana;#11', GroupSync::FULL);
         self::assertSame([GroupSync::LEAVE, GroupSync::LEAVE], array_values(array_column(array_filter($plan['rows'], static fn ($r) => $r['line'] === 0 && $r['status'] === GroupSync::LEAVE), 'status')));
-        self::assertTrue(GroupSync::massive(GroupSync::FULL, $plan['rows'], 3), '2 of 3 removable members');
-        self::assertFalse(GroupSync::massive(GroupSync::FULL, $plan['rows'], 5));
-        self::assertFalse(GroupSync::massive(GroupSync::PARTIAL, $plan['rows'], 3));
+        self::assertTrue(GroupSync::massive($plan['rows'], 3), '2 of 3 removable members');
+        self::assertFalse(GroupSync::massive($plan['rows'], 5));
+        // Listed accounts with empty groups lose the whole branch too, in either mode.
+        foreach ([GroupSync::FULL, GroupSync::PARTIAL] as $mode) {
+            $emptied = $this->plan("ana;\nluis;\nmarta;", $mode);
+            self::assertSame(3, GroupSync::leaving($emptied['rows']), $mode);
+            self::assertTrue(GroupSync::massive($emptied['rows'], $emptied['members']), $mode);
+        }
+        self::assertSame(0, GroupSync::leaving($this->plan('ana;#12')['rows']), 'moving within the branch is not leaving it');
     }
 
     public function testLinesAcceptCommentsBomQuotesAndRefuseHugeLists(): void

@@ -87,7 +87,7 @@ $back = Route::_('index.php?option=com_usertools&view=sync');
     <form method="post" action="<?= $back ?>" data-ut-sync-apply>
       <?php if ($review['massive']) : ?>
       <div class="card ut-card border-danger"><div class="card-body">
-        <p class="mb-2" id="ut-sync-mass-help"><?= Text::sprintf('COM_USERTOOLS_SYNC_MASS', (int) ($counts[GroupSync::LEAVE] ?? 0), (int) $plan['members']) ?></p>
+        <p class="mb-2" id="ut-sync-mass-help"><?= Text::sprintf('COM_USERTOOLS_SYNC_MASS', (int) $review['leaving'], (int) $plan['members']) ?></p>
         <div class="form-check">
           <input class="form-check-input" type="checkbox" name="mass" value="1" id="ut-sync-mass" required aria-describedby="ut-sync-mass-help">
           <label class="form-check-label" for="ut-sync-mass"><?= Text::_('COM_USERTOOLS_SYNC_MASS_CONFIRM') ?></label>

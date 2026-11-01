@@ -108,7 +108,8 @@ class SyncModel extends BaseDatabaseModel
             'count'      => GroupSync::writes($rows),
             'errors'     => GroupSync::errors($rows),
             'blocked'    => GroupSync::blocked($mode, $rows),
-            'massive'    => GroupSync::massive($mode, $rows, (int) $p['plan']['members']),
+            'massive'    => GroupSync::massive($rows, (int) $p['plan']['members']),
+            'leaving'    => GroupSync::leaving($rows),
             'creates'    => $creates,
             'mailOnline' => AccountMailer::canSend(),
             'threshold'  => Toolkit::settings()->confirmThreshold(),
@@ -309,6 +310,6 @@ class SyncModel extends BaseDatabaseModel
     {
         $directory = Toolkit::directory();
         return GroupSync::plan($directory->groups(), $directory->users(), (int) $draft['root'], (string) $draft['mode'], (string) $draft['by'],
-            (string) $draft['lines'], $this->operator(), $this->canCreate(), fn (string $email): bool => $directory->exists('email', $email));
+            (string) $draft['lines'], $this->operator(), $this->canCreate());
     }
 }
