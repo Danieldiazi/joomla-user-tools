@@ -18,7 +18,9 @@ use Danieldiazi\Component\Usertools\Administrator\Service\Operator;
 use Danieldiazi\Component\Usertools\Administrator\Service\Settings;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
+use Danieldiazi\Component\Usertools\Administrator\Service\UserRecord;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
+use Joomla\CMS\User\User;
 
 /** Stateless account lookup. Reading a profile never saves an account or changes a tool draft. */
 class ProfileModel extends BaseDatabaseModel
@@ -37,6 +39,27 @@ class ProfileModel extends BaseDatabaseModel
         return $match;
     }
 
+    /**
+     * The tools the operator may open for this account, with the same protection and exclusions as the
+     * tools themselves. Shared with the handover assistant's closing step.
+     *
+     * @return array<string, bool>
+     */
+    public static function actionsFor(UserRecord $account, User $identity): array
+    {
+        $operator = Operator::fromUser($identity);
+        $permissions = [];
+        foreach (['usertools.ungroup', 'usertools.inactive', 'usertools.anonymize', 'usertools.reassign'] as $permission) {
+            $permissions[$permission] = (bool) $identity->authorise($permission, 'com_usertools');
+        }
+        $permissions['usertools.reassign'] = $permissions['usertools.reassign'] && $identity->authorise('core.manage', 'com_content');
+        $actions = AccountProfile::actions($account, $operator, $permissions);
+        $settings = Toolkit::settings();
+        $actions['block'] = $actions['block'] && !$settings->exclusions(Settings::INACTIVE)->protects($account, $operator);
+        $actions['anonymize'] = $actions['anonymize'] && !$settings->exclusions(Settings::ANONYMIZE)->protects($account, $operator);
+        return $actions;
+    }
+
     /** @return array<string, mixed>|null */
     public function getProfile(int $id): ?array
     {
@@ -49,15 +72,7 @@ class ProfileModel extends BaseDatabaseModel
             throw new UserFacingException('COM_USERTOOLS_PROFILE_NOT_FOUND');
         }
         $identity = Toolkit::app()->getIdentity() ?? throw new \LogicException('No user.');
-        $operator = Operator::fromUser($identity);
-        $permissions = [];
-        foreach (['usertools.ungroup', 'usertools.inactive', 'usertools.anonymize'] as $permission) {
-            $permissions[$permission] = (bool) $identity->authorise($permission, 'com_usertools');
-        }
-        $actions = AccountProfile::actions($account, $operator, $permissions);
-        $settings = Toolkit::settings();
-        $actions['block'] = $actions['block'] && !$settings->exclusions(Settings::INACTIVE)->protects($account, $operator);
-        $actions['anonymize'] = $actions['anonymize'] && !$settings->exclusions(Settings::ANONYMIZE)->protects($account, $operator);
+        $actions = self::actionsFor($account, $identity);
         $groups = $directory->groups();
         $reader = new AccountProfileReader(Toolkit::db());
         $logsAllowed = (bool) $identity->authorise('core.admin');

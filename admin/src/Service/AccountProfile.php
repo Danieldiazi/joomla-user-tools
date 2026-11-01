@@ -66,6 +66,7 @@ final class AccountProfile
             'ungroup' => $safe && (bool) $account->groups && ($permissions['usertools.ungroup'] ?? false),
             'block' => $safe && $account->block === 0 && ($permissions['usertools.inactive'] ?? false),
             'anonymize' => $safe && ($permissions['usertools.anonymize'] ?? false),
+            'handover' => $safe && ($permissions['usertools.reassign'] ?? false),
         ];
     }
 

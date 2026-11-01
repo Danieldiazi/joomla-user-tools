@@ -23,7 +23,7 @@ use Joomla\CMS\Language\Text;
 class AccountsController extends DisplayController
 {
     /** Tools with a single-account selector, and the permissions each one needs besides its own view. */
-    public const TOOLS = ['profile' => [], 'ungroup' => [], 'explain' => ['usertools.profile']];
+    public const TOOLS = ['profile' => [], 'ungroup' => [], 'explain' => ['usertools.profile'], 'handover' => ['usertools.profile']];
 
     public function suggest(): void
     {
