@@ -171,38 +171,43 @@ final class AccountAnonymizer
 
     /**
      * Deletes the additional data and then counts what is left of each source, so that "verified" means
-     * checked after deleting, not merely "no exception".
+     * checked after deleting, not merely "no exception". Each source is deleted and checked on its own:
+     * a failure in one never hides the state of the others. A source whose check fails is left out of
+     * "remaining" and is therefore reported as pending.
      *
      * @return array{deleted: int, remaining: array<string, int>}
      */
     private function removeExtraData(int $id): array
     {
-        $db      = $this->db ?? throw new \LogicException('Database required for cleanup.');
-        $deleted = 0;
-        foreach (['#__user_profiles' => 'user_id', '#__user_notes' => 'user_id'] as $table => $column) {
-            $db->setQuery($db->createQuery()->delete($db->quoteName($table))
-                ->where($db->quoteName($column) . ' = :id')->bind(':id', $id, ParameterType::INTEGER))->execute();
-            $deleted += $db->getAffectedRows();
-        }
-        $item    = (string) $id;
-        $context = 'com_users.user';
-        $fields  = $db->createQuery()->select($db->quoteName('id'))->from($db->quoteName('#__fields'))
-            ->where($db->quoteName('context') . ' = :context');
-        $db->setQuery($db->createQuery()->delete($db->quoteName('#__fields_values'))
-            ->where($db->quoteName('item_id') . ' = :item')
-            ->where($db->quoteName('field_id') . ' IN (' . $fields . ')')
-            ->bind(':item', $item)->bind(':context', $context))->execute();
-        $deleted += $db->getAffectedRows();
+        $db       = $this->db ?? throw new \LogicException('Database required for cleanup.');
+        $item     = (string) $id;
+        $context  = 'com_users.user';
+        $deleted  = 0;
         $remaining = [];
-        foreach (['profile' => '#__user_profiles', 'notes' => '#__user_notes'] as $source => $table) {
-            $remaining[$source] = (int) $db->setQuery($db->createQuery()->select('COUNT(*)')->from($db->quoteName($table))
-                ->where($db->quoteName('user_id') . ' = :id')->bind(':id', $id, ParameterType::INTEGER))->loadResult();
-        }
-        $fields = $db->createQuery()->select($db->quoteName('id'))->from($db->quoteName('#__fields'))
+        $fields   = fn () => $db->createQuery()->select($db->quoteName('id'))->from($db->quoteName('#__fields'))
             ->where($db->quoteName('context') . ' = :context');
-        $remaining['fields'] = (int) $db->setQuery($db->createQuery()->select('COUNT(*)')->from($db->quoteName('#__fields_values'))
-            ->where($db->quoteName('item_id') . ' = :item')->where($db->quoteName('field_id') . ' IN (' . $fields . ')')
-            ->bind(':item', $item)->bind(':context', $context))->loadResult();
+        $sources = [
+            'profile' => fn ($query) => $query->from($db->quoteName('#__user_profiles'))
+                ->where($db->quoteName('user_id') . ' = :id')->bind(':id', $id, ParameterType::INTEGER),
+            'notes'   => fn ($query) => $query->from($db->quoteName('#__user_notes'))
+                ->where($db->quoteName('user_id') . ' = :id')->bind(':id', $id, ParameterType::INTEGER),
+            'fields'  => fn ($query) => $query->from($db->quoteName('#__fields_values'))
+                ->where($db->quoteName('item_id') . ' = :item')->where($db->quoteName('field_id') . ' IN (' . $fields() . ')')
+                ->bind(':item', $item)->bind(':context', $context),
+        ];
+        foreach ($sources as $source => $scope) {
+            try {
+                $db->setQuery($scope($db->createQuery()->delete()))->execute();
+                $deleted += $db->getAffectedRows();
+            } catch (\Throwable) {
+                // Checked just below: what matters is whether anything is left.
+            }
+            try {
+                $remaining[$source] = (int) $db->setQuery($scope($db->createQuery()->select('COUNT(*)')))->loadResult();
+            } catch (\Throwable) {
+                // Not checked: left out, so the source is reported as pending.
+            }
+        }
         return ['deleted' => $deleted, 'remaining' => $remaining];
     }
 }
