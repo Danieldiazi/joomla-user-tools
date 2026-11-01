@@ -19,9 +19,7 @@ use Danieldiazi\Component\Usertools\Administrator\Service\Settings;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserRecord;
-use Joomla\CMS\Plugin\CMSPlugin;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
-use Joomla\CMS\Plugin\PluginHelper;
 
 /** Manual comparison of a roster of usernames: preview, review and apply. */
 class CompareModel extends BaseDatabaseModel
@@ -391,23 +389,6 @@ class CompareModel extends BaseDatabaseModel
     private function more(int $done, float $deadline): bool
     {
         return $done === 0 || microtime(true) < $deadline;
-    }
-
-    /**
-     * The core user plugin would email the generated password; this tool sends its own link instead.
-     *
-     * @return array{0: CMSPlugin, 1: mixed} the plugin and its setting, to restore afterwards
-     */
-    private function silenceCoreMail(): array
-    {
-        PluginHelper::importPlugin('user');
-        $core = Toolkit::app()->bootPlugin('joomla', 'user');
-        if (!$core instanceof CMSPlugin) {
-            throw new \LogicException('The core user plugin is not available.');
-        }
-        $before = $core->params->get('mail_to_user', 1);
-        $core->params->set('mail_to_user', 0);
-        return [$core, $before];
     }
 
     /**

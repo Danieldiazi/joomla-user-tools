@@ -17,6 +17,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Dashboard summary | Shows pending accounts, task status and notices on the Users dashboard. Available since 2026.10.6. |
 | User groups on the site | Site module that lists the groups of a user or the members of a group. Read only. Available since 2026.10.9. |
 | Add accounts to groups | Adds existing accounts to groups by ID or full path without removing current memberships, with review and confirmation. |
+| Synchronise a group branch | Keeps the groups of one branch (staff, members, students) in line with a list: new accounts, group changes and leavers. Never touches other groups or blocks anyone; with review and confirmation. |
 | Remove from groups | Choose an account, untick the groups it should leave and, if you want, also remove it from all their subgroups. With a review and a confirmation. Available since 2026.10.9. |
 | Move groups | Changes the parent of several groups at once, with their subgroups, after reviewing which levels their members gain or lose. Refuses moves that would change administrator access. Super Users only. Available since 2026.10.16. |
 | Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.9. |
@@ -49,6 +50,7 @@ The home screen and Components menu organise tools into **Review accounts**, **G
 - [Users dashboard summary](#users-dashboard-summary)
 - [User groups module on the site](#user-groups-module-on-the-site)
 - [Bulk add accounts to groups](#bulk-add-accounts-to-groups)
+- [Synchronise a group branch](#synchronise-a-group-branch)
 - [Remove from groups](#remove-from-groups)
 - [Move groups](#move-groups)
 - [Groups and access levels](#groups-and-access-levels)
@@ -77,7 +79,7 @@ The installer checks minimum versions, registers the extension with the User Act
 
 ## Guided tours
 
-The tools that change accounts or groups have a Joomla **guided tour** that explains their screen step by step: what it is for, what you choose, what you review before applying and which safeguards it has. Compare a list, Review inactive users, Undo blocks, Delete inactive users, Anonymise accounts, Add accounts to groups, Remove from groups, Move groups and Scheduled task have one.
+The tools that change accounts or groups have a Joomla **guided tour** that explains their screen step by step: what it is for, what you choose, what you review before applying and which safeguards it has. Compare a list, Review inactive users, Undo blocks, Delete inactive users, Anonymise accounts, Add accounts to groups, Synchronise a group branch, Remove from groups, Move groups and Scheduled task have one.
 
 - **How to open it**: with the **Guided tour** button, next to Help, on the first screen of each tool. It only appears if you can use that tool and Joomla's guided tours are enabled (the “Guided Tours” component and the “System - Guided Tours Plugin” plugin).
 - **What it does**: it only explains. No step selects buttons, fills in fields or applies changes; you can close it at any time. It works with the keyboard and never starts on its own.
@@ -224,6 +226,41 @@ Each deletion is written to the **User Actions Log** with the account ID, userna
 Open **User Tools → Add accounts to groups** to add existing accounts to groups without removing other memberships. Enter usernames or emails and one target group, or `username;#ID` pairs on separate lines. Identify groups by `#ID` or a **full path** (for example `Public/Registered`); bare titles or duplicate paths are rejected. The preview distinguishes additions, existing memberships and exclusions. Only groups without administrator access can be assigned, and administrator accounts, Super Users and the operator are protected. Confirm and type the number of accounts. Changes use Joomla's User API, verify session closure and warn if sessions remain open or cannot be checked. Session closure can be retried from the result **without repeating memberships or their audit entries**. Every assignment is logged and large batches are resumable.
 
 ![Add accounts to groups: review with the assignments to be made, the existing ones and the refused ones (Spanish interface)](docs/screenshots/25-anadir-grupos-revision.jpg)
+
+## Synchronise a group branch
+
+When an organisation regularly receives the list of its staff, members or students, **User Tools → Synchronise a group branch** adjusts the groups of that **branch** without affecting anything else. For example, the Sales list can only change the groups of “Departments/Sales”: someone who is also in “Projects/Web” keeps that group and their account.
+
+1. **Branch**: choose the top group. It and all its subgroups are managed, except those that give administrator access, which are never touched. The branch cannot be the root group or include Registered, the group new accounts receive.
+2. **Type of list**:
+   - **Partial update**: only the accounts on the list are processed. Anyone not on it keeps all their groups; an absence is never read as leaving.
+   - **Complete list of the group**: also, anyone in a group of the branch who is not on the list is proposed to **lose the groups of the branch**. Their account is not blocked. You must tick that the list is complete; a list without valid rows is refused, and if any row is invalid it cannot be applied, because it could be a person who would then lose the groups.
+3. **How accounts are identified**: by **username** (not case-sensitive; new accounts can be created) or by **Joomla ID** (existing accounts only). Display names and emails are never used to guess an account.
+4. **List**: CSV with semicolons, one account per line, as `account;groups;email;name`. Groups are separated with `|` and each one is given by its ID (`#12`) or its **full path** (`Public/Departments/Sales`); a bare title or a duplicate path is an error. Empty groups mean the account must have no group of the branch. Lines starting with `#` are ignored and values containing a semicolon go in double quotes. UTF-8 with or without BOM, up to 2,000 lines.
+
+Partial update by username:
+
+```
+# account;groups;email;name
+ana.garcia;#12|Public/Departments/Sales/North
+luis.perez;Public/Departments/Sales
+new.person;#12;new@example.com;"Smith; New"
+```
+
+Complete list by ID (anyone in the branch who is not listed leaves it):
+
+```
+245;#12
+318;#12|#14
+402;
+```
+
+The **review** shows the exact list of managed groups and, per account, what is created, which groups are added, removed and kept, plus the invalid rows and why: unknown or ambiguous account, repeated account, unknown or ambiguous group, group outside the branch or with administrator access, and invalid or already used email. If the email on the list does not match an existing account's, you are warned and it is not changed. An account that would be left without groups gets Registered.
+
+**New accounts** are only created when identifying by username, with the create accounts permission and the site's mail enabled: they receive a link to choose their password, the Registered group and the listed groups. No password is shown or stored.
+
+The dedicated `usertools.sync` permission is required. Super Users, accounts with administrator access and your own account are never changed. You must confirm and, from the threshold in Options, type the number of accounts; if the list leaves more than half of the current members without any group of the branch (as leavers or through a row with empty groups), an explicit confirmation is also required. If the list, the branch, the groups, the accounts or your permissions change before applying, the review is withdrawn. Each account is checked again with Joomla just before saving, saved through its API, its sessions are closed and verified, and it is written to the User Actions Log; large lists continue in batches without repeating accounts, and a failed session closing is retried from the result without saving the groups again.
+
 
 ## Anonymise accounts
 

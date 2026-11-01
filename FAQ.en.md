@@ -94,6 +94,14 @@ On the **Users dashboard**, the User Tools module shows individual links to the 
 
 Yes. **Add accounts to groups** accepts a list and a single group, or `username;#ID` pairs. It reviews changes and duplicates before confirmation and prevents administrator account changes or assignment of backend-access groups. Use unambiguous group IDs or full paths.
 
+### How do I keep the groups of a team or class in line with the list I receive?
+
+With **Synchronise a group branch**. Choose the branch (for example “Departments/Sales”) and paste the `account;groups;email;name` list. Only the groups of that branch change. In a **partial update**, anyone not listed does not change; with a **complete list**, anyone not listed loses the groups of the branch, but their account is not blocked and keeps its other groups. See the [README](README.en.md#synchronise-a-group-branch).
+
+### Why can I not apply a complete list?
+
+Because some row is invalid (an account that does not exist, a group outside the branch, a repeated account…). That row could be a person of the group who would then lose the groups, so it must be corrected first. A partial update can be applied: it only skips the invalid rows.
+
 ## Account profile
 
 ### Does viewing a profile change anything?

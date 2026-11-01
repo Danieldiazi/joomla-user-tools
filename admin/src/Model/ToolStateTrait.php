@@ -15,6 +15,8 @@ use Danieldiazi\Component\Usertools\Administrator\Service\Exclusions;
 use Danieldiazi\Component\Usertools\Administrator\Service\Operator;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
+use Joomla\CMS\Plugin\CMSPlugin;
+use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\Session\SessionInterface;
 use Joomla\CMS\User\User;
 
@@ -162,5 +164,22 @@ trait ToolStateTrait
             'excluded_names'  => (string) ($input['excluded'] ?? ''),
             'excluded_groups' => (array) ($input['excluded_groups'] ?? []),
         ]);
+    }
+
+    /**
+     * The core user plugin would email the generated password; this tool sends its own link instead.
+     *
+     * @return array{0: CMSPlugin, 1: mixed} the plugin and its setting, to restore afterwards
+     */
+    protected function silenceCoreMail(): array
+    {
+        PluginHelper::importPlugin('user');
+        $core = Toolkit::app()->bootPlugin('joomla', 'user');
+        if (!$core instanceof CMSPlugin) {
+            throw new \LogicException('The core user plugin is not available.');
+        }
+        $before = $core->params->get('mail_to_user', 1);
+        $core->params->set('mail_to_user', 0);
+        return [$core, $before];
     }
 }

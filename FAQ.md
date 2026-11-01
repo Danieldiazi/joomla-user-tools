@@ -94,6 +94,14 @@ En el **panel de Usuarios**, el módulo User Tools muestra enlaces individuales 
 
 Sí. Usa **Añadir cuentas a grupos** con lista y grupo único, o pares `usuario;#ID`. Se revisan cambios y duplicados antes de confirmar, y no se modifican administradores ni se asignan grupos con acceso a la administración. Los grupos se indican por ID o ruta completa sin ambigüedad.
 
+### ¿Cómo mantengo los grupos de un colectivo con la lista que me envían?
+
+Con **Sincronizar un colectivo**. Eliges la rama (por ejemplo «Departamentos/Ventas») y pegas la lista `cuenta;grupos;correo;nombre`. Solo cambian los grupos de esa rama. En una **actualización parcial**, quien no aparece no cambia; con una **lista completa**, a quien no aparece se le retiran los grupos de la rama, pero su cuenta no se bloquea ni pierde otros grupos. Consulta el [README](README.md#sincronizar-un-colectivo).
+
+### ¿Por qué no puedo aplicar una lista completa?
+
+Porque alguna fila no es válida (una cuenta que no existe, un grupo fuera de la rama, una cuenta repetida…). Esa fila podría ser una persona del colectivo a la que se retirarían los grupos, así que hay que corregirla antes. Una actualización parcial sí se puede aplicar: solo omite las filas no válidas.
+
 ## Ficha de una persona
 
 ### ¿Consultar una ficha cambia algo?

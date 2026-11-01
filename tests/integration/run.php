@@ -222,13 +222,13 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['profile', 'explain', 'compare', 'export', 'inactive', 'unblock', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
+Test::check($cards[1] === ['profile', 'explain', 'compare', 'export', 'inactive', 'unblock', 'addgroups', 'sync', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
 Test::check(!preg_match('/<span class="icon-(address-card)"/', $home) && str_contains($home, '<span class="icon-vcard" aria-hidden="true"></span> Account profile'),
     'the profile card uses an icon that Joomla provides');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 17 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 18 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -1524,6 +1524,103 @@ Test::check(str_contains($bulkComplete, 'data-ut-addgroups-result="added"')
     && $allAdded && !in_array('UT anon G sub', $groupsOf('ag_batch_21'), true),
     'resuming still processes all 21 original users and never applies the rejected second job');
 
+Test::section('Synchronise a group branch');
+$syncUrl = 'index.php?option=com_usertools&view=sync';
+foreach ([['UT sync Ventas', 'Registered'], ['UT sync Norte', 'UT sync Ventas'], ['UT sync Sur', 'UT sync Ventas'], ['UT sync Proyectos', 'Registered']] as [$title, $parent]) {
+    $site->q('INSERT INTO #__usergroups (parent_id, lft, rgt, title) VALUES (?, 0, 0, ?)', [$gid($parent), $title]);
+}
+$rebuildGroups();
+[$syVentas, $syNorte, $sySur, $syProyectos] = [$gid('UT sync Ventas'), $gid('UT sync Norte'), $gid('UT sync Sur'), $gid('UT sync Proyectos')];
+$syAna = $site->addUser('sy_ana', 'Registered');
+$syLuis = $site->addUser('sy_luis', 'Registered');
+$syMarta = $site->addUser('sy_marta', 'UT sync Ventas');
+$syMgr = $site->addUser('sy_mgr', 'Manager');
+$syOut = $site->addUser('sy_out', 'UT sync Proyectos');
+foreach ([[$syAna, $syVentas], [$syLuis, $syNorte], [$syLuis, $syProyectos], [$syMgr, $syVentas]] as [$user, $group]) {
+    $site->q('INSERT INTO #__user_usergroup_map (user_id, group_id) VALUES (?, ?)', [$user, $group]);
+}
+$sortedOf = function (string $username) use ($groupsOf): array {
+    $groups = $groupsOf($username);
+    sort($groups);
+    return $groups;
+};
+$syncStatus = static fn (string $html, int $id): string => preg_match('/data-ut-sync-row="' . $id . '" data-ut-sync-status="([a-z_]+)"/', $html, $m) ? $m[1] : '';
+$syncApply = function (Client $client, array $extra = []) use ($syncUrl): string {
+    preg_match('/data-ut-sync-count="(\d+)"/', $client->get($syncUrl . '&layout=review'), $count);
+    $page = $client->submit($syncUrl . '&layout=review', ['task' => 'sync.apply', 'confirm' => 1, 'confirm_count' => $count[1] ?? ''] + $extra, 'data-ut-sync-apply');
+    for ($i = 0; $i < 20 && str_contains($page, 'data-ut-sync-next'); $i++) {
+        $page = $client->submit($syncUrl . '&layout=progress', ['task' => 'sync.next'], 'data-ut-sync-next');
+    }
+    return $page;
+};
+Test::check(str_contains($admin->get('index.php?option=com_usertools'), 'data-ut-home-card="sync"'), 'the home page offers the branch synchronisation');
+$syBefore = [$groupsOf('sy_ana'), $groupsOf('sy_luis'), $groupsOf('sy_marta'), $groupsOf('sy_out')];
+$syReview = $admin->submit($syncUrl, ['task' => 'sync.preview', 'root' => $syVentas, 'mode' => 'partial', 'by' => 'username',
+    'lines' => "# cuenta;grupos;correo;nombre\nsy_ana;#$syNorte\nsy_new;#$syVentas;sy_new@example.test;\"Nuevo; Sync\"\nsy_luis;#$syVentas|Public/Registered/UT sync Ventas/UT sync Sur\nsy_out;#$syProyectos"],
+    'data-ut-sync-form');
+Test::check($syncStatus($syReview, $syAna) === 'change' && str_contains($syReview, 'data-ut-sync-status="create"') && $syncStatus($syReview, $syLuis) === 'change'
+    && $syncStatus($syReview, $syOut) === 'outside' && $syncStatus($syReview, $syMarta) === '' && str_contains($syReview, 'data-ut-sync-count="3"'),
+    'a partial list proposes changes and a new account, rejects a group outside the branch and leaves out who is not listed');
+Test::check(preg_match('#<ul data-ut-sync-managed>(.*?)</ul>#s', $syReview, $managedList) === 1 && substr_count($managedList[1], '<li>') === 3
+    && str_contains($managedList[1], 'UT sync Norte') && !str_contains($managedList[1], 'UT sync Proyectos'), 'the review lists exactly the managed groups');
+Test::check([$groupsOf('sy_ana'), $groupsOf('sy_luis'), $groupsOf('sy_marta'), $groupsOf('sy_out')] === $syBefore && $site->userId('sy_new') === 0,
+    'the review changes nothing');
+array_map('unlink', glob($mails . '/*.eml') ?: []);
+$site->fakeSession($syAna);
+$syLogsBefore = count($site->q("SELECT id FROM #__action_logs WHERE extension = 'com_usertools.users'"));
+$syDone = $syncApply($admin);
+$syNew = $site->userId('sy_new');
+Test::check(str_contains($syDone, 'data-ut-sync-result-total="saved">2<') && str_contains($syDone, 'data-ut-sync-result-total="created">1<')
+    && $sortedOf('sy_ana') === ['Registered', 'UT sync Norte'] && $sortedOf('sy_luis') === ['Registered', 'UT sync Proyectos', 'UT sync Sur', 'UT sync Ventas'],
+    'memberships of the branch are added and removed, groups outside it are kept ' . json_encode($sortedOf('sy_luis')));
+Test::check($syNew > 0 && $sortedOf('sy_new') === ['Registered', 'UT sync Ventas']
+    && ($site->q('SELECT name FROM #__users WHERE id = ?', [$syNew])[0]['name'] ?? '') === 'Nuevo; Sync'
+    && str_contains(implode("\n", array_map('file_get_contents', glob($mails . '/*.eml') ?: [])), 'sy_new@example.test'),
+    'the new account is created with the default and listed groups and receives its link');
+Test::check($site->sessions($syAna) === 0 && str_contains($syDone, 'data-ut-sync-session="closed"'), 'sessions are closed and verified after a group change');
+Test::check($sortedOf('sy_marta') === ['UT sync Ventas'] && $sortedOf('sy_out') === ['UT sync Proyectos'] && !$site->blocked('sy_marta'),
+    'accounts not on a partial list keep everything');
+$syLogs = $site->q("SELECT message_language_key FROM #__action_logs WHERE extension = 'com_usertools.users' ORDER BY id");
+$syKeys = array_count_values(array_column(array_slice($syLogs, $syLogsBefore), 'message_language_key'));
+Test::check(($syKeys['COM_USERTOOLS_ACTION_LOG_GROUP_ADDED'] ?? 0) === 4 && ($syKeys['COM_USERTOOLS_ACTION_LOG_UNGROUPED'] ?? 0) === 2
+    && ($syKeys['COM_USERTOOLS_ACTION_LOG_CREATED_EMAIL'] ?? 0) === 1, 'each creation, addition and removal is logged once ' . json_encode($syKeys));
+// A complete list needs explicit confirmation and no invalid row.
+$syNoConfirm = $admin->submit($syncUrl, ['task' => 'sync.preview', 'root' => $syVentas, 'mode' => 'full', 'by' => 'username', 'lines' => "sy_ana;#$syNorte"], 'data-ut-sync-form');
+Test::check(str_contains($syNoConfirm, 'data-ut-sync-form') && str_contains($syNoConfirm, 'confirm that it includes everyone'), 'a complete list must be confirmed as complete');
+$syInvalid = $admin->submit($syncUrl, ['task' => 'sync.preview', 'root' => $syVentas, 'mode' => 'full', 'complete' => 1, 'by' => 'username',
+    'lines' => "sy_ana;#$syNorte\nsy_luis;#$syVentas|#$sySur\nsy_new;#$syVentas\nsy_typo;#$syVentas"], 'data-ut-sync-form');
+Test::check(str_contains($syInvalid, 'data-ut-sync-blocked') && !str_contains($syInvalid, 'data-ut-sync-apply') && $syncStatus($syInvalid, $syMarta) === 'leave',
+    'a complete list with an invalid row cannot be applied');
+$syMassive = $admin->submit($syncUrl, ['task' => 'sync.preview', 'root' => $syVentas, 'mode' => 'full', 'complete' => 1, 'by' => 'id', 'lines' => "$syAna;#$syNorte"], 'data-ut-sync-form');
+Test::check(str_contains($syMassive, 'name="mass"') && $syncStatus($syMassive, $syMgr) === 'protected_account', 'removing most members asks for an extra confirmation; administrator accounts are protected');
+$syMassRefused = $admin->submit($syncUrl . '&layout=review', ['task' => 'sync.apply', 'confirm' => 1, 'confirm_count' => '3'], 'data-ut-sync-apply');
+Test::check(str_contains($syMassRefused, 'data-ut-sync-apply') && $sortedOf('sy_luis') === ['Registered', 'UT sync Proyectos', 'UT sync Sur', 'UT sync Ventas'],
+    'without the extra confirmation nothing is removed');
+$syFull = $admin->submit($syncUrl, ['task' => 'sync.preview', 'root' => $syVentas, 'mode' => 'full', 'complete' => 1, 'by' => 'username',
+    'lines' => "sy_ana;#$syNorte\nsy_luis;#$syVentas|#$sySur\nsy_new;#$syVentas"], 'data-ut-sync-form');
+Test::check($syncStatus($syFull, $syMarta) === 'leave' && $syncStatus($syFull, $syMgr) === 'protected_account' && $syncStatus($syFull, $syAna) === 'unchanged'
+    && str_contains($syFull, 'data-ut-sync-default') && !str_contains($syFull, 'name="mass"'), 'a complete list proposes the leaver and the default group when nothing else is left');
+$syFullDone = $syncApply($admin);
+Test::check($sortedOf('sy_marta') === ['Registered'] && !$site->blocked('sy_marta') && in_array('UT sync Ventas', $groupsOf('sy_mgr'), true)
+    && $sortedOf('sy_out') === ['UT sync Proyectos'], 'the leaver only loses the branch, is not blocked, and protected or outside accounts are untouched');
+// A review is withdrawn if the accounts change before applying.
+$admin->submit($syncUrl, ['task' => 'sync.preview', 'root' => $syVentas, 'mode' => 'partial', 'by' => 'username', 'lines' => "sy_ana;#$syVentas"], 'data-ut-sync-form');
+$site->q('INSERT INTO #__user_usergroup_map (user_id, group_id) VALUES (?, ?)', [$syAna, $sySur]);
+$syStaleReview = $admin->get($syncUrl . '&layout=review');
+$syStale = $admin->request('index.php?option=com_usertools', ['task' => 'sync.apply', 'confirm' => 1, 'confirm_count' => '1', Client::token($syStaleReview) => 1])[1];
+Test::check(str_contains($syStaleReview, 'changed since the review') && !str_contains($syStaleReview, 'data-ut-sync-apply') && !str_contains($syStale, 'data-ut-sync-result-total')
+    && $sortedOf('sy_ana') === ['Registered', 'UT sync Norte', 'UT sync Sur'], 'a review whose accounts changed is withdrawn and writes nothing');
+// Permissions: the tool's own, and creating accounts needs its permission too.
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
+[$code] = $delegate->request($syncUrl);
+Test::check($code === 403, 'synchronising requires its own permission (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.sync' => ['6' => 1]])]);
+$syDelegate = $delegate->submit($syncUrl, ['task' => 'sync.preview', 'root' => $syVentas, 'mode' => 'partial', 'by' => 'username',
+    'lines' => "sy_other;#$syVentas;sy_other@example.test\nsy_mgr;"], 'data-ut-sync-form');
+Test::check(str_contains($syDelegate, 'data-ut-sync-status="create_not_allowed"') && $syncStatus($syDelegate, $syMgr) === 'protected_account',
+    'without the create permission new usernames are refused, and administrator accounts stay protected for a delegate');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+
 Test::section('Undo blocks');
 $unUrl = 'index.php?option=com_usertools&view=unblock';
 Test::check(str_contains($admin->get('index.php?option=com_usertools'), 'data-ut-home-card="unblock"'), 'the home page offers "Undo blocks"');
@@ -1839,7 +1936,7 @@ Test::check(!str_contains($blockedProfile, 'data-ut-profile-action="block"') && 
 $site->q('UPDATE #__categories SET created_user_id = ? WHERE id = ?', [$profileCategoryBefore, $ageCategory]);
 
 Test::section('Guided tours');
-$tourViews = ['compare' => 4, 'inactive' => 4, 'unblock' => 3, 'delete' => 4, 'anonymize' => 4, 'addgroups' => 3, 'ungroup' => 3, 'move' => 4, 'schedule' => 2];
+$tourViews = ['compare' => 4, 'inactive' => 4, 'unblock' => 3, 'delete' => 4, 'anonymize' => 4, 'addgroups' => 3, 'sync' => 4, 'ungroup' => 3, 'move' => 4, 'schedule' => 2];
 $tours = [];
 foreach ($site->q("SELECT id, uid, autostart, published, extensions FROM #__guidedtours WHERE uid LIKE 'com_usertools.tour-%'") as $row) {
     $tours[substr((string) $row['uid'], strlen('com_usertools.tour-'))] = $row;
@@ -1854,7 +1951,7 @@ foreach ($tourViews as $view => $count) {
     $missing = array_filter($steps, fn (array $step): bool => (int) $step['type'] !== 0
         || !preg_match('/^\[data-ut-tour="([a-z]+)"\]$/', (string) $step['target'], $m) || !str_contains($page, 'data-ut-tour="' . $m[1] . '"'));
     utCheckCategory($page, match ($view) {
-        'addgroups', 'ungroup', 'move' => 'groups', 'delete', 'anonymize' => 'delete',
+        'addgroups', 'sync', 'ungroup', 'move' => 'groups', 'delete', 'anonymize' => 'delete',
         'schedule' => 'automation', default => 'accounts',
     }, $view . ' with its guided tour');
     Test::check(count($steps) === $count && !$missing, "the $view tour only explains, and every step finds its target on the screen");
