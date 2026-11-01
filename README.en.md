@@ -11,6 +11,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Compare a list | Proposes blocking accounts missing from the complete list, except protected accounts, and lets you create selected new users. |
 | Export accounts to CSV | Downloads accounts, groups, dates, status and MFA with filters and optional email under its own permission. |
 | Review inactive users | Finds inactive accounts so you can select which ones to block. |
+| Hand over content and close an account | When someone leaves, reviews the articles they leave, transfers their authorship to another account and then offers the block or anonymisation review. With a review and a confirmation. |
 | Anonymise accounts | Replaces the personal data of the accounts in a list, of every inactive account or of a group, without deleting them. Permanent, with a review and a typed number. Available since 2026.10.17. |
 | Delete inactive users | Lets you select and permanently delete inactive accounts. By default, only blocked accounts are listed. Available since 2026.10.5. |
 | Scheduled task | Blocks accounts for inactivity; starts in dry-run mode and generates reports. |
@@ -43,6 +44,7 @@ The home screen and Components menu organise tools into **Review accounts**, **G
 - [Compare a user list](#compare-a-user-list)
 - [Review inactive users](#review-inactive-users)
 - [Undo blocks](#undo-blocks)
+- [Hand over content and close an account](#hand-over-content-and-close-an-account)
 - [Delete inactive users](#delete-inactive-users)
 - [Anonymise accounts](#anonymise-accounts)
 - [Scheduled inactivity task and reports](#scheduled-inactivity-task)
@@ -122,7 +124,7 @@ Authored content is counted as articles, contacts and categories by extension, i
 
 The recent log distinguishes whether the account **performed the action**, **was affected** or both. It shows up to 50 matches among the 1000 recent actor/item candidates; it is not an exhaustive history. Each date opens that exact entry in Joomla’s log. This section keeps Joomla’s Super User restriction; `usertools.profile` does not grant log access. Original third-party message payloads are never dumped into the profile.
 
-The **Remove from groups**, **Review blocking this account** and **Anonymise this account** links appear only with each tool’s own permission and when the account is not protected. They are never offered for Super Users or the operator’s own account; a non-Super User also never sees them for administrator accounts. Configured blocking and anonymisation exclusions remain in force. Group removal and anonymisation open their forms with the account filled in. Blocking opens a review of **that explicitly selected account**, even if recently active, without applying the inactivity filter. Opening any of these links does not change the account.
+The **Hand over their content**, **Remove from groups**, **Review blocking this account** and **Anonymise this account** links appear only with each tool’s own permission and when the account is not protected. They are never offered for Super Users or the operator’s own account; a non-Super User also never sees them for administrator accounts. Configured blocking and anonymisation exclusions remain in force. Content handover, group removal and anonymisation open their forms with the account filled in. Blocking opens a review of **that explicitly selected account**, even if recently active, without applying the inactivity filter. Opening any of these links does not change the account.
 
 Blocking still requires selection and confirmation, the typed count from the configured threshold and fresh checks of the account’s reviewed details, protections and operator permissions. An account that changes after review is skipped, never replaced. The block is saved through Joomla’s API, closes sessions and is audited. The profile does not itself delete, anonymise or reassign content.
 
@@ -201,6 +203,20 @@ Since 2026.10.19, **Undo blocks** unblocks, after a review, the accounts a batch
 Unblocking uses Joomla's User API and is written to the **User Actions Log** with the batch it undoes. It requires its own permission, *Undo blocks*. Manual batches are kept since 2026.10.19 in the usertools-batches subfolder of Joomla's logs directory, with the same protection and retention as the task reports.
 
 ![Undo blocks: recent scheduled task runs with the accounts each one blocked (Spanish interface)](docs/screenshots/27-deshacer-bloqueos.jpg)
+
+## Hand over content and close an account
+
+When someone leaves the organisation, blocking or anonymising their account does not settle who takes over their articles. **Hand over content and close an account** puts the process in order: review what they leave, hand it over to another account and, only once everything chosen is handed over, open the review to close the account. It opens from the home page or from the **account profile** with the account filled in.
+
+1. **Leaving account**: chosen with the [account selector](#choosing-the-account). It cannot be a Super User, your own account or, if you are not a Super User, an account with administrator access.
+2. **Articles and receiving account**: the articles they authored are listed in every state (archived and trashed too), within the access levels you can see, with their state, category and author alias, and a link to Joomla's list filtered by that author. Only those you are really allowed to edit (`core.edit` on each article; owning it or “Edit Own” is not enough) and that nobody else has open can be ticked. Up to 500 are shown; the rest are handed over in a second round. The account's contacts and categories are shown as **not supported yet**: this version neither hands them over nor marks them as handed over. Then choose the receiving account, which must be another existing, active account.
+3. **Review**: shows source, receiver and its groups, how many articles are handed over and each one with its state. If the receiving account has “Edit Own” in Content, you are warned that it will be able to edit them as their author. You must confirm and, from the threshold in Options, type the number of articles.
+4. **Handover**: in resumable batches with a checkpoint per article. Right before changing each one, it is checked that it still belongs to the source account, has not changed since the review (modification date, state and category), nobody else has it open and you can edit it; otherwise it is skipped and stays with the original account. If the receiving account stops being active, nothing else is handed over.
+5. **Result and closing**: lists handed over, skipped and failed articles separately, and counts again what the account still has. If a chosen article was not handed over, **the closing is pending** and closing the account is not offered. Articles created after the review are shown as new, never added silently. Once everything chosen is handed over, **Review blocking this account** and **Anonymise this account** are offered (with their permissions, exclusions and reviews), plus access to **Delete inactive users** (Permanent). Nothing is applied until you confirm it in those tools.
+
+**What changes in each article**: only the author (`created_by`). The **author alias** shown on the site (`created_by_alias`) is kept as it is. The change is saved with Joomla's article table, the same one its batch processing uses: as with any edit, the last modification date and user become those of the handover and, if versioning is enabled, a version is saved. Content plugins' save events do not run, as in Joomla's batch processing. Each handed-over article is written to the User Actions Log with its ID, title and the IDs of both accounts.
+
+Handing over never blocks, deletes or anonymises the account. It requires the dedicated `usertools.reassign` permission, the account profile permission (`usertools.profile`) and being able to manage articles in Joomla.
 
 ## Delete inactive users
 

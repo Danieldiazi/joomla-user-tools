@@ -49,11 +49,11 @@ final class AccountProfileTest extends TestCase
 
     public function testActionLinksNeedOwnPermissionsAndProtectPrivilegedAccounts(): void
     {
-        $permissions = array_fill_keys(['usertools.ungroup', 'usertools.inactive', 'usertools.anonymize'], true);
+        $permissions = array_fill_keys(['usertools.ungroup', 'usertools.inactive', 'usertools.anonymize', 'usertools.reassign'], true);
         $operator = new Operator(9, false, 'delegate');
         $ordinary = Fixtures::user(41, 'alice');
-        $this->assertSame(['ungroup' => true, 'block' => true, 'anonymize' => true], AccountProfile::actions($ordinary, $operator, $permissions));
-        $this->assertSame(['ungroup' => false, 'block' => false, 'anonymize' => false], AccountProfile::actions($ordinary, $operator, []));
+        $this->assertSame(['ungroup' => true, 'block' => true, 'anonymize' => true, 'handover' => true], AccountProfile::actions($ordinary, $operator, $permissions));
+        $this->assertSame(['ungroup' => false, 'block' => false, 'anonymize' => false, 'handover' => false], AccountProfile::actions($ordinary, $operator, []));
         foreach ([Fixtures::user(9, 'self'), Fixtures::user(41, 'super', [8], true, true),
             Fixtures::user(41, 'manager', [6], false, true)] as $protected) {
             $this->assertNotContains(true, AccountProfile::actions($protected, $operator, $permissions));

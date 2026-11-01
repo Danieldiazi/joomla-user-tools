@@ -106,7 +106,7 @@ $profile = $this->profile;
   <section class="card ut-card" aria-labelledby="ut-profile-actions"><div class="card-body">
     <h2 class="h4" id="ut-profile-actions"><?= Text::_('COM_USERTOOLS_PROFILE_ACTIONS') ?></h2>
     <p><?= Text::_('COM_USERTOOLS_PROFILE_ACTIONS_NOTE') ?></p><div class="ut-actions">
-    <?php foreach (['ungroup', 'block', 'anonymize'] as $action) : ?>
+    <?php foreach (['handover', 'ungroup', 'block', 'anonymize'] as $action) : ?>
       <?php if ($profile['actions'][$action]) : $query = $action === 'block' ? 'task=inactive.account&' . Session::getFormToken() . '=1' : 'view=' . $action; ?>
       <a class="btn btn-outline-secondary" data-ut-profile-action="<?= $action ?>" href="<?= Route::_('index.php?option=com_usertools&' . $query . '&account=' . (int) $account->id) ?>"><?= Text::_('COM_USERTOOLS_PROFILE_ACTION_' . strtoupper($action)) ?></a>
       <?php endif; ?>

@@ -86,6 +86,10 @@ Yes. **Add accounts to groups** accepts a list and a single group, or `username;
 
 ## Account profile
 
+### Someone is leaving: how do I hand over their articles before closing their account?
+
+With **Hand over content and close an account**, also from their profile. Choose the articles and the account taking over, review and confirm. Only the author changes; the visible alias is kept. Once everything chosen is handed over, the block and anonymisation reviews are offered; if something failed, the closing stays pending. See the [README](README.en.md#hand-over-content-and-close-an-account).
+
 ### Does viewing a profile change anything?
 
 No. It brings together an account’s groups, access levels, status, dates, authored content and recent activity. Searching by username, name, email or ID and opening its links never changes accounts. The dedicated `usertools.profile` permission is required.

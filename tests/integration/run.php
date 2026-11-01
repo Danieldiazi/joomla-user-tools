@@ -222,13 +222,13 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['profile', 'explain', 'compare', 'export', 'inactive', 'unblock', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
+Test::check($cards[1] === ['profile', 'explain', 'compare', 'export', 'inactive', 'unblock', 'handover', 'addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
 Test::check(!preg_match('/<span class="icon-(address-card)"/', $home) && str_contains($home, '<span class="icon-vcard" aria-hidden="true"></span> Account profile'),
     'the profile card uses an icon that Joomla provides');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 17 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 18 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -1984,6 +1984,87 @@ Test::check($site->q('SELECT id, block, "lastvisitDate", password FROM #__users 
 $site->q("DELETE FROM #__workflow_associations WHERE item_id = ? AND extension = 'com_content.article'", [$xpPublic]);
 $site->q("DELETE FROM #__content WHERE alias LIKE 'ut-age-xp-%'");
 $site->q("DELETE FROM #__viewlevels WHERE title = 'UT explain hidden'");
+
+Test::section('Hand over content');
+$hoUrl = 'index.php?option=com_usertools&view=handover';
+$hoSource = $site->addUser('ho_editor', 'Registered');
+$hoHeir = $site->addUser('ho_heir', 'Registered');
+$hoGone = $site->addUser('ho_gone', 'Registered');
+$site->q('UPDATE #__users SET block = 1 WHERE id = ?', [$hoGone]);
+$hoA = $addArticle('ho-a', '2024-01-01 00:00:00');
+$hoB = $addArticle('ho-b', '2024-01-02 00:00:00', 0);
+$hoC = $addArticle('ho-c', '2024-01-03 00:00:00', -2);
+// Two articles with the same alias in one category: Joomla's table refuses to store the second one.
+$hoTwin = $addArticle('ho-twin', '2024-01-04 00:00:00');
+$site->q("UPDATE #__content SET alias = 'ut-age-ho-dup' WHERE id = ?", [$hoTwin]);
+$hoD = $addArticle('ho-d', '2024-01-05 00:00:00');
+$site->q("UPDATE #__content SET alias = 'ut-age-ho-dup' WHERE id = ?", [$hoD]);
+$site->q('UPDATE #__content SET created_by = ? WHERE id IN (?, ?, ?, ?)', [$hoSource, $hoA, $hoB, $hoC, $hoD]);
+$site->q("UPDATE #__content SET created_by_alias = 'Redacción' WHERE id = ?", [$hoA]);
+$hoAuthor = static fn (int $id): int => (int) ($site->q('SELECT created_by FROM #__content WHERE id = ?', [$id])[0]['created_by'] ?? 0);
+$hoApply = function () use ($admin, $hoUrl): string {
+    preg_match('/data-ut-handover-count="(\d+)"/', $admin->get($hoUrl . '&layout=review'), $count);
+    $page = $admin->submit($hoUrl . '&layout=review', ['task' => 'handover.apply', 'confirm' => 1, 'confirm_count' => $count[1] ?? ''], 'data-ut-handover-apply');
+    for ($i = 0; $i < 10 && str_contains($page, 'data-ut-handover-next'); $i++) {
+        $page = $admin->submit($hoUrl . '&layout=progress', ['task' => 'handover.next'], 'data-ut-handover-next');
+    }
+    return $page;
+};
+Test::check(str_contains($admin->get('index.php?option=com_usertools'), 'data-ut-home-card="handover"'), 'the home page offers the handover assistant');
+Test::check(str_contains($admin->get('index.php?option=com_usertools&view=profile&account=' . $hoSource), 'data-ut-profile-action="handover"'),
+    'the account profile links to the handover of that account');
+Test::check(str_contains($admin->get($hoUrl . '&account=' . $hoSource), 'value="ho_editor"'), 'opened from the profile, the account is filled in without choosing it');
+$hoSelf = $admin->submit($hoUrl, ['task' => 'handover.source', 'login' => getenv('UT_ADMIN_USER') ?: 'admin'], 'data-ut-handover-source');
+Test::check(str_contains($hoSelf, 'That account is protected') && !str_contains($hoSelf, 'data-ut-handover-select'), 'the operator\'s own account cannot leave content here');
+$hoSelect = $admin->submit($hoUrl, ['task' => 'handover.source', 'login' => 'ho_editor'], 'data-ut-handover-source');
+Test::check(str_contains($hoSelect, 'data-ut-handover-account="' . $hoSource . '"') && substr_count($hoSelect, 'data-ut-handover-editable="1"') === 4
+    && str_contains($hoSelect, 'Redacción') && str_contains($hoSelect, 'Trashed') && str_contains(urldecode(html_entity_decode($hoSelect)), 'filter[author_id][0]=' . $hoSource),
+    'the inventory lists the account\'s articles in every state, with their author alias and a filtered list link');
+$hoBad = $admin->submit($hoUrl . '&layout=select', ['task' => 'handover.preview', 'login' => 'ho_gone', 'articles' => [$hoA]], 'data-ut-handover-select');
+Test::check(str_contains($hoBad, 'receiving account is blocked') && $hoAuthor($hoA) === $hoSource, 'a blocked account cannot receive the articles');
+$hoBad = $admin->submit($hoUrl . '&layout=select', ['task' => 'handover.preview', 'login' => 'ho_editor', 'articles' => [$hoA]], 'data-ut-handover-select');
+Test::check(str_contains($hoBad, 'must be different'), 'the articles cannot go to the same account');
+$hoReview = $admin->submit($hoUrl . '&layout=select', ['task' => 'handover.preview', 'login' => 'ho_heir', 'articles' => [$hoA, $hoB]], 'data-ut-handover-select');
+Test::check(str_contains($hoReview, 'data-ut-handover-count="2"') && str_contains($hoReview, 'data-ut-handover-to="' . $hoHeir . '"')
+    && str_contains($hoReview, 'data-ut-handover-policy') && str_contains($hoReview, 'Redacción (kept)') && $hoAuthor($hoA) === $hoSource,
+    'the review shows source, receiver, the author alias policy and changes nothing');
+$hoLogs = count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_ARTICLE_REASSIGNED'"));
+$hoDone = $hoApply();
+$hoRow = $site->q('SELECT created_by, created_by_alias, modified_by FROM #__content WHERE id = ?', [$hoA])[0];
+Test::check(str_contains($hoDone, 'data-ut-handover-total="transferred">2<') && $hoAuthor($hoA) === $hoHeir && $hoAuthor($hoB) === $hoHeir && $hoAuthor($hoC) === $hoSource
+    && $hoRow['created_by_alias'] === 'Redacción' && (int) $hoRow['modified_by'] === $site->userId(getenv('UT_ADMIN_USER') ?: 'admin'),
+    'only the chosen articles change author; the alias is kept and the modification records the operator');
+Test::check(count($site->q("SELECT id FROM #__action_logs WHERE message_language_key = 'COM_USERTOOLS_ACTION_LOG_ARTICLE_REASSIGNED'")) === $hoLogs + 2,
+    'each transferred article is logged once');
+Test::check(str_contains($hoDone, 'data-ut-handover-closing="ready"') && str_contains($hoDone, 'data-ut-handover-left') && str_contains($hoDone, 'data-ut-handover-action="block"')
+    && str_contains($hoDone, 'data-ut-handover-action="anonymize"') && !$site->blocked('ho_editor'),
+    'with nothing chosen pending, the closing step offers the block and anonymisation reviews without applying them');
+// A review is withdrawn if a chosen article changes before applying.
+$admin->submit($hoUrl, ['task' => 'handover.source', 'login' => 'ho_editor'], 'data-ut-handover-source');
+$admin->submit($hoUrl . '&layout=select', ['task' => 'handover.preview', 'login' => 'ho_heir', 'articles' => [$hoC]], 'data-ut-handover-select');
+$site->q("UPDATE #__content SET modified = '2025-05-05 05:05:05' WHERE id = ?", [$hoC]);
+$hoStale = $admin->get($hoUrl . '&layout=review');
+Test::check(str_contains($hoStale, 'changed since the review') && !str_contains($hoStale, 'data-ut-handover-apply') && $hoAuthor($hoC) === $hoSource, 'a changed article withdraws the review');
+// A chosen article that Joomla refuses to store keeps the closing pending.
+$admin->submit($hoUrl . '&layout=select', ['task' => 'handover.preview', 'login' => 'ho_heir', 'articles' => [$hoD]], 'data-ut-handover-select');
+$hoPending = $hoApply();
+Test::check(str_contains($hoPending, 'data-ut-handover-total="errors">1<') && str_contains($hoPending, 'data-ut-handover-closing="pending"')
+    && !str_contains($hoPending, 'data-ut-handover-action="block"') && $hoAuthor($hoD) === $hoSource,
+    'a failed transfer leaves the closing pending and does not offer to close the account');
+$hoNew = $addArticle('ho-new', '2024-02-01 00:00:00');
+$site->q('UPDATE #__content SET created_by = ? WHERE id = ?', [$hoSource, $hoNew]);
+Test::check(str_contains($admin->get($hoUrl . '&layout=result'), 'data-ut-handover-new'), 'an article created after the review is reported as new');
+// Permissions: the tool's own, plus the profile permission.
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
+[$code] = $delegate->request($hoUrl);
+Test::check($code === 403, 'handing over requires its own permission (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.reassign' => ['6' => 1]])]);
+[, $hoNoProfile] = $delegate->request($hoUrl);
+Test::check(!str_contains($hoNoProfile, 'data-ut-handover-source') && str_contains($hoNoProfile, 'also requires the account profile permission'), 'without the profile permission the assistant does not open');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.reassign' => ['6' => 1], 'usertools.profile' => ['6' => 1]])]);
+$hoDelegate = $delegate->submit($hoUrl, ['task' => 'handover.source', 'login' => 'ho_editor'], 'data-ut-handover-source');
+Test::check(str_contains($hoDelegate, 'data-ut-handover-account="' . $hoSource . '"'), 'a delegate with both permissions sees the inventory');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
 Test::section('Unambiguous account selection');
 $twinA = $site->addUser('twin_a', 'Registered');

@@ -11,6 +11,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Comparar una lista | Propone bloquear las cuentas ausentes de la lista completa, salvo las protegidas, y permite crear los usuarios nuevos que selecciones. |
 | Exportar cuentas a CSV | Descarga las cuentas y sus grupos, fechas, estado y MFA, con filtros y correo opcional bajo un permiso propio. |
 | Revisar usuarios inactivos | Busca cuentas inactivas para que selecciones cuáles bloquear. |
+| Traspasar contenido y dar de baja | Cuando alguien se va, revisa los artículos que deja, traspasa su autoría a otra cuenta y después ofrece la revisión de bloqueo o anonimización. Con revisión previa y confirmación. |
 | Anonimizar cuentas | Sustituye los datos personales de las cuentas de una lista, de todas las inactivas o de un grupo, sin eliminarlas. Permanente, con revisión y número escrito. Disponible desde 2026.10.17. |
 | Eliminar usuarios inactivos | Permite seleccionar y borrar definitivamente cuentas inactivas. Por defecto lista solo las ya bloqueadas. Disponible desde 2026.10.5. |
 | Tarea programada | Bloquea cuentas por inactividad; empieza en modo simulación y genera informes. |
@@ -43,6 +44,7 @@ La portada y el menú de Componentes organizan las herramientas en **Revisar cue
 - [Comparar una lista de usuarios](#comparar-una-lista-de-usuarios)
 - [Revisar usuarios inactivos](#revisar-usuarios-inactivos)
 - [Deshacer bloqueos](#deshacer-bloqueos)
+- [Traspasar contenido y dar de baja](#traspasar-contenido-y-dar-de-baja)
 - [Eliminar usuarios inactivos](#eliminar-usuarios-inactivos)
 - [Anonimizar cuentas](#anonimizar-cuentas)
 - [Tarea programada e informes](#tarea-programada-por-inactividad)
@@ -122,7 +124,7 @@ El contenido se cuenta por autor: artículos, contactos y categorías por extens
 
 El registro reciente distingue si la cuenta **realizó la acción**, **fue la afectada** o ambas cosas. Se muestran hasta 50 coincidencias entre los 1000 candidatos recientes por actor o elemento; no es un historial exhaustivo. Cada fecha abre la entrada concreta del registro de Joomla. Esta sección conserva la restricción de Joomla a superusuarios; `usertools.profile` no concede acceso al registro. Los mensajes originales de otras extensiones no se vuelcan en la ficha.
 
-Los enlaces **Quitar de grupos**, **Revisar bloqueo de esta cuenta** y **Anonimizar esta cuenta** solo aparecen con el permiso de cada herramienta y si la cuenta no está protegida. Nunca se ofrecen para superusuarios ni para la propia cuenta; quien no es superusuario tampoco los ve para cuentas con acceso administrativo. Además se conservan las exclusiones configuradas de bloqueo y anonimización. Quitar de grupos y anonimizar abren sus formularios con la cuenta rellenada. El bloqueo abre una revisión de **esa cuenta expresamente elegida**, aunque tenga actividad reciente, sin aplicar el filtro de inactividad. Abrir cualquiera de esos enlaces no cambia la cuenta.
+Los enlaces **Traspasar su contenido**, **Quitar de grupos**, **Revisar bloqueo de esta cuenta** y **Anonimizar esta cuenta** solo aparecen con el permiso de cada herramienta y si la cuenta no está protegida. Nunca se ofrecen para superusuarios ni para la propia cuenta; quien no es superusuario tampoco los ve para cuentas con acceso administrativo. Además se conservan las exclusiones configuradas de bloqueo y anonimización. Traspasar contenido, quitar de grupos y anonimizar abren sus formularios con la cuenta rellenada. El bloqueo abre una revisión de **esa cuenta expresamente elegida**, aunque tenga actividad reciente, sin aplicar el filtro de inactividad. Abrir cualquiera de esos enlaces no cambia la cuenta.
 
 Para bloquear hay que seleccionar y confirmar, escribir el número desde el umbral configurado y superar una nueva comprobación de los datos de la cuenta, sus protecciones y los permisos. Una cuenta que cambie después de la revisión se omite; nunca se sustituye por otra. El bloqueo se guarda mediante la API de Joomla, cierra las sesiones y se anota en el registro. La ficha no elimina, anonimiza ni reasigna contenido por sí misma.
 
@@ -200,6 +202,20 @@ Desde la 2026.10.19, **Deshacer bloqueos** desbloquea de una vez las cuentas que
 El desbloqueo usa la API de usuarios de Joomla y queda en el **registro de acciones de usuarios** con la tanda que deshace. Requiere el permiso propio *Deshacer bloqueos*. Las tandas manuales se guardan desde la 2026.10.19 en la subcarpeta usertools-batches de la carpeta de registros de Joomla, con la misma protección y retención que los informes de la tarea.
 
 ![Deshacer bloqueos: tandas recientes de la tarea programada con las cuentas que bloqueó cada una](docs/screenshots/27-deshacer-bloqueos.jpg)
+
+## Traspasar contenido y dar de baja
+
+Cuando una persona deja la organización, bloquear o anonimizar su cuenta no resuelve quién se hace cargo de sus artículos. **Traspasar contenido y dar de baja** ordena el proceso: revisar lo que deja, traspasarlo a otra cuenta y, solo cuando lo elegido está traspasado, abrir la revisión para cerrar la cuenta. Se abre desde la portada o desde la **ficha de la persona** con la cuenta ya rellenada.
+
+1. **Cuenta que se va**: se elige con el [selector de cuentas](#elegir-la-cuenta). No puede ser un superusuario, tu propia cuenta ni, si no eres superusuario, una cuenta con acceso a la administración.
+2. **Artículos y cuenta que los recibe**: se listan los artículos de los que es autora, en todos los estados (también archivados y en la papelera), dentro de los niveles de acceso que puedes ver, con su estado, categoría y alias del autor, y un enlace al listado de Joomla filtrado por esa autora. Solo se pueden marcar los que tienes permiso real para editar (`core.edit` en cada artículo; ser propietario o «Editar propios» no basta) y que no tiene abiertos otra persona. Se muestran hasta 500; el resto se traspasa en una segunda vuelta. Los contactos y categorías de la cuenta aparecen como **pendientes de soporte**: esta versión no los traspasa ni los marca como traspasados. Luego se elige la cuenta que los recibe, que debe ser otra cuenta existente y activa.
+3. **Revisión**: muestra origen, destino y sus grupos, cuántos artículos se traspasan y cada uno con su estado. Si la cuenta de destino tiene «Editar propios» en Contenido, se avisa de que podrá editarlos al ser su autora. Hay que confirmar y, a partir del umbral de Opciones, escribir el número de artículos.
+4. **Traspaso**: por tandas reanudables, con un punto de control por artículo. Justo antes de cambiar cada uno se comprueba que sigue siendo de la cuenta de origen, que no ha cambiado desde la revisión (fecha de modificación, estado y categoría), que nadie más lo tiene abierto y que puedes editarlo; si no, se omite y sigue siendo de la cuenta original. Si la cuenta de destino deja de estar activa, no se traspasa nada más.
+5. **Resultado y cierre**: separa los artículos traspasados, los omitidos y los errores, y vuelve a contar lo que la cuenta sigue teniendo. Si algún artículo elegido no se traspasó, **la baja queda pendiente** y no se ofrece cerrar la cuenta. Los artículos creados después de la revisión aparecen como nuevos, sin añadirse en silencio. Cuando todo lo elegido está traspasado, se ofrecen **Revisar bloqueo de esta cuenta** y **Anonimizar esta cuenta** (con sus permisos, exclusiones y revisiones) y el acceso a **Eliminar usuarios inactivos** (Permanente). Nada se aplica hasta confirmarlo en esas herramientas.
+
+**Qué cambia en cada artículo**: solo el autor (`created_by`). El **alias del autor** que se muestra en el sitio (`created_by_alias`) se conserva tal cual. El cambio se guarda con la tabla de artículos de Joomla, la misma que usa su procesamiento por lotes: como en cualquier edición, la fecha y el usuario de la última modificación pasan a ser los del traspaso y, si el control de versiones está activo, se guarda una versión. No se ejecutan los eventos de guardado de los plugins de contenido, igual que en los lotes de Joomla. Cada artículo traspasado queda en el registro de acciones con su ID, título y los IDs de las dos cuentas.
+
+Traspasar no bloquea, elimina ni anonimiza la cuenta. Requiere el permiso propio `usertools.reassign`, el de la ficha de una persona (`usertools.profile`) y poder gestionar los artículos en Joomla.
 
 ## Eliminar usuarios inactivos
 

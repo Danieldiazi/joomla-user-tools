@@ -86,6 +86,10 @@ Sí. Usa **Añadir cuentas a grupos** con lista y grupo único, o pares `usuario
 
 ## Ficha de una persona
 
+### Alguien se va: ¿cómo traspaso sus artículos antes de cerrar su cuenta?
+
+Con **Traspasar contenido y dar de baja**, también desde su ficha. Eliges los artículos y la cuenta que se hace cargo, revisas y confirmas. Solo cambia el autor; el alias visible se conserva. Cuando todo lo elegido está traspasado, se ofrecen las revisiones de bloqueo y anonimización; si algo falló, la baja queda pendiente. Consulta el [README](README.md#traspasar-contenido-y-dar-de-baja).
+
 ### ¿Consultar una ficha cambia algo?
 
 No. Reúne los grupos, accesos, estado, fechas, contenido creado y actividad reciente de una cuenta. Buscar por usuario, nombre, correo o ID y abrir sus enlaces no modifica cuentas. Hace falta el permiso propio `usertools.profile`.

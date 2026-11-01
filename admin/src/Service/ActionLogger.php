@@ -161,6 +161,30 @@ final class ActionLogger
         $this->write('COM_USERTOOLS_ACTION_LOG_UNBLOCKED', 'update', $account, $operator, '', ['batch' => $batch]);
     }
 
+    /**
+     * An article whose authorship was transferred with the handover assistant: only IDs and the title,
+     * never the accounts' names or emails.
+     */
+    public function articleReassigned(int $article, string $title, int $from, int $to, Operator $operator): void
+    {
+        $message = [
+            'action'      => 'update',
+            'type'        => 'COM_USERTOOLS_ACTION_LOG_TYPE_ARTICLE',
+            'id'          => $article,
+            'title'       => $title,
+            'itemlink'    => 'index.php?option=com_content&task=article.edit&id=' . $article,
+            'userid'      => $operator->id,
+            'username'    => $operator->name,
+            'accountlink' => 'index.php?option=com_users&task=user.edit&id=' . $operator->id,
+            'from'        => '#' . $from,
+            'to'          => '#' . $to,
+        ];
+        try {
+            ($this->writer)([$message], 'COM_USERTOOLS_ACTION_LOG_ARTICLE_REASSIGNED', self::CONTEXT, $operator->id);
+        } catch (\Throwable) {
+        }
+    }
+
     /** @param array<string, string> $extra */
     private function write(string $key, string $action, object $account, Operator $operator, string $tool, array $extra = []): void
     {
