@@ -10,6 +10,12 @@ Common questions about **Joomla User Tools**. For a complete description of each
 
 Yes. **Export accounts to CSV** supports group, descendants, status and inactivity filters. Email is off by default and its export is logged. The MFA indicator never exposes secrets. The `usertools.export` permission is required. See [README](README.en.md#export-accounts-to-csv).
 
+### Why do some CSV cells start with an apostrophe?
+
+So that the spreadsheet does not run as a formula a value someone else typed, such as a name like `=HYPERLINK(...)`. Every User Tools export adds an apostrophe `'` before cells that start with `=`, `+`, `-` or `@` (or their full-width forms), also when spaces, tabs, line breaks, control or invisible characters come first, and before cells that start with a tab or a line break. Nothing is removed: the complete original value follows the apostrophe. Plain numbers such as `-5` or `+34` are left alone; the spreadsheet may show them as numbers. Semicolons, quotes and line breaks inside a value are quoted and never create new columns or rows.
+
+The CSV is an exchange format: if you import it into another system, take that apostrophe into account. It has been checked with LibreOffice Calc 24.2, with and without the trim spaces option, that no protected cell is evaluated as a formula. Excel and Google Sheets have not been tested yet; the protection follows the rules those applications also apply.
+
 ## General
 
 ### Does it delete users?
@@ -31,6 +37,10 @@ Both are permanent. **Deleting** removes the account: its content is left withou
 ### What if cleanup fails after an account has been anonymised?
 
 The account **has already been anonymised and blocked**, and that anonymisation is recorded in the User Actions Log. The result shows **Incomplete cleanup** when profile, notes or custom-field data remains. To remove it, choose **Only retry the cleanup of already anonymised accounts**, select the accounts and confirm. This mode never anonymises new accounts and separately logs the completed cleanup.
+
+### Does “anonymised” mean all their data has been removed?
+
+No. It means the **Joomla identity** (name, username and email) has been replaced and checked, and the account is blocked. Separately, it says whether the **additional cleanup** (profile, notes and custom fields) is checked or pending. Other extensions' privacy plugins are run, but their effect cannot be verified, and content, messages, the action log, files and backups are out of scope. See the [README](README.en.md#anonymise-accounts).
 
 ### Why does no request appear in Users → Privacy when anonymising?
 

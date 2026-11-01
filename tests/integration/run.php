@@ -691,6 +691,14 @@ Test::check(str_contains($editorLine, 'Inherited from group «Author»'), 'cells
 [$code, $pairs] = $admin->request(preg_replace('#^.*/administrator/#', '', $exportUrl('pairs')));
 Test::check($code === 200 && str_contains($pairs, $editorId . ';Editor;"Public / Registered / Author / Editor";' . $authorsLevel . ';"UT level authors";Inherited;Author'), 'one row per group and level, with the parent it comes from');
 Test::check(!str_contains($pairs, ';"UT level empty";'), 'levels a group does not have are left out');
+// Group titles go through the same protection: a leading invisible space does not hide a formula.
+$site->q('UPDATE #__usergroups SET title = ? WHERE id = ?', ["\u{200B}=1+1;\"x\"", $editorId]);
+[, $hostilePairs] = $admin->request(preg_replace('#^.*/administrator/#', '', $exportUrl('pairs')));
+$site->q('UPDATE #__usergroups SET title = ? WHERE id = ?', ['Editor', $editorId]);
+$pairRows = array_map(static fn (string $line): array => str_getcsv($line, ';', '"', ''), array_values(array_filter(preg_split('/\R/', substr($hostilePairs, 3)) ?: [], static fn (string $l): bool => $l !== '')));
+$editorPairs = array_values(array_filter($pairRows, static fn (array $row): bool => ($row[0] ?? '') === (string) $editorId));
+Test::check($editorPairs !== [] && ($editorPairs[0][1] ?? '') === "'\u{200B}=1+1;\"x\"" && count(array_unique(array_map('count', $pairRows))) === 1,
+    'a group title that could run as a formula is exported whole behind an apostrophe, without adding columns');
 $tokenless = preg_replace('/&(amp;)?[0-9a-f]{32}=1/', '', $exportUrl('matrix'));
 [, $refused, $refusedHeaders] = $admin->request(preg_replace('#^.*/administrator/#', '', $tokenless));
 Test::check(!str_starts_with($refusedHeaders['content-type'] ?? '', 'text/csv') && !str_contains($refused, '"UT level authors"'), 'without the token there is no CSV');
@@ -1219,6 +1227,11 @@ $one  = $account($anonId('an_one'));
 Test::check(str_contains($done, 'data-ut-anonymized="2"') && $one['name'] === 'User ID ' . $anonId('an_one') && $one['email'] === 'UserID' . $anonId('an_one') . 'removed@email.invalid'
     && $one['username'] !== 'an_one' && (int) $one['block'] === 1, 'Joomla\'s privacy plugin replaced the name, username and email and blocked the account (two batches)');
 Test::check($site->sessions($anonId('an_one')) === 0, 'its sessions are closed');
+Test::check(substr_count($done, 'data-ut-anonymize-identity="verified"') === 2 && substr_count($done, 'data-ut-anonymize-cleanup="verified"') === 2
+    && str_contains($done, 'does not by itself guarantee the removal of all personal data') && preg_match('/data-ut-anonymize-plugins="[1-9]/', $done) === 1
+    && str_contains($done, 'Returning without an error does not prove they did') && str_contains($done, 'backups'),
+    'the result reports the identity and the additional cleanup apart, the privacy plugins as not verifiable and what is out of scope');
+Test::check(str_contains($admin->get($anonUrl), 'data-ut-anonymize-limits'), 'the limits are stated before choosing accounts');
 Test::check(str_contains($done, 'User ID ' . $anonId('an_one') . '</td>') && str_contains($done, '<code>' . $one['username'] . '</code>')
     && str_contains($done, 'task=user.edit&amp;id=' . $anonId('an_one')), 'the result shows the new name and username and links each account');
 Test::check(!$site->q('SELECT user_id FROM #__user_profiles WHERE user_id = ?', [$anonId('an_one')]) && !$site->q('SELECT id FROM #__user_notes WHERE user_id = ?', [$anonId('an_one')])
@@ -1253,8 +1266,8 @@ preg_match('/<tr\\s+data-ut-cleaned-row="' . $retryId . '"[^>]*>(.*?)<\\/tr>/s',
 preg_match_all('/<td\\b/', (string) ($retryRow[1] ?? ''), $retryCells);
 Test::check(str_contains($retryDone, 'Cleanup retry result')
     && substr_count($retryDone, 'Accounts with completed cleanup') === 1
-    && count($retryCells[0]) === 2,
-    'retry result has distinct headings and exactly ID and username columns');
+    && count($retryCells[0]) === 4 && str_contains($retryDone, 'They were not run again'),
+    'retry result has distinct headings, ID and username plus identity and cleanup columns, and says the plugins did not run again');
 Test::check($account($retryId) === $retryBefore && $account($anonId('an_old'))['username'] === 'an_old',
     'cleanup retry leaves anonymized identity unchanged and does not anonymize a normal account');
 Test::check(!$site->q('SELECT user_id FROM #__user_profiles WHERE user_id = ?', [$retryId])
@@ -1300,6 +1313,34 @@ $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_en
 Test::check($code === 403, 'the tool needs its own permission (got ' . $code . ')');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
+
+// A note that the database refuses to delete: the identity is anonymised and checked, the cleanup stays pending.
+$pendId = $site->addUser('an_pend', 'Registered');
+$site->q("INSERT INTO #__user_notes (user_id, catid, subject, body, state, created_user_id, created_time, modified_user_id, modified_time) VALUES (?, 0, 'UT stuck note', 'stuck', 1, 0, '2026-01-01 00:00:00', 0, '2026-01-01 00:00:00')", [$pendId]);
+$noteTrigger = $site->prefix . 'ut_keep_note';
+if ($quoted) {
+    $site->db->exec("CREATE FUNCTION $noteTrigger() RETURNS trigger LANGUAGE plpgsql AS 'BEGIN IF OLD.user_id = $pendId THEN RETURN NULL; END IF; RETURN OLD; END;'");
+    $site->db->exec("CREATE TRIGGER $noteTrigger BEFORE DELETE ON {$site->prefix}user_notes FOR EACH ROW EXECUTE FUNCTION $noteTrigger()");
+} else {
+    $site->db->exec("CREATE TRIGGER $noteTrigger BEFORE DELETE ON {$site->prefix}user_notes FOR EACH ROW BEGIN IF OLD.user_id = $pendId THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'simulated cleanup failure'; END IF; END");
+}
+try {
+    $anonSearch(['names' => 'an_pend']);
+    $pendDone = $anonApply([$pendId], '1');
+    Test::check(str_contains($pendDone, 'data-ut-anonymize-partial-row="' . $pendId . '"') && str_contains($pendDone, 'Cleanup pending for: user notes')
+        && str_contains($pendDone, 'Identity anonymised, additional cleanup pending') && $account($pendId)['username'] !== 'an_pend' && (int) $account($pendId)['block'] === 1,
+        'when a source cannot be cleaned, the identity is reported as anonymised and that source as pending');
+} finally {
+    $site->db->exec('DROP TRIGGER ' . $noteTrigger . ($quoted ? ' ON ' . $site->prefix . 'user_notes' : ''));
+    if ($quoted) {
+        $site->db->exec("DROP FUNCTION $noteTrigger()");
+    }
+}
+$anonSearch(['names' => $account($pendId)['username'], 'retry_cleanup' => 1]);
+$pendRetry = $anonApply([$pendId], '1');
+Test::check(str_contains($pendRetry, 'data-ut-cleaned-row="' . $pendId . '"') && str_contains($pendRetry, 'data-ut-anonymize-cleanup="verified"')
+    && !$site->q('SELECT id FROM #__user_notes WHERE user_id = ?', [$pendId]), 'retrying only the cleanup completes it and reports it as checked');
 
 Test::section('Bulk add accounts to groups');
 $agUrl = 'index.php?option=com_usertools&view=addgroups';
@@ -1668,6 +1709,9 @@ $xpOther = $site->addUser('xp_other', 'Registered', '', $old);
 $site->q('UPDATE #__users SET "block" = 1, "activation" = ? WHERE id = ?', ['test-pending-activation', $xpChild]);
 $site->q('INSERT INTO #__user_mfa ("user_id", "title", "method", "options", "created_on") VALUES (?, ?, ?, ?, ?)',
     [$xpBase, 'Test MFA', 'totp', '{}', gmdate('Y-m-d H:i:s')]);
+// A name that a spreadsheet could run as a formula once it trims the leading space, with a separator and quotes.
+$xpHostileName = ' =HYPERLINK("http://example.test";"open");x';
+$site->q('UPDATE #__users SET name = ? WHERE id = ?', [$xpHostileName, $xpBase]);
 $token = Client::token($exportPage);
 $csvPath = 'index.php?option=com_usertools&task=export.download&group=' . $xpGroup . '&subgroups=1&status=all&days=0&' . $token . '=1';
 [$status, $csv, $headers] = $admin->request($csvPath);
@@ -1682,6 +1726,8 @@ Test::check($status === 200 && str_starts_with($csv, "\xEF\xBB\xBF")
     && str_contains((string) ($headers['cache-control'] ?? ''), 'no-store')
     && str_contains((string) ($headers['content-disposition'] ?? ''), 'attachment'),
     'download is UTF-8 CSV with private no-store response headers');
+Test::check(($csvById[$xpBase][2] ?? '') === "'" . $xpHostileName && count(array_unique(array_map('count', $csvRows))) === 1,
+    'a name that could run as a formula is exported whole behind an apostrophe, without adding columns');
 Test::check(isset($csvById[$xpBase], $csvById[$xpChild]) && !isset($csvById[$xpOther]),
     'group with descendants exports only direct and descendant memberships');
 Test::check(count($csvRows[0] ?? []) === 9 && !str_contains($csv, '@example.test'),

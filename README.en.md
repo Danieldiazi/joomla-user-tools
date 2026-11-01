@@ -155,7 +155,7 @@ It requires its own *Explain content access* permission (`usertools.explain`), p
 
 ## Export accounts to CSV
 
-**Export accounts to CSV** requires the `usertools.export` permission. It supports group/descendant, status and inactivity filters; never-visited accounts may be filtered by registration date. The file contains ID, username, name, **direct group memberships with their IDs**, last visit, registration, status, pending activation (a blocked account that has never logged in and has an activation token) and whether an MFA method is configured, without exposing secrets. **Email is optional and unchecked by default**; including it creates a User Actions Log entry without logging the addresses. CSV is UTF-8 with semicolons and spreadsheet formula protection. Handle the file as personal data.
+**Export accounts to CSV** requires the `usertools.export` permission. It supports group/descendant, status and inactivity filters; never-visited accounts may be filtered by registration date. The file contains ID, username, name, **direct group memberships with their IDs**, last visit, registration, status, pending activation (a blocked account that has never logged in and has an activation token) and whether an MFA method is configured, without exposing secrets. **Email is optional and unchecked by default**; including it creates a User Actions Log entry without logging the addresses. CSV is UTF-8 with semicolons and spreadsheet formula protection: cells that could run are prefixed with an apostrophe (see [the FAQ](FAQ.en.md#why-do-some-csv-cells-start-with-an-apostrophe)). Handle the file as personal data.
 
 ![Export accounts to CSV: group, inactivity and status filters, with optional email (Spanish interface)](docs/screenshots/26-exportar-cuentas.jpg)
 
@@ -286,6 +286,13 @@ What happens to each account:
 It requires its own permission, *Anonymise accounts*. Super Users, your own account and, for non-Super Users, accounts with administrator access are never offered.
 
 If profile, notes or custom-field cleanup fails, the account **has already been anonymised** and that action is logged, but the result reports **incomplete cleanup**. To retry, open Anonymise accounts, choose **Only retry the cleanup of already anonymised accounts**, select the anonymised username (or filter by group/inactivity), review and confirm. This mode offers **only** already anonymised and blocked accounts, never anonymises new accounts, and logs each completed cleanup separately.
+
+**What is checked and what is not.** The result shows two states per account:
+
+- **Joomla identity**: “Anonymised and checked” when, on the freshly loaded account, name, username and email are replaced and the account is blocked. Otherwise the account is listed as an error, never as anonymised.
+- **Additional data**: “Cleanup checked” only if nothing is left of the account's profile, notes or custom fields after deleting. If something remains or the deletion fails, “Cleanup pending” says which source, and it is repeated with “Only retry the cleanup”, without anonymising again.
+
+Below, a summary explains the scope: what was checked in Joomla; the **privacy plugins** that were asked to remove their data, by name, marked as **cannot be verified**, because returning without an error does not prove they did; and what is **outside the tool** (content created by the account, messages, the action log, media and files, backups and data in other systems), which may need its own review or retention policy. The screen sums it up: **“Anonymising the identity in Joomla does not by itself guarantee the removal of all personal data related to this person.”** Technical anonymisation is not by itself compliance with the GDPR.
 
 ## Scheduled inactivity task
 

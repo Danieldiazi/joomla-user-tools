@@ -202,16 +202,16 @@ class AnonymizeModel extends BaseDatabaseModel
                 // batch's snapshot and the account's turn is caught too.
                 $outcome = $anonymizer->anonymize((int) $id, $exclusions, $operator,
                     fn (object $user): bool => (empty($job['criteria']['retryCleanup']) ? !AnonymizeSelection::isAnonymized($user) : true) && AnonymizeSelection::fingerprint($user) === $fingerprint);
+                // What was verified and what was not, per account: never the old name or email, nor plugin messages.
+                $row = ['id' => (int) $id, 'username' => $outcome['username'], 'newName' => $outcome['newName'] ?? '',
+                    'newUsername' => $outcome['newUsername'] ?? '', 'identity' => $outcome['identity'] ?? '',
+                    'cleanup' => $outcome['cleanup'] ?? [], 'plugins' => $outcome['plugins'] ?? []];
                 if ($outcome['status'] === AccountAnonymizer::ANONYMIZED && !empty($job['criteria']['retryCleanup'])) {
-                    $job['cleaned'][] = ['id' => (int) $id, 'username' => $outcome['username'],
-                        'newName' => $outcome['newName'] ?? '', 'newUsername' => $outcome['newUsername'] ?? ''];
+                    $job['cleaned'][] = $row;
                 } elseif ($outcome['status'] === AccountAnonymizer::ANONYMIZED) {
-                    $job['done'][] = ['id' => (int) $id, 'username' => $outcome['username'],
-                        'newName' => $outcome['newName'] ?? '', 'newUsername' => $outcome['newUsername'] ?? ''];
+                    $job['done'][] = $row;
                 } elseif ($outcome['status'] === AccountAnonymizer::PARTIAL) {
-                    $job['partial'][] = ['id' => (int) $id, 'username' => $outcome['username'],
-                        'newName' => $outcome['newName'] ?? '', 'newUsername' => $outcome['newUsername'] ?? '',
-                        'message' => $outcome['reason']];
+                    $job['partial'][] = $row + ['message' => $outcome['reason']];
                 } elseif (\in_array($outcome['status'], [AccountAnonymizer::ERROR, AccountAnonymizer::REFUSED], true)) {
                     $job['errors'][] = ['username' => $outcome['username'], 'message' => $outcome['reason']];
                 } else {

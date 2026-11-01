@@ -154,7 +154,7 @@ Requiere el permiso propio *Explicar acceso a contenido* (`usertools.explain`), 
 
 ## Exportar cuentas a CSV
 
-La herramienta **Exportar cuentas a CSV** requiere el permiso `usertools.export`. Permite filtrar por grupo (y subgrupos), estado e inactividad; para las cuentas sin accesos registrados puede utilizar la fecha de alta. El archivo incluye ID, usuario, nombre, **grupos asignados directamente con su ID**, fecha de último acceso, alta, estado, activación pendiente (cuenta bloqueada que nunca ha accedido y tiene token de activación) y existencia de un método de autenticación multifactor (MFA) configurado, sin sus secretos. El **correo electrónico es opcional y viene desmarcado**; al exportarlo queda constancia en el registro de acciones, sin guardar direcciones en ese registro. El CSV es UTF-8, usa punto y coma y protege contra fórmulas al abrirlo en una hoja de cálculo. Debe custodiarse como información personal.
+La herramienta **Exportar cuentas a CSV** requiere el permiso `usertools.export`. Permite filtrar por grupo (y subgrupos), estado e inactividad; para las cuentas sin accesos registrados puede utilizar la fecha de alta. El archivo incluye ID, usuario, nombre, **grupos asignados directamente con su ID**, fecha de último acceso, alta, estado, activación pendiente (cuenta bloqueada que nunca ha accedido y tiene token de activación) y existencia de un método de autenticación multifactor (MFA) configurado, sin sus secretos. El **correo electrónico es opcional y viene desmarcado**; al exportarlo queda constancia en el registro de acciones, sin guardar direcciones en ese registro. El CSV es UTF-8, usa punto y coma y protege contra fórmulas al abrirlo en una hoja de cálculo: las celdas que podrían ejecutarse llevan delante un apóstrofo (véase [la FAQ](FAQ.md#por-qué-algunas-celdas-del-csv-empiezan-por-un-apóstrofo)). Debe custodiarse como información personal.
 
 ![Exportar cuentas a CSV: filtros por grupo, inactividad y estado, con el correo opcional](docs/screenshots/26-exportar-cuentas.jpg)
 
@@ -285,6 +285,13 @@ Qué se hace con cada cuenta:
 Requiere el permiso propio *Anonimizar cuentas*. Superusuarios, tu propia cuenta y, para quien no es superusuario, las cuentas con acceso a la administración nunca se ofrecen.
 
 Si falla el borrado del perfil, las notas o los campos, la cuenta **ya está anonimizada** y queda registrada como tal, pero el resultado indica **«Limpieza incompleta»**. Para recuperar la limpieza, vuelve a «Anonimizar cuentas», selecciona **«Solo repetir la limpieza de cuentas ya anonimizadas»**, indica el usuario anonimizado (o filtra por grupo/inactividad), revisa y confirma. Este modo **solo** admite cuentas ya anonimizadas y bloqueadas; no anonimiza cuentas nuevas, y cada limpieza recuperada se anota por separado en el registro de acciones.
+
+**Qué se comprueba y qué no.** El resultado separa dos estados por cuenta:
+
+- **Identidad en Joomla**: «Anonimizada y comprobada» cuando, con la cuenta recién cargada, el nombre, el usuario y el correo ya están sustituidos y la cuenta está bloqueada. Si no, la cuenta aparece como error, nunca como anonimizada.
+- **Datos adicionales**: «Limpieza comprobada» solo si, después de borrar, no queda nada del perfil, las notas ni los campos personalizados de la cuenta. Si queda algo o el borrado falla, «Limpieza pendiente» indica de qué fuente, y se repite con «Solo repetir la limpieza», sin volver a anonimizar.
+
+Debajo, un resumen explica el alcance: lo comprobado en Joomla; los **plugins de privacidad** a los que se pidió borrar sus datos, por su nombre, marcados como **no verificables**, porque que no den error no demuestra que lo hayan hecho; y lo que queda **fuera de la herramienta** (contenido creado por la cuenta, mensajes, registro de acciones, medios y archivos, copias de seguridad y datos en otros sistemas), que puede necesitar su propia revisión o política de conservación. La pantalla lo resume así: **«La anonimización de la identidad en Joomla no garantiza por sí sola la eliminación de todos los datos personales relacionados con esta persona.»** La anonimización técnica no equivale por sí sola al cumplimiento del RGPD.
 
 ## Tarea programada por inactividad
 
