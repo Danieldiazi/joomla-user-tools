@@ -10,6 +10,12 @@ Dudas habituales sobre **Joomla User Tools**. Para la descripción completa de c
 
 Sí, con **Exportar cuentas a CSV**. Se filtra por grupo, subgrupos, estado e inactividad. El correo está desactivado por defecto y su exportación se registra. El indicador MFA no revela claves ni códigos. Se necesita el permiso `usertools.export`. Consulta el [README](README.md#exportar-cuentas-a-csv).
 
+### ¿Por qué algunas celdas del CSV empiezan por un apóstrofo?
+
+Para que la hoja de cálculo no ejecute como fórmula un valor que escribió otra persona, por ejemplo un nombre como `=HYPERLINK(...)`. Todas las exportaciones de User Tools añaden un apóstrofo `'` delante de las celdas que empiezan por `=`, `+`, `-` o `@` (o sus formas de ancho completo), también cuando antes hay espacios, tabulaciones, saltos de línea, caracteres de control o invisibles, y delante de las que empiezan por tabulación o salto de línea. No se quita nada: detrás del apóstrofo está el valor original completo. Los números simples, como `-5` o `+34`, no se tocan; la hoja de cálculo puede mostrarlos como número. Los puntos y coma, comillas y saltos de línea dentro de un valor van entrecomillados y nunca crean columnas ni filas nuevas.
+
+El CSV es un formato de intercambio: si lo vuelves a importar en otro sistema, ten en cuenta ese apóstrofo. Se ha comprobado con LibreOffice Calc 24.2, con y sin la opción de recortar espacios, que ninguna celda protegida se evalúa como fórmula. Excel y Google Sheets no se han probado todavía; la protección sigue las reglas que aplican también esas aplicaciones.
+
 ## General
 
 ### ¿Borra usuarios?
@@ -31,6 +37,10 @@ Las dos son permanentes. **Eliminar** borra la cuenta: sus contenidos quedan sin
 ### ¿Qué ocurre si falla la limpieza después de anonimizar una cuenta?
 
 La cuenta **ya está anonimizada y bloqueada**, y esa anonimización consta en el registro de acciones. El resultado indicará **«Limpieza incompleta»** si quedan datos en el perfil, las notas o los campos personalizados. Para borrarlos, elige **«Solo repetir la limpieza de cuentas ya anonimizadas»**, selecciona las cuentas y confirma. Este modo no anonimiza cuentas nuevas y registra la limpieza terminada como una acción independiente.
+
+### ¿«Anonimizada» quiere decir que se han borrado todos sus datos?
+
+No. Significa que la **identidad en Joomla** (nombre, usuario y correo) se ha sustituido y comprobado, y la cuenta está bloqueada. Aparte se indica si la **limpieza adicional** (perfil, notas y campos personalizados) quedó comprobada o pendiente. Los plugins de privacidad de otras extensiones se ejecutan, pero su resultado no se puede verificar, y el contenido, los mensajes, el registro de acciones, los archivos y las copias de seguridad quedan fuera. Consulta el [README](README.md#anonimizar-cuentas).
 
 ### ¿Por qué no aparece una solicitud en Usuarios → Privacidad al anonimizar?
 
@@ -83,6 +93,14 @@ En el **panel de Usuarios**, el módulo User Tools muestra enlaces individuales 
 ### ¿Puedo añadir muchos usuarios a grupos sin quitarles los actuales?
 
 Sí. Usa **Añadir cuentas a grupos** con lista y grupo único, o pares `usuario;#ID`. Se revisan cambios y duplicados antes de confirmar, y no se modifican administradores ni se asignan grupos con acceso a la administración. Los grupos se indican por ID o ruta completa sin ambigüedad.
+
+### ¿Cómo mantengo los grupos de un colectivo con la lista que me envían?
+
+Con **Sincronizar un colectivo**. Eliges la rama (por ejemplo «Departamentos/Ventas») y pegas la lista `cuenta;grupos;correo;nombre`. Solo cambian los grupos de esa rama. En una **actualización parcial**, quien no aparece no cambia; con una **lista completa**, a quien no aparece se le retiran los grupos de la rama, pero su cuenta no se bloquea ni pierde otros grupos. Consulta el [README](README.md#sincronizar-un-colectivo).
+
+### ¿Por qué no puedo aplicar una lista completa?
+
+Porque alguna fila no es válida (una cuenta que no existe, un grupo fuera de la rama, una cuenta repetida…). Esa fila podría ser una persona del colectivo a la que se retirarían los grupos, así que hay que corregirla antes. Una actualización parcial sí se puede aplicar: solo omite las filas no válidas.
 
 ## Ficha de una persona
 

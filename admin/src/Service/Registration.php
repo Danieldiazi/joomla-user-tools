@@ -103,7 +103,8 @@ final class Registration
     }
 
     /**
-     * @param  list<array{username: string, email: string}> $selection
+     * @param  list<array{username: string, email: string, name?: string, groups?: list<int>}> $selection
+     *         "groups" are added to $groupId and "name" defaults to the username (group synchronisation)
      * @param  callable(): object                           $newUser  returns an empty Joomla User
      * @param  callable(object): bool                       $sendLink sends the "choose your password" email (email mode)
      * @param  (callable(object): void)|null                $saved    runs as soon as each account exists (the action log),
@@ -119,9 +120,10 @@ final class Registration
             try {
                 $user = $newUser();
                 $data = [
-                    'id' => 0, 'username' => $row['username'], 'name' => $row['username'],
+                    'id' => 0, 'username' => $row['username'], 'name' => trim((string) ($row['name'] ?? '')) ?: $row['username'],
                     'email' => $row['email'], 'password' => $password, 'password2' => $password,
-                    'groups' => [$groupId], 'block' => 0, 'activation' => '',
+                    'groups' => array_values(array_unique(array_merge([$groupId], array_map('intval', $row['groups'] ?? [])))),
+                    'block' => 0, 'activation' => '',
                     'requireReset' => $mode === self::MODE_PASSWORD ? 1 : 0, 'sendEmail' => 0,
                 ];
                 if (!$user->bind($data) || !$user->save()) {

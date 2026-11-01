@@ -59,7 +59,7 @@ $menuHome = $admin->get('index.php?option=com_usertools&view=home');
 Test::check(array_keys(utMenuLinks($menuHome)) === ['', 'accounts', 'groups', 'automation', 'delete'],
     'the real Joomla administrator menu renders Home and the four categories in order');
 foreach (['accounts' => ['profile', 'explain', 'compare', 'export', 'inactive', 'unblock', 'handover'],
-    'groups' => ['addgroups', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose'],
+    'groups' => ['addgroups', 'sync', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose'],
     'automation' => ['schedule', 'reports'], 'delete' => ['delete', 'anonymize']] as $category => $expected) {
     [$categoryCode, $categoryPage, $categoryHeaders] = $admin->request('index.php?option=com_usertools&view=home&section=' . $category);
     preg_match_all('/data-ut-home-card="([a-z]+)"/', $categoryPage, $categoryCards);

@@ -47,6 +47,7 @@ final class GuidedTours
         'delete'    => ['warning' => 'bottom', 'period' => 'right', 'exclusions' => 'left', 'actions' => 'top'],
         'anonymize' => ['warning' => 'bottom', 'source' => 'right', 'exclusions' => 'left', 'actions' => 'top'],
         'addgroups' => ['rules' => 'bottom', 'accounts' => 'top', 'actions' => 'top'],
+        'sync'      => ['rules' => 'bottom', 'branch' => 'right', 'list' => 'top', 'actions' => 'top'],
         'ungroup'   => ['steps' => 'bottom', 'account' => 'bottom', 'actions' => 'top'],
         'move'      => ['rules' => 'bottom', 'groups' => 'top', 'target' => 'top', 'actions' => 'top'],
         'schedule'  => ['state' => 'bottom', 'instructions' => 'top'],

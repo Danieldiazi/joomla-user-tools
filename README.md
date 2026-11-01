@@ -18,6 +18,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Resumen en el panel | Muestra en el panel de Usuarios las cuentas pendientes, el estado de las tareas y avisos. Disponible desde 2026.10.6. |
 | Grupos de usuarios en el sitio | Módulo del sitio que lista los grupos de un usuario o los miembros de un grupo. Solo lee. Disponible desde 2026.10.9. |
 | Añadir cuentas a grupos | Añade cuentas existentes a grupos por ID o ruta completa, sin quitar grupos ya asignados; exige revisión y confirmación. |
+| Sincronizar un colectivo | Mantiene los grupos de una rama (personal, socios, alumnado) a partir de una lista: altas, cambios de grupo y salidas. No toca otros grupos ni bloquea a nadie; con revisión y confirmación. |
 | Quitar de grupos | Elige una cuenta, desmarca los grupos de los que debe salir y, si quieres, quítala también de todos sus subgrupos. Con revisión previa y confirmación. Disponible desde 2026.10.9. |
 | Mover grupos | Cambia de una vez el grupo padre de varios grupos, con sus subgrupos, tras revisar qué niveles ganan o pierden sus miembros. Rechaza los movimientos que cambiarían el acceso a la administración. Solo superusuarios. Disponible desde 2026.10.16. |
 | Grupos y niveles de acceso | Tabla de solo lectura con los niveles de acceso que tiene cada grupo, asignados o heredados. Disponible desde 2026.10.9. |
@@ -51,6 +52,7 @@ La portada y el menú de Componentes organizan las herramientas en **Revisar cue
 - [Resumen en el panel de Usuarios](#resumen-en-el-panel-de-usuarios)
 - [Módulo de grupos de usuarios en el sitio](#módulo-de-grupos-de-usuarios-en-el-sitio)
 - [Añadir cuentas a grupos en bloque](#añadir-cuentas-a-grupos-en-bloque)
+- [Sincronizar un colectivo](#sincronizar-un-colectivo)
 - [Quitar de grupos](#quitar-de-grupos)
 - [Mover grupos](#mover-grupos)
 - [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso)
@@ -79,7 +81,7 @@ El instalador comprueba las versiones mínimas, registra la extensión en el reg
 
 ## Recorridos guiados
 
-Las herramientas que cambian cuentas o grupos tienen un **recorrido guiado** de Joomla que explica su pantalla paso a paso: para qué sirve, qué se elige, qué se revisa antes de aplicar y qué protecciones tiene. Los tienen Comparar una lista, Revisar usuarios inactivos, Deshacer bloqueos, Eliminar usuarios inactivos, Anonimizar cuentas, Añadir cuentas a grupos, Quitar de grupos, Mover grupos y Tarea programada.
+Las herramientas que cambian cuentas o grupos tienen un **recorrido guiado** de Joomla que explica su pantalla paso a paso: para qué sirve, qué se elige, qué se revisa antes de aplicar y qué protecciones tiene. Los tienen Comparar una lista, Revisar usuarios inactivos, Deshacer bloqueos, Eliminar usuarios inactivos, Anonimizar cuentas, Añadir cuentas a grupos, Sincronizar un colectivo, Quitar de grupos, Mover grupos y Tarea programada.
 
 - **Cómo se abre**: con el botón **Recorrido guiado**, junto a Ayuda, en la primera pantalla de cada herramienta. Solo aparece si puedes usar esa herramienta y si los recorridos guiados de Joomla están activados (componente «Recorridos guiados» y plugin «Sistema - Plugin Recorridos guiados»).
 - **Qué hace**: solo explica. Ningún paso pulsa botones, rellena campos ni aplica cambios; puedes cerrarlo en cualquier momento. Se maneja con el teclado y nunca se abre solo.
@@ -154,7 +156,7 @@ Requiere el permiso propio *Explicar acceso a contenido* (`usertools.explain`), 
 
 ## Exportar cuentas a CSV
 
-La herramienta **Exportar cuentas a CSV** requiere el permiso `usertools.export`. Permite filtrar por grupo (y subgrupos), estado e inactividad; para las cuentas sin accesos registrados puede utilizar la fecha de alta. El archivo incluye ID, usuario, nombre, **grupos asignados directamente con su ID**, fecha de último acceso, alta, estado, activación pendiente (cuenta bloqueada que nunca ha accedido y tiene token de activación) y existencia de un método de autenticación multifactor (MFA) configurado, sin sus secretos. El **correo electrónico es opcional y viene desmarcado**; al exportarlo queda constancia en el registro de acciones, sin guardar direcciones en ese registro. El CSV es UTF-8, usa punto y coma y protege contra fórmulas al abrirlo en una hoja de cálculo. Debe custodiarse como información personal.
+La herramienta **Exportar cuentas a CSV** requiere el permiso `usertools.export`. Permite filtrar por grupo (y subgrupos), estado e inactividad; para las cuentas sin accesos registrados puede utilizar la fecha de alta. El archivo incluye ID, usuario, nombre, **grupos asignados directamente con su ID**, fecha de último acceso, alta, estado, activación pendiente (cuenta bloqueada que nunca ha accedido y tiene token de activación) y existencia de un método de autenticación multifactor (MFA) configurado, sin sus secretos. El **correo electrónico es opcional y viene desmarcado**; al exportarlo queda constancia en el registro de acciones, sin guardar direcciones en ese registro. El CSV es UTF-8, usa punto y coma y protege contra fórmulas al abrirlo en una hoja de cálculo: las celdas que podrían ejecutarse llevan delante un apóstrofo (véase [la FAQ](FAQ.md#por-qué-algunas-celdas-del-csv-empiezan-por-un-apóstrofo)). Debe custodiarse como información personal.
 
 ![Exportar cuentas a CSV: filtros por grupo, inactividad y estado, con el correo opcional](docs/screenshots/26-exportar-cuentas.jpg)
 
@@ -240,6 +242,41 @@ Desde **User Tools → Añadir cuentas a grupos** se pueden añadir usuarios exi
 
 ![Añadir cuentas a grupos: revisión con las asignaciones que se harán, las que ya existían y las rechazadas](docs/screenshots/25-anadir-grupos-revision.jpg)
 
+## Sincronizar un colectivo
+
+Cuando una organización recibe cada cierto tiempo la lista de su personal, socios o alumnado, **User Tools → Sincronizar un colectivo** ajusta los grupos de esa **rama** sin afectar a nada más. Por ejemplo, la lista de Ventas solo puede cambiar los grupos de «Departamentos/Ventas»: quien está también en «Proyectos/Web» conserva ese grupo y su cuenta.
+
+1. **Rama**: elige el grupo principal. Se gestionan él y todos sus subgrupos, salvo los que dan acceso a la administración, que nunca se tocan. La rama no puede ser el grupo raíz ni incluir Registered, el grupo que reciben las cuentas nuevas.
+2. **Tipo de lista**:
+   - **Actualización parcial**: solo se procesan las cuentas de la lista. Quien no aparece conserva todos sus grupos; una ausencia nunca se interpreta como baja.
+   - **Lista completa del colectivo**: además, a quien está en algún grupo de la rama y no aparece se le propone **retirar los grupos de la rama**. No se bloquea su cuenta. Hay que marcar que la lista es completa; una lista sin filas válidas se rechaza, y si alguna fila no es válida no se puede aplicar, porque podría ser una persona a la que se retirarían los grupos.
+3. **Cómo se identifican las cuentas**: por **nombre de usuario** (sin distinguir mayúsculas; permite crear cuentas nuevas) o por **ID de Joomla** (solo cuentas existentes). Los nombres visibles y los correos nunca se usan para adivinar una cuenta.
+4. **Lista**: CSV con punto y coma, una cuenta por línea, en formato `cuenta;grupos;correo;nombre`. Los grupos se separan con `|` y cada uno se indica por su ID (`#12`) o su **ruta completa** (`Public/Departamentos/Ventas`); un título suelto o una ruta duplicada es un error. Los grupos vacíos significan que la cuenta no debe tener ningún grupo de la rama. Las líneas que empiezan por `#` se ignoran y los valores con punto y coma van entre comillas dobles. Admite UTF-8 con o sin BOM y hasta 2.000 líneas.
+
+Ejemplo de actualización parcial por usuario:
+
+```
+# cuenta;grupos;correo;nombre
+ana.garcia;#12|Public/Departamentos/Ventas/Norte
+luis.perez;Public/Departamentos/Ventas
+nueva.persona;#12;nueva@example.com;"Pérez; Nueva"
+```
+
+Ejemplo de lista completa por ID (quien esté en la rama y no aparezca saldrá de ella):
+
+```
+245;#12
+318;#12|#14
+402;
+```
+
+La **revisión** muestra la lista exacta de grupos gestionados y, por cuenta, qué se crea, qué grupos se añaden, cuáles se quitan y cuáles se mantienen, además de las filas no válidas y su motivo: cuenta inexistente o ambigua, cuenta repetida, grupo inexistente, ambiguo, fuera de la rama o con acceso a la administración, y correo no válido o ya usado. Si el correo de la lista no coincide con el de una cuenta existente, se avisa y no se cambia. Si una cuenta se quedaría sin grupos, recibe Registered.
+
+Las **cuentas nuevas** solo se crean al identificar por usuario, con el permiso de crear cuentas y el correo del sitio activo: reciben un enlace para elegir su contraseña, el grupo Registered y los grupos indicados. Ninguna contraseña se muestra ni se guarda.
+
+Se requiere el permiso propio `usertools.sync`. Nunca se modifican superusuarios, cuentas con acceso a la administración ni tu propia cuenta. Hay que confirmar y, a partir del umbral de Opciones, escribir el número de cuentas; si la lista deja sin ningún grupo de la rama a más de la mitad de sus miembros actuales (por salida o por una fila con los grupos vacíos), se pide además una confirmación expresa. Si la lista, la rama, los grupos, las cuentas o tus permisos cambian antes de aplicar, la revisión se retira. Cada cuenta se vuelve a comprobar con Joomla justo antes de guardarla, se guarda con su API, se cierran y verifican sus sesiones y queda en el registro de acciones; las listas grandes continúan por tandas sin repetir cuentas, y un cierre de sesiones fallido se reintenta desde el resultado sin volver a guardar los grupos.
+
+
 ## Anonimizar cuentas
 
 Desde la 2026.10.17, **Anonimizar cuentas** sustituye los datos personales de varias cuentas a la vez sin eliminarlas. Joomla solo lo hace una a una, desde una solicitud de eliminación en Usuarios → Privacidad que la persona tiene que confirmar por correo. Es **permanente**: no se puede deshacer.
@@ -264,6 +301,13 @@ Qué se hace con cada cuenta:
 Requiere el permiso propio *Anonimizar cuentas*. Superusuarios, tu propia cuenta y, para quien no es superusuario, las cuentas con acceso a la administración nunca se ofrecen.
 
 Si falla el borrado del perfil, las notas o los campos, la cuenta **ya está anonimizada** y queda registrada como tal, pero el resultado indica **«Limpieza incompleta»**. Para recuperar la limpieza, vuelve a «Anonimizar cuentas», selecciona **«Solo repetir la limpieza de cuentas ya anonimizadas»**, indica el usuario anonimizado (o filtra por grupo/inactividad), revisa y confirma. Este modo **solo** admite cuentas ya anonimizadas y bloqueadas; no anonimiza cuentas nuevas, y cada limpieza recuperada se anota por separado en el registro de acciones.
+
+**Qué se comprueba y qué no.** El resultado separa dos estados por cuenta:
+
+- **Identidad en Joomla**: «Anonimizada y comprobada» cuando, con la cuenta recién cargada, el nombre, el usuario y el correo ya están sustituidos y la cuenta está bloqueada. Si no, la cuenta aparece como error, nunca como anonimizada.
+- **Datos adicionales**: «Limpieza comprobada» solo si, después de borrar, no queda nada del perfil, las notas ni los campos personalizados de la cuenta. Si queda algo o el borrado falla, «Limpieza pendiente» indica de qué fuente, y se repite con «Solo repetir la limpieza», sin volver a anonimizar.
+
+Debajo, un resumen explica el alcance: lo comprobado en Joomla; los **plugins de privacidad** a los que se pidió borrar sus datos, por su nombre, marcados como **no verificables**, porque que no den error no demuestra que lo hayan hecho; y lo que queda **fuera de la herramienta** (contenido creado por la cuenta, mensajes, registro de acciones, medios y archivos, copias de seguridad y datos en otros sistemas), que puede necesitar su propia revisión o política de conservación. La pantalla lo resume así: **«La anonimización de la identidad en Joomla no garantiza por sí sola la eliminación de todos los datos personales relacionados con esta persona.»** La anonimización técnica no equivale por sí sola al cumplimiento del RGPD.
 
 ## Tarea programada por inactividad
 
