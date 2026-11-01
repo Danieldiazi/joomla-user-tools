@@ -20,7 +20,17 @@ use Joomla\CMS\Plugin\PluginHelper;
 use Joomla\Session\SessionInterface;
 use Joomla\CMS\User\User;
 
-/** Session state shared by the manual tools: one-time previews and short-lived results. */
+/**
+ * Common session lifecycle for manual operations:
+ * - Drafts preserve operator input and have no separate preview expiry.
+ * - Previews contain the tool's reviewed selection plus nonce, owner and expiry. A tool checks
+ *   its nonce and any business signature before consuming it, prior to the first account write.
+ * - Resumable jobs (when supported) have their own owner and checkpoint/queue contract.
+ * - Results expire after 900 seconds; they are not an audit history or a transaction log.
+ *
+ * Tool-specific payloads are documented in the owning model. This trait never authorizes
+ * writes: controllers and services must revalidate permissions and account state themselves.
+ */
 trait ToolStateTrait
 {
     private int $lifetime = 900;
@@ -41,8 +51,13 @@ trait ToolStateTrait
     }
 
     /**
-     * @param  array<string, mixed> $values
-     * @return array<string, mixed>
+     * Add an unpredictable one-use token, the current operator ID and a Unix expiry.
+     * Payload fields are defined by the tool; the caller must check the nonce and consume
+     * the preview before writing. The array union preserves the caller's keys, so callers
+     * must never supply nonce, actor or expires as payload fields.
+     *
+     * @param array<string, mixed> $values Tool-specific reviewed fields.
+     * @return array<string, mixed> Payload with nonce (hex string), actor (user ID), expires (Unix seconds).
      */
     protected function newPreview(array $values): array
     {
@@ -53,7 +68,12 @@ trait ToolStateTrait
         ];
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * Validate expiry and owner. An invalid preview is cleared from session; this is not
+     * a substitute for verifying the submitted nonce or re-checking the reviewed accounts.
+     *
+     * @return array<string, mixed>|null The original tool payload, or null when unavailable.
+     */
     protected function validPreview(string $key): ?array
     {
         $preview = (array) $this->session()->get($key, []);
@@ -66,7 +86,13 @@ trait ToolStateTrait
         return $preview;
     }
 
-    /** @param array<string, mixed> $result */
+    /**
+     * Store a short-lived, operator-owned display result, NOT a persistent audit record.
+     * Remove temporary passwords from created rows before any session write; only the
+     * immediate HTTP response from the creating request may show those credentials.
+     *
+     * @param array<string, mixed> $result Tool-specific result rows and counters.
+     */
     protected function storeResult(string $key, array $result): void
     {
         foreach ($result['created'] ?? [] as $i => $row) {
@@ -75,7 +101,12 @@ trait ToolStateTrait
         $this->session()->set($key, $result + ['actor' => (int) $this->identity()->id, 'expires' => time() + $this->lifetime]);
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * Results may outlive the job that produced them, but expire after 900 seconds.
+     * They carry actor and expires metadata and must never be treated as rollback data.
+     *
+     * @return array<string, mixed>|null Tool-specific result or null if expired/wrong operator.
+     */
     protected function validResult(string $key): ?array
     {
         $result = (array) $this->session()->get($key, []);

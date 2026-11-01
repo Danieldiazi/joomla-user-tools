@@ -104,6 +104,22 @@ Reports and the action log are separate evidence sources. A dry run does not cre
 | Scheduled reports | usertools-reports subfolder of the logs directory. PHP files with a denial header and JSON body. Retention is configured in Options and applied when tasks finish. |
 | Temporary password | Generated in memory and shown in the creation response. Joomla retains the authentication hash, not the clear-text password. |
 
+### Session contracts: preview, job and result
+
+These three states are not interchangeable; each tool model documents its business fields in PHPDoc. `ToolStateTrait` supplies only common metadata and validation:
+
+| State | Metadata or fields | Meaning and limitation |
+|---|---|---|
+| Preview | `actor` (operator ID), `nonce` (random token), `expires` (Unix seconds) | Owner and expiry are checked; the controller/model also verifies the submitted token and tool-specific conditions. Consumed **before** any write. |
+| Resumable job | `actor`, pending queues, original total and accumulated outcomes | Held in the operator's session. Each processed account produces a checkpoint; it is neither a transaction nor a way to roll back earlier changes after interruption. |
+| Temporary result | `actor`, `expires` and tool-specific outcomes | A 900-second display snapshot. **Not** persistent audit history and not a replacement for the action log. Never holds temporary passwords. |
+
+**Comparison** (`CompareModel`): the preview stores `names`, offered block `ids`, `unknown` names and an exclusions `signature`. The job carries `block` and `create` queues, a fixed `total`, and `processed` as completed attempts rather than successes. `blocked`, `created` and `errors` accumulate outcomes; `blockErrors` separates failed blocks from omissions/protections. The result distinguishes `skipped` (offered candidates not blocked) from `discarded` (pending operations explicitly abandoned). `batch` may refer to a **separate** persistent undoable-block report. Newly created passwords are present only in the immediate response of their creation step, never the stored job or result.
+
+**Anonymization** (`AnonymizeModel`): the preview associates reviewed account `ids` with `fingerprints` and a `selected` subset; each step checks fresh account data again. `pending` maps remaining IDs to fingerprints while `total` stays fixed. `done` collects anonymized identities, `cleaned` cleanup-only retries, `partial` pending or unverifiable cleanup, `errors` failures, and `skipped` accounts not processed because of changes or conditions. On completion the temporary result exposes `anonymized`, `cleaned`, `retryCleanup`, `partial`, `errors`, `skipped` and `total`; it does not imply deletion outside its documented scope.
+
+**Maintenance rule:** whenever session fields, their consumers or result states change, update the owning model's PHPDoc, this section and its translation. Array shape documentation never replaces real-time checks.
+
 ReportStore validates file IDs and writes through a temporary file followed by a rename. The report's version property identifies its format; it is not the extension version.
 
 ## 5. Rules every change must preserve

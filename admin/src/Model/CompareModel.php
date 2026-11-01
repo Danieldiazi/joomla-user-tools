@@ -21,7 +21,21 @@ use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserRecord;
 use Joomla\CMS\MVC\Model\BaseDatabaseModel;
 
-/** Manual comparison of a roster of usernames: preview, review and apply. */
+/**
+ * Manual comparison of usernames: preview, review, and optional batched blocking/creation.
+ *
+ * Session contracts (all job fields are stored without clear-text passwords):
+ * @phpstan-type ComparePreview array{actor: int, expires: int, nonce: string, names: list<string>,
+ *     ids: list<int>, unknown: list<string>, signature: string}
+ * @phpstan-type CompareJob array{actor: int, mode: string, names: list<string>,
+ *     exclusions: array<string, mixed>, offered: int, block: list<int>,
+ *     create: list<array<string, mixed>>, total: int, processed: int,
+ *     blocked: list<array{id: int, username: string}>, created: list<array<string, mixed>>,
+ *     errors: list<array<string, mixed>>, blockErrors?: int}
+ * @phpstan-type CompareResult array{blocked: list<array{id: int, username: string}>,
+ *     created: list<array<string, mixed>>, errors: list<array<string, mixed>>,
+ *     skipped: int, discarded: int, mode: string, batch: string, actor?: int, expires?: int}
+ */
 class CompareModel extends BaseDatabaseModel
 {
     use ToolStateTrait;
@@ -73,7 +87,12 @@ class CompareModel extends BaseDatabaseModel
         ]));
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * The preview binds the offered block IDs, unknown usernames, exclusion signature,
+     * operator, nonce and expiry. Changes to exclusions invalidate the reviewed decision.
+     *
+     * @return array<string, mixed>|null ComparePreview payload, or null when invalid.
+     */
     public function getPreview(): ?array
     {
         $preview = $this->validPreview(self::PREVIEW);
@@ -188,9 +207,12 @@ class CompareModel extends BaseDatabaseModel
     }
 
     /**
-     * The pending job of this operator, if a comparison is being applied.
+     * The operator-owned CompareJob stored in session while processing remains.
+     * block/create are *pending* queues; processed counts completed attempts, not
+     * successful writes. total is fixed at apply time, so processed / total is progress.
+     * blockErrors counts failed block attempts separately from protected/skipped rows.
      *
-     * @return array<string, mixed>|null
+     * @return array<string, mixed>|null CompareJob payload, or null when absent/wrong operator.
      */
     public function getJob(): ?array
     {
@@ -210,6 +232,8 @@ class CompareModel extends BaseDatabaseModel
      * the web server's time limit. Each account is revalidated, changed and logged on its own, so an
      * interrupted request loses nothing already done and the rest can still be continued or discarded.
      * One-time passwords appear only in the return value of the step that created them.
+     * The step's rows describe this request; cumulative job counters persist between requests.
+     * When done, result is the final summary and the session job is removed.
      *
      * @return array{done: bool, total: int, processed: int, blocked: list<array<string, mixed>>, created: list<array<string, mixed>>,
      *     errors: list<array<string, mixed>>, result: array<string, mixed>|null}
@@ -325,8 +349,12 @@ class CompareModel extends BaseDatabaseModel
     }
 
     /**
-     * @param  array<string, mixed> $job
-     * @return array<string, mixed> the result, also stored (without passwords) for the result screen
+     * Finish the CompareJob. skipped counts previously offered block candidates that
+     * did not block or error; discarded counts pending queue entries explicitly abandoned.
+     * A batch reference is a separate persisted *block* record, not the result in session.
+     *
+     * @param array<string, mixed> $job CompareJob with accumulated rows and remaining queues.
+     * @return array<string, mixed> CompareResult, also stored without passwords for the result screen.
      */
     private function finish(array $job, int $discarded): array
     {
@@ -345,7 +373,12 @@ class CompareModel extends BaseDatabaseModel
         return $result;
     }
 
-    /** @return array<string, mixed>|null */
+    /**
+     * Return the short-lived CompareResult, not a durable history. A completed batch may
+     * have a separate undo-block report; only that report can be used to review undo.
+     *
+     * @return array<string, mixed>|null CompareResult payload, or null when expired.
+     */
     public function getResult(): ?array
     {
         return $this->validResult(self::RESULT);
@@ -377,8 +410,9 @@ class CompareModel extends BaseDatabaseModel
     /**
      * Saves the job after each account, so a request that is cut off half-way (a time limit, a slow mail
      * server) keeps everything done so far and continuing never repeats an account.
+     * This is intentionally a session checkpoint, not a database transaction.
      *
-     * @param array<string, mixed> $job
+     * @param array<string, mixed> $job CompareJob
      */
     private function checkpoint(array $job): void
     {
