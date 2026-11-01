@@ -529,7 +529,7 @@ Consulta la [galería completa](docs/capturas.md) para recorrer las demás herra
 
 ## Desarrollo
 
-Consulta el [mapa de arquitectura](docs/arquitectura.md) para seguir los flujos, localizar responsabilidades, entender la persistencia y elegir las pruebas relacionadas con cada cambio.
+Consulta el [mapa de arquitectura](docs/arquitectura.md) para seguir los flujos, localizar responsabilidades, entender la persistencia y elegir las pruebas relacionadas con cada cambio. Para incorporarte al desarrollo, empieza por la [guía para desarrolladores](docs/desarrollo.md), que incluye un recorrido completo y las invariantes de seguridad.
 
 Estructura:
 
