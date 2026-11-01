@@ -17,6 +17,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Resumen en el panel | Muestra en el panel de Usuarios las cuentas pendientes, el estado de las tareas y avisos. Disponible desde 2026.10.6. |
 | Grupos de usuarios en el sitio | Módulo del sitio que lista los grupos de un usuario o los miembros de un grupo. Solo lee. Disponible desde 2026.10.9. |
 | Añadir cuentas a grupos | Añade cuentas existentes a grupos por ID o ruta completa, sin quitar grupos ya asignados; exige revisión y confirmación. |
+| Sincronizar un colectivo | Mantiene los grupos de una rama (personal, socios, alumnado) a partir de una lista: altas, cambios de grupo y salidas. No toca otros grupos ni bloquea a nadie; con revisión y confirmación. |
 | Quitar de grupos | Elige una cuenta, desmarca los grupos de los que debe salir y, si quieres, quítala también de todos sus subgrupos. Con revisión previa y confirmación. Disponible desde 2026.10.9. |
 | Mover grupos | Cambia de una vez el grupo padre de varios grupos, con sus subgrupos, tras revisar qué niveles ganan o pierden sus miembros. Rechaza los movimientos que cambiarían el acceso a la administración. Solo superusuarios. Disponible desde 2026.10.16. |
 | Grupos y niveles de acceso | Tabla de solo lectura con los niveles de acceso que tiene cada grupo, asignados o heredados. Disponible desde 2026.10.9. |
@@ -49,6 +50,7 @@ La portada y el menú de Componentes organizan las herramientas en **Revisar cue
 - [Resumen en el panel de Usuarios](#resumen-en-el-panel-de-usuarios)
 - [Módulo de grupos de usuarios en el sitio](#módulo-de-grupos-de-usuarios-en-el-sitio)
 - [Añadir cuentas a grupos en bloque](#añadir-cuentas-a-grupos-en-bloque)
+- [Sincronizar un colectivo](#sincronizar-un-colectivo)
 - [Quitar de grupos](#quitar-de-grupos)
 - [Mover grupos](#mover-grupos)
 - [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso)
@@ -77,7 +79,7 @@ El instalador comprueba las versiones mínimas, registra la extensión en el reg
 
 ## Recorridos guiados
 
-Las herramientas que cambian cuentas o grupos tienen un **recorrido guiado** de Joomla que explica su pantalla paso a paso: para qué sirve, qué se elige, qué se revisa antes de aplicar y qué protecciones tiene. Los tienen Comparar una lista, Revisar usuarios inactivos, Deshacer bloqueos, Eliminar usuarios inactivos, Anonimizar cuentas, Añadir cuentas a grupos, Quitar de grupos, Mover grupos y Tarea programada.
+Las herramientas que cambian cuentas o grupos tienen un **recorrido guiado** de Joomla que explica su pantalla paso a paso: para qué sirve, qué se elige, qué se revisa antes de aplicar y qué protecciones tiene. Los tienen Comparar una lista, Revisar usuarios inactivos, Deshacer bloqueos, Eliminar usuarios inactivos, Anonimizar cuentas, Añadir cuentas a grupos, Sincronizar un colectivo, Quitar de grupos, Mover grupos y Tarea programada.
 
 - **Cómo se abre**: con el botón **Recorrido guiado**, junto a Ayuda, en la primera pantalla de cada herramienta. Solo aparece si puedes usar esa herramienta y si los recorridos guiados de Joomla están activados (componente «Recorridos guiados» y plugin «Sistema - Plugin Recorridos guiados»).
 - **Qué hace**: solo explica. Ningún paso pulsa botones, rellena campos ni aplica cambios; puedes cerrarlo en cualquier momento. Se maneja con el teclado y nunca se abre solo.
@@ -223,6 +225,41 @@ Cada eliminación queda en el **registro de acciones de usuarios** con el ID, el
 Desde **User Tools → Añadir cuentas a grupos** se pueden añadir usuarios existentes a grupos sin eliminar sus pertenencias actuales. Introduce una lista de usuarios o correos y un grupo de destino, o pares `usuario;#ID` en líneas independientes. Los grupos se identifican por `#ID` o **ruta completa** (por ejemplo `Public/Registered`); los títulos aislados o rutas duplicadas se rechazan. La revisión muestra qué se añadiría, qué ya existe y qué se excluye. Solo se pueden asignar grupos sin acceso a administración y no se modifican administradores, superusuarios ni la cuenta del operador. Debes confirmar y escribir el número de cuentas. El guardado usa la API de Joomla, comprueba el cierre de sesiones y advierte si permanecen abiertas o no se puede verificar su cierre. Si falla el cierre, puede reintentarse desde el resultado **sin volver a asignar grupos ni duplicar registros**. Cada asignación queda registrada y las listas grandes continúan por tandas.
 
 ![Añadir cuentas a grupos: revisión con las asignaciones que se harán, las que ya existían y las rechazadas](docs/screenshots/25-anadir-grupos-revision.jpg)
+
+## Sincronizar un colectivo
+
+Cuando una organización recibe cada cierto tiempo la lista de su personal, socios o alumnado, **User Tools → Sincronizar un colectivo** ajusta los grupos de esa **rama** sin afectar a nada más. Por ejemplo, la lista de Ventas solo puede cambiar los grupos de «Departamentos/Ventas»: quien está también en «Proyectos/Web» conserva ese grupo y su cuenta.
+
+1. **Rama**: elige el grupo principal. Se gestionan él y todos sus subgrupos, salvo los que dan acceso a la administración, que nunca se tocan. La rama no puede ser el grupo raíz ni incluir Registered, el grupo que reciben las cuentas nuevas.
+2. **Tipo de lista**:
+   - **Actualización parcial**: solo se procesan las cuentas de la lista. Quien no aparece conserva todos sus grupos; una ausencia nunca se interpreta como baja.
+   - **Lista completa del colectivo**: además, a quien está en algún grupo de la rama y no aparece se le propone **retirar los grupos de la rama**. No se bloquea su cuenta. Hay que marcar que la lista es completa; una lista sin filas válidas se rechaza, y si alguna fila no es válida no se puede aplicar, porque podría ser una persona a la que se retirarían los grupos.
+3. **Cómo se identifican las cuentas**: por **nombre de usuario** (sin distinguir mayúsculas; permite crear cuentas nuevas) o por **ID de Joomla** (solo cuentas existentes). Los nombres visibles y los correos nunca se usan para adivinar una cuenta.
+4. **Lista**: CSV con punto y coma, una cuenta por línea, en formato `cuenta;grupos;correo;nombre`. Los grupos se separan con `|` y cada uno se indica por su ID (`#12`) o su **ruta completa** (`Public/Departamentos/Ventas`); un título suelto o una ruta duplicada es un error. Los grupos vacíos significan que la cuenta no debe tener ningún grupo de la rama. Las líneas que empiezan por `#` se ignoran y los valores con punto y coma van entre comillas dobles. Admite UTF-8 con o sin BOM y hasta 2.000 líneas.
+
+Ejemplo de actualización parcial por usuario:
+
+```
+# cuenta;grupos;correo;nombre
+ana.garcia;#12|Public/Departamentos/Ventas/Norte
+luis.perez;Public/Departamentos/Ventas
+nueva.persona;#12;nueva@example.com;"Pérez; Nueva"
+```
+
+Ejemplo de lista completa por ID (quien esté en la rama y no aparezca saldrá de ella):
+
+```
+245;#12
+318;#12|#14
+402;
+```
+
+La **revisión** muestra la lista exacta de grupos gestionados y, por cuenta, qué se crea, qué grupos se añaden, cuáles se quitan y cuáles se mantienen, además de las filas no válidas y su motivo: cuenta inexistente o ambigua, cuenta repetida, grupo inexistente, ambiguo, fuera de la rama o con acceso a la administración, y correo no válido o ya usado. Si el correo de la lista no coincide con el de una cuenta existente, se avisa y no se cambia. Si una cuenta se quedaría sin grupos, recibe Registered.
+
+Las **cuentas nuevas** solo se crean al identificar por usuario, con el permiso de crear cuentas y el correo del sitio activo: reciben un enlace para elegir su contraseña, el grupo Registered y los grupos indicados. Ninguna contraseña se muestra ni se guarda.
+
+Se requiere el permiso propio `usertools.sync`. Nunca se modifican superusuarios, cuentas con acceso a la administración ni tu propia cuenta. Hay que confirmar y, a partir del umbral de Opciones, escribir el número de cuentas; si una lista completa retira los grupos a más de la mitad de los miembros actuales, se pide además una confirmación expresa. Si la lista, la rama, los grupos, las cuentas o tus permisos cambian antes de aplicar, la revisión se retira. Cada cuenta se vuelve a comprobar con Joomla justo antes de guardarla, se guarda con su API, se cierran y verifican sus sesiones y queda en el registro de acciones; las listas grandes continúan por tandas sin repetir cuentas, y un cierre de sesiones fallido se reintenta desde el resultado sin volver a guardar los grupos.
+
 
 ## Anonimizar cuentas
 
