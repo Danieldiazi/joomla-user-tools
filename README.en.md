@@ -220,6 +220,10 @@ When someone leaves the organisation, blocking or anonymising their account does
 
 Handing over never blocks, deletes or anonymises the account. It requires the dedicated `usertools.reassign` permission, the account profile permission (`usertools.profile`) and being able to manage articles in Joomla.
 
+![Hand over content and close an account: review with source, target and its groups, and what changes in each article (Spanish interface)](docs/screenshots/40-traspasar-revision.jpg)
+
+![Hand over content and close an account: result with the handed-over articles and the links to close the account (Spanish interface)](docs/screenshots/41-traspasar-resultado.jpg)
+
 ## Delete inactive users
 
 On the home screen, choose “Review accounts for deletion”. This is the only tool that **deletes** accounts, and deletion cannot be undone; use the inactivity review to prevent access while preserving accounts.
@@ -277,6 +281,8 @@ The **review** shows the exact list of managed groups and, per account, what is 
 
 The dedicated `usertools.sync` permission is required. Super Users, accounts with administrator access and your own account are never changed. You must confirm and, from the threshold in Options, type the number of accounts; if the list leaves more than half of the current members without any group of the branch (as leavers or through a row with empty groups), an explicit confirmation is also required. If the list, the branch, the groups, the accounts or your permissions change before applying, the review is withdrawn. Each account is checked again with Joomla just before saving, saved through its API, its sessions are closed and verified, and it is written to the User Actions Log; large lists continue in batches without repeating accounts, and a failed session closing is retried from the result without saving the groups again.
 
+![Synchronise a group branch: review of a partial update with a new account, group changes, a protected account and an invalid row (Spanish interface)](docs/screenshots/37-sincronizar-revision.jpg)
+
 
 ## Anonymise accounts
 
@@ -309,6 +315,8 @@ If profile, notes or custom-field cleanup fails, the account **has already been 
 - **Additional data**: “Cleanup checked” only if nothing is left of the account's profile, notes or custom fields after deleting. If something remains or the deletion fails, “Cleanup pending” says which source, and it is repeated with “Only retry the cleanup”, without anonymising again.
 
 Below, a summary explains the scope: what was checked in Joomla; the **privacy plugins** that were asked to remove their data, by name, marked as **cannot be verified**, because returning without an error does not prove they did; and what is **outside the tool** (content created by the account, messages, the action log, media and files, backups and data in other systems), which may need its own review or retention policy. The screen sums it up: **“Anonymising the identity in Joomla does not by itself guarantee the removal of all personal data related to this person.”** Technical anonymisation is not by itself compliance with the GDPR.
+
+![Anonymise accounts: result with the verified identity and additional clean-up, and the scope summary (Spanish interface)](docs/screenshots/42-anonimizar-resultado.jpg)
 
 ## Scheduled inactivity task
 

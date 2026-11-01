@@ -48,7 +48,7 @@ trait ViewTrait
         $wa = $this->getDocument()->getWebAssetManager();
         $wa->getRegistry()->addExtensionRegistryFile('com_usertools');
         $wa->useStyle('com_usertools.admin')->useScript('com_usertools.admin');
-        foreach (['COM_USERTOOLS_JS_SELECTED', 'COM_USERTOOLS_JS_NO_RESULTS', 'COM_USERTOOLS_JS_TYPE_COUNT'] as $key) {
+        foreach (['COM_USERTOOLS_JS_SELECTED', 'COM_USERTOOLS_JS_SELECTED_1', 'COM_USERTOOLS_JS_NO_RESULTS', 'COM_USERTOOLS_JS_TYPE_COUNT'] as $key) {
             Text::script($key);
         }
     }

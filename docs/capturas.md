@@ -4,21 +4,21 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos y la lista de contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, las de añadir cuentas a grupos, exportar cuentas y deshacer bloqueos de 2026.10.19, las de la ficha de una persona de 2026.10.20, la tabla de contenido por antigüedad con sus cuatro tipos, las categorías de automatización, grupos y eliminación, y el recorrido guiado, de 2026.10.21, y la portada, la categoría «Revisar cuentas», el panel de Usuarios y la explicación de acceso, de la versión siguiente a 2026.10.21. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos y la lista de contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, las de añadir cuentas a grupos, exportar cuentas y deshacer bloqueos de 2026.10.19, las de la ficha de una persona de 2026.10.20, la tabla de contenido por antigüedad con sus cuatro tipos, las categorías de automatización, grupos y eliminación, y el recorrido guiado, de 2026.10.21, y la portada, las categorías «Revisar cuentas» y «Grupos y niveles de acceso», la ficha de una persona, el panel de Usuarios, la explicación de acceso, sincronizar un colectivo, traspasar contenido y el resultado de la anonimización, de la versión siguiente a 2026.10.21. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
-Además de estas capturas, la CI comprueba el orden de teclado, el despliegue del menú y la categoría activa, y guarda capturas a texto al 200 %, con preferencia oscura y a 390 px de ancho. Las tarjetas caben a 390 px, pero la cabecera general de Joomla genera un ancho de documento de 600 px; no se ha alterado la plantilla para ocultarlo. Esto no acredita conformidad WCAG ni sustituye pruebas con lector de pantalla.
+Además de estas capturas, la CI comprueba el orden de teclado, el despliegue del menú y la categoría activa, y guarda capturas a texto al 200 %, con preferencia oscura y a 390 px de ancho. Las tarjetas y los formularios caben a 390 px, pero la cabecera general de Joomla no parte el título de la página y genera un ancho de documento de unos 600 px, y hasta unos 780 px con los títulos más largos, como el de «Traspasar contenido y dar de baja»; no se ha alterado la plantilla para ocultarlo. Esto no acredita conformidad WCAG ni sustituye pruebas con lector de pantalla.
 
 ![Portada de User Tools con sus cuatro categorías y todas las herramientas permitidas, y el menú Componentes → User Tools desplegado con Inicio activo (posterior a 2026.10.21)](screenshots/01-portada.jpg)
 
-![Categoría «Revisar cuentas», señalada en el menú, con sus seis herramientas (posterior a 2026.10.21)](screenshots/31-menu-cuentas.jpg)
+![Categoría «Revisar cuentas», señalada en el menú, con sus siete herramientas, entre ellas «Traspasar contenido y dar de baja» (posterior a 2026.10.21)](screenshots/31-menu-cuentas.jpg)
 
-![Categoría «Grupos y niveles de acceso», señalada en el menú, con sus siete herramientas (2026.10.21)](screenshots/32-menu-grupos.jpg)
+![Categoría «Grupos y niveles de acceso», señalada en el menú, con sus ocho herramientas, entre ellas «Sincronizar un colectivo» (posterior a 2026.10.21)](screenshots/32-menu-grupos.jpg)
 
 ![Categoría «Automatización y seguimiento»: bloqueo automático por inactividad, con el estado de su plugin, y resultados de tareas (2026.10.21)](screenshots/33-menu-automatizacion.jpg)
 
 ![Categoría «Eliminar y anonimizar cuentas», con la marca «Permanente» y el aviso de que no se puede deshacer en cada herramienta (2026.10.21)](screenshots/34-menu-eliminacion.jpg)
 
-![Ficha de una persona: datos de la cuenta, grupos en su árbol con el grupo intermedio, niveles de acceso efectivos y por qué, contenido creado, registro de acciones reciente y enlaces a las herramientas (2026.10.20)](screenshots/28-ficha-persona.jpg)
+![Ficha de una persona: datos de la cuenta, grupos en su árbol con el grupo intermedio, niveles de acceso efectivos y por qué, contenido creado, registro de acciones reciente y enlaces a las herramientas, con «Traspasar su contenido» (posterior a 2026.10.21)](screenshots/28-ficha-persona.jpg)
 
 ![Ficha de una persona: revisión del bloqueo de esa cuenta, con confirmación y sin filtro de inactividad (2026.10.20)](screenshots/29-ficha-revision-bloqueo.jpg)
 
@@ -42,13 +42,27 @@ Además de estas capturas, la CI comprueba el orden de teclado, el despliegue de
 
 ![Deshacer bloqueos: tandas recientes de la tarea programada con las cuentas que bloqueó cada una, para revisarlas antes de desbloquear (2026.10.19)](screenshots/27-deshacer-bloqueos.jpg)
 
+![Traspasar contenido y dar de baja: la cuenta que se va, abierta desde su ficha con la cuenta ya elegida (posterior a 2026.10.21)](screenshots/38-traspasar-cuenta.jpg)
+
+![Traspasar contenido y dar de baja: artículos de la cuenta con su estado y categoría, y la cuenta que los recibe (posterior a 2026.10.21)](screenshots/39-traspasar-articulos.jpg)
+
+![Traspasar contenido y dar de baja: revisión con origen, destino y sus grupos, y qué cambia en cada artículo (posterior a 2026.10.21)](screenshots/40-traspasar-revision.jpg)
+
+![Traspasar contenido y dar de baja: resultado con los artículos traspasados y los enlaces para revisar el bloqueo o la anonimización de la cuenta (posterior a 2026.10.21)](screenshots/41-traspasar-resultado.jpg)
+
 ![Eliminar inactivos: plazo, cuentas listadas y exclusiones (2026.10.5)](screenshots/11-eliminar-plazo.jpg)
 
 ![Eliminar inactivos: selección de cuentas y confirmación (2026.10.5)](screenshots/12-eliminar-seleccion.jpg)
 
+![Anonimizar cuentas: resultado con la identidad comprobada y la limpieza adicional comprobada por cuenta, y el resumen de lo que se ha hecho, lo que no se puede comprobar y lo que queda fuera (posterior a 2026.10.21)](screenshots/42-anonimizar-resultado.jpg)
+
 ![Añadir cuentas a grupos: pares usuario;grupo con rutas completas (2026.10.19)](screenshots/24-anadir-grupos-lista.jpg)
 
 ![Añadir cuentas a grupos: revisión con las asignaciones que se harán, una que ya existía, una cuenta protegida, un usuario inexistente y un grupo con acceso a la administración rechazado (2026.10.19)](screenshots/25-anadir-grupos-revision.jpg)
+
+![Sincronizar un colectivo: rama gestionada, tipo de lista, forma de identificar las cuentas y lista con su ejemplo (posterior a 2026.10.21)](screenshots/36-sincronizar-lista.jpg)
+
+![Sincronizar un colectivo: revisión de una actualización parcial con los grupos gestionados y, por cuenta, una cuenta nueva, dos cambios de grupos, una cuenta protegida y una fila con un grupo fuera de la rama (posterior a 2026.10.21)](screenshots/37-sincronizar-revision.jpg)
 
 ![Quitar de grupos: elegir la cuenta (2026.10.9)](screenshots/15-quitar-grupos-cuenta.jpg)
 
