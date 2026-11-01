@@ -47,7 +47,11 @@
         const ids = boxes.filter((box) => box.checked).map((box) => Number(box.dataset.utSuspendId));
         form.querySelector('[data-ut-selected]').value = JSON.stringify(ids);
         form.querySelector('[data-ut-selection-ready]').value = '1';
-        if (counter) counter.textContent = sprintf(text('COM_USERTOOLS_JS_SELECTED', '%d selected'), ids.length);
+        if (counter) {
+          // Joomla.Text has no plural rules, so the singular has its own key.
+          const key = ids.length === 1 ? 'COM_USERTOOLS_JS_SELECTED_1' : 'COM_USERTOOLS_JS_SELECTED';
+          counter.textContent = sprintf(text(key, ids.length === 1 ? '%d account selected' : '%d accounts selected'), ids.length);
+        }
         if (submit) submit.disabled = !ids.length;
         if (all) {
           all.checked = !!boxes.length && ids.length === boxes.length;

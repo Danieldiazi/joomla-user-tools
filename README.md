@@ -219,6 +219,10 @@ Cuando una persona deja la organización, bloquear o anonimizar su cuenta no res
 
 Traspasar no bloquea, elimina ni anonimiza la cuenta. Requiere el permiso propio `usertools.reassign`, el de la ficha de una persona (`usertools.profile`) y poder gestionar los artículos en Joomla.
 
+![Traspasar contenido y dar de baja: revisión con origen, destino y sus grupos, y qué cambia en cada artículo](docs/screenshots/40-traspasar-revision.jpg)
+
+![Traspasar contenido y dar de baja: resultado con los artículos traspasados y los enlaces para cerrar la cuenta](docs/screenshots/41-traspasar-resultado.jpg)
+
 ## Eliminar usuarios inactivos
 
 En la portada, «Revisar cuentas para eliminar». Es la única herramienta que **borra** cuentas, y el borrado no se puede deshacer; para impedir el acceso sin borrar, usa la revisión de inactivos.
@@ -276,6 +280,8 @@ Las **cuentas nuevas** solo se crean al identificar por usuario, con el permiso 
 
 Se requiere el permiso propio `usertools.sync`. Nunca se modifican superusuarios, cuentas con acceso a la administración ni tu propia cuenta. Hay que confirmar y, a partir del umbral de Opciones, escribir el número de cuentas; si la lista deja sin ningún grupo de la rama a más de la mitad de sus miembros actuales (por salida o por una fila con los grupos vacíos), se pide además una confirmación expresa. Si la lista, la rama, los grupos, las cuentas o tus permisos cambian antes de aplicar, la revisión se retira. Cada cuenta se vuelve a comprobar con Joomla justo antes de guardarla, se guarda con su API, se cierran y verifican sus sesiones y queda en el registro de acciones; las listas grandes continúan por tandas sin repetir cuentas, y un cierre de sesiones fallido se reintenta desde el resultado sin volver a guardar los grupos.
 
+![Sincronizar un colectivo: revisión de una actualización parcial con una cuenta nueva, cambios de grupos, una cuenta protegida y una fila no válida](docs/screenshots/37-sincronizar-revision.jpg)
+
 
 ## Anonimizar cuentas
 
@@ -308,6 +314,8 @@ Si falla el borrado del perfil, las notas o los campos, la cuenta **ya está ano
 - **Datos adicionales**: «Limpieza comprobada» solo si, después de borrar, no queda nada del perfil, las notas ni los campos personalizados de la cuenta. Si queda algo o el borrado falla, «Limpieza pendiente» indica de qué fuente, y se repite con «Solo repetir la limpieza», sin volver a anonimizar.
 
 Debajo, un resumen explica el alcance: lo comprobado en Joomla; los **plugins de privacidad** a los que se pidió borrar sus datos, por su nombre, marcados como **no verificables**, porque que no den error no demuestra que lo hayan hecho; y lo que queda **fuera de la herramienta** (contenido creado por la cuenta, mensajes, registro de acciones, medios y archivos, copias de seguridad y datos en otros sistemas), que puede necesitar su propia revisión o política de conservación. La pantalla lo resume así: **«La anonimización de la identidad en Joomla no garantiza por sí sola la eliminación de todos los datos personales relacionados con esta persona.»** La anonimización técnica no equivale por sí sola al cumplimiento del RGPD.
+
+![Anonimizar cuentas: resultado con la identidad y la limpieza adicional comprobadas, y el resumen del alcance](docs/screenshots/42-anonimizar-resultado.jpg)
 
 ## Tarea programada por inactividad
 

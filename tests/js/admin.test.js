@@ -9,7 +9,7 @@ const script = fs.readFileSync(path.join(__dirname, '../../media/js/admin.js'), 
 
 const load = (html) => {
   const dom = new JSDOM(`<!doctype html><body>${html}</body>`, { runScripts: 'outside-only' });
-  dom.window.Joomla = { Text: { _: (key, fallback) => ({ COM_USERTOOLS_JS_SELECTED: '%d seleccionadas', COM_USERTOOLS_JS_TYPE_COUNT: 'Escribe %d' }[key] || fallback) } };
+  dom.window.Joomla = { Text: { _: (key, fallback) => ({ COM_USERTOOLS_JS_SELECTED: '%d seleccionadas', COM_USERTOOLS_JS_SELECTED_1: '%d seleccionada', COM_USERTOOLS_JS_TYPE_COUNT: 'Escribe %d' }[key] || fallback) } };
   dom.window.eval(script);
   // The script waits for DOMContentLoaded while jsdom is still parsing.
   return new Promise((resolve) => {
@@ -68,7 +68,7 @@ test('inactivity review: selection, select-all on visible rows and typed confirm
   boxes[0].checked = true;
   change(boxes[0]);
   assert.equal(doc.querySelector('[data-ut-selected]').value, '[1]');
-  assert.equal(doc.querySelector('[data-ut-suspension-count]').textContent, '1 seleccionadas');
+  assert.equal(doc.querySelector('[data-ut-suspension-count]').textContent, '1 seleccionada', 'one account takes the singular key');
   assert.equal(doc.querySelector('[data-ut-typed]').hidden, true, 'below the threshold no number is typed');
   const filter = doc.querySelector('[data-ut-filter]');
   filter.value = 'user3';
@@ -83,6 +83,7 @@ test('inactivity review: selection, select-all on visible rows and typed confirm
   all.checked = true;
   change(all);
   assert.equal(doc.querySelector('[data-ut-selected]').value, '[1,2,3,4]');
+  assert.equal(doc.querySelector('[data-ut-suspension-count]').textContent, '4 seleccionadas');
   const typed = doc.querySelector('[data-ut-typed]');
   assert.equal(typed.hidden, false);
   assert.equal(doc.querySelector('[data-ut-typed-input]').required, true);

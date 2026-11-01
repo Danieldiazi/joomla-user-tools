@@ -4,21 +4,21 @@
 
 [Back to the README](../README.en.md)
 
-These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, access diagnosis and the content by age list in 2026.10.15, move groups in 2026.10.16, add accounts to groups, export accounts and undo blocks in 2026.10.19, the account profile in 2026.10.20, the content by age table with its four kinds, the automation, groups and delete categories and the guided tour in 2026.10.21, and the home screen, the “Review accounts” category, the Users dashboard and the access explanation in the version after 2026.10.21. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
+These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, access diagnosis and the content by age list in 2026.10.15, move groups in 2026.10.16, add accounts to groups, export accounts and undo blocks in 2026.10.19, the account profile in 2026.10.20, the content by age table with its four kinds, the automation, groups and delete categories and the guided tour in 2026.10.21, and the home screen, the “Review accounts” and “Groups and access levels” categories, the account profile, the Users dashboard, the access explanation, synchronising a group branch, handing over content and the anonymisation result in the version after 2026.10.21. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
-Besides these screenshots, CI checks keyboard order, menu expansion and the active category, and saves captures at 200% text size, with a dark preference and at 390 px width. The cards fit at 390 px, but Joomla’s overall header produces a document width of 600 px; the template has not been altered to hide this. This does not establish WCAG conformance or replace screen-reader testing.
+Besides these screenshots, CI checks keyboard order, menu expansion and the active category, and saves captures at 200% text size, with a dark preference and at 390 px width. The cards and forms fit at 390 px, but Joomla’s overall header does not wrap the page title and produces a document width of about 600 px, and up to about 780 px with the longest titles, such as “Hand over content and close an account”; the template has not been altered to hide this. This does not establish WCAG conformance or replace screen-reader testing.
 
 ![User Tools home screen with its four categories and all permitted tools, and the Components → User Tools menu expanded with Home active (after 2026.10.21, Spanish interface)](screenshots/01-portada.jpg)
 
-![“Review accounts” category, marked in the menu, with its six tools (after 2026.10.21, Spanish interface)](screenshots/31-menu-cuentas.jpg)
+![“Review accounts” category, marked in the menu, with its seven tools, including “Hand over content and close an account” (after 2026.10.21, Spanish interface)](screenshots/31-menu-cuentas.jpg)
 
-![“Groups and access levels” category, marked in the menu, with its seven tools (2026.10.21, Spanish interface)](screenshots/32-menu-grupos.jpg)
+![“Groups and access levels” category, marked in the menu, with its eight tools, including “Synchronise a group branch” (after 2026.10.21, Spanish interface)](screenshots/32-menu-grupos.jpg)
 
 ![“Automation and follow-up” category: automatic inactivity blocking, with its plugin status, and task results (2026.10.21, Spanish interface)](screenshots/33-menu-automatizacion.jpg)
 
 ![“Delete and anonymise accounts” category, with the “Permanent” badge and the cannot-be-undone warning on each tool (2026.10.21, Spanish interface)](screenshots/34-menu-eliminacion.jpg)
 
-![Account profile: account details, groups in their tree with the intermediate group, effective access levels and why, authored content, recent action log and links to the tools (2026.10.20, Spanish interface)](screenshots/28-ficha-persona.jpg)
+![Account profile: account details, groups in their tree with the intermediate group, effective access levels and why, authored content, recent action log and links to the tools, including “Hand over their content” (after 2026.10.21, Spanish interface)](screenshots/28-ficha-persona.jpg)
 
 ![Account profile: review of blocking that account, with confirmation and no inactivity filter (2026.10.20, Spanish interface)](screenshots/29-ficha-revision-bloqueo.jpg)
 
@@ -42,13 +42,27 @@ Besides these screenshots, CI checks keyboard order, menu expansion and the acti
 
 ![Undo blocks: recent scheduled task runs with the accounts each one blocked, to review before unblocking (2026.10.19, Spanish interface)](screenshots/27-deshacer-bloqueos.jpg)
 
+![Hand over content and close an account: the leaving account, opened from its profile with the account already chosen (after 2026.10.21, Spanish interface)](screenshots/38-traspasar-cuenta.jpg)
+
+![Hand over content and close an account: the account’s articles with their state and category, and the receiving account (after 2026.10.21, Spanish interface)](screenshots/39-traspasar-articulos.jpg)
+
+![Hand over content and close an account: review with source, target and its groups, and what changes in each article (after 2026.10.21, Spanish interface)](screenshots/40-traspasar-revision.jpg)
+
+![Hand over content and close an account: result with the handed-over articles and the links to review blocking or anonymising the account (after 2026.10.21, Spanish interface)](screenshots/41-traspasar-resultado.jpg)
+
 ![Delete inactive users: period, status and exclusions (2026.10.5)](screenshots/11-eliminar-plazo.jpg)
 
 ![Delete inactive users: selection and confirmation (2026.10.5)](screenshots/12-eliminar-seleccion.jpg)
 
+![Anonymise accounts: result with the verified identity and verified additional clean-up per account, and the summary of what was done, what cannot be verified and what is out of scope (after 2026.10.21, Spanish interface)](screenshots/42-anonimizar-resultado.jpg)
+
 ![Add accounts to groups: username;group pairs with full paths (2026.10.19, Spanish interface)](screenshots/24-anadir-grupos-lista.jpg)
 
 ![Add accounts to groups: review with the assignments to be made, one that already existed, a protected account, an unknown user and a refused group with administrator access (2026.10.19, Spanish interface)](screenshots/25-anadir-grupos-revision.jpg)
+
+![Synchronise a group branch: managed branch, type of list, how accounts are identified and the list with its example (after 2026.10.21, Spanish interface)](screenshots/36-sincronizar-lista.jpg)
+
+![Synchronise a group branch: review of a partial update with the managed groups and, per account, a new account, two group changes, a protected account and a row with a group outside the branch (after 2026.10.21, Spanish interface)](screenshots/37-sincronizar-revision.jpg)
 
 ![Remove from groups: choose the account (2026.10.9)](screenshots/15-quitar-grupos-cuenta.jpg)
 
