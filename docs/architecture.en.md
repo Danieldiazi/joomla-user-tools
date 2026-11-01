@@ -4,7 +4,7 @@
 
 [Back to the README](../README.en.md#development)
 
-This guide describes the 2026.10.5 implementation. It is intended for anyone locating a rule, following a request or modifying a tool. Update this guide whenever flows, persistence or guarantees change. Usage instructions are in the [README](../README.en.md) and [FAQ](../FAQ.en.md).
+This guide describes the architecture of the `main` branch (not a fixed historical release). It is intended for anyone locating a rule, following a request or modifying a tool. For a shorter reading path, see the [developer onboarding guide](development.en.md). Update this guide whenever flows, persistence or guarantees change. Usage instructions are in the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
 ## 1. Responsibility map
 
@@ -93,7 +93,9 @@ Reports and the action log are separate evidence sources. A dry run does not cre
 |---|---|
 | Manual draft | Session, under tool-specific keys. Preserves input for editing; it does not have the preview's separate 15-minute expiry. |
 | Preview | Session; 900 seconds, tied to the actor and a nonce. Relevant settings are checked through a signature. Consumed before application. |
-| Manual result | Session; 900 seconds, tied to the actor. Temporary passwords are removed from the stored copy. This is not persistent history. |
+| Manual result | Session; 900 seconds, tied to the actor. Temporary passwords are removed from the stored copy. This is not general persistent history. |
+| Batched manual job | Session, owned by the operator; comparison, account creation and other resumable operations checkpoint per account. Losing the session may prevent continuing the pending work; completed changes remain. |
+| Undo-block batches | Dedicated manual and scheduled block-batch reports stored through `ReportStore` under the log directory. They allow reviewing a subset of blocks still eligible for undo; they are not a general log of all operations. |
 | Manual options | Component parameters in #__extensions, through SettingsStore. Shared across the site, with separate keys per tool. Searching can also save options. |
 | Scheduled parameters | Each Joomla task's configuration; exclusions are independent of manual tools. |
 | Accounts | Joomla user tables and API; blocks, creations and deletions use the API to run events. |
@@ -122,7 +124,7 @@ Operations are not atomic: changes already applied remain if a later account fai
 
 ActionLogger discards exceptions so audit failures do not stop an operation. A changed account therefore does not guarantee a corresponding log entry. Task reports have checkpoints and may also remain incomplete if execution stops between saves.
 
-Manual results retain only the skipped count, not a persistent per-account explanation. Scheduled reports retain actions and protections in detail, and summarize omissions by reason. There is currently no common ID connecting all manual actions in a batch.
+Temporary manual results are not a complete persistent per-account history. Scheduled reports retain actions and protections in detail, and summarize omissions by reason. Manual block batches are persisted for «Undo blocks», but not all manual operations share a common identifier or unified durable log.
 
 These are limits of the current implementation, not guarantees of complete auditing or automatic recovery. A future persistent history must explicitly address these cases.
 
