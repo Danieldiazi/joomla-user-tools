@@ -198,6 +198,10 @@ class AnonymizeModel extends BaseDatabaseModel
      * Each pending account is checked against its reviewed fingerprint and revalidated on a fresh
      * Joomla User before writing. The session checkpoint is saved after each processed account;
      * already completed changes are not rolled back if a later account fails.
+     * pending holds the remaining reviewed account ID => fingerprint pairs; total never
+     * shrinks. skipped counts changed, ineligible or unprocessed accounts; partial
+     * separates unfinished verification/cleanup from outright errors. done and cleaned
+     * distinguish first-time anonymization from cleanup-only retries.
      *
      * @return bool True when all pending accounts have been processed and a temporary result saved;
      *              false while more work remains in the current session.
