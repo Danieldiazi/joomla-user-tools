@@ -27,7 +27,7 @@ use Joomla\CMS\MVC\Model\BaseDatabaseModel;
  * Session contracts (all job fields are stored without clear-text passwords):
  * @phpstan-type ComparePreview array{actor: int, expires: int, nonce: string, names: list<string>,
  *     ids: list<int>, unknown: list<string>, signature: string}
- * @phpstan-type CompareJob array{actor: int, mode: string, requireReset: bool, names: list<string>,
+ * @phpstan-type CompareJob array{actor: int, mode: string, names: list<string>,
  *     exclusions: array<string, mixed>, offered: int, block: list<int>,
  *     create: list<array<string, mixed>>, total: int, processed: int,
  *     blocked: list<array{id: int, username: string}>, created: list<array<string, mixed>>,
@@ -46,7 +46,7 @@ class CompareModel extends BaseDatabaseModel
     private const JOB     = 'com_usertools.compare.job';
     private const REGISTERED_GROUP = 2;
 
-    /** @return array{text: string, checked: array<string, string>, emails: array<string, string>, mode: string, requireReset: bool, exclusions: Exclusions} */
+    /** @return array{text: string, checked: array<string, string>, emails: array<string, string>, mode: string, exclusions: Exclusions} */
     public function getDraft(): array
     {
         $settings = Toolkit::settings();
@@ -56,7 +56,6 @@ class CompareModel extends BaseDatabaseModel
             'checked'    => (array) ($draft['checked'] ?? []),
             'emails'     => (array) ($draft['emails'] ?? []),
             'mode'       => Registration::mode($draft['mode'] ?? $settings->creationMode()),
-            'requireReset' => (bool) ($draft['requireReset'] ?? false),
             'exclusions' => isset($draft['exclusions']) ? Exclusions::fromArray($draft['exclusions']) : $settings->exclusions(Settings::COMPARE),
         ];
     }
@@ -107,7 +106,7 @@ class CompareModel extends BaseDatabaseModel
     /**
      * Fresh data for the review screen, limited to what the preview offered.
      *
-     * @return array{candidates: list<UserRecord>, unknown: list<string>, matched: int, protected: int, blocked: int, threshold: int, mode: string, requireReset: bool, mailOnline: bool, canCreate: bool}
+     * @return array{candidates: list<UserRecord>, unknown: list<string>, matched: int, protected: int, blocked: int, threshold: int, mode: string, mailOnline: bool, canCreate: bool}
      */
     public function getReview(): array
     {
@@ -124,7 +123,6 @@ class CompareModel extends BaseDatabaseModel
         return $comparison + [
             'threshold'  => Toolkit::settings()->confirmThreshold(),
             'mode'       => $draft['mode'],
-            'requireReset' => $draft['requireReset'],
             'mailOnline' => AccountMailer::canSend(),
             'canCreate'  => $this->identity()->authorise('usertools.create', 'com_usertools'),
         ];
@@ -135,7 +133,7 @@ class CompareModel extends BaseDatabaseModel
     {
         $preview = $this->requirePreview($input);
         $this->storeDraft(Registration::draft((string) ($input['registrations'] ?? '{}'), $preview['unknown'])
-            + ['mode' => Registration::mode($input['creation_mode'] ?? null), 'requireReset' => (int) ($input['require_reset'] ?? 0) === 1]);
+            + ['mode' => Registration::mode($input['creation_mode'] ?? null)]);
         $this->session()->set(self::PREVIEW, []);
     }
 
@@ -153,7 +151,7 @@ class CompareModel extends BaseDatabaseModel
             throw new UserFacingException('COM_USERTOOLS_ERROR_JOB_PENDING');
         }
         $mode    = Registration::mode($input['creation_mode'] ?? null);
-        $this->storeDraft(Registration::draft((string) ($input['registrations'] ?? '{}'), $preview['unknown']) + ['mode' => $mode, 'requireReset' => (int) ($input['require_reset'] ?? 0) === 1]);
+        $this->storeDraft(Registration::draft((string) ($input['registrations'] ?? '{}'), $preview['unknown']) + ['mode' => $mode]);
         if ((int) ($input['confirm'] ?? 0) !== 1) {
             throw new UserFacingException('COM_USERTOOLS_ERROR_CONFIRM');
         }
@@ -193,7 +191,6 @@ class CompareModel extends BaseDatabaseModel
         $this->session()->set(self::JOB, [
             'actor'      => (int) $this->identity()->id,
             'mode'       => $mode,
-            'requireReset' => $draft['requireReset'],
             'names'      => $preview['names'],
             'exclusions' => $exclusions->toArray(),
             'offered'    => \count($preview['ids']),
@@ -285,7 +282,6 @@ class CompareModel extends BaseDatabaseModel
             $mailer  = new AccountMailer();
             $log     = new ActionLogger();
             $mode    = (string) $job['mode'];
-            $requireReset = (bool) ($job['requireReset'] ?? false);
             $core    = $this->silenceCoreMail();
             try {
                 while ($job['create'] && $this->more($count, $deadline)) {
@@ -301,7 +297,7 @@ class CompareModel extends BaseDatabaseModel
                                 'mode' => $mode, 'mailed' => false];
                             $this->checkpoint($job);
                             $log->created($user, $operator, $mode);
-                        }, $requireReset);
+                        });
                     if (!$created['created']) {
                         // Not created: nothing exists to repeat, so it leaves the queue as a failure.
                         array_shift($job['create']);

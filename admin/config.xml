@@ -9,6 +9,7 @@
       label="COM_USERTOOLS_CONFIG_CREATION_MODE" description="COM_USERTOOLS_CONFIG_CREATION_MODE_DESC">
       <option value="email">COM_USERTOOLS_CREATION_MODE_EMAIL</option>
       <option value="password">COM_USERTOOLS_CREATION_MODE_PASSWORD</option>
+      <option value="sso">COM_USERTOOLS_CREATION_MODE_SSO</option>
     </field>
     <field name="report_retention_days" type="number" default="90" min="0" max="36500" filter="integer"
       label="COM_USERTOOLS_CONFIG_RETENTION" description="COM_USERTOOLS_CONFIG_RETENTION_DESC" />

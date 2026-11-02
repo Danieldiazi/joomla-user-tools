@@ -152,7 +152,12 @@ final class ActionLogger
 
     public function created(object $account, Operator $operator, string $mode): void
     {
-        $this->write($mode === Registration::MODE_PASSWORD ? 'COM_USERTOOLS_ACTION_LOG_CREATED_PASSWORD' : 'COM_USERTOOLS_ACTION_LOG_CREATED_EMAIL', 'create', $account, $operator, '');
+        $key = match ($mode) {
+            Registration::MODE_PASSWORD => 'COM_USERTOOLS_ACTION_LOG_CREATED_PASSWORD',
+            Registration::MODE_SSO      => 'COM_USERTOOLS_ACTION_LOG_CREATED_SSO',
+            default                     => 'COM_USERTOOLS_ACTION_LOG_CREATED_EMAIL',
+        };
+        $this->write($key, 'create', $account, $operator, '');
     }
 
     /** An account unblocked with "Undo blocks"; $batch says which run or review had blocked it. */

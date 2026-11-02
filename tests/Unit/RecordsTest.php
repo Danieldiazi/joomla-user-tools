@@ -77,13 +77,22 @@ final class RecordsTest extends TestCase
         $password = Registration::create($selection, function () use (&$users) {
             return $users[] = Fixtures::joomlaUser();
         }, 2, 'password', new PasswordGenerator(), fn () => $this->fail('no mail in password mode'));
-        $this->assertSame(0, $users[0]->bound['requireReset'], 'password mode does not force a local password change by default');
-        $forcedUser = Fixtures::joomlaUser();
-        Registration::create([$selection[0]], fn () => $forcedUser, 2, 'password', new PasswordGenerator(), fn () => $this->fail('no mail in password mode'), null, true);
-        $this->assertSame(1, $forcedUser->bound['requireReset']);
+        $this->assertSame(1, $users[0]->bound['requireReset']);
         $this->assertSame([2], $users[0]->bound['groups']);
         $this->assertSame($users[0]->bound['password'], $password['created'][0]['password']);
         $this->assertNotSame($password['created'][0]['password'], $password['created'][1]['password']);
+
+        // Single sign-on: no password returned, no email, no forced change of a password nobody knows.
+        $ssoUsers = [];
+        $sso      = Registration::create($selection, function () use (&$ssoUsers) {
+            return $ssoUsers[] = Fixtures::joomlaUser();
+        }, 2, 'sso', new PasswordGenerator(), fn () => $this->fail('no mail in single sign-on mode'));
+        $this->assertSame(0, $ssoUsers[0]->bound['requireReset']);
+        $this->assertGreaterThanOrEqual(24, \strlen($ssoUsers[0]->bound['password']), 'the account still gets a strong random password');
+        $this->assertSame(['sso', 'sso'], array_column($sso['created'], 'mode'));
+        $this->assertArrayNotHasKey('password', $sso['created'][0], 'single sign-on mode never returns the password');
+        $this->assertArrayNotHasKey('mailed', $sso['created'][0]);
+        $this->assertSame('email', Registration::mode('other'), 'unknown modes fall back to the email link');
 
         $failed = Registration::create([$selection[0]], fn () => Fixtures::joomlaUser(0, '', 0, false), 2, 'password', new PasswordGenerator(), fn () => true);
         $this->assertSame([], $failed['created']);

@@ -186,7 +186,7 @@ En **Registrados** (grupo ID 2). La herramienta comprueba que el grupo exista y 
 
 ### ¿Se envía un correo de bienvenida?
 
-Hay dos modos de alta. Por defecto se envía un correo con un enlace para elegir la contraseña, mediante la plantilla editable «User Tools: cuenta creada». También puedes elegir mostrar una contraseña temporal una sola vez y comunicarla tú mismo. En ambos casos se suprime el correo de bienvenida del plugin de usuarios de Joomla y después se restaura su configuración. Otros plugins siguen recibiendo los eventos normales de creación.
+Hay tres modos de alta. Por defecto se envía un correo con un enlace para elegir la contraseña, mediante la plantilla editable «User Tools: cuenta creada». También puedes elegir mostrar una contraseña temporal una sola vez y comunicarla tú mismo; la persona deberá cambiarla en su primer acceso. Si en tu sitio se entra con inicio de sesión único (SSO), elige «Sin contraseña local»: la cuenta recibe una contraseña aleatoria que nadie ve, sin cambio obligatorio y sin correo. En todos los casos se suprime el correo de bienvenida del plugin de usuarios de Joomla y después se restaura su configuración. Otros plugins siguen recibiendo los eventos normales de creación.
 
 ### He perdido la contraseña temporal
 
