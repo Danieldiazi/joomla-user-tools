@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Joomla changelog for pkg_usertools, shown by System - Update - Extensions
+  and Extensions - Manage. Joomla shows the entry whose version matches the
+  update (or the installed version), so every release adds its own entry at
+  the top; tests/verify-build.php fails without one. Items are printed as
+  plain text and split at XML entities, so they contain no markup and no
+  ampersands or angle brackets.
+-->
+<changelogs>
+  <changelog>
+    <element>pkg_usertools</element>
+    <type>package</type>
+    <version>2026.11.2</version>
+    <addition>
+      <item>Joomla now shows this changelog for each update in System - Update - Extensions and in Extensions - Manage.</item>
+    </addition>
+  </changelog>
+  <changelog>
+    <element>pkg_usertools</element>
+    <type>package</type>
+    <version>2026.11.1</version>
+    <fix>
+      <item>Add the GPL licence notice to the PHP files of Add accounts to groups, as JED Checker requires.</item>
+    </fix>
+    <note>
+      <item>The build check now fails if any distributed PHP file lacks the licence notice.</item>
+    </note>
+  </changelog>
+  <changelog>
+    <element>pkg_usertools</element>
+    <type>package</type>
+    <version>2026.11.0</version>
+    <addition>
+      <item>Synchronise a group branch: adjust the groups of one branch from a list, as a partial update or a complete list, with review, confirmation and resumable batches.</item>
+      <item>Hand over content and close an account: move the authorship of chosen articles to another active account, then open the block or anonymisation review.</item>
+    </addition>
+    <change>
+      <item>Anonymise accounts: the result reports separately the verified identity, the additional clean-up per source and the privacy plugins that cannot be verified.</item>
+      <item>Explain content access only lists the menu items the operator can see.</item>
+      <item>CSV exports neutralise every cell that a spreadsheet could run as a formula.</item>
+    </change>
+    <fix>
+      <item>The selection counter uses the singular for one account.</item>
+    </fix>
+    <language>
+      <item>New Spanish and British English strings for the new tools and guided tours.</item>
+    </language>
+  </changelog>
+</changelogs>

@@ -48,7 +48,7 @@ Se distribuye como un paquete con el componente `com_usertools`, los plugins `pl
 | `modules/mod_usertools/` | Módulo del panel de Usuarios. Solo presenta datos: las cifras y avisos los calculan `DashboardSummary` y `Toolkit::dashboard()`, con caché que se limpia con `Toolkit::clearDashboardCache()` cuando cambian cuentas u Opciones. |
 | `modules/mod_usertools_groups/` | Módulo del sitio de solo lectura. No depende del componente: `GroupTree` (reglas puras del árbol de grupos, con pruebas unitarias) y `MembershipHelper` (consultas). Nunca muestra correos ni cuentas bloqueadas, y por defecto oculta las cuentas con acceso a la administración. |
 | `package/` | Manifiesto del paquete, `script.php` de instalación (comprobaciones, migración de opciones, registro de acciones, plantilla de correo, colocación inicial del módulo) e idiomas. |
-| `scripts/build.php` | Construye los ZIP, `SHA256SUMS.txt` y `updates.xml`. |
+| `scripts/build.php` | Construye los ZIP, `SHA256SUMS.txt`, `updates.xml` y `changelog.xml` (copia de `package/changelog.xml`). |
 | `tests/` | `Unit/` (PHPUnit), `regression/` (controladores y modelos con sustitutos de Joomla), `js/` (jsdom), `integration/` (Joomla real), `verify-build.php`. |
 
 ## Reglas de seguridad que no se pueden romper
@@ -144,12 +144,13 @@ Estas referencias usan la ruta `next`, cuyo contenido puede cambiar. Contrasta s
   - `modules/mod_usertools_groups/mod_usertools_groups.xml`
   - `package/pkg_usertools.xml`
   - `media/joomla.asset.json`
+- Cada versión añade también su entrada al principio de `package/changelog.xml` (formato de registro de cambios de Joomla: `security`, `fix`, `addition`, `change`, `remove`, `language`, `note`). Joomla muestra solo la entrada cuya versión coincide con la actualización e imprime cada `item` tal cual: texto plano, sin marcado ni `&`. `verify-build.php` falla si falta la entrada.
 - No se reutiliza un número que ya tenga release.
 - **Antes de recomendar una versión o una etiqueta**: consulta las releases y etiquetas existentes y verifica la versión real del commit que se va a publicar. No basta con elegir el siguiente número.
 - **Preparar primero, etiquetar después**: actualiza los siete archivos en la misma rama y pull request, comprueba que sus valores coinciden, construye sin `--version` y ejecuta `php tests/verify-build.php VERSIÓN dist`. Fusiona la pull request con CI en verde antes de crear la etiqueta sobre ese commit de `main`.
 - **Comprobar el commit etiquetado**: `vAAAA.M.REVISIÓN` debe coincidir con los siete valores guardados en ese commit. Crear una etiqueta o pasar `--version` al constructor no actualiza los archivos del repositorio. No desactives la validación de etiquetas para publicar.
 - **Si la publicación falla por versiones distintas**: corrige los archivos mediante una pull request y comprueba el commit al que apunta la etiqueta antes de volver a publicar. Reejecutar el trabajo sobre el mismo commit incorrecto vuelve a fallar; cambiar solo el título de la release tampoco lo corrige. Conserva las etiquetas de versiones ya distribuidas.
-- **Verificar la publicación**: no des la release por terminada hasta que el trabajo haya finalizado correctamente y estén adjuntos los seis ZIP, `SHA256SUMS.txt` y `updates.xml`, con la misma versión. Una página de release creada sin paquetes no confirma una publicación correcta.
+- **Verificar la publicación**: no des la release por terminada hasta que el trabajo haya finalizado correctamente y estén adjuntos los seis ZIP, `SHA256SUMS.txt`, `updates.xml` y `changelog.xml`, con la misma versión. Una página de release creada sin paquetes no confirma una publicación correcta.
 
 ## Pruebas
 
@@ -173,7 +174,7 @@ Estas reglas del proyecto preservan la preparación para el JED; no sustituyen s
 
 - **Licencia en cada PHP distribuido**: conserva y añade en los archivos nuevos el encabezado `@copyright` y `@license GNU General Public License version 2 or later; see LICENSE`. Mantén el titular real (`Danieldiazi` en el código propio actual) y los avisos de terceros. `tests/verify-build.php` falla si algún PHP de los ZIP no lleva el aviso.
 - **Paquetes**: conserva el texto íntegro GPL en `LICENSE` y su inclusión en todos los ZIP generados por `scripts/build.php`, también en los paquetes internos. Revisa el archivo final, no solo las fuentes.
-- **Actualizaciones**: preserva el servidor declarado en el manifiesto del paquete y la generación de `updates.xml`. Comprueba versión, compatibilidad, URL del ZIP y hash, además de la detección e instalación de una actualización en Joomla de pruebas cuando cambie ese flujo.
+- **Actualizaciones**: preserva el servidor declarado en el manifiesto del paquete, la generación de `updates.xml` y el registro de cambios (`changelogurl` en ambos). Comprueba versión, compatibilidad, URL del ZIP y hash, además de la detección e instalación de una actualización en Joomla de pruebas cuando cambie ese flujo.
 - **Ficha**: mantén coherentes el nombre instalado («User Tools»), las funciones, los requisitos y la compatibilidad anunciados. Revisa los enlaces de descarga, documentación, soporte y licencia cuando cambien.
 - **Antes de enviar o actualizar el paquete en el JED**: ejecuta [JED Checker](https://extensions.joomla.org/extension/jedchecker/) sobre el ZIP final, incluidos sus paquetes internos; corrige los errores y revisa los avisos. Registra versión, hash del ZIP, versión del comprobador y resultado en la pull request o en la evidencia de publicación. Si no se ha ejecutado, indícalo como pendiente.
 - **JAMSS**: examina cada aviso en su contexto. No cambies código legítimo solo para silenciar patrones ni declares que un análisis garantiza ausencia de malware. Los escapes `\\xEF\\xBB\\xBF` usados para el BOM UTF-8 y los métodos propios `assertKind`/`assertReviewedCandidates`/`assertAllowed` han generado avisos (el nombre empieza por `assert`; no son `assert()` de PHP ni código codificado): vuelve a revisar su implementación si cambian.
@@ -187,5 +188,5 @@ Consulta antes de publicar los [requisitos del JED](https://extensions.joomla.or
 - La CI debe estar en verde antes de fusionar.
 - La integración de navegación se habilita una sola vez por plugin instalado; su marcador vive en `custom_data` de la propia extensión de sistema, no en el marcador del módulo. Conservar una deshabilitación posterior y verificar instalación, actualización desde el menú antiguo, repetición sin duplicados y desinstalación. `tests/integration/navigation-uninstall.php` se ejecuta al final, después de las capturas.
 - **Sin enlaces a sesiones de agentes**: no incluyas URL de sesiones (por ejemplo `https://claude.ai/code/session_…`) ni líneas `Claude-Session:` en commits, descripciones de pull request, issues ni comentarios. La atribución se limita a `Co-Authored-By` en los commits y a una línea «Generated with Claude Code» en las pull requests.
-- La release la publica una persona: crea en GitHub una release con la etiqueta `vAAAA.M.REVISIÓN` sobre `main`. GitHub Actions construye y adjunta los paquetes y el `updates.xml`. La etiqueta debe coincidir con la versión de los manifiestos del commit etiquetado; si no coincide, la publicación falla.
+- La release la publica una persona: crea en GitHub una release con la etiqueta `vAAAA.M.REVISIÓN` sobre `main`. GitHub Actions construye y adjunta los paquetes, el `updates.xml` y el `changelog.xml`. La etiqueta debe coincidir con la versión de los manifiestos del commit etiquetado; si no coincide, la publicación falla.
 - Actualiza README y FAQ cuando cambie lo que ve o configura el usuario. Si cambian las pantallas, renueva las capturas de `docs/screenshots/`.

@@ -144,6 +144,22 @@ $check((string) $updates->update->element === 'pkg_usertools', 'updates.xml elem
 $check((string) $updates->update->sha256 === hash_file('sha256', $pkg), 'updates.xml checksum matches the package');
 $check(str_ends_with((string) $updates->update->downloads->downloadurl, "/v$version/pkg_usertools-$version.zip"), 'updates.xml download URL');
 
+// Joomla shows the changelog entry whose version equals the update, so a
+// release without its own entry would show an empty changelog.
+$check(str_ends_with((string) $updates->update->changelogurl, "/v$version/changelog.xml"), 'updates.xml changelog URL');
+$check(str_ends_with((string) $pkgXml->changelogurl, '/releases/latest/download/changelog.xml'), 'package declares the changelog URL');
+$changelog = is_file("$dir/changelog.xml") ? simplexml_load_file("$dir/changelog.xml") : false;
+$check($changelog !== false, 'changelog.xml is built and parses');
+$entries = $changelog === false ? [] : $changelog->xpath("changelog[version='$version'][element='pkg_usertools'][type='package']");
+$check(count($entries) === 1, "changelog.xml has exactly one pkg_usertools entry for $version");
+if (count($entries) === 1) {
+    $items = $entries[0]->xpath('*/item');
+    $check(count($items) > 0, "changelog entry for $version lists at least one change");
+    $raw = (string) file_get_contents("$dir/changelog.xml");
+    // Joomla prints items as HTML and splits them at entities: keep them plain.
+    $check(!preg_match('/<item>[^<]*&/', $raw), 'changelog items contain no entities');
+}
+
 // Every language key used by the code exists in both languages.
 $languages = [];
 foreach (['es-ES', 'en-GB'] as $tag) {
