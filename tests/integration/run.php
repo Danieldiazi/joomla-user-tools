@@ -197,6 +197,9 @@ Test::section('Setup');
 $site->q('UPDATE #__guidedtours SET autostart = 0');
 // The disposable site does not send statistics or display the first-run telemetry prompt.
 $site->q("UPDATE #__extensions SET enabled = 0 WHERE type = 'plugin' AND folder = 'system' AND element = 'stats'");
+// The installer stores the package changelog URL, which Extensions - Manage uses.
+$package = $site->q("SELECT changelogurl FROM #__extensions WHERE type = 'package' AND element = 'pkg_usertools'");
+Test::check(($package[0]['changelogurl'] ?? '') === 'https://github.com/Danieldiazi/joomla-user-tools/releases/latest/download/changelog.xml', 'the package registers its changelog URL');
 $site->cli('config:set live_site=' . escapeshellarg($url) . ' error_reporting=maximum mailer=smtp smtphost=127.0.0.1 smtpport=2525 smtpauth=false smtpsecure=none mailonline=true session_metadata=true');
 // Remove what a previous run left behind.
 $previous = array_column($site->q("SELECT id FROM #__users WHERE email LIKE '%@example.test' AND username <> ?", [getenv('UT_ADMIN_USER') ?: 'admin']), 'id');
