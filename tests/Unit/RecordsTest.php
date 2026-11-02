@@ -77,7 +77,10 @@ final class RecordsTest extends TestCase
         $password = Registration::create($selection, function () use (&$users) {
             return $users[] = Fixtures::joomlaUser();
         }, 2, 'password', new PasswordGenerator(), fn () => $this->fail('no mail in password mode'));
-        $this->assertSame(1, $users[0]->bound['requireReset']);
+        $this->assertSame(0, $users[0]->bound['requireReset'], 'password mode does not force a local password change by default');
+        $forcedUser = Fixtures::joomlaUser();
+        Registration::create([$selection[0]], fn () => $forcedUser, 2, 'password', new PasswordGenerator(), fn () => $this->fail('no mail in password mode'), null, true);
+        $this->assertSame(1, $forcedUser->bound['requireReset']);
         $this->assertSame([2], $users[0]->bound['groups']);
         $this->assertSame($users[0]->bound['password'], $password['created'][0]['password']);
         $this->assertNotSame($password['created'][0]['password'], $password['created'][1]['password']);
