@@ -111,7 +111,7 @@ final class Registration
      *                                                                so an interrupted request never leaves an unlogged account
      * @return array{created: list<array<string, mixed>>, errors: list<array{username: string, message: string}>}
      */
-    public static function create(array $selection, callable $newUser, int $groupId, string $mode, PasswordGenerator $passwords, callable $sendLink, ?callable $saved = null): array
+    public static function create(array $selection, callable $newUser, int $groupId, string $mode, PasswordGenerator $passwords, callable $sendLink, ?callable $saved = null, bool $requireReset = false): array
     {
         $mode   = self::mode($mode);
         $result = ['created' => [], 'errors' => []];
@@ -124,7 +124,7 @@ final class Registration
                     'email' => $row['email'], 'password' => $password, 'password2' => $password,
                     'groups' => array_values(array_unique(array_merge([$groupId], array_map('intval', $row['groups'] ?? [])))),
                     'block' => 0, 'activation' => '',
-                    'requireReset' => $mode === self::MODE_PASSWORD ? 1 : 0, 'sendEmail' => 0,
+                    'requireReset' => $requireReset ? 1 : 0, 'sendEmail' => 0,
                 ];
                 if (!$user->bind($data) || !$user->save()) {
                     throw new \RuntimeException('save');
