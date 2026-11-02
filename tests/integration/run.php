@@ -254,6 +254,7 @@ Test::check(str_contains($review, 'baja@example.test') && str_contains($review, 
 Test::check(str_contains($review, 'name="confirm_count"'), 'typed confirmation is required from the threshold');
 Test::check(str_contains($review, 'data-ut-add-all') && str_contains($review, 'data-ut-email-domain') && str_contains($review, 'data-ut-name="nuevo1"'),
     'new accounts offer "tick all" and emails built from the username');
+Test::check(str_contains($review, 'id="ut-require-reset" value="1">'), 'the forced password change option is unchecked by default');
 $site->fakeSession($site->userId('baja'));
 $registrations = [];
 foreach (['nuevo1', 'nuevo2'] as $name) {
@@ -300,7 +301,7 @@ $password = html_entity_decode($pw[1] ?? '', ENT_QUOTES);
 Test::check(strlen($password) >= 24 && preg_match('/[A-Z]/', $password) && preg_match('/[a-z]/', $password) && preg_match('/[0-9]/', $password) && preg_match('/[^A-Za-z0-9]/', $password), 'password mode shows a strong temporary password once');
 $stored = implode('', array_column($site->q('SELECT data FROM #__session'), 'data'));
 Test::check($password !== '' && !str_contains($stored, $password), 'the password is not stored in any session');
-Test::check((int) ($site->q('SELECT "requireReset" FROM #__users WHERE username = ?', ['nuevo3'])[0]['requireReset'] ?? 0) === 1, 'password mode forces a change at first login');
+Test::check((int) ($site->q('SELECT "requireReset" FROM #__users WHERE username = ?', ['nuevo3'])[0]['requireReset'] ?? 0) === 0, 'password mode does not force a change by default');
 $again = $admin->get('index.php?option=com_usertools&view=compare&layout=result');
 Test::check(!str_contains($again, $password) && str_contains($again, 'Already shown'), 'reloading the result does not show the password again');
 
@@ -371,12 +372,15 @@ Test::check($site->blocked('lote1') && !$site->blocked('lote2') && $site->userId
 $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster(['baja', 'servicio', 'lote1'], ['lote6', 'lote7']),
     'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
 $progress = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
-    'creation_mode' => 'password', 'registrations' => $registrationsFor(['lote6', 'lote7'])], 'data-ut-review');
+    'creation_mode' => 'password', 'require_reset' => 1, 'registrations' => $registrationsFor(['lote6', 'lote7'])], 'data-ut-review');
 preg_match('#<script type="application/json" data-ut-progress-initial>(.*?)</script>#s', $progress, $initial);
 $firstRows = json_decode($initial[1] ?? '[]', true) ?: [];
 $data = $step($admin, $progress);
 $passwords = array_filter([$firstRows[0]['password'] ?? '', $data['created'][0]['password'] ?? '']);
 Test::check(count($passwords) === 2 && ($firstRows[0]['username'] ?? '') === 'lote6' && ($data['done'] ?? false) === true, 'each batch returns the passwords it created, once');
+$forcedUsers = $site->q('SELECT "requireReset" FROM #__users WHERE username IN (?, ?)', ['lote6', 'lote7']);
+Test::check(count($forcedUsers) === 2 && array_reduce($forcedUsers, fn (bool $ok, array $row): bool => $ok && (int) $row['requireReset'] === 1, true),
+    'the explicit option requires the local password change across batches');
 $stored = implode('', array_column($site->q('SELECT data FROM #__session'), 'data'));
 Test::check(!array_filter($passwords, fn ($p) => str_contains($stored, $p)), 'no batch password is stored in any session');
 $summary = $admin->get('index.php?option=com_usertools&view=compare&layout=result');
