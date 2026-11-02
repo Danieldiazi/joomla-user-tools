@@ -55,6 +55,7 @@ trait ToolControllerTrait
             'registrations'   => $post->get('registrations', '{}', 'RAW'),
             'selected'        => $post->get('selected', '[]', 'RAW'),
             'creation_mode'   => $post->getCmd('creation_mode', ''),
+            'require_reset'   => $post->getInt('require_reset', 0),
             'confirm'         => $post->getInt('confirm', 0),
             'confirm_count'   => trim($post->getString('confirm_count', '')),
             'days'            => $post->getInt('days', 365),
