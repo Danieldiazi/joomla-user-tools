@@ -82,6 +82,11 @@ $draft      = $this->draft;
             <div class="form-text"><?= Text::_('COM_USERTOOLS_CREATION_MODE_PASSWORD_HELP') ?></div>
           </div>
         </fieldset>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="checkbox" name="require_reset" id="ut-require-reset" value="1"<?= $draft['requireReset'] ? ' checked' : '' ?>>
+          <label class="form-check-label" for="ut-require-reset"><?= Text::_('COM_USERTOOLS_REQUIRE_RESET') ?></label>
+          <div class="form-text"><?= Text::_('COM_USERTOOLS_REQUIRE_RESET_HELP') ?></div>
+        </div>
         <div class="ut-email-auto mb-3" data-ut-email-auto>
           <div class="form-check">
             <input class="form-check-input" type="checkbox" id="ut-email-auto" data-ut-email-auto-on>
