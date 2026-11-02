@@ -186,7 +186,7 @@ No. Since 2026.10.11, the box in the **Add** header ticks them all, and the **Bu
 
 ### Is a welcome email sent?
 
-There are two creation modes. By default, an email with a password-selection link is sent using the editable “User Tools: account created” template. Alternatively, show a temporary password once and communicate it yourself. Both modes suppress Joomla's user-plugin welcome email and then restore that plugin's settings. Other plugins still receive the normal account-creation events.
+There are three creation modes. By default, an email with a password-selection link is sent using the editable “User Tools: account created” template. Alternatively, show a temporary password once and communicate it yourself; the user must change it at first login. If people sign in to your site with single sign-on (SSO), choose “No local password”: the account gets a random password that nobody sees, with no forced change and no email. All modes suppress Joomla's user-plugin welcome email and then restore that plugin's settings. Other plugins still receive the normal account-creation events.
 
 ### I lost the temporary password
 

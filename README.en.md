@@ -178,10 +178,11 @@ An incomplete list can cause incorrect blocks: always review the preview.
 
 ### Creating new accounts
 
-New accounts are created in the **Registered** group, after checking that it exists and has no administrator access, with a different email address for each account. Choose between two modes for each operation:
+New accounts are created in the **Registered** group, after checking that it exists and has no administrator access, with a different email address for each account. Choose one of three modes for each operation:
 
 - **Send a link to choose a password** (default). The account receives a random password that nobody sees, and the user receives an email linking to Joomla's standard password selection page. Edit the message under System → Mail Templates → “User Tools: account created”. Sending mail must be enabled in Global Configuration.
 - **Show a temporary password.** A random password following Joomla's password policy (length and minimum digits, symbols, uppercase and lowercase letters) appears **once**, in the response that creates the account. Its clear text is not stored in the session, database or logs. The user must change it at first login.
+- **No local password (single sign-on).** For sites where people sign in with single sign-on. The account receives a random password that nobody sees and that is never shown, with no forced change and no email. A visible password without a forced change is not offered, because it would leave a valid credential with whoever creates the account. If an account later needs a local password, use Joomla's password reset.
 
 When the list brings many new names, two aids in the review save work (since 2026.10.11):
 
@@ -532,7 +533,7 @@ Components → User Tools → **Options** (toolbar button):
 
 | Tab | Settings |
 |---|---|
-| Security | Reinforced-confirmation threshold (0 disables it); default creation mode (email link or temporary password); report retention days (90 by default, 0 = forever) |
+| Security | Reinforced-confirmation threshold (0 disables it); default creation mode (email link, temporary password or no local password for single sign-on); report retention days (90 by default, 0 = forever) |
 | Comparison | Exclude administrators, usernames and groups from manual comparison |
 | Inactivity review | Period, include never-logged-in users, and manual review exclusions |
 | Inactivity deletion | Period, account status (blocked only by default, both, or active only), include never-logged-in users, and deletion exclusions |

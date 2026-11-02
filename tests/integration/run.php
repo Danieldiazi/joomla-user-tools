@@ -304,6 +304,18 @@ Test::check((int) ($site->q('SELECT "requireReset" FROM #__users WHERE username 
 $again = $admin->get('index.php?option=com_usertools&view=compare&layout=result');
 Test::check(!str_contains($again, $password) && str_contains($again, 'Already shown'), 'reloading the result does not show the password again');
 
+Test::section('Comparison: accounts for single sign-on get no visible password');
+$review = $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => "ana\nluis\ndelegate\nnuevo1\nnuevo2\nnuevo3\nnuevo4", 'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
+Test::check(str_contains($review, 'id="ut-mode-sso" value="sso">') && str_contains($review, 'No local password (single sign-on)'), 'the review offers the single sign-on mode, not selected by default');
+$mailsBefore = count(glob($mails . '/*') ?: []);
+$result = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1, 'creation_mode' => 'sso',
+    'registrations' => json_encode([hash('sha256', 'nuevo4') => ['checked' => true, 'email' => 'nuevo4@example.test']])], 'data-ut-review');
+$ssoUser = $site->q('SELECT "requireReset", block FROM #__users WHERE username = ?', ['nuevo4'])[0] ?? [];
+Test::check(($ssoUser['requireReset'] ?? null) !== null && (int) $ssoUser['requireReset'] === 0 && (int) $ssoUser['block'] === 0, 'the single sign-on account is active and has no forced password change');
+Test::check(!str_contains($result, 'ut-secret') && str_contains($result, 'Accounts for single sign-on') && str_contains($result, 'nuevo4@example.test'), 'no password is shown; the account is listed apart');
+Test::check(count(glob($mails . '/*') ?: []) === $mailsBefore, 'no email is sent for single sign-on accounts');
+Test::check(count($site->q("SELECT id FROM #__action_logs WHERE extension = 'com_usertools.users' AND message_language_key = 'COM_USERTOOLS_ACTION_LOG_CREATED_SSO'")) === 1, 'the creation is logged as single sign-on');
+
 Test::section('Comparison: no matching names');
 $site->q('UPDATE #__users SET block = 0 WHERE username IN (?, ?)', ['baja', 'servicio']);
 $review = $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => 'pepito', 'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);

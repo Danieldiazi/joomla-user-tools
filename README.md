@@ -177,10 +177,11 @@ Una lista incompleta puede producir bloqueos incorrectos: revisa siempre la prev
 
 ### Altas de cuentas nuevas
 
-Las cuentas nuevas se crean en el grupo **Registrados** (se comprueba que exista y no tenga acceso a la administración), con un correo distinto para cada una. Hay dos modos, que se eligen en cada operación:
+Las cuentas nuevas se crean en el grupo **Registrados** (se comprueba que exista y no tenga acceso a la administración), con un correo distinto para cada una. Hay tres modos, que se eligen en cada operación:
 
 - **Enviar un enlace para elegir la contraseña** (por defecto). La cuenta se crea con una contraseña aleatoria que nadie ve, y la persona recibe un correo con un enlace a la página estándar de Joomla para elegir la suya. El texto del correo se edita en Sistema → Plantillas de correo → «User Tools: cuenta creada». Requiere que el envío de correo esté activado en la configuración global.
 - **Mostrar una contraseña temporal.** Se genera una contraseña aleatoria que cumple la política de contraseñas de Joomla (longitud y número mínimo de dígitos, símbolos, mayúsculas y minúsculas) y se muestra **una sola vez**, en la misma respuesta que crea la cuenta. No se guarda en la sesión, en la base de datos ni en los registros. La persona debe cambiarla en su primer acceso.
+- **Sin contraseña local (acceso por SSO).** Para sitios en los que se entra con inicio de sesión único. La cuenta se crea con una contraseña aleatoria que nadie ve ni se muestra, sin cambio obligatorio y sin enviar ningún correo. No se ofrece una contraseña visible sin cambio obligatorio porque dejaría una credencial válida en manos de quien hace el alta. Si alguna cuenta necesita después contraseña local, se usa la recuperación de contraseña de Joomla.
 
 Si la lista trae muchos nombres nuevos, dos ayudas de la revisión ahorran trabajo (desde la 2026.10.11):
 
@@ -531,7 +532,7 @@ Componentes → User Tools → **Opciones** (botón de la barra de herramientas)
 
 | Pestaña | Ajustes |
 |---|---|
-| Seguridad | Confirmación reforzada a partir de N cuentas (0 la desactiva); modo de alta por defecto (enlace por correo o contraseña temporal); días que se conservan los informes (90 por defecto, 0 = siempre) |
+| Seguridad | Confirmación reforzada a partir de N cuentas (0 la desactiva); modo de alta por defecto (enlace por correo, contraseña temporal o sin contraseña local para SSO); días que se conservan los informes (90 por defecto, 0 = siempre) |
 | Comparación | Excluir administradores, nombres excluidos y grupos excluidos de la comparación manual |
 | Revisión de inactivos | Plazo, incluir quien nunca accedió y exclusiones de la revisión manual |
 | Eliminación de inactivos | Plazo, cuentas que se listan (solo bloqueadas por defecto, ambas o solo activas), incluir quien nunca accedió y exclusiones de la eliminación |

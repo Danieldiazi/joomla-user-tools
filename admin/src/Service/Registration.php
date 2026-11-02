@@ -17,6 +17,14 @@ final class Registration
     public const MODE_EMAIL = 'email';
     /** A temporary password is shown once to the operator and must be changed at first login. */
     public const MODE_PASSWORD = 'password';
+    /**
+     * For sites where people sign in through single sign-on: the account gets a
+     * random local password that nobody sees and no forced change, because
+     * Joomla's password form is never used. Showing a password nobody has to
+     * change would leave the operator with a valid credential, so none is shown.
+     */
+    public const MODE_SSO = 'sso';
+    public const MODES = [self::MODE_EMAIL, self::MODE_PASSWORD, self::MODE_SSO];
 
     public static function key(string $name): string
     {
@@ -25,7 +33,7 @@ final class Registration
 
     public static function mode(mixed $value): string
     {
-        return $value === self::MODE_PASSWORD ? self::MODE_PASSWORD : self::MODE_EMAIL;
+        return \in_array($value, self::MODES, true) ? $value : self::MODE_EMAIL;
     }
 
     /**
@@ -106,10 +114,11 @@ final class Registration
      * @param  list<array{username: string, email: string, name?: string, groups?: list<int>}> $selection
      *         "groups" are added to $groupId and "name" defaults to the username (group synchronisation)
      * @param  callable(): object                           $newUser  returns an empty Joomla User
-     * @param  callable(object): bool                       $sendLink sends the "choose your password" email (email mode)
+     * @param  callable(object): bool                       $sendLink sends the "choose your password" email (email mode only)
      * @param  (callable(object): void)|null                $saved    runs as soon as each account exists (the action log),
      *                                                                so an interrupted request never leaves an unlogged account
      * @return array{created: list<array<string, mixed>>, errors: list<array{username: string, message: string}>}
+     *         Only password mode returns the password, and only then is a change required at first login.
      */
     public static function create(array $selection, callable $newUser, int $groupId, string $mode, PasswordGenerator $passwords, callable $sendLink, ?callable $saved = null): array
     {
@@ -144,7 +153,7 @@ final class Registration
             $created = $row + ['id' => (int) $user->id, 'mode' => $mode];
             if ($mode === self::MODE_PASSWORD) {
                 $created['password'] = $password;
-            } else {
+            } elseif ($mode === self::MODE_EMAIL) {
                 try {
                     $created['mailed'] = (bool) $sendLink($user);
                 } catch (\Throwable) {

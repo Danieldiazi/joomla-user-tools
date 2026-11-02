@@ -17,6 +17,7 @@ $layouts = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
 $result  = $this->result;
 $mailed  = array_filter($result['created'], fn ($row) => ($row['mode'] ?? '') === 'email');
 $shown   = array_filter($result['created'], fn ($row) => ($row['mode'] ?? '') === 'password');
+$sso     = array_filter($result['created'], fn ($row) => ($row['mode'] ?? '') === 'sso');
 ?>
 <div class="ut-app">
   <?= LayoutHelper::render('usertools.steps', ['steps' => ['edit' => 'COM_USERTOOLS_STEP_LIST', 'review' => 'COM_USERTOOLS_STEP_REVIEW', 'result' => 'COM_USERTOOLS_STEP_RESULT'], 'current' => 'result', 'label' => 'COM_USERTOOLS_COMPARE_PROGRESS'], $layouts) ?>
@@ -51,6 +52,18 @@ $shown   = array_filter($result['created'], fn ($row) => ($row['mode'] ?? '') ==
     <?php foreach ($mailed as $row) : ?>
       <li><a href="<?= Route::_('index.php?option=com_users&task=user.edit&id=' . (int) $row['id']) ?>"><?= $this->escape($row['username']) ?></a> · <?= $this->escape($row['email']) ?> ·
         <?= !empty($row['mailed']) ? '<span class="text-success">' . Text::_('COM_USERTOOLS_MAIL_SENT') . '</span>' : '<span class="text-danger">' . Text::_('COM_USERTOOLS_MAIL_FAILED') . '</span>' ?></li>
+    <?php endforeach; ?>
+    </ul>
+  </div></section>
+  <?php endif; ?>
+
+  <?php if ($sso) : ?>
+  <section class="card ut-card"><div class="card-body">
+    <h3 class="h5"><?= Text::_('COM_USERTOOLS_SSO_HEADING') ?></h3>
+    <p><?= Text::_('COM_USERTOOLS_SSO_RESULT') ?></p>
+    <ul class="mb-0">
+    <?php foreach ($sso as $row) : ?>
+      <li><a href="<?= Route::_('index.php?option=com_users&task=user.edit&id=' . (int) $row['id']) ?>"><?= $this->escape($row['username']) ?></a> · <?= $this->escape($row['email']) ?></li>
     <?php endforeach; ?>
     </ul>
   </div></section>
