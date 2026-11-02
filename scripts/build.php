@@ -113,8 +113,6 @@ foreach ($files as $file) {
 }
 file_put_contents($output . '/SHA256SUMS.txt', $sums);
 
-// Published next to updates.xml so Joomla can show what each update changes.
-copy($root . '/package/changelog.xml', $output . '/changelog.xml');
 
 $hash     = hash_file('sha256', $files['pkg']);
 $download = 'https://github.com/Danieldiazi/joomla-user-tools/releases/download/v' . $version . '/' . basename($files['pkg']);
@@ -129,6 +127,7 @@ $updates  = <<<XML
     <client>site</client>
     <version>$version</version>
     <infourl title="User Tools $version">https://github.com/Danieldiazi/joomla-user-tools/releases/tag/v$version</infourl>
+    <!-- changelog.xml is written by the release workflow (scripts/changelog.php). -->
     <changelogurl>https://github.com/Danieldiazi/joomla-user-tools/releases/download/v$version/changelog.xml</changelogurl>
     <downloads>
       <downloadurl type="full" format="zip">$download</downloadurl>

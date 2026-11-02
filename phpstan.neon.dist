@@ -9,6 +9,8 @@ parameters:
     - modules/mod_usertools_groups/src
     - package/script.php
     - scripts/build.php
+    - scripts/changelog.php
+    - scripts/ReleaseChangelog.php
   bootstrapFiles:
     - tests/phpstan-bootstrap.php
   treatPhpDocTypesAsCertain: false

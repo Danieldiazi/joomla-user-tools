@@ -25,6 +25,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+          # The changelog needs the previous tag and the merges since it.
+          fetch-depth: 0
 
       - uses: shivammathur/setup-php@v2
         with:
@@ -58,10 +60,31 @@ jobs:
           vendor/bin/phpunit
           npm test
 
+      - name: Collect the pull requests of this release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          # Previous release tag reachable from this one; none for the first release.
+          previous=$(git describe --tags --abbrev=0 --match 'v20*' "$GITHUB_REF_NAME^" 2>/dev/null || true)
+          range="$GITHUB_REF_NAME"
+          if [ -n "$previous" ]; then range="$previous..$GITHUB_REF_NAME"; fi
+          # Pull requests are merged with merge commits on main.
+          numbers=$(git log --first-parent --format=%s "$range" | sed -n 's/^Merge pull request #\([0-9]*\) .*/\1/p' | sort -n)
+          for number in $numbers; do
+            gh api "repos/$GH_REPO/pulls/$number" --jq '{number, title, body, labels: [.labels[].name]}'
+          done | jq -s . > pulls.json
+          rm -f previous-changelog.xml
+          if [ -n "$previous" ]; then
+            gh release download "$previous" --pattern changelog.xml --output previous-changelog.xml || true
+          fi
+          echo "Changelog since ${previous:-the first commit}: $(jq length pulls.json) pull requests"
+
       - name: Build and verify installable packages
         run: |
           php scripts/build.php --version="$GITHUB_REF_NAME" --output=dist
-          php tests/verify-build.php "$GITHUB_REF_NAME" dist
+          php scripts/changelog.php "$GITHUB_REF_NAME" pulls.json previous-changelog.xml > dist/changelog.xml
+          php tests/verify-build.php "$GITHUB_REF_NAME" dist --changelog
 
       - name: Publish release assets
         env:

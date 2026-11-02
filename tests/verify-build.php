@@ -2,7 +2,7 @@
 
 /**
  * Checks the packages built by scripts/build.php:
- *   php tests/verify-build.php 2026.10.3 dist
+ *   php tests/verify-build.php 2026.10.3 dist [--changelog]
  */
 
 declare(strict_types=1);
@@ -145,19 +145,18 @@ $check((string) $updates->update->sha256 === hash_file('sha256', $pkg), 'updates
 $check(str_ends_with((string) $updates->update->downloads->downloadurl, "/v$version/pkg_usertools-$version.zip"), 'updates.xml download URL');
 
 // Joomla shows the changelog entry whose version equals the update, so a
-// release without its own entry would show an empty changelog.
+// release without its own entry would show an empty changelog. changelog.xml
+// is written by the release workflow; pass --changelog to require it.
 $check(str_ends_with((string) $updates->update->changelogurl, "/v$version/changelog.xml"), 'updates.xml changelog URL');
 $check(str_ends_with((string) $pkgXml->changelogurl, '/releases/latest/download/changelog.xml'), 'package declares the changelog URL');
-$changelog = is_file("$dir/changelog.xml") ? simplexml_load_file("$dir/changelog.xml") : false;
-$check($changelog !== false, 'changelog.xml is built and parses');
-$entries = $changelog === false ? [] : $changelog->xpath("changelog[version='$version'][element='pkg_usertools'][type='package']");
-$check(count($entries) === 1, "changelog.xml has exactly one pkg_usertools entry for $version");
-if (count($entries) === 1) {
-    $items = $entries[0]->xpath('*/item');
-    $check(count($items) > 0, "changelog entry for $version lists at least one change");
-    $raw = (string) file_get_contents("$dir/changelog.xml");
-    // Joomla prints items as HTML and splits them at entities: keep them plain.
-    $check(!preg_match('/<item>[^<]*&/', $raw), 'changelog items contain no entities');
+if (in_array('--changelog', $argv, true)) {
+    $changelog = is_file("$dir/changelog.xml") ? simplexml_load_file("$dir/changelog.xml") : false;
+    $check($changelog !== false, 'changelog.xml is present and parses');
+    $entries = $changelog === false ? [] : $changelog->xpath("changelog[version='$version'][element='pkg_usertools'][type='package']");
+    $check(count($entries) === 1, "changelog.xml has exactly one pkg_usertools entry for $version");
+    $check(count($entries) === 1 && count($entries[0]->xpath('*/item')) > 0, "changelog entry for $version lists at least one item");
+    // Joomla prints items unescaped and splits them at entities: keep them plain.
+    $check(!preg_match('/<item>[^<]*&/', (string) @file_get_contents("$dir/changelog.xml")), 'changelog items contain no entities');
 }
 
 // Every language key used by the code exists in both languages.

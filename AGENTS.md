@@ -48,7 +48,8 @@ Se distribuye como un paquete con el componente `com_usertools`, los plugins `pl
 | `modules/mod_usertools/` | Módulo del panel de Usuarios. Solo presenta datos: las cifras y avisos los calculan `DashboardSummary` y `Toolkit::dashboard()`, con caché que se limpia con `Toolkit::clearDashboardCache()` cuando cambian cuentas u Opciones. |
 | `modules/mod_usertools_groups/` | Módulo del sitio de solo lectura. No depende del componente: `GroupTree` (reglas puras del árbol de grupos, con pruebas unitarias) y `MembershipHelper` (consultas). Nunca muestra correos ni cuentas bloqueadas, y por defecto oculta las cuentas con acceso a la administración. |
 | `package/` | Manifiesto del paquete, `script.php` de instalación (comprobaciones, migración de opciones, registro de acciones, plantilla de correo, colocación inicial del módulo) e idiomas. |
-| `scripts/build.php` | Construye los ZIP, `SHA256SUMS.txt`, `updates.xml` y `changelog.xml` (copia de `package/changelog.xml`). |
+| `scripts/build.php` | Construye los ZIP, `SHA256SUMS.txt` y `updates.xml`. |
+| `scripts/changelog.php`, `scripts/ReleaseChangelog.php` | Generan en el workflow de release el `changelog.xml` de Joomla a partir de las pull requests fusionadas desde la release anterior. |
 | `tests/` | `Unit/` (PHPUnit), `regression/` (controladores y modelos con sustitutos de Joomla), `js/` (jsdom), `integration/` (Joomla real), `verify-build.php`. |
 
 ## Reglas de seguridad que no se pueden romper
@@ -144,7 +145,7 @@ Estas referencias usan la ruta `next`, cuyo contenido puede cambiar. Contrasta s
   - `modules/mod_usertools_groups/mod_usertools_groups.xml`
   - `package/pkg_usertools.xml`
   - `media/joomla.asset.json`
-- Cada versión añade también su entrada al principio de `package/changelog.xml` (formato de registro de cambios de Joomla: `security`, `fix`, `addition`, `change`, `remove`, `language`, `note`). Joomla muestra solo la entrada cuya versión coincide con la actualización e imprime cada `item` tal cual: texto plano, sin marcado ni `&`. `verify-build.php` falla si falta la entrada.
+- **Registro de cambios**: lo genera el workflow de release (`scripts/changelog.php`) con las pull requests fusionadas desde la etiqueta anterior; no se edita a mano. Escribe títulos de pull request comprensibles para un administrador, etiquétalas (`bug`, `enhancement`, `documentation`, `security`) o usa prefijos (`feat:`, `fix:`, `docs:`; `refactor:`, `test:`, `ci:`, `build:` y `chore:` no aparecen), y añade `Changelog: texto` o `Changelog: none` en la descripción cuando el título no sirva. Las pull requests de preparación de versión se omiten. `verify-build.php --changelog` falla si falta la entrada de la versión.
 - No se reutiliza un número que ya tenga release.
 - **Antes de recomendar una versión o una etiqueta**: consulta las releases y etiquetas existentes y verifica la versión real del commit que se va a publicar. No basta con elegir el siguiente número.
 - **Preparar primero, etiquetar después**: actualiza los siete archivos en la misma rama y pull request, comprueba que sus valores coinciden, construye sin `--version` y ejecuta `php tests/verify-build.php VERSIÓN dist`. Fusiona la pull request con CI en verde antes de crear la etiqueta sobre ese commit de `main`.
