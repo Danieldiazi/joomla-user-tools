@@ -150,6 +150,12 @@ final class ActionLogger
             '', ['group' => '#' . $group]);
     }
 
+    /** Records a display-name update without copying the old or proposed name into the audit log. */
+    public function nameChanged(object $account, Operator $operator): void
+    {
+        $this->write('COM_USERTOOLS_ACTION_LOG_NAME_CHANGED', 'update', $account, $operator, '');
+    }
+
     public function created(object $account, Operator $operator, string $mode): void
     {
         $key = match ($mode) {

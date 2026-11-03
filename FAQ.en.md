@@ -68,7 +68,7 @@ No. List comparison, manual inactivity review, inactivity deletion and **each** 
 
 ### Who can use it?
 
-Super Users and users with the corresponding delegated permissions under **Options → Permissions**. There are separate permissions for viewing profiles, explaining content access, comparison and blocking, account creation, inactivity review, inactivity deletion, viewing task results, removing from groups, viewing groups, levels and content by level, viewing content by age and viewing the access diagnosis. Deletion is restricted to Super Users until you explicitly grant it to others. Access to the component also requires `core.manage`.
+Super Users and users with the corresponding delegated permissions under **Options → Permissions**. There are separate permissions for viewing profiles, explaining content access, comparison and blocking, account creation, inactivity review, inactivity deletion, viewing task results, bulk updating names, removing from groups, viewing groups, levels and content by level, viewing content by age and viewing the access diagnosis. Deletion is restricted to Super Users until you explicitly grant it to others. Access to the component also requires `core.manage`.
 
 ### Does it need JavaScript?
 
@@ -93,6 +93,10 @@ On the **Users dashboard**, the User Tools module shows individual links to the 
 ### Can I add many accounts to groups without removing current memberships?
 
 Yes. **Add accounts to groups** accepts a list and a single group, or `username;#ID` pairs. It reviews changes and duplicates before confirmation and prevents administrator account changes or assignment of backend-access groups. Use unambiguous group IDs or full paths.
+
+### Can I change the names of many accounts at once?
+
+Yes. In **Bulk update names**, paste `username;name` rows, review the current and proposed names, and select the accounts to change. Only the Name field is changed; malformed, duplicate or unmatched rows are skipped. Administrator accounts, Super Users and the operator are protected. See the [README](README.en.md#bulk-update-names).
 
 ### How do I keep the groups of a team or class in line with the list I receive?
 

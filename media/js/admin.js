@@ -69,6 +69,20 @@
       sync();
     });
 
+    // Keep bulk name selections in one field so the review does not hit PHP's max_input_vars limit.
+    document.querySelectorAll('[data-ut-names-review]').forEach((form) => {
+      const table = document.getElementById('ut-names-table');
+      const selected = form.querySelector('[data-ut-names-selected]');
+      if (!table || !selected) return;
+      const boxes = [...table.querySelectorAll('[data-ut-name-choice]')];
+      const sync = () => {
+        selected.value = JSON.stringify(boxes.filter((box) => box.checked).map((box) => Number(box.value)));
+      };
+      boxes.forEach((box) => box.addEventListener('change', sync));
+      form.addEventListener('submit', sync);
+      sync();
+    });
+
     document.querySelectorAll('[data-ut-exclusions]').forEach((card) => {
       const protectAdmins = card.querySelector('[data-ut-protect-admins]');
       const options = [...card.querySelectorAll('[data-ut-group-option]')];
