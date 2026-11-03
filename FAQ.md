@@ -96,7 +96,7 @@ Sí. Usa **Añadir cuentas a grupos** con lista y grupo único, o pares `usuario
 
 ### ¿Puedo cambiar el nombre de muchas cuentas a la vez?
 
-Sí. En **Actualizar nombres en bloque**, pega líneas `username;nombre`, revisa el nombre actual y el propuesto y marca las cuentas que quieres cambiar. Solo se modifica el campo Nombre; las filas incorrectas, duplicadas o sin coincidencia se omiten. Las cuentas administrativas, superusuarios y la cuenta que opera están protegidos. Consulta el [README](README.md#actualizar-nombres-en-bloque).
+Sí. En **Actualizar nombres en bloque**, pega líneas `username;nombre`, revisa el nombre actual y el propuesto y marca las cuentas que quieres cambiar. Solo se modifica el campo Nombre; las filas incorrectas, duplicadas o sin coincidencia se omiten. Las cuentas administrativas, superusuarios y la cuenta que opera están protegidos. Consulta el [README](README.md#actualizar-nombres-en-bloque). La selección necesita JavaScript; si no está disponible, la actualización no se habilita. Si vuelves a la herramienta con una tanda pendiente, puedes continuarla.
 
 ### ¿Cómo mantengo los grupos de un colectivo con la lista que me envían?
 

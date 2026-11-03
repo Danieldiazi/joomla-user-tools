@@ -41,6 +41,7 @@ class NamesController extends DisplayController
             $done = $model->apply([
                 'preview' => $this->input->post->getString('preview', ''),
                 'confirm' => $this->input->post->getInt('confirm', 0),
+                'selection_ready' => $this->input->post->getInt('selection_ready', 0),
                 'selected' => $this->input->post->get('selected', '[]', 'RAW'),
             ]);
             $this->go($done ? 'view=names&layout=result' : 'view=names&layout=progress');

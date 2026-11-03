@@ -52,6 +52,10 @@ class HtmlView extends BaseHtmlView
                     return;
                 }
             } else {
+                if ($model->getJob()) {
+                    Toolkit::app()->redirect('index.php?option=com_usertools&view=names&layout=progress');
+                    return;
+                }
                 $this->setLayout('default');
             }
         } catch (UserFacingException $e) {

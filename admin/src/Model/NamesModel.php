@@ -88,6 +88,11 @@ class NamesModel extends BaseDatabaseModel
             throw new UserFacingException('COM_USERTOOLS_ERROR_PREVIEW_EXPIRED');
         }
 
+        // A failed/missing script must never submit the initially checked rows as consent.
+        if ((int) ($input['selection_ready'] ?? 0) !== 1) {
+            throw new UserFacingException('COM_USERTOOLS_ERROR_JAVASCRIPT');
+        }
+
         $eligible = [];
         foreach ($preview['rows'] as $index => $row) {
             if ($row['status'] === Plan::UPDATE) {
@@ -98,6 +103,9 @@ class NamesModel extends BaseDatabaseModel
         $rawSelected = $input['selected'] ?? '[]';
         $submitted = is_array($rawSelected) ? $rawSelected : json_decode((string) $rawSelected, true);
         foreach (is_array($submitted) ? $submitted : [] as $value) {
+            if (!is_int($value) && !is_string($value)) {
+                continue;
+            }
             $key = (string) $value;
             if (isset($eligible[$key])) {
                 $selected[] = $eligible[$key];
@@ -142,6 +150,7 @@ class NamesModel extends BaseDatabaseModel
             return false;
         }
         $this->session()->set(self::JOB, []);
+        Toolkit::clearDashboardCache();
         $this->storeResult(self::RESULT, ['updated' => $job['updated'], 'changed' => $job['changed'], 'errors' => $job['errors']]);
         $this->session()->set(self::DRAFT, '');
         return true;

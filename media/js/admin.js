@@ -73,10 +73,15 @@
     document.querySelectorAll('[data-ut-names-review]').forEach((form) => {
       const table = document.getElementById('ut-names-table');
       const selected = form.querySelector('[data-ut-names-selected]');
-      if (!table || !selected) return;
+      const ready = form.querySelector('[data-ut-names-ready]');
+      const submit = form.querySelector('[data-ut-names-submit]');
+      if (!table || !selected || !ready || !submit) return;
       const boxes = [...table.querySelectorAll('[data-ut-name-choice]')];
       const sync = () => {
-        selected.value = JSON.stringify(boxes.filter((box) => box.checked).map((box) => Number(box.value)));
+        const choices = boxes.filter((box) => box.checked).map((box) => Number(box.value));
+        selected.value = JSON.stringify(choices);
+        ready.value = '1';
+        submit.disabled = choices.length === 0;
       };
       boxes.forEach((box) => box.addEventListener('change', sync));
       form.addEventListener('submit', sync);

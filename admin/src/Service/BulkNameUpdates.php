@@ -65,8 +65,8 @@ final class BulkNameUpdates
             $rows[] = [
                 'line' => $index + 1,
                 'username' => $username,
-                'id' => $user?->id ?? 0,
-                'before' => $user?->name ?? '',
+                'id' => $user->id ?? 0,
+                'before' => $user->name ?? '',
                 'after' => $after,
                 'status' => $status,
             ];

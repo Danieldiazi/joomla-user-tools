@@ -18,7 +18,7 @@ use Joomla\CMS\Router\Route;
 $layouts = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
 $selected = array_map('intval', $this->review['selected'] ?? []);
 $candidates = count(array_filter($this->review['rows'], static fn (array $row): bool => $row['status'] === BulkNameUpdates::UPDATE));
-$selectedJson = json_encode($selected, JSON_THROW_ON_ERROR);
+
 ?>
 <div class="ut-app">
   <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'review', 'label' => 'COM_USERTOOLS_NAMES_TITLE'], $layouts) ?>
@@ -45,7 +45,8 @@ $selectedJson = json_encode($selected, JSON_THROW_ON_ERROR);
   <?php if ($candidates > 0) : ?>
   <?php if (!$selected) : ?><p class="alert alert-info" data-ut-names-none-selected><?= Text::_('COM_USERTOOLS_NAMES_NONE_SELECTED') ?></p><?php endif; ?>
   <form id="ut-names-apply" method="post" action="<?= Route::_('index.php?option=com_usertools&view=names') ?>" data-ut-names-review>
-    <input type="hidden" name="selected" data-ut-names-selected value="<?= $this->escape($selectedJson) ?>">
+    <input type="hidden" name="selected" data-ut-names-selected value="[]">
+    <input type="hidden" name="selection_ready" data-ut-names-ready value="0">
     <div class="form-check my-3">
       <input class="form-check-input" type="checkbox" name="confirm" value="1" id="ut-names-confirm" required>
       <label class="form-check-label" for="ut-names-confirm"><?= Text::_('COM_USERTOOLS_NAMES_CONFIRM') ?></label>
@@ -53,7 +54,7 @@ $selectedJson = json_encode($selected, JSON_THROW_ON_ERROR);
     <input type="hidden" name="preview" value="<?= $this->escape($this->review['nonce']) ?>">
     <div class="ut-actions">
       <a class="btn btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools&view=names') ?>"><?= Text::_('COM_USERTOOLS_BACK_EDIT') ?></a>
-      <button class="btn btn-primary" name="task" value="names.apply"><?= Text::_('COM_USERTOOLS_NAMES_APPLY') ?></button>
+      <button class="btn btn-primary" name="task" value="names.apply" data-ut-names-submit disabled><?= Text::_('COM_USERTOOLS_NAMES_APPLY') ?></button>
     </div>
     <?= HTMLHelper::_('form.token') ?>
   </form>

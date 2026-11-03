@@ -22,7 +22,7 @@ $result = $this->result;
   <?php foreach (['updated', 'changed', 'errors'] as $status) : ?>
   <?php if ($result[$status]) : ?>
   <section class="card ut-card"><div class="card-body">
-    <h3 class="h5"><?= Text::_('COM_USERTOOLS_NAMES_STATUS_' . strtoupper($status)) ?></h3>
+    <h3 class="h5"><?= Text::_($status === 'errors' ? 'COM_USERTOOLS_STAT_ERRORS' : 'COM_USERTOOLS_NAMES_STATUS_' . strtoupper($status)) ?></h3>
     <ul><?php foreach ($result[$status] as $row) : ?>
       <li data-ut-names-result="<?= $status ?>" data-ut-names-id="<?= (int) $row['id'] ?>">
         <?= $this->escape($row['username']) ?> — <?= $this->escape($row['before']) ?> → <?= $this->escape($row['after']) ?>
