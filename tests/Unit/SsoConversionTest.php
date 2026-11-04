@@ -60,6 +60,27 @@ final class SsoConversionTest extends TestCase
         self::assertContains('manager', array_column(Plan::candidates($users, $groups, $filters, new Operator(9, true)), 'username'));
     }
 
+    public function testLimitAppliesAfterGroupStatusAndProtectedAccountFiltering(): void
+    {
+        $groups = $this->fixtureGroups();
+        $users = [];
+        // A large site may have many reset-required accounts outside this
+        // group's scope; these must not consume review capacity.
+        for ($i = 1; $i <= 5200; $i++) {
+            $users[$i + 100] = Fixtures::user($i + 100, 'outside' . $i, [8]);
+        }
+        $users[8001] = Fixtures::user(8001, 'eligible', [3]);
+        $users[8002] = Fixtures::user(8002, 'blocked', [3], block: 1);
+        $filters = Plan::filters(['group' => 2, 'subgroups' => 1, 'status' => 'active'], $groups);
+        $matching = Plan::candidates($users, $groups, $filters, new Operator(9, true));
+        $review = [];
+        Plan::appendWithinLimit($review, $matching);
+        self::assertSame(['eligible'], array_column($review, 'username'));
+
+        $this->expectException(UserFacingException::class);
+        Plan::appendWithinLimit($review, array_fill(0, Plan::MAX_ACCOUNTS, ['id' => 9001]));
+    }
+
     public function testConversionRotatesPasswordClearsResetAuditsAndTerminatesSessions(): void
     {
         $account = $this->account();
