@@ -225,13 +225,13 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['profile', 'explain', 'compare', 'export', 'inactive', 'unblock', 'handover', 'addgroups', 'sync', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
+Test::check($cards[1] === ['profile', 'explain', 'compare', 'bulkcreate', 'export', 'inactive', 'unblock', 'handover', 'addgroups', 'sync', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
 Test::check(!preg_match('/<span class="icon-(address-card)"/', $home) && str_contains($home, '<span class="icon-vcard" aria-hidden="true"></span> Account profile'),
     'the profile card uses an icon that Joomla provides');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 19 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 20 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -1955,7 +1955,7 @@ Test::check(!str_contains($blockedProfile, 'data-ut-profile-action="block"') && 
 $site->q('UPDATE #__categories SET created_user_id = ? WHERE id = ?', [$profileCategoryBefore, $ageCategory]);
 
 Test::section('Guided tours');
-$tourViews = ['compare' => 4, 'inactive' => 4, 'unblock' => 3, 'delete' => 4, 'anonymize' => 4, 'addgroups' => 3, 'sync' => 4, 'ungroup' => 3, 'move' => 4, 'schedule' => 2];
+$tourViews = ['compare' => 4, 'bulkcreate' => 3, 'inactive' => 4, 'unblock' => 3, 'delete' => 4, 'anonymize' => 4, 'addgroups' => 3, 'sync' => 4, 'ungroup' => 3, 'move' => 4, 'schedule' => 2];
 $tours = [];
 foreach ($site->q("SELECT id, uid, autostart, published, extensions FROM #__guidedtours WHERE uid LIKE 'com_usertools.tour-%'") as $row) {
     $tours[substr((string) $row['uid'], strlen('com_usertools.tour-'))] = $row;
@@ -2327,6 +2327,10 @@ $bulkResult = $admin->submit($bulkUrl . '&layout=review', [
     'registrations' => json_encode([$bulkKey => ['checked' => true, 'email' => 'ut_bulk_new@example.test']]),
 ], 'data-ut-review');
 $bulkId = $site->userId('ut_bulk_new');
+if ($bulkId === 0) {
+    echo 'Bulk creation diagnostic: ' . substr(preg_replace('/\\s+/', ' ', strip_tags($bulkResult)), 0, 1600) . "\n";
+}
+
 Test::check($bulkId > 0 && str_contains($bulkResult, 'ut_bulk_new'), 'selected SSO account is created');
 $bulkRow = $site->q('SELECT name, email, "requireReset" FROM #__users WHERE id = ?', [$bulkId])[0] ?? [];
 Test::check(($bulkRow['name'] ?? '') === 'ut_bulk_new' && ($bulkRow['email'] ?? '') === 'ut_bulk_new@example.test'
