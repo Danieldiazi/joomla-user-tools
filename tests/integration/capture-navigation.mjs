@@ -122,7 +122,10 @@ try {
   if (!(await typed.isVisible())) throw new Error('Bulk create threshold must require a typed count');
   await capture('42-alta-masiva-correos-generados.jpg');
   await bulk.locator('[data-ut-add]').last().uncheck();
-  if (await typed.isVisible()) throw new Error('Typed confirmation must follow the selected count');
+  const threshold = Number(await bulk.locator('[data-ut-confirm]').getAttribute('data-ut-threshold'));
+  if ((await typed.isVisible()) !== (threshold > 0 && 2 >= threshold)) {
+    throw new Error('Typed confirmation must follow the configured threshold and selected count');
+  }
 
   await writeFile(resolve(output, 'navigation-checks.json'), JSON.stringify({
     menuKeyboardOrder: true, keyboardExpandCollapse: true, activeCategories: true,
