@@ -88,6 +88,42 @@ try {
     throw error;
   }
   await capture('13-panel-usuarios.jpg');
+
+  // Browser verification of the standalone, create-only bulk registration review.
+  // No submit/apply: synthetic fixtures only, with no account changes.
+  const bulkUrl = base + '/administrator/index.php?option=com_usertools&view=bulkcreate';
+  await page.goto(bulkUrl);
+  await page.locator('textarea[name="lines"]').fill(
+    'ut_browser_a\nut_browser_b;Example Person;manual@example.test\nut_browser_c;Third Person',
+  );
+  await capture('40-alta-masiva-entrada.jpg');
+  await page.locator('button[value="bulkcreate.preview"]').click();
+  const bulk = page.locator('[data-ut-bulkcreate-review]');
+  await bulk.waitFor();
+  await capture('41-alta-masiva-revision.jpg');
+  if (await bulk.locator('[data-ut-add]:checked').count() !== 0 ||
+      await bulk.locator('[data-ut-bulkcreate-submit]').isEnabled()) {
+    throw new Error('Bulk creation must start with no accounts selected');
+  }
+  await bulk.locator('[data-ut-email-auto-on]').check();
+  await bulk.locator('[data-ut-email-domain]').fill('example.test');
+  const emails = await bulk.locator('[data-ut-user] [data-ut-email]').evaluateAll(
+    fields => fields.map(field => field.value),
+  );
+  if (JSON.stringify(emails) !== JSON.stringify([
+    'ut_browser_a@example.test', 'manual@example.test', 'ut_browser_c@example.test',
+  ])) throw new Error('Bulk creation email generation must preserve manual addresses');
+  await bulk.locator('[data-ut-add-all]').check();
+  if (await bulk.locator('[data-ut-add]:checked').count() !== 3 ||
+      await bulk.locator('[data-ut-bulkcreate-selected]').textContent() !== '3') {
+    throw new Error('Bulk create select-all and counter must reflect three accounts');
+  }
+  const typed = bulk.locator('[data-ut-typed]');
+  if (!(await typed.isVisible())) throw new Error('Bulk create threshold must require a typed count');
+  await capture('42-alta-masiva-correos-generados.jpg');
+  await bulk.locator('[data-ut-add]').last().uncheck();
+  if (await typed.isVisible()) throw new Error('Typed confirmation must follow the selected count');
+
   await writeFile(resolve(output, 'navigation-checks.json'), JSON.stringify({
     menuKeyboardOrder: true, keyboardExpandCollapse: true, activeCategories: true,
     narrowCategoryFits: true, layout, language: 'en-GB',
