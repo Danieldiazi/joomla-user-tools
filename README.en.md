@@ -256,6 +256,8 @@ Open **User Tools → Bulk update names** and paste one row per account in `user
 
 The tool changes only the **Name** field. It does not change the username, email, groups, status or password. Each successful change is recorded in the User Actions Log without copying the old or proposed names into that entry.
 
+![Bulk update names: review with the current and proposed names, the selected rows and those that cannot be applied (Spanish interface)](docs/screenshots/44-nombres-revision.jpg)
+
 ## Synchronise a group branch
 
 When an organisation regularly receives the list of its staff, members or students, **User Tools → Synchronise a group branch** adjusts the groups of that **branch** without affecting anything else. For example, the Sales list can only change the groups of “Departments/Sales”: someone who is also in “Projects/Web” keeps that group and their account.

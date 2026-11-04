@@ -255,6 +255,8 @@ Desde **User Tools → Actualizar nombres en bloque**, pega una fila por cuenta 
 
 La herramienta solo cambia el campo **Nombre**. No modifica el username, el correo, los grupos, el estado ni la contraseña. Cada cambio realizado se anota en el registro de acciones sin copiar los nombres anterior o propuesto a esa anotación.
 
+![Actualizar nombres en bloque: revisión con el nombre actual y el propuesto, las filas marcadas y las que no se pueden aplicar](docs/screenshots/44-nombres-revision.jpg)
+
 ## Sincronizar un colectivo
 
 Cuando una organización recibe cada cierto tiempo la lista de su personal, socios o alumnado, **User Tools → Sincronizar un colectivo** ajusta los grupos de esa **rama** sin afectar a nada más. Por ejemplo, la lista de Ventas solo puede cambiar los grupos de «Departamentos/Ventas»: quien está también en «Proyectos/Web» conserva ese grupo y su cuenta.
