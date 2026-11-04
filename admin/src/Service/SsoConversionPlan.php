@@ -18,7 +18,11 @@ final class SsoConversionPlan
 {
     public const MAX_ACCOUNTS = 5000;
 
-    /** @return array{group: int, subgroups: bool, status: string, visits: string} */
+    /**
+     * @param array<string, mixed> $input
+     * @param array<int, object> $groups
+     * @return array{group: int, subgroups: bool, status: string, visits: string}
+     */
     public static function filters(array $input, array $groups): array
     {
         $group = (int) ($input['group'] ?? 0);
