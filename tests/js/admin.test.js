@@ -400,3 +400,34 @@ test('stylesheet: sticky headers and first columns have an opaque surface even w
   }
   assert.ok(!/background:var\(--bs-body-bg\)/.test(css), 'no sticky cell depends on --bs-body-bg alone');
 });
+
+test('name selections start empty and are synchronised before enabling apply', async () => {
+  const doc = await load(`<table id="ut-names-table"><tr><td><input type="checkbox" data-ut-name-choice value="0" checked></td></tr><tr><td><input type="checkbox" data-ut-name-choice value="1" checked></td></tr></table>
+    <form data-ut-names-review><p data-ut-names-none-selected hidden></p><input data-ut-names-selected value="[]"><input data-ut-names-ready value="0"><button data-ut-names-submit disabled></button></form>`);
+  const none = doc.querySelector('[data-ut-names-none-selected]');
+  const boxes = doc.querySelectorAll('[data-ut-name-choice]');
+  const selected = doc.querySelector('[data-ut-names-selected]');
+  const submit = doc.querySelector('button');
+  assert.equal(doc.querySelector('[data-ut-names-ready]').value, '1');
+  assert.equal(submit.disabled, false);
+  boxes[0].checked = false;
+  change(boxes[0]);
+  assert.deepEqual(JSON.parse(selected.value), [1]);
+  boxes[1].checked = false;
+  change(boxes[1]);
+  assert.equal(submit.disabled, true);
+  assert.equal(none.hidden, false);
+  assert.deepEqual(JSON.parse(selected.value), []);
+  // Submission synchronises even if a browser restores a checkbox without a change event.
+  boxes[0].checked = true;
+  doc.querySelector('form').dispatchEvent(new doc.defaultView.Event('submit'));
+  assert.deepEqual(JSON.parse(selected.value), [0]);
+  assert.equal(none.hidden, true);
+});
+
+test('name apply remains disabled if selection controls cannot initialise', async () => {
+  const doc = await load('<form data-ut-names-review><input data-ut-names-selected value="[]"><input data-ut-names-ready value="0"><button data-ut-names-submit disabled></button></form>');
+  assert.equal(doc.querySelector('button').disabled, true);
+  assert.equal(doc.querySelector('[data-ut-names-ready]').value, '0');
+  assert.equal(doc.querySelector('[data-ut-names-selected]').value, '[]');
+});

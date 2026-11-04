@@ -28,6 +28,8 @@ namespace Danieldiazi\Component\Usertools\Administrator\Service {
         public static object $options;
         public static object $store;
         public static int $writes = 0;
+        public static object $factory;
+        public static function users() { return self::$factory; }
         /** Account id whose block throws, as a request cut off half-way would. */
         public static int $failOn = 0;
         public static function app() { return self::$application; }
@@ -75,6 +77,7 @@ namespace {
     Toolkit::$directory = new class {
         public array $records = [];
         public function users() { return $this->records; }
+        public function usersByUsername($names) { return array_filter($this->records, fn ($row) => in_array($row->username, $names, true)); }
         public function exists($field, $value) { return false; }
     };
     Toolkit::$options = new class {
@@ -86,8 +89,8 @@ namespace {
     };
     Toolkit::$store = new class { public function save($values) {} };
 
-    foreach (['Compare', 'Bulkcreate', 'Export', 'Inactive', 'Delete', 'Reports', 'Ungroup', 'Access', 'Usage', 'Diagnose', 'Age', 'Move', 'Anonymize', 'Addgroups', 'Sync', 'Unblock', 'Profile', 'Accounts', 'Handover'] as $controllerName) {
-        foreach (['compare' => 'usertools.compare', 'bulkcreate' => 'usertools.create', 'export' => 'usertools.export', 'inactive' => 'usertools.inactive', 'delete' => 'usertools.delete', 'access' => 'usertools.access', 'usage' => 'usertools.access', 'ungroup' => 'usertools.ungroup', 'diagnose' => 'usertools.diagnose', 'age' => 'usertools.content', 'move' => 'core.admin', 'anonymize' => 'usertools.anonymize', 'addgroups' => 'usertools.addgroups', 'sync' => 'usertools.sync', 'unblock' => 'usertools.unblock', 'handover' => 'usertools.reassign', 'profile' => 'usertools.profile', 'explain' => 'usertools.explain',
+    foreach (['Compare', 'Bulkcreate', 'Export', 'Inactive', 'Delete', 'Reports', 'Ungroup', 'Access', 'Usage', 'Diagnose', 'Age', 'Move', 'Anonymize', 'Addgroups', 'Names', 'Sync', 'Unblock', 'Profile', 'Accounts', 'Handover'] as $controllerName) {
+        foreach (['compare' => 'usertools.compare', 'bulkcreate' => 'usertools.create', 'export' => 'usertools.export', 'inactive' => 'usertools.inactive', 'delete' => 'usertools.delete', 'access' => 'usertools.access', 'usage' => 'usertools.access', 'ungroup' => 'usertools.ungroup', 'diagnose' => 'usertools.diagnose', 'age' => 'usertools.content', 'move' => 'core.admin', 'anonymize' => 'usertools.anonymize', 'addgroups' => 'usertools.addgroups', 'names' => 'usertools.names', 'sync' => 'usertools.sync', 'unblock' => 'usertools.unblock', 'handover' => 'usertools.reassign', 'profile' => 'usertools.profile', 'explain' => 'usertools.explain',
                   'reports' => 'usertools.reports', 'report' => 'usertools.reports'] as $view => $permission) {
             $input = new class($view) {
                 public function __construct(private string $view) {}
@@ -228,5 +231,62 @@ namespace {
     Toolkit::$failOn = 0;
     $step = $model->step();
     check($step['done'] && Toolkit::$writes === $writes + 10 && count($step['result']['blocked']) === 10, 'Continuing does the other six, once each');
+    // Name reviews cannot write without synchronised, explicit selection and a current nonce.
+    $names = new \Danieldiazi\Component\Usertools\Administrator\Model\NamesModel();
+    Toolkit::$directory->records = [Fixtures::user(2, 'alice'), Fixtures::user(3, 'bob')];
+    $names->preview(['lines' => "alice;New Alice\nbob;New Bob"]);
+    $np = $names->getPreview();
+    foreach ([['selection_ready' => 0], ['preview' => 'forged'], ['confirm' => 0], ['selected' => '[]']] as $override) {
+        try {
+            $names->apply($override + ['preview' => $np['nonce'], 'confirm' => 1, 'selection_ready' => 1, 'selected' => '[0]']);
+            throw new \RuntimeException('Unsafe name submission accepted');
+        } catch (UserFacingException $e) {
+            check($names->getJob() === null && $names->getPreview() !== null, 'Rejected name selection writes nothing and preserves review');
+        }
+    }
+    $session->data['com_usertools.names.preview']['expires'] = time() - 1;
+    check($names->getPreview() === null, 'Name preview expires');
+    $names->preview(['lines' => 'alice;New Alice']);
+    Toolkit::$directory->records[0] = Fixtures::user(2, 'renamed');
+    check($names->getReview()['rows'][0]['username'] === 'alice', 'A changed account does not discard the rest of the review');
+    // Real name writer with mutable stand-in accounts exercises selection and one-use jobs.
+    Toolkit::$directory->records = [Fixtures::user(2, 'alice'), Fixtures::user(3, 'bob')];
+    Toolkit::$factory = new class implements \Joomla\CMS\User\UserFactoryInterface {
+        public array $accounts = [];
+        public function __construct() {
+            foreach ([2 => 'alice', 3 => 'bob'] as $id => $username) {
+                $this->accounts[$id] = new class ($id, $username) {
+                    public string $name;
+                    public int $saves = 0;
+                    public function __construct(public int $id, public string $username) { $this->name = ucfirst($username); }
+                    public function authorise($permission) { return false; }
+                    public function save(bool $updateOnly): bool { $this->saves++; return true; }
+                };
+            }
+        }
+        public function loadUserById(int $id) { return $this->accounts[$id]; }
+        public function loadUserByUsername(string $username) { throw new \LogicException('Names use reviewed IDs'); }
+    };
+    $names->preview(['lines' => "alice;New Alice\nbob;New Bob"]);
+    $np = $names->getPreview();
+    $nameInput = ['preview' => $np['nonce'], 'confirm' => 1, 'selection_ready' => 1, 'selected' => '[0,0,999,{},false]'];
+    check($names->apply($nameInput), 'Selected name job completes');
+    check(Toolkit::$factory->accounts[2]->name === 'New Alice' && Toolkit::$factory->accounts[2]->saves === 1
+        && Toolkit::$factory->accounts[3]->name === 'Bob', 'Only selected valid row saves, once');
+    check(count($names->getResult()['updated']) === 1 && $names->getPreview() === null && $names->getJob() === null,
+        'Completed name review is consumed and result stored');
+    try { $names->apply($nameInput); throw new \RuntimeException('Name review replay accepted'); }
+    catch (UserFacingException $e) { check(Toolkit::$factory->accounts[2]->saves === 1, 'Replay cannot save twice'); }
+    // A concurrent edit skips only that account; unselected and invalid rows are reported as well.
+    Toolkit::$factory->accounts[2]->name = 'Alice';
+    $names->preview(['lines' => "alice;Again\nbob;New Bob\nbad"]);
+    $np = $names->getPreview();
+    Toolkit::$factory->accounts[3]->name = 'Concurrent';
+    check($names->apply(['preview' => $np['nonce'], 'confirm' => 1, 'selection_ready' => 1, 'selected' => '[0,1]']), 'Name job with a stale row completes');
+    $nr = $names->getResult();
+    check(Toolkit::$factory->accounts[2]->name === 'Again' && Toolkit::$factory->accounts[3]->name === 'Concurrent' && Toolkit::$factory->accounts[3]->saves === 0,
+        'Stale row is not overwritten while the rest are saved');
+    check(array_column($nr['updated'], 'username') === ['alice'] && array_column($nr['changed'], 'username') === ['bob']
+        && array_column($nr['skipped'], 'status') === ['invalid_line'], 'Result reports each row: updated, changed and skipped');
     echo "OK: controller view permissions and changed comparison previews\n";
 }

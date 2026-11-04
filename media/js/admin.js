@@ -69,6 +69,27 @@
       sync();
     });
 
+    // Keep bulk name selections in one field so the review does not hit PHP's max_input_vars limit.
+    document.querySelectorAll('[data-ut-names-review]').forEach((form) => {
+      const table = document.getElementById('ut-names-table');
+      const selected = form.querySelector('[data-ut-names-selected]');
+      const ready = form.querySelector('[data-ut-names-ready]');
+      const submit = form.querySelector('[data-ut-names-submit]');
+      const none = form.querySelector('[data-ut-names-none-selected]');
+      if (!table || !selected || !ready || !submit) return;
+      const boxes = [...table.querySelectorAll('[data-ut-name-choice]')];
+      const sync = () => {
+        const choices = boxes.filter((box) => box.checked).map((box) => Number(box.value));
+        selected.value = JSON.stringify(choices);
+        ready.value = '1';
+        submit.disabled = choices.length === 0;
+        if (none) none.hidden = choices.length > 0;
+      };
+      boxes.forEach((box) => box.addEventListener('change', sync));
+      form.addEventListener('submit', sync);
+      sync();
+    });
+
     document.querySelectorAll('[data-ut-exclusions]').forEach((card) => {
       const protectAdmins = card.querySelector('[data-ut-protect-admins]');
       const options = [...card.querySelectorAll('[data-ut-group-option]')];

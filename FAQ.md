@@ -72,7 +72,7 @@ No. La comparación de listas, la revisión manual por inactividad, la eliminaci
 
 ### ¿Quién puede usarlo?
 
-Los superusuarios y los usuarios con los permisos delegados correspondientes en **Opciones → Permisos**. Hay permisos separados para consultar fichas, explicar el acceso a contenido, comparar listas y bloquear, crear cuentas, revisar usuarios inactivos, eliminar usuarios inactivos, consultar resultados de tareas, quitar de grupos, ver grupos, niveles y contenido por nivel, ver contenido por antigüedad y ver el diagnóstico de accesos. El de eliminar no se concede a nadie más que a los superusuarios hasta que lo des expresamente. El acceso al componente también requiere `core.manage`.
+Los superusuarios y los usuarios con los permisos delegados correspondientes en **Opciones → Permisos**. Hay permisos separados para consultar fichas, explicar el acceso a contenido, comparar listas y bloquear, crear cuentas, revisar usuarios inactivos, eliminar usuarios inactivos, consultar resultados de tareas, actualizar nombres en bloque, quitar de grupos, ver grupos, niveles y contenido por nivel, ver contenido por antigüedad y ver el diagnóstico de accesos. El de eliminar no se concede a nadie más que a los superusuarios hasta que lo des expresamente. El acceso al componente también requiere `core.manage`.
 
 ### ¿Necesita JavaScript?
 
@@ -97,6 +97,10 @@ En el **panel de Usuarios**, el módulo User Tools muestra enlaces individuales 
 ### ¿Puedo añadir muchos usuarios a grupos sin quitarles los actuales?
 
 Sí. Usa **Añadir cuentas a grupos** con lista y grupo único, o pares `usuario;#ID`. Se revisan cambios y duplicados antes de confirmar, y no se modifican administradores ni se asignan grupos con acceso a la administración. Los grupos se indican por ID o ruta completa sin ambigüedad.
+
+### ¿Puedo cambiar el nombre de muchas cuentas a la vez?
+
+Sí. En **Actualizar nombres en bloque**, pega líneas `username;nombre`, revisa el nombre actual y el propuesto y marca las cuentas que quieres cambiar. Solo se modifica el campo Nombre; las filas incorrectas, duplicadas o sin coincidencia se omiten, y el resultado indica qué ocurrió con cada una. Si una cuenta cambia mientras revisas, se omite solo esa fila. Las cuentas administrativas, superusuarios y la cuenta que opera están protegidos. Consulta el [README](README.md#actualizar-nombres-en-bloque). La selección necesita JavaScript; si no está disponible, la actualización no se habilita. Si vuelves a la herramienta con una tanda pendiente, puedes continuarla.
 
 ### ¿Cómo mantengo los grupos de un colectivo con la lista que me envían?
 

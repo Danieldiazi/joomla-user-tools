@@ -140,6 +140,34 @@ final class UserDirectory
     }
 
     /**
+     * Load accounts by username, ignoring case, without reading the entire user table.
+     * The result is still evaluated through the same bulk membership and ACL snapshot as users().
+     *
+     * @param list<string> $usernames
+     * @return array<int, UserRecord>
+     */
+    public function usersByUsername(array $usernames): array
+    {
+        $usernames = array_values(array_unique(array_map('mb_strtolower', array_filter($usernames, static fn (string $name): bool => $name !== ''))));
+        if (!$usernames) {
+            return [];
+        }
+        $ids = [];
+        foreach (array_chunk($usernames, self::CHUNK) as $chunk) {
+            $query = $this->db->createQuery()
+                ->select($this->db->quoteName('id'))
+                ->from($this->db->quoteName('#__users'))
+                ->whereIn('LOWER(' . $this->db->quoteName('username') . ')', $chunk, ParameterType::STRING);
+            foreach ($this->db->setQuery($query)->loadColumn() as $id) {
+                $ids[] = (int) $id;
+            }
+        }
+        $users = $this->users($ids);
+        $wanted = array_fill_keys($usernames, true);
+        return array_filter($users, static fn (UserRecord $user): bool => isset($wanted[mb_strtolower($user->username)]));
+    }
+
+    /**
      * Viewing access levels in their configured order.
      *
      * @return list<array{id: int, title: string, rules: list<int>}>

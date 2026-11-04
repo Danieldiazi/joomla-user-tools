@@ -88,6 +88,32 @@ try {
     throw error;
   }
   await capture('13-panel-usuarios.jpg');
+  // Exercise the actual Joomla asset as well as the HTTP-only integration client.
+  await page.goto(base + '/administrator/index.php?option=com_usertools&view=names');
+  await page.locator('[data-ut-names-form]').waitFor();
+  await capture('43-nombres-lista.jpg');
+  await page.locator('[name="lines"]').fill('names_one;Updated First Name\nnames_two;Updated Second Name\nnames_manager;Protected Row\nnames_missing;Unknown Row\nmalformed row');
+  await page.locator('button[value="names.preview"]').click();
+  await page.locator('[data-ut-names-review]').waitFor();
+  const applyNames = page.locator('[data-ut-names-submit]');
+  if (!(await applyNames.isEnabled())) throw new Error('Name selection script did not initialise');
+  await page.locator('[data-ut-name-choice][value="1"]').uncheck();
+  if (await page.locator('[data-ut-names-selected]').inputValue() !== '[0]') throw new Error('Deselected name was still submitted');
+  await capture('44-nombres-revision.jpg');
+  await page.locator('[data-ut-name-choice][value="0"]').uncheck();
+  if (!(await applyNames.isDisabled())) throw new Error('Empty name selection must disable apply');
+  const noScript = await browser.newContext({ storageState: await page.context().storageState(), javaScriptEnabled: false });
+  try {
+    const fallback = await noScript.newPage();
+    await fallback.goto(base + '/administrator/index.php?option=com_usertools&view=names&layout=review');
+    if (!(await fallback.locator('[data-ut-names-submit]').isDisabled())
+        || await fallback.locator('[data-ut-names-selected]').inputValue() !== '[]'
+        || await fallback.locator('[data-ut-names-ready]').inputValue() !== '0') {
+      throw new Error('Name update must remain disabled without JavaScript');
+    }
+  } finally {
+    await noScript.close();
+  }
 
   // Browser verification of the standalone, create-only bulk registration review.
   // No submit/apply: synthetic fixtures only, with no account changes.

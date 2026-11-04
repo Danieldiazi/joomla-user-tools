@@ -38,6 +38,7 @@ final class Navigation
         'age' => 'usertools.content',
         'move' => self::SUPER_USERS,
         'addgroups' => 'usertools.addgroups',
+        'names' => 'usertools.names',
         'sync' => 'usertools.sync',
         'anonymize' => 'usertools.anonymize',
     ];
@@ -64,6 +65,7 @@ final class Navigation
         'inactive' => ['accounts', 'COM_USERTOOLS_INACTIVE_TITLE', 'COM_USERTOOLS_INACTIVE_HOME_DESC', 'COM_USERTOOLS_INACTIVE_START', '', 'clock'],
         'unblock' => ['accounts', 'COM_USERTOOLS_UNBLOCK_TITLE', 'COM_USERTOOLS_UNBLOCK_HOME_DESC', 'COM_USERTOOLS_UNBLOCK_START', '', 'undo'],
         'handover' => ['accounts', 'COM_USERTOOLS_HANDOVER_TITLE', 'COM_USERTOOLS_HANDOVER_HOME_DESC', 'COM_USERTOOLS_HANDOVER_START', '', 'share'],
+        'names' => ['accounts', 'COM_USERTOOLS_NAMES_TITLE', 'COM_USERTOOLS_NAMES_HOME_DESC', 'COM_USERTOOLS_NAMES_START', '', 'user-edit'],
         'addgroups' => ['groups', 'COM_USERTOOLS_ADDGROUPS_TITLE', 'COM_USERTOOLS_ADDGROUPS_HOME_DESC', 'COM_USERTOOLS_ADDGROUPS_START', '', 'users'],
         'sync' => ['groups', 'COM_USERTOOLS_SYNC_TITLE', 'COM_USERTOOLS_SYNC_HOME_DESC', 'COM_USERTOOLS_SYNC_START', '', 'refresh'],
         'ungroup' => ['groups', 'COM_USERTOOLS_UNGROUP_TITLE', 'COM_USERTOOLS_UNGROUP_HOME_DESC', 'COM_USERTOOLS_UNGROUP_START', '', 'users-cog'],
