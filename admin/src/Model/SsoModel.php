@@ -54,15 +54,46 @@ class SsoModel extends BaseDatabaseModel
         $groups = $directory->groups();
         $filters = SsoConversionPlan::filters($input, $groups);
         $db = Toolkit::db();
-        $query = $db->createQuery()->select($db->quoteName('id'))
-            ->from($db->quoteName('#__users'))
-            ->where($db->quoteName('requireReset') . ' = 1')
-            ->order($db->quoteName('id'));
-        $ids = array_map('intval', $db->setQuery($query)->loadColumn());
-        if (\count($ids) > SsoConversionPlan::MAX_ACCOUNTS) {
-            throw new UserFacingException('COM_USERTOOLS_SSO_TOO_MANY', [SsoConversionPlan::MAX_ACCOUNTS]);
-        }
-        $rows = SsoConversionPlan::candidates($directory->users($ids), $groups, $filters, $this->operator());
+        // Restrict the query before applying the 5,000-account review limit.
+        // Keyset pagination bounds memory and works when the site has many
+        // reset-required accounts outside the chosen group or status.
+        $groupIds = SsoConversionPlan::groupIds($groups, $filters['group'], $filters['subgroups']);
+        $groupMembership = $groupIds
+            ? $db->quoteName('id') . ' IN (SELECT ' . $db->quoteName('user_id')
+                . ' FROM ' . $db->quoteName('#__user_usergroup_map')
+                . ' WHERE ' . $db->quoteName('group_id') . ' IN (' . implode(', ', $groupIds) . '))'
+            : null;
+        $operator = $this->operator();
+        $rows = [];
+        $lastId = 0;
+        $pageSize = 250;
+        do {
+            $query = $db->createQuery()->select($db->quoteName('id'))
+                ->from($db->quoteName('#__users'))
+                ->where($db->quoteName('requireReset') . ' = 1')
+                ->where($db->quoteName('id') . ' > ' . $lastId)
+                ->where($db->quoteName('id') . ' <> ' . $operator->id)
+                ->order($db->quoteName('id'))
+                ->setLimit($pageSize);
+            if ($groupMembership !== null) {
+                $query->where($groupMembership);
+            }
+            if ($filters['status'] !== 'all') {
+                $query->where($db->quoteName('block') . ' = ' . ($filters['status'] === 'active' ? '0' : '1'));
+            }
+            $ids = array_map('intval', $db->setQuery($query)->loadColumn());
+            if (!$ids) {
+                break;
+            }
+            $lastId = $ids[\count($ids) - 1];
+            // Visits and administrator protection still use the existing
+            // UserDirectory classification, not raw DB group assumptions.
+            $matching = SsoConversionPlan::candidates($directory->users($ids), $groups, $filters, $operator);
+            if (\count($rows) + \count($matching) > SsoConversionPlan::MAX_ACCOUNTS) {
+                throw new UserFacingException('COM_USERTOOLS_SSO_TOO_MANY', [SsoConversionPlan::MAX_ACCOUNTS]);
+            }
+            array_push($rows, ...$matching);
+        } while (\count($ids) === $pageSize);
         $this->session()->set(self::DRAFT, $filters);
         $this->session()->set(self::PREVIEW, $this->newPreview(['rows' => $rows, 'filters' => $filters]));
     }
