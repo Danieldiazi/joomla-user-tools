@@ -89,6 +89,7 @@ final class BulkRegistrationList
     }
 
     /** Never assign a group that inherits backend or global admin privileges. */
+    /** @param array<int, object> $groups */
     public static function safeGroup(array $groups, int $id): bool
     {
         $group = $groups[$id] ?? null;
