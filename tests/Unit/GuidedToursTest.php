@@ -12,7 +12,7 @@ final class GuidedToursTest extends TestCase
 
     public function testToursExplainTheToolsThatChangeAccountsOrGroups(): void
     {
-        $this->assertSame(['compare', 'inactive', 'unblock', 'delete', 'anonymize', 'addgroups', 'sync', 'ungroup', 'move', 'schedule'], array_keys(GuidedTours::TOURS));
+        $this->assertSame(['compare', 'bulkcreate', 'inactive', 'unblock', 'delete', 'anonymize', 'addgroups', 'sync', 'ungroup', 'move', 'schedule'], array_keys(GuidedTours::TOURS));
         foreach (array_keys(GuidedTours::TOURS) as $position => $view) {
             $this->assertArrayHasKey($view, Navigation::PERMISSIONS, $view . ' is a screen with its own permission');
             $tour = GuidedTours::tour($view, $position);
