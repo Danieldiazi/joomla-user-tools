@@ -34,7 +34,10 @@ final class SsoAccountConverter
         ?callable $destroySessions = null,
     ) {
         $this->destroySessions = $destroySessions !== null ? \Closure::fromCallable($destroySessions)
-            : static fn (int $id): bool => (bool) UserHelper::destroyUserSessions($id);
+            : static function (int $id): bool {
+                UserHelper::destroyUserSessions($id);
+                return true;
+            };
     }
 
     /**
