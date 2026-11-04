@@ -6,6 +6,8 @@
 
 This guide describes the architecture of the `main` branch (not a fixed historical release). It is intended for anyone locating a rule, following a request or modifying a tool. For a shorter reading path, see the [developer onboarding guide](development.en.md). Update this guide whenever flows, persistence or guarantees change. Usage instructions are in the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
+**Standalone bulk account creation**: `BulkcreateController`, `BulkcreateModel` and `BulkRegistrationList` implement a create-only flow. The parser retains line numbers and optional names and resolves groups on the server. An operator-owned, single-use preview includes a group fingerprint; the client submits only selected rows and email values, with a typed count of selected rows. Each creation rechecks username, email, permissions and group and reuses `Registration::create()`, `AccountMailer` and `ActionLogger`, with resumable batches and no persisted temporary passwords. Existing accounts are never blocked or updated.
+
 ## 1. Responsibility map
 
 ```mermaid
