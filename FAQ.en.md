@@ -16,6 +16,10 @@ So that the spreadsheet does not run as a formula a value someone else typed, su
 
 The CSV is an exchange format: if you import it into another system, take that apostrophe into account. It has been checked with LibreOffice Calc 24.2, with and without the trim spaces option, that no protected cell is evaluated as a formula. Excel and Google Sheets have not been tested yet; the protection follows the rules those applications also apply.
 
+### Can I create accounts by pasting only their usernames?
+
+Yes. In **Bulk account creation**, only the username is required in the input. The default display name is the username, the default group is Registered, and emails can be provided manually or generated optionally using a domain, just like Compare a list. Joomla still requires a valid, unique email before an account is saved. Only selected rows are created: absent accounts are not blocked and existing accounts are not changed. Assigning an extra group also requires the `usertools.addgroups` permission.
+
 ## General
 
 ### Does it delete users?
