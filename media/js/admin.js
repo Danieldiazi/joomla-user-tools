@@ -87,16 +87,23 @@
           counter.textContent = sprintf(text(key, '%d accounts selected'), selected.length);
         }
         if (all) {
-          all.checked = boxes.length > 0 && selected.length === boxes.length;
-          all.indeterminate = selected.length > 0 && selected.length < boxes.length;
+          const visible = boxes.filter((box) => !box.closest('tr').hidden);
+          const checkedVisible = visible.filter((box) => box.checked).length;
+          all.disabled = visible.length === 0;
+          all.checked = visible.length > 0 && checkedVisible === visible.length;
+          all.indeterminate = checkedVisible > 0 && checkedVisible < visible.length;
         }
         syncTyped(form, selected.length);
       };
       boxes.forEach((box) => box.addEventListener('change', sync));
       if (all) all.addEventListener('change', () => {
+        // Hidden selections are preserved. This toggle reflects the visible subset.
         boxes.forEach((box) => { if (!box.closest('tr').hidden) box.checked = all.checked; });
         sync();
       });
+      // initFilters registers its input listener before this one, so row.hidden
+      // has already been updated when we recalculate the select-all state.
+      form.querySelectorAll('[data-ut-filter]').forEach((filter) => filter.addEventListener('input', sync));
       form.addEventListener('submit', sync);
       sync();
     });
