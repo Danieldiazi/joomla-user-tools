@@ -47,6 +47,12 @@ final class BulkRegistrationListTest extends TestCase
             'protected_group', 'unknown_group', 'protected_group'], array_column($rows, 'status'));
     }
 
+    public function testUsernameJoomlaWouldRejectCannotBeSelected(): void
+    {
+        $rows = Plan::parse("a;pepe\nñ\nab", $this->fixtureGroups(), $this->users(), false);
+        $this->assertSame(['username_too_short', 'username_too_short', 'ready'], array_column($rows, 'status'));
+    }
+
     public function testEmailIsRequiredOnlyAtCreationAndMustBeValid(): void
     {
         $this->assertFalse(Plan::validEmail(''));

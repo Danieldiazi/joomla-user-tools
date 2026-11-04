@@ -55,6 +55,17 @@ final class RecordsTest extends TestCase
         Registration::select($unknown, $twice, [Registration::key('nuevo') => 'X@example.test', Registration::key('otro') => 'x@EXAMPLE.test'], fn () => false, fn () => false);
     }
 
+    public function testUsernameJoomlaWouldRejectStopsTheSelectionBeforeAnythingIsChanged(): void
+    {
+        $key = Registration::key('a');
+        try {
+            Registration::select(['a'], [$key => '1'], [$key => 'a@example.test'], fn () => false, fn () => false);
+            $this->fail('Accepted a one-character username');
+        } catch (UserFacingException $e) {
+            $this->assertSame('COM_USERTOOLS_ERROR_USERNAME_TOO_SHORT', $e->key());
+        }
+    }
+
     public function testDraftRejectsForeignKeys(): void
     {
         $this->expectException(UserFacingException::class);

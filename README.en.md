@@ -180,7 +180,7 @@ rfernandez;Rosa Fernandez;rosa@example.org;15
 
 Joomla needs a **unique, valid email at creation time**. In the review, enter missing emails or optionally tick **Generate email from username**, supply a domain and fill only empty values, exactly as in Compare a list. Manually entered emails remain untouched when the domain changes or the option is disabled. Verify that generated addresses belong to their intended recipients.
 
-Duplicate, existing, malformed and unauthorized group rows are not selectable. Select eligible rows and choose **email link**, **temporary password** or **SSO**. Work uses one-time review and resumable batches. Temporary passwords are displayed once and never persisted; SSO creates an undisclosed random password, though Joomla password recovery may allow a later local password.
+Duplicate, existing, malformed and unauthorized group rows are not selectable, nor are one-character usernames, because Joomla requires at least 2. Select eligible rows and choose **email link**, **temporary password** or **SSO**. Work uses one-time review and resumable batches. Temporary passwords are displayed once and never persisted; SSO creates an undisclosed random password, though Joomla password recovery may allow a later local password.
 
 **Unlike Compare a list, the new tool never blocks absent users or modifies existing accounts.**
 
