@@ -42,6 +42,7 @@ final class GuidedTours
      */
     public const TOURS = [
         'compare'   => ['steps' => 'bottom', 'list' => 'right', 'exclusions' => 'left', 'actions' => 'top'],
+        'bulkcreate' => ['rules' => 'bottom', 'list' => 'right', 'actions' => 'top'],
         'inactive'  => ['steps' => 'bottom', 'period' => 'right', 'exclusions' => 'left', 'actions' => 'top'],
         'unblock'   => ['steps' => 'bottom', 'rules' => 'bottom', 'batches' => 'top'],
         'delete'    => ['warning' => 'bottom', 'period' => 'right', 'exclusions' => 'left', 'actions' => 'top'],
