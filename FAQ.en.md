@@ -178,6 +178,10 @@ Previews last **15 minutes** and can be applied only once. They also become inva
 
 Existing accounts count as matches and remain unchanged. Already blocked accounts are not proposed again.
 
+### How do I remove mandatory password changes for accounts that use SSO?
+
+Use **Convert accounts to SSO access** (permission `usertools.sso`). Filter accounts with `requireReset = 1` by group, blocking status and previous logins, then explicitly select the accounts. The tool rotates their local passwords to undisclosed random values, clears the mandatory reset flag and closes sessions. It does not change groups, blocking or MFA and logs the action without passwords. Accounts changed since review are skipped. **This does not stop** Joomla password recovery from allowing a new local password later.
+
 ## Accounts and passwords
 
 ### Are new usernames from the list created automatically?

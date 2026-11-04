@@ -156,6 +156,12 @@ final class ActionLogger
         $this->write('COM_USERTOOLS_ACTION_LOG_NAME_CHANGED', 'update', $account, $operator, '');
     }
 
+    /** The generated local password is never part of the audit payload. */
+    public function convertedToSso(object $account, Operator $operator): void
+    {
+        $this->write('COM_USERTOOLS_ACTION_LOG_CONVERTED_SSO', 'update', $account, $operator, '');
+    }
+
     public function created(object $account, Operator $operator, string $mode): void
     {
         $key = match ($mode) {

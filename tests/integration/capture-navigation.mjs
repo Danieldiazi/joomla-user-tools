@@ -190,6 +190,27 @@ try {
     throw new Error('Typed confirmation must follow the configured threshold and selected count');
   }
 
+  // Real browser proof of SSO conversion search and review. No password is changed here.
+  const ssoUrl = base + '/administrator/index.php?option=com_usertools&view=sso';
+  await page.goto(ssoUrl);
+  await page.locator('[data-ut-sso-search]').waitFor();
+  await capture('45-sso-busqueda.jpg');
+  await page.locator('button[value="sso.search"]').click();
+  const ssoReview = page.locator('[data-ut-sso-review]');
+  await ssoReview.waitFor();
+  const ssoBoxes = ssoReview.locator('[data-ut-suspend-id]');
+  if (await ssoBoxes.count() === 0) throw new Error('No eligible fixture remained for SSO review');
+  if (await ssoReview.locator('[data-ut-suspend-id]:checked').count() !== 0
+      || await ssoReview.locator('[data-ut-selected]').inputValue() !== '[]'
+      || await ssoReview.locator('[data-ut-suspend-submit]').isEnabled()) {
+    throw new Error('SSO conversion must require an explicit selection');
+  }
+  await ssoBoxes.first().check();
+  if (JSON.parse(await ssoReview.locator('[data-ut-selected]').inputValue()).length !== 1) {
+    throw new Error('SSO conversion selection was not serialised');
+  }
+  await capture('46-sso-revision.jpg');
+
   await writeFile(resolve(output, 'navigation-checks.json'), JSON.stringify({
     menuKeyboardOrder: true, keyboardExpandCollapse: true, activeCategories: true,
     narrowCategoryFits: true, layout, language: 'en-GB',

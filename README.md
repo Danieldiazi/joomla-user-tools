@@ -10,6 +10,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Explicar acceso a contenido | Explica por qué una cuenta puede o no ver, editar o publicar un artículo o una categoría, con todas las condiciones que lo impiden. Solo lectura. |
 | Comparar una lista | Permite seleccionar **qué cuentas ausentes se bloquean** (ninguna marcada por defecto), sin afectar a las no seleccionadas; también permite crear los usuarios nuevos que selecciones. |
 | **Alta masiva de usuarios** | Crea solo cuentas nuevas desde un listado donde únicamente el username es obligatorio; nombre, correo y grupo son opcionales. Revisión y generación opcional de correos. |
+| **Pasar cuentas a acceso por SSO** | Convierte cuentas con `requireReset = 1`: contraseña local aleatoria no revelada, indicador desmarcado y sesiones cerradas, sin tocar grupos ni MFA. |
 | Exportar cuentas a CSV | Descarga las cuentas y sus grupos, fechas, estado y MFA, con filtros y correo opcional bajo un permiso propio. |
 | Revisar usuarios inactivos | Busca cuentas inactivas para que selecciones cuáles bloquear. |
 | Traspasar contenido y dar de baja | Cuando alguien se va, revisa los artículos que deja, traspasa su autoría a otra cuenta y después ofrece la revisión de bloqueo o anonimización. Con revisión previa y confirmación. |
@@ -181,6 +182,16 @@ Joomla necesita un **correo válido y único** antes de crear la cuenta. En la r
 Se muestran las filas inválidas, duplicadas, existentes y de grupos no autorizados **sin seleccionar**. Selecciona las altas válidas, elige uno de los tres modos habituales (**enlace por correo**, **contraseña temporal** o **SSO**) y confirma. En SSO se crea una contraseña aleatoria que no se revela ni se envía; revisa también si la recuperación de contraseñas de Joomla permite posteriormente establecer credenciales locales. A partir del umbral configurado se pide escribir el número seleccionado. Las altas se aplican por tandas reanudables y cada cuenta se vuelve a comprobar antes de crearla. Las contraseñas temporales se muestran una sola vez, sin persistirlas.
 
 **A diferencia de «Comparar lista», esta herramienta nunca bloquea usuarios ausentes ni cambia cuentas existentes.** Requiere `usertools.create`; los grupos adicionales requieren además `usertools.addgroups`.
+
+## Pasar cuentas a acceso por SSO
+
+La herramienta **Revisar cuentas → Pasar cuentas a acceso por SSO** (`usertools.sso`) muestra únicamente cuentas con **«Requerir restablecimiento de contraseña»** (`requireReset = 1`). Permite filtrar por **grupo y subgrupos**, **activas/bloqueadas** y **si alguna vez accedieron**.
+
+En la revisión se ven usuario, nombre, correo, estado, última visita, fecha de alta y grupos. **No hay ninguna cuenta marcada inicialmente**. Puedes seleccionar todos los visibles tras filtrar, revisar el contador y confirmar la operación (con número escrito si se alcanza el umbral de Opciones). La revisión de un solo uso caduca a los **15 minutos**.
+
+Por cada cuenta seleccionada y revalidada, el sistema genera una contraseña local aleatoria según la política de Joomla, la establece con `User::bind()` y `User::save(true)`, desactiva `requireReset`, intenta cerrar sus sesiones y deja un registro de auditoría **sin contraseña**. No modifica el bloqueo, grupos, identidad ni MFA. Las cuentas protegidas (superusuarios, propia cuenta y, para operadores no superusuarios, cualquier cuenta con acceso administrativo) no se ofrecen. Una cuenta con cambios de estado, grupos, datos o última visita desde la revisión se omite sin reemplazarla por otra. La ejecución funciona en tandas reanudables de 20 cuentas y permite descartar lo pendiente.
+
+**Importante:** SSO no implica deshabilitar permanentemente el inicio de sesión local. Si el sitio permite recuperar contraseñas, la cuenta podría establecer una nueva posteriormente. Revisa la configuración de los plugins de autenticación y recuperación antes de usar esta herramienta.
 
 ## Comparar una lista de usuarios
 

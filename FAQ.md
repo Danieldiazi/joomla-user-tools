@@ -178,6 +178,10 @@ La vista previa dura **15 minutos** y solo se puede aplicar una vez. También se
 
 Si existe en Joomla cuenta como coincidencia y no se toca. Las cuentas que ya estaban bloqueadas tampoco se proponen de nuevo.
 
+### ¿Cómo elimino el cambio obligatorio de contraseña a cuentas que usan SSO?
+
+Con **«Pasar cuentas a acceso por SSO»** (permiso `usertools.sso`). Filtra las cuentas con `requireReset = 1` por grupo, estado y accesos; después marca explícitamente las que quieres convertir. El sistema sustituye su contraseña local por otra aleatoria que no muestra, desactiva el cambio obligatorio y cierra sus sesiones. No toca grupos, bloqueo ni MFA, y registra la actuación sin contraseñas. Si la cuenta cambia desde la revisión, la omite. **No impide** que la recuperación de contraseñas de Joomla habilite posteriormente una nueva contraseña local.
+
 ## Altas y contraseñas
 
 ### ¿Se crean automáticamente los nombres nuevos de la lista?

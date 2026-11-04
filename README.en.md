@@ -10,6 +10,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Explain content access | Explains why an account can or cannot view, edit or publish an article or category, with every condition preventing it. Read only. |
 | Compare a list | Allows choosing **which missing accounts to block** (none selected by default), leaving unselected accounts untouched; also creates selected new users. |
 | **Bulk account creation** | Creates new accounts from usernames alone; optional name, email and group, reviewed before writing, with optional email generation. |
+| **Convert accounts to SSO access** | Converts accounts with `requireReset = 1`: undisclosed new random local password, reset cleared and sessions closed; groups and MFA unchanged. |
 | Export accounts to CSV | Downloads accounts, groups, dates, status and MFA with filters and optional email under its own permission. |
 | Review inactive users | Finds inactive accounts so you can select which ones to block. |
 | Hand over content and close an account | When someone leaves, reviews the articles they leave, transfers their authorship to another account and then offers the block or anonymisation review. With a review and a confirmation. |
@@ -182,6 +183,16 @@ Joomla needs a **unique, valid email at creation time**. In the review, enter mi
 Duplicate, existing, malformed and unauthorized group rows are not selectable. Select eligible rows and choose **email link**, **temporary password** or **SSO**. Work uses one-time review and resumable batches. Temporary passwords are displayed once and never persisted; SSO creates an undisclosed random password, though Joomla password recovery may allow a later local password.
 
 **Unlike Compare a list, the new tool never blocks absent users or modifies existing accounts.**
+
+## Convert accounts to SSO access
+
+**Review accounts → Convert accounts to SSO access** (`usertools.sso`) lists only accounts with **Require Password Reset** (`requireReset = 1`). Filter by **group and descendants**, **active/blocked status** and **whether the account has ever logged in**.
+
+The review shows username, display name, email, status, last login, registration date and groups. **All accounts start unselected**; select visible rows after filtering, review the live count and confirm (typing the number when the configured threshold is reached). The one-use preview expires after **15 minutes**.
+
+For each selected and revalidated account, the tool generates a random Joomla-policy-compliant local password, applies it through `User::bind()` and `User::save(true)`, clears `requireReset`, attempts to terminate active sessions and logs the operation **without credentials**. It does not change identity, groups, blocked state or MFA. Super Users, the operator's account and (for non-Super-User operators) accounts with administrator access are protected. If the status, groups, identity or last visit changed since preview, that account is skipped. Changes run in resumable batches of 20 and the remaining queue can be discarded.
+
+**Important:** SSO does not necessarily prevent future local login. Joomla password recovery may let an account set a new password if the site allows it; review authentication and recovery configuration.
 
 ## Compare a user list
 

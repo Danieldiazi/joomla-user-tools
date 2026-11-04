@@ -8,6 +8,8 @@ Esta guía describe la arquitectura de la rama `main` (no una versión históric
 
 **Alta masiva independiente**: `BulkcreateController`, `BulkcreateModel` y `BulkRegistrationList` ofrecen un flujo exclusivo de creación. El parser conserva identidad, línea, nombre opcional y grupo resuelto en el servidor. Una previsualización vinculada al operador y de un solo uso conserva la huella del grupo; el cliente envía únicamente la selección y los correos, y la confirmación cuenta solo las filas marcadas. Cada alta revalida username, correo, permisos y grupo, reutilizando `Registration::create()`, `AccountMailer` y `ActionLogger`, con tandas reanudables y contraseñas nunca persistidas. No existe operación de bloqueo ni actualización de cuentas preexistentes.
 
+El límite de 5.000 cuentas se aplica **después** de filtrar por grupos, estado, visitas y protección, no sobre toda la base de datos. La consulta usa paginación por ID y carga tandas acotadas para evitar leer todas las cuentas a la vez. **Conversión a SSO:** `SsoModel` crea una previsualización de uso único con las cuentas con `requireReset = 1` y huellas `AccountProfile::fingerprint()`. `SsoConversionPlan` filtra por grupo/descendientes, bloqueo y visitas; excluye cuentas protegidas. El cliente solo selecciona IDs de la previsualización; `InactiveSelection::decode()` rechaza IDs externos. Las tandas reanudables de 20 ejecutan `SsoAccountConverter`: carga un Joomla User nuevo por ID, revalida `requireReset`, identidad, grupos, estado, fecha y permisos, reemplaza la contraseña local con `User::bind()` y `save(true)`, invalida sesiones y audita sin secretos. Solo el objeto User temporal recibe la contraseña en claro; nunca se guarda en sesión ni se muestra.
+
 ## 1. Mapa de responsabilidades
 
 ```mermaid
