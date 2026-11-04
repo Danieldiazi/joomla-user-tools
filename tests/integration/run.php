@@ -2368,7 +2368,7 @@ $reqSso = ['task' => 'sso.apply', 'selection_ready' => 1, 'confirm' => 1,
 $forgedSso = $admin->submit($ssoUrl . '&layout=review', $reqSso + [
     'selected' => json_encode([$site->userId('super2')])], 'data-ut-suspension-form');
 Test::check((int) $site->q('SELECT "requireReset" FROM #__users WHERE id = ?', [$ssoId])[0]['requireReset'] === 1
-    && str_contains($forgedSso, 'not offered'), 'forged SSO selection cannot modify accounts');
+    && str_contains($forgedSso, 'does not belong to this review'), 'forged SSO selection cannot modify accounts');
 $ssoConverted = $admin->submit($ssoUrl . '&layout=review', $reqSso + [
     'selected' => json_encode([$ssoId])], 'data-ut-suspension-form');
 $after = $site->q('SELECT username, name, email, block, password, "requireReset" FROM #__users WHERE id = ?', [$ssoId])[0] ?? [];
@@ -2397,8 +2397,9 @@ Test::check($logCount('COM_USERTOOLS_ACTION_LOG_CONVERTED_SSO') === 1,
     'stale review causes no extra SSO audit action');
 $site->q('UPDATE #__assets SET rules = ? WHERE name = ?', [
     json_encode(['core.manage' => ['6' => 1]]), 'com_usertools']);
-$notAuthorized = $delegate->get($ssoUrl);
-Test::check(!str_contains($notAuthorized, 'data-ut-sso-search'), 'delegate without SSO permission cannot access the tool');
+[$denyCode, $notAuthorized] = $delegate->request($ssoUrl);
+Test::check($denyCode === 403 && !str_contains($notAuthorized, 'data-ut-sso-search'),
+    'delegate without SSO permission cannot access the tool');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
