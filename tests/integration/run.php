@@ -225,13 +225,13 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['profile', 'explain', 'compare', 'bulkcreate', 'export', 'inactive', 'unblock', 'handover', 'names', 'addgroups', 'sync', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
+Test::check($cards[1] === ['profile', 'explain', 'compare', 'bulkcreate', 'sso', 'export', 'inactive', 'unblock', 'handover', 'names', 'addgroups', 'sync', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
 Test::check(!preg_match('/<span class="icon-(address-card)"/', $home) && str_contains($home, '<span class="icon-vcard" aria-hidden="true"></span> Account profile'),
     'the profile card uses an icon that Joomla provides');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 21 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 22 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -1957,7 +1957,7 @@ Test::check(!str_contains($blockedProfile, 'data-ut-profile-action="block"') && 
 $site->q('UPDATE #__categories SET created_user_id = ? WHERE id = ?', [$profileCategoryBefore, $ageCategory]);
 
 Test::section('Guided tours');
-$tourViews = ['compare' => 4, 'bulkcreate' => 3, 'inactive' => 4, 'unblock' => 3, 'delete' => 4, 'anonymize' => 4, 'addgroups' => 3, 'names' => 3, 'sync' => 4, 'ungroup' => 3, 'move' => 4, 'schedule' => 2];
+$tourViews = ['compare' => 4, 'bulkcreate' => 3, 'sso' => 3, 'inactive' => 4, 'unblock' => 3, 'delete' => 4, 'anonymize' => 4, 'addgroups' => 3, 'names' => 3, 'sync' => 4, 'ungroup' => 3, 'move' => 4, 'schedule' => 2];
 $tours = [];
 foreach ($site->q("SELECT id, uid, autostart, published, extensions FROM #__guidedtours WHERE uid LIKE 'com_usertools.tour-%'") as $row) {
     $tours[substr((string) $row['uid'], strlen('com_usertools.tour-'))] = $row;
@@ -2342,6 +2342,64 @@ Test::check($beforeExisting == $site->q('SELECT name, email, block FROM #__users
     'existing accounts stay unchanged');
 Test::check($site->userId('ut_bulk_dup') === 0 && $site->userId('ut_bulk_outsider') === 0,
     'duplicated and unauthorized usernames are not created');
+
+Test::section('SSO conversion: filtered, protected, reviewed, rotated password, sessions and audit');
+$ssoUrl = 'index.php?option=com_usertools&view=sso';
+$ssoOldPassword = 'Original-Password-7Aa!';
+$ssoId = $site->addUser('ut_sso_rotate', 'Registered', $ssoOldPassword);
+$ssoStayId = $site->addUser('ut_sso_stay', 'Registered');
+$ssoChangedId = $site->addUser('ut_sso_changed', 'Registered');
+$site->q('UPDATE #__users SET "requireReset" = 1 WHERE id IN (?, ?, ?, ?, ?)',
+    [$ssoId, $ssoStayId, $ssoChangedId, $site->userId('mgr'), $site->userId('super2')]);
+$before = $site->q('SELECT username, name, email, block, password FROM #__users WHERE id = ?', [$ssoId])[0];
+$site->fakeSession($ssoId);
+$ssoIndex = $admin->get($ssoUrl);
+Test::check(str_contains($ssoIndex, 'sso.search') && str_contains($ssoIndex, 'name="visits"')
+    && str_contains($ssoIndex, 'name="group"'), 'SSO conversion offers group, activity and state filters');
+$ssoReview = $admin->submit($ssoUrl, ['task' => 'sso.search', 'group' => 2,
+    'subgroups' => 0, 'status' => 'active', 'visits' => 'all']);
+Test::check(str_contains($ssoReview, 'data-ut-sso-review') && str_contains($ssoReview, 'ut_sso_rotate')
+    && str_contains($ssoReview, 'ut_sso_stay') && !str_contains($ssoReview, 'data-ut-suspend-id="' . $site->userId('super2') . '"'),
+    'review lists reset-only ordinary accounts and no protected Super User');
+Test::check(!str_contains($ssoReview, 'data-ut-suspend-id="' . $site->userId('mgr') . '"'),
+    'admin group is excluded by Registered filter');
+$reqSso = ['task' => 'sso.apply', 'selection_ready' => 1, 'confirm' => 1,
+    'confirm_count' => '1'];
+$forgedSso = $admin->submit($ssoUrl . '&layout=review', $reqSso + [
+    'selected' => json_encode([$site->userId('super2')])], 'data-ut-suspension-form');
+Test::check((int) $site->q('SELECT "requireReset" FROM #__users WHERE id = ?', [$ssoId])[0]['requireReset'] === 1
+    && str_contains($forgedSso, 'not offered'), 'forged SSO selection cannot modify accounts');
+$ssoConverted = $admin->submit($ssoUrl . '&layout=review', $reqSso + [
+    'selected' => json_encode([$ssoId])], 'data-ut-suspension-form');
+$after = $site->q('SELECT username, name, email, block, password, "requireReset" FROM #__users WHERE id = ?', [$ssoId])[0] ?? [];
+Test::check((int) ($after['requireReset'] ?? -1) === 0 && ($after['password'] ?? '') !== $before['password'],
+    'SSO conversion rotates local password and clears requireReset');
+Test::check(!password_verify($ssoOldPassword, (string) ($after['password'] ?? ''))
+    && $site->sessions($ssoId) === 0, 'old local password no longer works and sessions were terminated');
+Test::check(array_intersect_key($before, array_flip(['username', 'name', 'email', 'block']))
+        === array_intersect_key($after, array_flip(['username', 'name', 'email', 'block'])),
+    'conversion does not alter identity or blocked state');
+Test::check((int) $site->q('SELECT "requireReset" FROM #__users WHERE id = ?', [$ssoStayId])[0]['requireReset'] === 1
+    && str_contains($ssoConverted, 'ut_sso_rotate'), 'unselected reset-required accounts remain unchanged');
+Test::check($logCount('COM_USERTOOLS_ACTION_LOG_CONVERTED_SSO') === 1,
+    'conversion is written to the User Actions Log exactly once');
+$ssoReplay = $admin->submit($ssoUrl . '&layout=review', $reqSso + ['selected' => json_encode([$ssoId])], 'data-ut-suspension-form');
+Test::check((int) $site->q('SELECT "requireReset" FROM #__users WHERE id = ?', [$ssoId])[0]['requireReset'] === 0,
+    'replaying consumed SSO preview cannot modify an account');
+$ssoReview = $admin->submit($ssoUrl, ['task' => 'sso.search', 'group' => 0,
+    'status' => 'all', 'visits' => 'all']);
+$site->q('UPDATE #__users SET block = 1 WHERE id = ?', [$ssoChangedId]);
+$ssoSkipped = $admin->submit($ssoUrl . '&layout=review', $reqSso + [
+    'selected' => json_encode([$ssoChangedId])], 'data-ut-suspension-form');
+Test::check((int) $site->q('SELECT "requireReset" FROM #__users WHERE id = ?', [$ssoChangedId])[0]['requireReset'] === 1
+    && str_contains($ssoSkipped, 'Skipped'), 'changed account is never converted or replaced');
+Test::check($logCount('COM_USERTOOLS_ACTION_LOG_CONVERTED_SSO') === 1,
+    'stale review causes no extra SSO audit action');
+$site->q('UPDATE #__assets SET rules = ? WHERE name = ?', [
+    json_encode(['core.manage' => ['6' => 1]]), 'com_usertools']);
+$notAuthorized = $delegate->get($ssoUrl);
+Test::check(!str_contains($notAuthorized, 'data-ut-sso-search'), 'delegate without SSO permission cannot access the tool');
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);
