@@ -89,10 +89,7 @@ class SsoModel extends BaseDatabaseModel
             // Visits and administrator protection still use the existing
             // UserDirectory classification, not raw DB group assumptions.
             $matching = SsoConversionPlan::candidates($directory->users($ids), $groups, $filters, $operator);
-            if (\count($rows) + \count($matching) > SsoConversionPlan::MAX_ACCOUNTS) {
-                throw new UserFacingException('COM_USERTOOLS_SSO_TOO_MANY', [SsoConversionPlan::MAX_ACCOUNTS]);
-            }
-            array_push($rows, ...$matching);
+            SsoConversionPlan::appendWithinLimit($rows, $matching);
         } while (\count($ids) === $pageSize);
         $this->session()->set(self::DRAFT, $filters);
         $this->session()->set(self::PREVIEW, $this->newPreview(['rows' => $rows, 'filters' => $filters]));
