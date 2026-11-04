@@ -172,7 +172,7 @@ class BulkcreateModel extends BaseDatabaseModel
 
     /**
      * One bounded batch; calls the existing Joomla registration service.
-     * @return array{done: bool, total: int, processed: int, created: list<array<string, mixed>>, errors: list<array<string, mixed>>, result: ?array}
+     * @return array{done: bool, total: int, processed: int, created: list<array<string, mixed>>, errors: list<array<string, mixed>>, result: array<string, mixed>|null}
      */
     public function step(): array
     {
@@ -281,6 +281,10 @@ class BulkcreateModel extends BaseDatabaseModel
         return $this->validResult(self::RESULT);
     }
 
+    /**
+     * @param array<string, mixed> $job
+     * @return array<string, mixed>
+     */
     private function finish(array $job, int $discarded): array
     {
         $result = [
