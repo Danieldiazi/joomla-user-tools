@@ -97,7 +97,7 @@ try {
   await compareReview.waitFor();
   const blockBoxes = compareReview.locator('[data-ut-compare-block-id]');
   if (await blockBoxes.count() === 0) throw new Error('Expected reviewable block candidates');
-  if (await blockBoxes.locator(':checked').count() !== 0 ||
+  if (await compareReview.locator('[data-ut-compare-block-id]:checked').count() !== 0 ||
       await compareReview.locator('[data-ut-compare-block-selected]').inputValue() !== '[]') {
     throw new Error('Comparison must start without selected block accounts');
   }
