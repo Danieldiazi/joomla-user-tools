@@ -54,7 +54,7 @@ class SsoModel extends BaseDatabaseModel
         $groups = $directory->groups();
         $filters = SsoConversionPlan::filters($input, $groups);
         $db = Toolkit::db();
-        $query = $db->getQuery(true)->select($db->quoteName('id'))
+        $query = $db->createQuery()->select($db->quoteName('id'))
             ->from($db->quoteName('#__users'))
             ->where($db->quoteName('requireReset') . ' = 1')
             ->order($db->quoteName('id'));
