@@ -88,6 +88,26 @@ try {
     throw error;
   }
   await capture('13-panel-usuarios.jpg');
+
+  // Compare review: verify the default-safe selection, filter and dynamic counter, without blocking anyone.
+  await page.goto(base + '/administrator/index.php?option=com_usertools&view=compare');
+  await page.locator('textarea[name="names"]').fill('ana');
+  await page.locator('button[value="compare.preview"]').click();
+  const compareReview = page.locator('[data-ut-compare-block-review]');
+  await compareReview.waitFor();
+  const blockBoxes = compareReview.locator('[data-ut-compare-block-id]');
+  if (await blockBoxes.count() === 0) throw new Error('Expected reviewable block candidates');
+  if (await blockBoxes.locator(':checked').count() !== 0 ||
+      await compareReview.locator('[data-ut-compare-block-selected]').inputValue() !== '[]') {
+    throw new Error('Comparison must start without selected block accounts');
+  }
+  await blockBoxes.first().check();
+  if (JSON.parse(await compareReview.locator('[data-ut-compare-block-selected]').inputValue()).length !== 1) {
+    throw new Error('Review did not serialize the selected block');
+  }
+  await capture('03-comparacion-revision.jpg');
+  await blockBoxes.first().uncheck();
+
   // Exercise the actual Joomla asset as well as the HTTP-only integration client.
   await page.goto(base + '/administrator/index.php?option=com_usertools&view=names');
   await page.locator('[data-ut-names-form]').waitFor();
