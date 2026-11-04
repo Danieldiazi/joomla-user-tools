@@ -70,6 +70,37 @@
     });
 
     // Keep bulk name selections in one field so the review does not hit PHP's max_input_vars limit.
+    // Compare list: only the explicitly selected accounts are ever blocked.
+    // This is independent from the checkboxes used to create missing accounts.
+    document.querySelectorAll('[data-ut-compare-block-review]').forEach((form) => {
+      const boxes = [...form.querySelectorAll('[data-ut-compare-block-id]')];
+      const all = form.querySelector('[data-ut-compare-block-all]');
+      const output = form.querySelector('[data-ut-compare-block-selected]');
+      const ready = form.querySelector('[data-ut-compare-block-ready]');
+      const counter = form.querySelector('[data-ut-compare-block-counter]');
+      const sync = () => {
+        const selected = boxes.filter((box) => box.checked).map((box) => Number(box.dataset.utCompareBlockId));
+        output.value = JSON.stringify(selected);
+        ready.value = '1';
+        if (counter) {
+          const key = selected.length === 1 ? 'COM_USERTOOLS_JS_SELECTED_1' : 'COM_USERTOOLS_JS_SELECTED';
+          counter.textContent = sprintf(text(key, '%d accounts selected'), selected.length);
+        }
+        if (all) {
+          all.checked = boxes.length > 0 && selected.length === boxes.length;
+          all.indeterminate = selected.length > 0 && selected.length < boxes.length;
+        }
+        syncTyped(form, selected.length);
+      };
+      boxes.forEach((box) => box.addEventListener('change', sync));
+      if (all) all.addEventListener('change', () => {
+        boxes.forEach((box) => { if (!box.closest('tr').hidden) box.checked = all.checked; });
+        sync();
+      });
+      form.addEventListener('submit', sync);
+      sync();
+    });
+
     document.querySelectorAll('[data-ut-names-review]').forEach((form) => {
       const table = document.getElementById('ut-names-table');
       const selected = form.querySelector('[data-ut-names-selected]');
