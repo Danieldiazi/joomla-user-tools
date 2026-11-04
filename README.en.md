@@ -9,6 +9,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Account profile | Reviews account identity, groups, access, content and activity, with protected links to its tools. Read only. |
 | Explain content access | Explains why an account can or cannot view, edit or publish an article or category, with every condition preventing it. Read only. |
 | Compare a list | Proposes blocking accounts missing from the complete list, except protected accounts, and lets you create selected new users. |
+| **Bulk account creation** | Creates new accounts from usernames alone; optional name, email and group, reviewed before writing, with optional email generation. |
 | Export accounts to CSV | Downloads accounts, groups, dates, status and MFA with filters and optional email under its own permission. |
 | Review inactive users | Finds inactive accounts so you can select which ones to block. |
 | Hand over content and close an account | When someone leaves, reviews the articles they leave, transfers their authorship to another account and then offers the block or anonymisation review. With a review and a confirmation. |
@@ -160,6 +161,25 @@ It requires its own *Explain content access* permission (`usertools.explain`), p
 **Export accounts to CSV** requires the `usertools.export` permission. It supports group/descendant, status and inactivity filters; never-visited accounts may be filtered by registration date. The file contains ID, username, name, **direct group memberships with their IDs**, last visit, registration, status, pending activation (a blocked account that has never logged in and has an activation token) and whether an MFA method is configured, without exposing secrets. **Email is optional and unchecked by default**; including it creates a User Actions Log entry without logging the addresses. CSV is UTF-8 with semicolons and spreadsheet formula protection: cells that could run are prefixed with an apostrophe (see [the FAQ](FAQ.en.md#why-do-some-csv-cells-start-with-an-apostrophe)). Handle the file as personal data.
 
 ![Export accounts to CSV: group, inactivity and status filters, with optional email (Spanish interface)](docs/screenshots/26-exportar-cuentas.jpg)
+
+## Bulk account creation (create only)
+
+Open **Components → User Tools → Review accounts → Bulk account creation** and paste one account per line with `username;name;email;group` (up to 2,000 lines):
+
+```text
+jperez
+mlopez;Maria Lopez
+agarcia;;;12
+rfernandez;Rosa Fernandez;rosa@example.org;15
+```
+
+**Only the username is required in the input.** Missing names default to the username. The group defaults to Registered. An explicit group by ID or unique full path is added to Registered when safe, and also requires the `usertools.addgroups` permission.
+
+Joomla needs a **unique, valid email at creation time**. In the review, enter missing emails or optionally tick **Generate email from username**, supply a domain and fill only empty values, exactly as in Compare a list. Manually entered emails remain untouched when the domain changes or the option is disabled. Verify that generated addresses belong to their intended recipients.
+
+Duplicate, existing, malformed and unauthorized group rows are not selectable. Select eligible rows and choose **email link**, **temporary password** or **SSO**. Work uses one-time review and resumable batches. Temporary passwords are displayed once and never persisted; SSO creates an undisclosed random password, though Joomla password recovery may allow a later local password.
+
+**Unlike Compare a list, the new tool never blocks absent users or modifies existing accounts.**
 
 ## Compare a user list
 
