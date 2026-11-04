@@ -9,7 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 final class BulkRegistrationListTest extends TestCase
 {
-    private function groups(): array
+    private function fixtureGroups(): array
     {
         return [
             1 => (object) ['id' => 1, 'parent_id' => 0, 'lft' => 1, 'rgt' => 10,
@@ -32,7 +32,7 @@ final class BulkRegistrationListTest extends TestCase
     public function testOptionalFieldsAndDefaultName(): void
     {
         $rows = Plan::parse("jperez\nmlopez;María López\nagarcia;;;12\nrfernandez;Rosa Fernández;rosa@example.test;12",
-            $this->groups(), $this->users(), true);
+            $this->fixtureGroups(), $this->users(), true);
         $this->assertSame(['jperez', 'María López', 'agarcia', 'Rosa Fernández'], array_column($rows, 'name'));
         $this->assertSame(['', '', '', 'rosa@example.test'], array_column($rows, 'email'));
         $this->assertSame([0, 0, 12, 12], array_column($rows, 'group'));
@@ -42,7 +42,7 @@ final class BulkRegistrationListTest extends TestCase
     public function testDuplicateExistingInvalidAndPrivilegedAccountsCannotBeCreated(): void
     {
         $rows = Plan::parse("existing\nJPEREZ\njperez\nbad;too;many;columns;here\nadmin;;;8\nmissing;;;999\nstaff;;;12",
-            $this->groups(), $this->users(), false);
+            $this->fixtureGroups(), $this->users(), false);
         $this->assertSame(['existing', 'duplicate', 'duplicate', 'invalid',
             'protected_group', 'unknown_group', 'protected_group'], array_column($rows, 'status'));
     }
@@ -56,7 +56,7 @@ final class BulkRegistrationListTest extends TestCase
 
     public function testChangesInGroupFingerprintAreDetected(): void
     {
-        $groups = $this->groups();
+        $groups = $this->fixtureGroups();
         $before = Plan::fingerprint($groups[12]);
         $groups[12]->backend = true;
         $this->assertNotSame($before, Plan::fingerprint($groups[12]));
@@ -66,6 +66,6 @@ final class BulkRegistrationListTest extends TestCase
     public function testEmptyAndOversizedInputsAreRejected(): void
     {
         $this->expectException(UserFacingException::class);
-        Plan::parse(" \n ", $this->groups(), [], true);
+        Plan::parse(" \n ", $this->fixtureGroups(), [], true);
     }
 }
