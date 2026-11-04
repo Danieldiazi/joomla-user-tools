@@ -238,6 +238,14 @@ Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no lin
 $admin->get('index.php?option=com_config&view=component&component=com_usertools');
 require __DIR__ . '/navigation.php';
 
+// Test clients do not execute JavaScript: explicitly submit the IDs that a human
+// selected from the reviewed table, rather than relying on implicit blocking.
+$selectAllCompare = static function (Client $client): array {
+    $page = $client->get('index.php?option=com_usertools&view=compare&layout=review');
+    preg_match_all('/data-ut-compare-block-id="([0-9]+)"/', $page, $matches);
+    return ['selection_ready' => 1, 'selected' => json_encode(array_map('intval', $matches[1]))];
+};
+
 Test::section('Comparison: preview, Super Users always protected, reinforced confirmation');
 $review = $admin->submit('index.php?option=com_usertools&view=compare', [
     'task' => 'compare.preview', 'names' => "ana\nLUIS\ndelegate\nnuevo1\nnuevo2", 'protect_admins' => 0, 'excluded' => '', 'excluded_groups' => [],
@@ -259,7 +267,7 @@ $registrations = [];
 foreach (['nuevo1', 'nuevo2'] as $name) {
     $registrations[hash('sha256', $name)] = ['checked' => true, 'email' => $name . '@example.test'];
 }
-$fields = ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1, 'creation_mode' => 'email', 'registrations' => json_encode($registrations)];
+$fields = ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1, 'creation_mode' => 'email', 'registrations' => json_encode($registrations)] + $selectAllCompare($admin);
 $denied = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', $fields + ['confirm_count' => '1'], 'data-ut-review');
 Test::check(str_contains($denied, 'type the number of affected accounts: ' . $toBlock) && !$site->blocked('baja'), 'a wrong typed number blocks nothing');
 array_map('unlink', glob($mails . '/*.eml') ?: []);
@@ -294,7 +302,7 @@ Test::check(str_contains($actionLog, 'with User Tools'), 'the User Actions Log s
 Test::section('Comparison: one-time passwords never reach the session');
 $review = $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => "ana\nluis\ndelegate\nnuevo1\nnuevo2\nnuevo3", 'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
 $result = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1, 'creation_mode' => 'password',
-    'registrations' => json_encode([hash('sha256', 'nuevo3') => ['checked' => true, 'email' => 'nuevo3@example.test']])], 'data-ut-review');
+    'registrations' => json_encode([hash('sha256', 'nuevo3') => ['checked' => true, 'email' => 'nuevo3@example.test']])] + $selectAllCompare($admin), 'data-ut-review');
 preg_match('#<code class="ut-secret">([^<]+)</code>#', $result, $pw);
 $password = html_entity_decode($pw[1] ?? '', ENT_QUOTES);
 Test::check(strlen($password) >= 24 && preg_match('/[A-Z]/', $password) && preg_match('/[a-z]/', $password) && preg_match('/[0-9]/', $password) && preg_match('/[^A-Za-z0-9]/', $password), 'password mode shows a strong temporary password once');
@@ -309,7 +317,7 @@ $review = $admin->submit('index.php?option=com_usertools&view=compare', ['task' 
 Test::check(str_contains($review, 'id="ut-mode-sso" value="sso">') && str_contains($review, 'No local password (single sign-on)'), 'the review offers the single sign-on mode, not selected by default');
 $mailsBefore = count(glob($mails . '/*') ?: []);
 $result = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1, 'creation_mode' => 'sso',
-    'registrations' => json_encode([hash('sha256', 'nuevo4') => ['checked' => true, 'email' => 'nuevo4@example.test']])], 'data-ut-review');
+    'registrations' => json_encode([hash('sha256', 'nuevo4') => ['checked' => true, 'email' => 'nuevo4@example.test']])] + $selectAllCompare($admin), 'data-ut-review');
 $ssoUser = $site->q('SELECT "requireReset", block FROM #__users WHERE username = ?', ['nuevo4'])[0] ?? [];
 Test::check(($ssoUser['requireReset'] ?? null) !== null && (int) $ssoUser['requireReset'] === 0 && (int) $ssoUser['block'] === 0, 'the single sign-on account is active and has no forced password change');
 Test::check(!str_contains($result, 'ut-secret') && str_contains($result, 'Accounts for single sign-on') && str_contains($result, 'nuevo4@example.test'), 'no password is shown; the account is listed apart');
@@ -344,7 +352,7 @@ $blockedBefore = $logCount('COM_USERTOOLS_ACTION_LOG_BLOCKED');
 $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster(['baja', 'servicio'], ['lote1', 'lote2', 'lote3']),
     'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
 $progress = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
-    'creation_mode' => 'email', 'registrations' => $registrationsFor(['lote1', 'lote2', 'lote3'])], 'data-ut-review');
+    'creation_mode' => 'email', 'registrations' => $registrationsFor(['lote1', 'lote2', 'lote3'])] + $selectAllCompare($admin), 'data-ut-review');
 Test::check(str_contains($progress, 'data-ut-progress') && str_contains($progress, '1 of 5 accounts processed'), 'a large job continues on the progress screen after the first batch');
 Test::check($site->blocked('baja') && !$site->blocked('servicio') && $site->userId('lote1') === 0, 'the first batch did one account only');
 [, $noToken] = $admin->request('index.php?option=com_usertools', ['task' => 'compare.step']);
@@ -356,7 +364,7 @@ $first = $admin->get('index.php?option=com_usertools&view=compare');
 Test::check(str_contains($first, 'data-ut-job-pending') && str_contains($first, '2 of 5 accounts have been processed'), 'a job left half-way is offered to continue or discard');
 $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster([], []), 'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
 $refused = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
-    'creation_mode' => 'email', 'registrations' => '{}'], 'data-ut-review');
+    'creation_mode' => 'email', 'registrations' => '{}'] + $selectAllCompare($admin), 'data-ut-review');
 Test::check(str_contains($refused, 'A comparison is partly applied'), 'another comparison cannot be applied while one is pending');
 $progress = $admin->get('index.php?option=com_usertools&view=compare&layout=progress');
 for ($i = 0, $data = []; $i < 10 && empty($data['done']); $i++) {
@@ -374,7 +382,7 @@ Test::check(!str_contains($admin->get('index.php?option=com_usertools&view=compa
 $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster(['baja', 'servicio', 'lote1', 'lote2'], ['lote3', 'lote4', 'lote5']),
     'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
 $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
-    'creation_mode' => 'email', 'registrations' => $registrationsFor(['lote4', 'lote5'])], 'data-ut-review');
+    'creation_mode' => 'email', 'registrations' => $registrationsFor(['lote4', 'lote5'])] + $selectAllCompare($admin), 'data-ut-review');
 $discarded = $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.discard'], 'data-ut-job-pending');
 Test::check($site->blocked('lote1') && !$site->blocked('lote2') && $site->userId('lote4') === 0 && str_contains($discarded, '3 pending accounts were neither blocked nor created'),
     'discarding keeps the first account and leaves the other three untouched');
@@ -383,7 +391,7 @@ Test::check($site->blocked('lote1') && !$site->blocked('lote2') && $site->userId
 $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster(['baja', 'servicio', 'lote1'], ['lote6', 'lote7']),
     'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
 $progress = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
-    'creation_mode' => 'password', 'registrations' => $registrationsFor(['lote6', 'lote7'])], 'data-ut-review');
+    'creation_mode' => 'password', 'registrations' => $registrationsFor(['lote6', 'lote7'])] + $selectAllCompare($admin), 'data-ut-review');
 preg_match('#<script type="application/json" data-ut-progress-initial>(.*?)</script>#s', $progress, $initial);
 $firstRows = json_decode($initial[1] ?? '[]', true) ?: [];
 $data = $step($admin, $progress);
@@ -418,7 +426,7 @@ $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_en
 $delegate->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster([], ['permiso1', 'permiso2']),
     'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
 $progress = $delegate->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
-    'creation_mode' => 'email', 'registrations' => $registrationsFor(['permiso1', 'permiso2'])], 'data-ut-review');
+    'creation_mode' => 'email', 'registrations' => $registrationsFor(['permiso1', 'permiso2'])] + $selectAllCompare($delegate), 'data-ut-review');
 Test::check(str_contains($progress, '1 of 2 accounts processed') && $site->userId('permiso1') > 0, 'the delegate starts a job that creates accounts');
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.compare' => ['6' => 1]])]);
 $data = $step($delegate, $progress);
@@ -428,7 +436,7 @@ $delegate->submit('index.php?option=com_usertools&view=compare', ['task' => 'com
 $admin->submit('index.php?option=com_usertools&view=compare', ['task' => 'compare.preview', 'names' => $roster([], ['grupo1', 'grupo2']),
     'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => []]);
 $progress = $admin->submit('index.php?option=com_usertools&view=compare&layout=review', ['task' => 'compare.apply', 'review_ready' => 1, 'confirm' => 1,
-    'creation_mode' => 'email', 'registrations' => $registrationsFor(['grupo1', 'grupo2'])], 'data-ut-review');
+    'creation_mode' => 'email', 'registrations' => $registrationsFor(['grupo1', 'grupo2'])] + $selectAllCompare($admin), 'data-ut-review');
 $rootRules = (string) $site->q("SELECT rules FROM #__assets WHERE name = 'root.1'")[0]['rules'];
 $withAdmin = json_decode($rootRules, true) ?: [];
 $withAdmin['core.login.admin'][(string) $site->q("SELECT id FROM #__usergroups WHERE title = 'Registered'")[0]['id']] = 1;
@@ -2342,6 +2350,45 @@ Test::check($beforeExisting == $site->q('SELECT name, email, block FROM #__users
     'existing accounts stay unchanged');
 Test::check($site->userId('ut_bulk_dup') === 0 && $site->userId('ut_bulk_outsider') === 0,
     'duplicated and unauthorized usernames are not created');
+
+Test::section('Compare review: select only certain blocks, reject foreign IDs and allow creation only');
+$site->options(['confirm_threshold' => 1, 'batch_seconds' => 10]);
+$site->q('UPDATE #__users SET block = 0 WHERE username IN (?, ?)', ['baja', 'servicio']);
+$baseLogBlocks = $logCount('COM_USERTOOLS_ACTION_LOG_BLOCKED');
+$selectionPreview = $admin->submit('index.php?option=com_usertools&view=compare', [
+    'task' => 'compare.preview', 'names' => $roster(['baja', 'servicio'], []),
+    'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => [],
+]);
+Test::check(str_contains($selectionPreview, 'data-ut-compare-block-id') && str_contains($selectionPreview, 'data-ut-compare-block-all')
+    && str_contains($selectionPreview, 'data-ut-compare-block-counter'), 'comparison review offers explicit block selection');
+$compareSafe = ['task' => 'compare.apply', 'review_ready' => 1, 'selection_ready' => 1, 'confirm' => 1,
+    'creation_mode' => 'sso', 'registrations' => '{}', 'confirm_count' => '1'];
+$forged = $admin->submit('index.php?option=com_usertools&view=compare&layout=review',
+    $compareSafe + ['selected' => json_encode([$site->userId('admin')])], 'data-ut-review');
+Test::check(!$site->blocked('baja') && !$site->blocked('servicio')
+    && str_contains($forged, 'selection'), 'foreign block ID is rejected before writing');
+$partial = $admin->submit('index.php?option=com_usertools&view=compare&layout=review',
+    $compareSafe + ['selected' => json_encode([$site->userId('baja')])], 'data-ut-review');
+Test::check($site->blocked('baja') && !$site->blocked('servicio'), 'only a selected comparison account is blocked');
+Test::check(str_contains($partial, 'Unselected accounts: still active') && str_contains($partial, '>servicio<'),
+    'unselected accounts are reported separately and remain active');
+Test::check($logCount('COM_USERTOOLS_ACTION_LOG_BLOCKED') === $baseLogBlocks + 1,
+    'only the selected block is logged');
+
+$admin->submit('index.php?option=com_usertools&view=compare', [
+    'task' => 'compare.preview', 'names' => $roster(['servicio'], ['ut_compare_create_only']),
+    'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => [],
+]);
+$createOnly = $admin->submit('index.php?option=com_usertools&view=compare&layout=review',
+    ['task' => 'compare.apply', 'review_ready' => 1, 'selection_ready' => 1,
+        'selected' => '[]', 'confirm' => 1, 'creation_mode' => 'sso',
+        'registrations' => json_encode([hash('sha256', 'ut_compare_create_only') =>
+            ['checked' => true, 'email' => 'ut_compare_create_only@example.test']])], 'data-ut-review');
+Test::check($site->userId('ut_compare_create_only') > 0 && !$site->blocked('servicio')
+    && str_contains($createOnly, 'ut_compare_create_only@example.test'),
+    'zero selected blocks can create accounts without blocking anyone');
+Test::check($logCount('COM_USERTOOLS_ACTION_LOG_BLOCKED') === $baseLogBlocks + 1,
+    'create-only review produces no extra block action');
 
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);

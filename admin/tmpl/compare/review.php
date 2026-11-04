@@ -36,28 +36,38 @@ $draft      = $this->draft;
     <div class="card"><div class="card-body"><strong><?= (int) $number ?></strong><span><?= Text::_($label) ?></span></div></div>
     <?php endforeach; ?>
   </div>
-  <form method="post" action="<?= Route::_('index.php?option=com_usertools&view=compare') ?>" data-ut-review>
+  <form method="post" action="<?= Route::_('index.php?option=com_usertools&view=compare') ?>" data-ut-review data-ut-compare-block-review>
     <input type="hidden" name="preview" value="<?= $this->escape($this->preview['nonce']) ?>">
     <input type="hidden" name="registrations" data-ut-registrations value="{}">
     <input type="hidden" name="review_ready" data-ut-ready value="0">
+    <input type="hidden" name="selected" data-ut-compare-block-selected value="[]">
+    <input type="hidden" name="selection_ready" data-ut-compare-block-ready value="0">
 
     <section class="card ut-card"><div class="card-body">
       <div class="ut-section-heading"><h3 class="h5 mb-0"><?= Text::_('COM_USERTOOLS_TO_BLOCK_HEADING') ?></h3><span class="badge text-bg-danger"><?= count($candidates) ?></span></div>
       <?php if ($candidates) : ?>
-        <?php if (count($candidates) > 8) : ?>
-        <input type="search" class="form-control mt-3" placeholder="<?= Text::_('COM_USERTOOLS_FILTER_PLACEHOLDER') ?>" aria-label="<?= Text::_('COM_USERTOOLS_FILTER_PLACEHOLDER') ?>" data-ut-filter="ut-block-table">
-        <?php endif; ?>
+        <div class="d-flex flex-wrap gap-3 align-items-center mt-3">
+          <div class="form-check mb-0"><input class="form-check-input" type="checkbox" id="ut-compare-block-all" data-ut-compare-block-all>
+            <label class="form-check-label" for="ut-compare-block-all"><?= Text::_('COM_USERTOOLS_SELECT_ALL') ?></label></div>
+          <?php if (count($candidates) > 8) : ?>
+          <input type="search" class="form-control ut-filter" placeholder="<?= Text::_('COM_USERTOOLS_FILTER_PLACEHOLDER') ?>" aria-label="<?= Text::_('COM_USERTOOLS_FILTER_PLACEHOLDER') ?>" data-ut-filter="ut-block-table">
+          <?php endif; ?>
+        </div>
         <div class="ut-table-scroll"><table class="table table-sm table-striped" id="ut-block-table"><thead><tr>
-          <th scope="col"><?= Text::_('COM_USERTOOLS_USERNAME') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_NAME') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_EMAIL') ?></th>
+          <th scope="col"><?= Text::_('COM_USERTOOLS_SUSPEND') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_USERNAME') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_NAME') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_EMAIL') ?></th>
           <th scope="col"><?= Text::_('COM_USERTOOLS_LAST_VISIT_UTC') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_GROUPS') ?></th></tr></thead><tbody>
         <?php foreach ($candidates as $user) : ?>
-          <tr><td><?= $this->escape($user->username) ?></td><td><?= $this->escape($user->name) ?></td><td><?= $this->escape($user->email) ?></td>
+          <tr><td><input type="checkbox" class="form-check-input" data-ut-compare-block-id="<?= (int) $user->id ?>"
+            aria-label="<?= Text::sprintf('COM_USERTOOLS_SUSPEND_USER', $this->escape($user->username)) ?>"></td>
+            <td><?= $this->escape($user->username) ?></td><td><?= $this->escape($user->name) ?></td><td><?= $this->escape($user->email) ?></td>
             <td><?= $this->date($user->lastvisitDate) ?></td><td><?= $this->groupTitles($user->groups, $this->groups) ?></td></tr>
         <?php endforeach; ?>
         </tbody></table><p class="text-muted" data-ut-filter-empty hidden><?= Text::_('COM_USERTOOLS_JS_NO_RESULTS') ?></p></div>
       <?php else : ?>
         <p class="text-muted mt-3 mb-0"><?= Text::_('COM_USERTOOLS_NOTHING_TO_BLOCK') ?></p>
       <?php endif; ?>
+      <p class="form-text"><?= Text::_('COM_USERTOOLS_COMPARE_SELECTION_NOTE') ?></p>
+      <p aria-live="polite" data-ut-compare-block-counter></p>
     </div></section>
 
     <section class="card ut-card"><div class="card-body">
@@ -119,7 +129,7 @@ $draft      = $this->draft;
     </div></section>
 
     <noscript><div class="alert alert-warning"><?= Text::_('COM_USERTOOLS_ERROR_JAVASCRIPT') ?></div></noscript>
-    <?= LayoutHelper::render('usertools.confirm', ['label' => 'COM_USERTOOLS_CONFIRM_COMPARE', 'count' => count($candidates), 'threshold' => $review['threshold'], 'dynamic' => false], $layouts) ?>
+    <?= LayoutHelper::render('usertools.confirm', ['label' => 'COM_USERTOOLS_CONFIRM_COMPARE', 'count' => 0, 'threshold' => $review['threshold'], 'dynamic' => true], $layouts) ?>
     <div class="ut-actions">
       <button class="btn btn-outline-secondary" name="task" value="compare.back" formnovalidate><?= Text::_('COM_USERTOOLS_BACK_EDIT') ?></button>
       <button class="btn btn-danger" name="task" value="compare.apply"><?= Text::_('COM_USERTOOLS_APPLY_CHANGES') ?></button>

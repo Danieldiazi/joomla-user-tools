@@ -164,7 +164,7 @@ No. `OTRO` and `otro` are the same account, both in comparisons and username exc
 
 ### What if I paste an incomplete list?
 
-Every missing account is proposed for blocking unless protected. Always paste the **complete** list and review changes before confirming. If **no** username matches an existing account, a red warning suggests that the wrong list may have been pasted.
+Every missing account is proposed for blocking unless protected, but **none is blocked by default**. Explicitly select the accounts you want to block in the review. “Select all visible” respects the filter, and reinforced confirmation counts only selected blocks. Unselected accounts remain active and are reported separately. Still paste a **complete** list and review changes before confirming. If **no** username matches an existing account, a red warning suggests that the wrong list may have been pasted.
 
 ### Does “Next: review changes” apply anything?
 
