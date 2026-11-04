@@ -115,7 +115,7 @@ class BulkcreateModel extends BaseDatabaseModel
             if (!isset($draft['checked'][$key])) {
                 continue;
             }
-            $chosen[] = $row + ['email' => trim((string) ($draft['emails'][$key] ?? ''))];
+            $chosen[] = array_replace($row, ['email' => trim((string) ($draft['emails'][$key] ?? ''))]);
         }
         if (!$chosen) {
             throw new UserFacingException('COM_USERTOOLS_BULKCREATE_ERROR_NO_SELECTION');
