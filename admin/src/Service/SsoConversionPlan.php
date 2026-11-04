@@ -94,6 +94,20 @@ final class SsoConversionPlan
         return $rows;
     }
 
+    /**
+     * Enforce the review size after filtering, never on the raw requireReset count.
+     *
+     * @param list<array<string, mixed>> $rows
+     * @param list<array<string, mixed>> $matching
+     */
+    public static function appendWithinLimit(array &$rows, array $matching): void
+    {
+        if (\count($rows) + \count($matching) > self::MAX_ACCOUNTS) {
+            throw new UserFacingException('COM_USERTOOLS_SSO_TOO_MANY', [self::MAX_ACCOUNTS]);
+        }
+        array_push($rows, ...$matching);
+    }
+
     /** @param array<string, mixed> $row */
     public static function stillEligible(object $user, array $row, Operator $operator): bool
     {
