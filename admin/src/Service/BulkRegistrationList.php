@@ -18,6 +18,7 @@ final class BulkRegistrationList
 {
     public const MAX_LINES = 2000;
     public const READY = 'ready';
+    public const USERNAME_TOO_SHORT = 'username_too_short';
 
     /**
      * @param array<int, object> $groups Directory groups, including privilege flags.
@@ -50,6 +51,8 @@ final class BulkRegistrationList
                 || mb_strlen($name) > 400 || !preg_match('/^[\pL\pN_.@-]+$/u', $login)
                 || preg_match('/[\x00-\x1f\x7f]/', $name)) {
                 $status = 'invalid';
+            } elseif (Registration::usernameTooShort($login)) {
+                $status = self::USERNAME_TOO_SHORT;
             }
             if ($status === self::READY && isset($existing[Comparison::normalise($login)])) {
                 $status = 'existing';

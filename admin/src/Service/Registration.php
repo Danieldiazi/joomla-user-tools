@@ -25,10 +25,20 @@ final class Registration
      */
     public const MODE_SSO = 'sso';
     public const MODES = [self::MODE_EMAIL, self::MODE_PASSWORD, self::MODE_SSO];
+    /**
+     * Joomla's user table rejects shorter usernames when saving. Checking it in the
+     * review tells the operator why, instead of a generic error after confirming.
+     */
+    public const MIN_USERNAME_LENGTH = 2;
 
     public static function key(string $name): string
     {
         return hash('sha256', Comparison::normalise($name));
+    }
+
+    public static function usernameTooShort(string $username): bool
+    {
+        return mb_strlen($username) < self::MIN_USERNAME_LENGTH;
     }
 
     public static function mode(mixed $value): string
@@ -93,6 +103,9 @@ final class Registration
                 throw new UserFacingException('COM_USERTOOLS_ERROR_REGISTRATIONS_CHANGED');
             }
             $name  = $allowed[$key];
+            if (self::usernameTooShort($name)) {
+                throw new UserFacingException('COM_USERTOOLS_ERROR_USERNAME_TOO_SHORT', [$name]);
+            }
             $email = trim((string) ($emails[$key] ?? ''));
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 throw new UserFacingException('COM_USERTOOLS_ERROR_EMAIL_INVALID', [$name]);

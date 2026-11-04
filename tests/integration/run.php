@@ -2321,6 +2321,9 @@ Test::check(str_contains($bulkReview, 'data-ut-bulkcreate-review')
 Test::check(str_contains($bulkReview, 'Repeated username') && str_contains($bulkReview, 'Account already exists')
     && str_contains($bulkReview, 'Privileged group'),
     'duplicates, existing users and privileged groups cannot be selected');
+$bulkShort = $admin->submit($bulkUrl, ['task' => 'bulkcreate.preview', 'lines' => 'x;Short']);
+Test::check(str_contains($bulkShort, 'Username too short'), 'a username Joomla would reject is explained in the review');
+$bulkReview = $admin->submit($bulkUrl, ['task' => 'bulkcreate.preview', 'lines' => "ut_bulk_new\nut_bulk_dup\nUT_BULK_DUP\ntwin_a\nut_bulk_group;;;8"]);
 $bulkKey = hash('sha256', 'ut_bulk_new');
 $badKey = hash('sha256', 'ut_bulk_outsider');
 $bulkTampered = $admin->submit($bulkUrl . '&layout=review', [

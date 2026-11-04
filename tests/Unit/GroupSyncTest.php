@@ -158,6 +158,11 @@ final class GroupSyncTest extends TestCase
         self::assertSame([GroupSync::CREATE_NOT_ALLOWED], array_column($this->plan('nuevo;#12;nuevo@example.test', GroupSync::PARTIAL, GroupSync::BY_USERNAME, false)['rows'], 'status'));
     }
 
+    public function testANewAccountNeedsAUsernameJoomlaAccepts(): void
+    {
+        self::assertSame([GroupSync::USERNAME_TOO_SHORT], array_column($this->plan('x;#12;x@example.test')['rows'], 'status'));
+    }
+
     public function testAnEmailThatDiffersIsShownButNeverUsedToMatchAnotherPerson(): void
     {
         $rows = $this->byName($this->plan("ana;#11;otra@example.test\nluis;#12;LUIS@example.test"));

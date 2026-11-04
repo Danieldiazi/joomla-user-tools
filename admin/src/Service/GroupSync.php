@@ -55,13 +55,14 @@ final class GroupSync
     public const EMAIL_INVALID = 'email_invalid';
     public const EMAIL_IN_USE = 'email_in_use';
     public const CREATE_NOT_ALLOWED = 'create_not_allowed';
+    public const USERNAME_TOO_SHORT = 'username_too_short';
 
     /** Statuses that change something when applied. */
     public const WRITES = [self::CHANGE, self::CREATE, self::LEAVE];
 
     /** Statuses that mean the row could not be used. Protected accounts are not errors: they are left alone on purpose. */
     public const ERRORS = [self::INVALID_LINE, self::UNKNOWN_ACCOUNT, self::AMBIGUOUS_ACCOUNT, self::DUPLICATE, self::UNKNOWN_GROUP,
-        self::AMBIGUOUS_GROUP, self::OUTSIDE, self::PROTECTED_GROUP, self::EMAIL_INVALID, self::EMAIL_IN_USE, self::CREATE_NOT_ALLOWED];
+        self::AMBIGUOUS_GROUP, self::OUTSIDE, self::PROTECTED_GROUP, self::EMAIL_INVALID, self::EMAIL_IN_USE, self::CREATE_NOT_ALLOWED, self::USERNAME_TOO_SHORT];
 
     /**
      * The groups the branch manages, and those inside it that are never managed because they give
@@ -132,6 +133,8 @@ final class GroupSync
             $email = mb_strtolower($row['email']);
             if (!$canCreate) {
                 $row['status'] = self::CREATE_NOT_ALLOWED;
+            } elseif (Registration::usernameTooShort($row['username'])) {
+                $row['status'] = self::USERNAME_TOO_SHORT;
             } elseif (!filter_var($row['email'], FILTER_VALIDATE_EMAIL)) {
                 $row['status'] = self::EMAIL_INVALID;
             } elseif (isset($emails[$email]) || isset($usedEmails[$email])) {
