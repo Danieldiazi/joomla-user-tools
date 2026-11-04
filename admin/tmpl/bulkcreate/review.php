@@ -99,7 +99,7 @@ $mailOnline = $this->review['mailOnline'];
                   value="<?= $this->escape($row['email']) ?>" placeholder="<?= Text::_('COM_USERTOOLS_EMAIL_PLACEHOLDER') ?>" disabled>
               <?php else : ?><?= $this->escape($row['email']) ?><?php endif; ?>
             </td>
-            <td><?= Text::_('COM_USERTOOLS_BULKCREATE_REGISTERED') ?><?= $group ? ' + ' . $this->escape($groupName !== '' ? $groupName . ' (#' . $group . ')' : '#' . $group) : '' ?></td>
+            <td><?= Text::_('COM_USERTOOLS_BULKCREATE_REGISTERED') ?><?= $group > 0 ? ' + ' . $this->escape($groupName !== '' ? $groupName . ' (#' . $group . ')' : '#' . $group) : '' ?></td>
             <td><?= Text::_('COM_USERTOOLS_BULKCREATE_STATUS_' . strtoupper($row['status'])) ?></td>
           </tr>
           <?php endforeach; ?>
