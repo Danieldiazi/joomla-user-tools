@@ -122,7 +122,7 @@ try {
   await page.waitForTimeout(800);
   await page.screenshot({
     path: resolve(output, '04-comparacion-resultado.jpg'), type: 'jpeg',
-    quality: 78, fullPage: true, animations: 'disabled',
+    quality: 78, fullPage: false, animations: 'disabled',
   });
 
   // Exercise the actual Joomla asset as well as the HTTP-only integration client.
