@@ -54,6 +54,8 @@ Se distribuye como un paquete con el componente `com_usertools`, los plugins `pl
 | `scripts/changelog.php`, `scripts/ReleaseChangelog.php` | Generan en el workflow de release el `changelog.xml` de Joomla a partir de las pull requests fusionadas desde la release anterior. |
 | `tests/` | `Unit/` (PHPUnit), `regression/` (controladores y modelos con sustitutos de Joomla), `js/` (jsdom), `integration/` (Joomla real), `verify-build.php`. |
 
+- **Conversión SSO (#85):** solo cuentas `requireReset = 1`; lista revisada de un solo uso y 15 minutos, selección de IDs validada, ninguna marcada por defecto, y tandas reanudables. Superusuarios y cuenta propia siempre protegidos; administradores para operadores no superusuarios también. `SsoAccountConverter` revalida una instancia nueva de User, contraseña local y `requireReset` mediante API Joomla, cierra sesiones, registra acción sin secretos y no modifica grupos, bloqueo ni MFA. No prometer que se impide una recuperación posterior de contraseña local.
+
 ## Reglas de seguridad que no se pueden romper
 
 Cualquier cambio debe mantener estas garantías. Hay pruebas que las cubren.
