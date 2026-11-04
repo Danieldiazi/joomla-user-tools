@@ -2314,7 +2314,7 @@ Test::check(str_contains($bulkReview, 'Repeated username') && str_contains($bulk
 $bulkKey = hash('sha256', 'ut_bulk_new');
 $badKey = hash('sha256', 'ut_bulk_outsider');
 $bulkTampered = $admin->submit($bulkUrl . '&layout=review', [
-    'task' => 'bulkcreate.apply', 'review_ready' => 1, 'confirm' => 1, 'creation_mode' => 'sso',
+    'task' => 'bulkcreate.apply', 'review_ready' => 1, 'confirm' => 1, 'confirm_count' => '1', 'creation_mode' => 'sso',
     'registrations' => json_encode([
         $bulkKey => ['checked' => true, 'email' => 'ut_bulk_new@example.test'],
         $badKey => ['checked' => true, 'email' => 'ut_bulk_outsider@example.test'],
@@ -2323,13 +2323,10 @@ $bulkTampered = $admin->submit($bulkUrl . '&layout=review', [
 Test::check($site->userId('ut_bulk_new') === 0 && $site->userId('ut_bulk_outsider') === 0,
     'a manipulated selection creates no account');
 $bulkResult = $admin->submit($bulkUrl . '&layout=review', [
-    'task' => 'bulkcreate.apply', 'review_ready' => 1, 'confirm' => 1, 'creation_mode' => 'sso',
+    'task' => 'bulkcreate.apply', 'review_ready' => 1, 'confirm' => 1, 'confirm_count' => '1', 'creation_mode' => 'sso',
     'registrations' => json_encode([$bulkKey => ['checked' => true, 'email' => 'ut_bulk_new@example.test']]),
 ], 'data-ut-review');
 $bulkId = $site->userId('ut_bulk_new');
-if ($bulkId === 0) {
-    echo 'Bulk creation diagnostic: ' . substr(preg_replace('/\\s+/u', ' ', html_entity_decode(strip_tags(preg_replace('#<(script|style)\\b[^>]*>.*?</\\1>#si', '', $bulkResult)), ENT_QUOTES)), 0, 4500) . "\n";
-}
 
 Test::check($bulkId > 0 && str_contains($bulkResult, 'ut_bulk_new'), 'selected SSO account is created');
 $bulkRow = $site->q('SELECT name, email, "requireReset" FROM #__users WHERE id = ?', [$bulkId])[0] ?? [];
