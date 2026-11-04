@@ -28,9 +28,9 @@ Besides these screenshots, CI checks keyboard order, menu expansion and the acti
 
 ![Guided tour of “Compare a list”: the step that explains the current list, opened with the “Guided tour” button next to Help (2026.10.21, Spanish interface)](screenshots/30-recorrido-guiado.jpg)
 
-![Comparison: review changes, with «tick all» and emails built from the username (2026.10.11, Spanish interface)](screenshots/03-comparacion-revision.jpg)
+![Comparison: explicit block selections (none selected by default), select-all visible and a live typed confirmation count (CI Joomla, English interface)](screenshots/03-comparacion-revision.jpg)
 
-![Comparison: result with passwords hidden](screenshots/04-comparacion-resultado.jpg)
+![Comparison: result of one actual block, showing all unselected accounts left active and excluded from undo (CI Joomla, English interface)](screenshots/04-comparacion-resultado.jpg)
 
 ![Warning for a list with no matches](screenshots/05-aviso-sin-coincidencias.jpg)
 
