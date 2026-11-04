@@ -13,7 +13,7 @@ use PHPUnit\Framework\TestCase;
 
 final class SsoConversionTest extends TestCase
 {
-    private function groups(): array
+    private function fixtureGroups(): array
     {
         return [
             1 => (object) ['id' => 1, 'lft' => 1, 'rgt' => 12],
@@ -26,7 +26,7 @@ final class SsoConversionTest extends TestCase
 
     public function testFiltersAndSubgroupScope(): void
     {
-        $groups = $this->groups();
+        $groups = $this->fixtureGroups();
         self::assertSame([2], Plan::groupIds($groups, 2, false));
         self::assertSame([2, 3, 5], Plan::groupIds($groups, 2, true));
         self::assertSame([], Plan::groupIds($groups, 0, true));
@@ -38,7 +38,7 @@ final class SsoConversionTest extends TestCase
 
     public function testProtectedAccountsAndStatusVisitFilters(): void
     {
-        $groups = $this->groups();
+        $groups = $this->fixtureGroups();
         $users = [
             Fixtures::user(11, 'first', [3], block: 0),
             Fixtures::user(12, 'blocked', [3], block: 1),
