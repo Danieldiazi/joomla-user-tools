@@ -40,7 +40,7 @@ class NamesModel extends BaseDatabaseModel
         $lines = is_string($input['lines'] ?? null) ? $input['lines'] : '';
         $this->session()->set(self::DRAFT, $lines);
         $this->session()->set(self::PREVIEW, []);
-        if (trim($lines) === '' || count(preg_split('/\R/u', $lines) ?: []) > 1000) {
+        if (trim($lines) === '' || count(preg_split('/\R/u', rtrim($lines)) ?: []) > 1000) {
             throw new UserFacingException('COM_USERTOOLS_NAMES_INVALID_INPUT');
         }
         $rows = $this->plan($lines);
@@ -62,16 +62,18 @@ class NamesModel extends BaseDatabaseModel
         return $this->validPreview(self::PREVIEW);
     }
 
-    /** @return array<string, mixed> */
+    /**
+     * The stored rows are what the operator reviewed, so they are not re-planned here: a change
+     * to one account must not discard the rest of the review. AccountNameUpdater revalidates each
+     * selected account before saving and reports the ones that changed as skipped, by row.
+     *
+     * @return array<string, mixed>
+     */
     public function getReview(): array
     {
         $preview = $this->getPreview();
         if (!$preview) {
             throw new UserFacingException('COM_USERTOOLS_ERROR_PREVIEW_EXPIRED');
-        }
-        if ($this->plan($this->getDraft()) !== $preview['rows']) {
-            $this->session()->set(self::PREVIEW, []);
-            throw new UserFacingException('COM_USERTOOLS_NAMES_CHANGED');
         }
         return $preview;
     }
@@ -117,13 +119,19 @@ class NamesModel extends BaseDatabaseModel
         if (!$selected) {
             throw new UserFacingException('COM_USERTOOLS_NAMES_NONE_SELECTED');
         }
+        // Rows left out by the operator or by validation are reported too, never dropped silently.
         $pending = [];
-        foreach ($selected as $index) {
-            $pending[] = $preview['rows'][$index];
+        $skipped = [];
+        foreach ($preview['rows'] as $index => $row) {
+            if (in_array($index, $selected, true)) {
+                $pending[] = $row;
+            } else {
+                $skipped[] = $row;
+            }
         }
         $this->session()->set(self::PREVIEW, []);
         $this->session()->set(self::JOB, ['actor' => (int) $this->identity()->id, 'pending' => $pending,
-            'updated' => [], 'changed' => [], 'errors' => []]);
+            'updated' => [], 'changed' => [], 'errors' => [], 'skipped' => $skipped]);
         return $this->step();
     }
 
@@ -151,7 +159,7 @@ class NamesModel extends BaseDatabaseModel
         }
         $this->session()->set(self::JOB, []);
         Toolkit::clearDashboardCache();
-        $this->storeResult(self::RESULT, ['updated' => $job['updated'], 'changed' => $job['changed'], 'errors' => $job['errors']]);
+        $this->storeResult(self::RESULT, ['updated' => $job['updated'], 'changed' => $job['changed'], 'errors' => $job['errors'], 'skipped' => $job['skipped']]);
         $this->session()->set(self::DRAFT, '');
         return true;
     }

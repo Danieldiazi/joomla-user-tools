@@ -75,6 +75,7 @@
       const selected = form.querySelector('[data-ut-names-selected]');
       const ready = form.querySelector('[data-ut-names-ready]');
       const submit = form.querySelector('[data-ut-names-submit]');
+      const none = form.querySelector('[data-ut-names-none-selected]');
       if (!table || !selected || !ready || !submit) return;
       const boxes = [...table.querySelectorAll('[data-ut-name-choice]')];
       const sync = () => {
@@ -82,6 +83,7 @@
         selected.value = JSON.stringify(choices);
         ready.value = '1';
         submit.disabled = choices.length === 0;
+        if (none) none.hidden = choices.length > 0;
       };
       boxes.forEach((box) => box.addEventListener('change', sync));
       form.addEventListener('submit', sync);

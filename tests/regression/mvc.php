@@ -248,9 +248,7 @@ namespace {
     check($names->getPreview() === null, 'Name preview expires');
     $names->preview(['lines' => 'alice;New Alice']);
     Toolkit::$directory->records[0] = Fixtures::user(2, 'renamed');
-    try { $names->getReview(); throw new \RuntimeException('Stale name review accepted'); }
-    catch (UserFacingException $e) { check($e->key() === 'COM_USERTOOLS_NAMES_CHANGED', 'Changed account invalidates the name review'); }
-    check($names->getPreview() === null, 'Stale name review is consumed');
+    check($names->getReview()['rows'][0]['username'] === 'alice', 'A changed account does not discard the rest of the review');
     // Real name writer with mutable stand-in accounts exercises selection and one-use jobs.
     Toolkit::$directory->records = [Fixtures::user(2, 'alice'), Fixtures::user(3, 'bob')];
     Toolkit::$factory = new class implements \Joomla\CMS\User\UserFactoryInterface {
@@ -279,5 +277,16 @@ namespace {
         'Completed name review is consumed and result stored');
     try { $names->apply($nameInput); throw new \RuntimeException('Name review replay accepted'); }
     catch (UserFacingException $e) { check(Toolkit::$factory->accounts[2]->saves === 1, 'Replay cannot save twice'); }
+    // A concurrent edit skips only that account; unselected and invalid rows are reported as well.
+    Toolkit::$factory->accounts[2]->name = 'Alice';
+    $names->preview(['lines' => "alice;Again\nbob;New Bob\nbad"]);
+    $np = $names->getPreview();
+    Toolkit::$factory->accounts[3]->name = 'Concurrent';
+    check($names->apply(['preview' => $np['nonce'], 'confirm' => 1, 'selection_ready' => 1, 'selected' => '[0,1]']), 'Name job with a stale row completes');
+    $nr = $names->getResult();
+    check(Toolkit::$factory->accounts[2]->name === 'Again' && Toolkit::$factory->accounts[3]->name === 'Concurrent' && Toolkit::$factory->accounts[3]->saves === 0,
+        'Stale row is not overwritten while the rest are saved');
+    check(array_column($nr['updated'], 'username') === ['alice'] && array_column($nr['changed'], 'username') === ['bob']
+        && array_column($nr['skipped'], 'status') === ['invalid_line'], 'Result reports each row: updated, changed and skipped');
     echo "OK: controller view permissions and changed comparison previews\n";
 }

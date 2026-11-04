@@ -20,10 +20,17 @@ final class BulkNameUpdates
     public const DUPLICATE = 'duplicate';
     public const PROTECTED = 'protected';
     public const INVALID_LINE = 'invalid_line';
+    public const INVALID_NAME = 'invalid_name';
+
+    /** Length of #__users.name: longer values could be truncated by a non-strict database. */
+    private const MAX_NAME_LENGTH = 400;
 
     /**
      * Resolve input by username and classify every submitted line without changing any account.
      * The first semicolon is the only delimiter, so proposed names may contain semicolons.
+     * Usernames match case-insensitively, like the other bulk tools: on a database where two
+     * accounts differ only by case the row is ambiguous, never applied to the first match.
+     * Trailing line breaks are not entries; a blank line between entries is an invalid row.
      *
      * @param array<int, UserRecord> $users
      * @return list<array{line: int, username: string, id: int, before: string, after: string, status: string}>
@@ -32,60 +39,55 @@ final class BulkNameUpdates
     {
         $lookups = [];
         foreach ($users as $user) {
-            $lookups[$user->username][] = $user;
+            $lookups[mb_strtolower($user->username)][] = $user;
         }
 
-        $rows = [];
-        $seen = [];
-        foreach (preg_split('/\R/u', $lines) ?: [] as $index => $line) {
+        $parsed = [];
+        $repeats = [];
+        foreach (preg_split('/\R/u', rtrim($lines)) ?: [] as $index => $line) {
             $separator = strpos($line, ';');
             $username  = $separator === false ? '' : trim(substr($line, 0, $separator));
             $after     = $separator === false ? '' : trim(substr($line, $separator + 1));
-            $matches   = $username === '' ? [] : ($lookups[$username] ?? []);
-            $user      = count($matches) === 1 ? $matches[0] : null;
-            $status    = self::UPDATE;
+            $key       = mb_strtolower($username);
+            if ($username !== '') {
+                $repeats[$key] = ($repeats[$key] ?? 0) + 1;
+            }
+            $parsed[] = [$index + 1, $username, $key, $after, $separator !== false];
+        }
 
-            if ($separator === false || $username === '' || $after === '') {
+        $rows = [];
+        foreach ($parsed as [$number, $username, $key, $after, $hasSeparator]) {
+            $matches = $username === '' ? [] : ($lookups[$key] ?? []);
+            $user    = count($matches) === 1 ? $matches[0] : null;
+
+            if (!$hasSeparator || $username === '' || $after === '') {
                 $status = self::INVALID_LINE;
+            } elseif (mb_strlen($after) > self::MAX_NAME_LENGTH || preg_match('/\p{Cc}/u', $after) === 1) {
+                $status = self::INVALID_NAME;
+            } elseif (($repeats[$key] ?? 0) > 1) {
+                // Every repeated row is rejected: the first line must not win by input order.
+                $status = self::DUPLICATE;
             } elseif (count($matches) > 1) {
                 $status = self::AMBIGUOUS;
             } elseif ($user === null) {
                 $status = self::UNKNOWN;
-            } elseif (isset($seen[$username])) {
-                $status = self::DUPLICATE;
             } elseif ($user->id === $operator->id || $user->isSuperUser || $user->hasBackendAccess) {
                 $status = self::PROTECTED;
             } elseif ($user->name === $after) {
                 $status = self::UNCHANGED;
+            } else {
+                $status = self::UPDATE;
             }
 
-            if ($username !== '') {
-                $seen[$username] = true;
-            }
             $rows[] = [
-                'line' => $index + 1,
-                'username' => $username,
+                'line' => $number,
+                'username' => $user->username ?? $username,
                 'id' => $user->id ?? 0,
                 'before' => $user->name ?? '',
                 'after' => $after,
                 'status' => $status,
             ];
         }
-
-        // Duplicate rows are all rejected; the first line must not win by input order.
-        $counts = [];
-        foreach ($rows as $row) {
-            if ($row['username'] !== '' && $row['id'] > 0) {
-                $key = $row['username'];
-                $counts[$key] = ($counts[$key] ?? 0) + 1;
-            }
-        }
-        foreach ($rows as &$row) {
-            if ($row['id'] > 0 && ($counts[$row['username']] ?? 0) > 1) {
-                $row['status'] = self::DUPLICATE;
-            }
-        }
-        unset($row);
 
         return $rows;
     }

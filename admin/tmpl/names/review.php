@@ -26,13 +26,14 @@ $candidates = count(array_filter($this->review['rows'], static fn (array $row): 
   <p><?= Text::sprintf('COM_USERTOOLS_NAMES_REVIEW_COUNT', count($selected)) ?> <?= Text::_('COM_USERTOOLS_NAMES_REVIEW_HELP') ?></p>
   <section class="card ut-card"><div class="card-body"><div class="table-responsive">
     <table class="table table-striped table-sm" id="ut-names-table">
-      <thead><tr><th scope="col"><?= Text::_('COM_USERTOOLS_NAMES_SELECT') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_USERNAME') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_NAMES_BEFORE') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_NAMES_AFTER') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_STATE') ?></th></tr></thead>
+      <thead><tr><th scope="col"><?= Text::_('COM_USERTOOLS_NAMES_SELECT') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_NAMES_LINE') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_USERNAME') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_NAMES_BEFORE') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_NAMES_AFTER') ?></th><th scope="col"><?= Text::_('COM_USERTOOLS_STATE') ?></th></tr></thead>
       <tbody>
       <?php foreach ($this->review['rows'] as $index => $row) : ?>
       <tr data-ut-names-row="<?= (int) $row['line'] ?>" data-ut-names-status="<?= $this->escape($row['status']) ?>">
         <td><?php if ($row['status'] === BulkNameUpdates::UPDATE) : ?>
           <input class="form-check-input" type="checkbox" data-ut-name-choice value="<?= (int) $index ?>" form="ut-names-apply" aria-label="<?= Text::sprintf('COM_USERTOOLS_NAMES_SELECT_ROW', $this->escape($row['username'])) ?>"<?= in_array($index, $selected, true) ? ' checked' : '' ?>>
           <?php else : ?>—<?php endif; ?></td>
+        <td><?= (int) $row['line'] ?></td>
         <td><?= $this->escape($row['username'] !== '' ? $row['username'] : '—') ?></td>
         <td><?= $row['id'] > 0 ? $this->escape($row['before']) : '—' ?></td>
         <td><?= $this->escape($row['after'] !== '' ? $row['after'] : '—') ?></td>
@@ -43,8 +44,9 @@ $candidates = count(array_filter($this->review['rows'], static fn (array $row): 
     </table>
   </div></div></section>
   <?php if ($candidates > 0) : ?>
-  <?php if (!$selected) : ?><p class="alert alert-info" data-ut-names-none-selected><?= Text::_('COM_USERTOOLS_NAMES_NONE_SELECTED') ?></p><?php endif; ?>
   <form id="ut-names-apply" method="post" action="<?= Route::_('index.php?option=com_usertools&view=names') ?>" data-ut-names-review>
+    <p class="alert alert-info" role="status" data-ut-names-none-selected<?= $selected ? ' hidden' : '' ?>><?= Text::_('COM_USERTOOLS_NAMES_NONE_SELECTED') ?></p>
+    <noscript><div class="alert alert-warning"><?= Text::_('COM_USERTOOLS_ERROR_JAVASCRIPT') ?></div></noscript>
     <input type="hidden" name="selected" data-ut-names-selected value="[]">
     <input type="hidden" name="selection_ready" data-ut-names-ready value="0">
     <div class="form-check my-3">

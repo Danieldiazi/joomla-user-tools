@@ -11,13 +11,13 @@ use PHPUnit\Framework\TestCase;
 
 final class BulkNameUpdatesTest extends TestCase
 {
-    public function testOnlyExactUsernamesResolveAndProtectedOrInvalidRowsCannotUpdate(): void
+    public function testProtectedUnknownOrInvalidRowsCannotUpdate(): void
     {
         $users = [Fixtures::user(2, 'alice'), Fixtures::user(3, 'manager', backend: true),
             Fixtures::user(4, 'root', super: true), Fixtures::user(9, 'operator'),
             Fixtures::user(5, 'same')];
-        $rows = Plan::plan("alice;Ángela; Flores\nALICE;Other\nmanager;New\nroot;New\noperator;New\nsame;Same\nmissing;New\nbad\n;Name\nalice2;", $users, new Operator(9, true));
-        self::assertSame(['update', 'unknown', 'protected', 'protected', 'protected', 'unchanged',
+        $rows = Plan::plan("alice;Ángela; Flores\nmanager;New\nroot;New\noperator;New\nsame;Same\nmissing;New\nbad\n;Name\nalice2;\n\n", $users, new Operator(9, true));
+        self::assertSame(['update', 'protected', 'protected', 'protected', 'unchanged',
             'unknown', 'invalid_line', 'invalid_line', 'invalid_line'], array_column($rows, 'status'));
         self::assertSame('Alice', $rows[0]['before']);
         self::assertSame('Ángela; Flores', $rows[0]['after']);
@@ -26,10 +26,34 @@ final class BulkNameUpdatesTest extends TestCase
 
     public function testEveryDuplicateIsRejectedAndAmbiguityNeverChoosesFirstAccount(): void
     {
-        $rows = Plan::plan("alice;First\nalice;Second\ndouble;Name", [Fixtures::user(2, 'alice'),
-            Fixtures::user(3, 'double'), Fixtures::user(4, 'double')], new Operator(9, true));
-        self::assertSame(['duplicate', 'duplicate', 'ambiguous'], array_column($rows, 'status'));
-        self::assertSame(0, $rows[2]['id']);
+        $rows = Plan::plan("alice;First\nALICE;Second\nnobody;One\nNobody;Two\ndouble;Name", [Fixtures::user(2, 'alice'),
+            Fixtures::user(3, 'double'), Fixtures::user(4, 'DOUBLE')], new Operator(9, true));
+        self::assertSame(['duplicate', 'duplicate', 'duplicate', 'duplicate', 'ambiguous'], array_column($rows, 'status'));
+        self::assertSame(0, $rows[4]['id']);
+    }
+
+    public function testUsernameMatchIgnoresCaseAndReviewsTheRealAccount(): void
+    {
+        $rows = Plan::plan('ALICE;New Name', [Fixtures::user(2, 'alice')], new Operator(9, true));
+        self::assertSame('update', $rows[0]['status']);
+        self::assertSame('alice', $rows[0]['username']);
+        self::assertSame(2, $rows[0]['id']);
+    }
+
+    public function testRowsKeepTheirLineNumberAndOnlyTrailingBreaksAreIgnored(): void
+    {
+        $rows = Plan::plan("alice;New\n\nbad\n\n", [Fixtures::user(2, 'alice')], new Operator(9, true));
+        self::assertSame([1, 2, 3], array_column($rows, 'line'));
+        self::assertSame(['update', 'invalid_line', 'invalid_line'], array_column($rows, 'status'));
+    }
+
+    public function testNameThatDoesNotFitOrHasControlCharactersIsRejected(): void
+    {
+        $users = [Fixtures::user(2, 'alice')];
+        $operator = new Operator(9, true);
+        self::assertSame('update', Plan::plan('alice;' . str_repeat('ñ', 400), $users, $operator)[0]['status']);
+        self::assertSame('invalid_name', Plan::plan('alice;' . str_repeat('ñ', 401), $users, $operator)[0]['status']);
+        self::assertSame('invalid_name', Plan::plan("alice;New\tName", $users, $operator)[0]['status']);
     }
 
     public function testWriterChangesOnlyNameAndAuditsOnceWithoutCopyingNames(): void
