@@ -26,7 +26,7 @@ $layouts = JPATH_ADMINISTRATOR . '/components/com_usertools/layouts';
       <h3 class="h5"><?= Text::_('COM_USERTOOLS_SSO_FILTERS') ?></h3>
       <div class="row g-3">
         <div class="col-md-6">
-          <label for="ut-sso-group" class="form-label"><?= Text::_('COM_USERTOOLS_GROUP') ?></label>
+          <label for="ut-sso-group" class="form-label"><?= Text::_('COM_USERTOOLS_GROUPS') ?></label>
           <select id="ut-sso-group" name="group" class="form-select">
             <option value="0"><?= Text::_('COM_USERTOOLS_SSO_ALL_GROUPS') ?></option>
             <?php foreach ($this->groups as $group) : ?>
