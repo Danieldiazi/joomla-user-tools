@@ -116,7 +116,14 @@ try {
   if (!(await page.locator('text=Unselected accounts: still active').isVisible())) {
     throw new Error('Comparison result does not report unselected accounts');
   }
-  await capture('04-comparacion-resultado.jpg');
+  // Joomla uses page-view transitions; capture only after the old review
+  // surface has fully disappeared, avoiding ghosted old/new screenshots.
+  await page.waitForLoadState('networkidle');
+  await page.waitForTimeout(800);
+  await page.screenshot({
+    path: resolve(output, '04-comparacion-resultado.jpg'), type: 'jpeg',
+    quality: 78, fullPage: true, animations: 'disabled',
+  });
 
   // Exercise the actual Joomla asset as well as the HTTP-only integration client.
   await page.goto(base + '/administrator/index.php?option=com_usertools&view=names');
