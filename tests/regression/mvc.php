@@ -152,7 +152,8 @@ namespace {
         check(Toolkit::$writes === $before, 'No writes allowed for a changed review');
     }
     function applyInput(array $preview, string $count = '10'): array {
-        return ['preview' => $preview['nonce'], 'review_ready' => 1, 'confirm' => 1,
+        return ['preview' => $preview['nonce'], 'review_ready' => 1, 'selection_ready' => 1,
+                'selected' => json_encode(array_map('intval', $preview['ids'])), 'confirm' => 1,
                 'confirm_count' => $count, 'registrations' => '{}', 'creation_mode' => 'password'];
     }
 
