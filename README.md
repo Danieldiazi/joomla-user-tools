@@ -9,6 +9,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Ficha de una persona | Consulta identidad, grupos, accesos, contenido y actividad de una cuenta; ofrece enlaces protegidos a sus herramientas. Solo lectura. |
 | Explicar acceso a contenido | Explica por qué una cuenta puede o no ver, editar o publicar un artículo o una categoría, con todas las condiciones que lo impiden. Solo lectura. |
 | Comparar una lista | Propone bloquear las cuentas ausentes de la lista completa, salvo las protegidas, y permite crear los usuarios nuevos que selecciones. |
+| **Alta masiva de usuarios** | Crea solo cuentas nuevas desde un listado donde únicamente el username es obligatorio; nombre, correo y grupo son opcionales. Revisión y generación opcional de correos. |
 | Exportar cuentas a CSV | Descarga las cuentas y sus grupos, fechas, estado y MFA, con filtros y correo opcional bajo un permiso propio. |
 | Revisar usuarios inactivos | Busca cuentas inactivas para que selecciones cuáles bloquear. |
 | Traspasar contenido y dar de baja | Cuando alguien se va, revisa los artículos que deja, traspasa su autoría a otra cuenta y después ofrece la revisión de bloqueo o anonimización. Con revisión previa y confirmación. |
@@ -159,6 +160,25 @@ Requiere el permiso propio *Explicar acceso a contenido* (`usertools.explain`), 
 La herramienta **Exportar cuentas a CSV** requiere el permiso `usertools.export`. Permite filtrar por grupo (y subgrupos), estado e inactividad; para las cuentas sin accesos registrados puede utilizar la fecha de alta. El archivo incluye ID, usuario, nombre, **grupos asignados directamente con su ID**, fecha de último acceso, alta, estado, activación pendiente (cuenta bloqueada que nunca ha accedido y tiene token de activación) y existencia de un método de autenticación multifactor (MFA) configurado, sin sus secretos. El **correo electrónico es opcional y viene desmarcado**; al exportarlo queda constancia en el registro de acciones, sin guardar direcciones en ese registro. El CSV es UTF-8, usa punto y coma y protege contra fórmulas al abrirlo en una hoja de cálculo: las celdas que podrían ejecutarse llevan delante un apóstrofo (véase [la FAQ](FAQ.md#por-qué-algunas-celdas-del-csv-empiezan-por-un-apóstrofo)). Debe custodiarse como información personal.
 
 ![Exportar cuentas a CSV: filtros por grupo, inactividad y estado, con el correo opcional](docs/screenshots/26-exportar-cuentas.jpg)
+
+## Alta masiva de usuarios (solo crear)
+
+En **Componentes → User Tools → Revisar cuentas → Alta masiva de usuarios**, pega una cuenta por línea con el formato `usuario;nombre;correo;grupo` (hasta 2.000 líneas):
+
+```text
+jperez
+mlopez;María López
+agarcia;;;12
+rfernandez;Rosa Fernández;rosa@empresa.es;15
+```
+
+**Solo el nombre de usuario es obligatorio en la entrada.** Si falta el nombre visible se usa el propio username; si no se indica grupo se asigna **Registrados**. Un grupo explícito por **ID** o **ruta completa inequívoca** se añade a Registrados, siempre que no conceda acceso de administración y quien opera tenga tanto el permiso de crear cuentas como el de añadir grupos. No se modifican grupos de cuentas existentes.
+
+Joomla necesita un **correo válido y único** antes de crear la cuenta. En la revisión, el operador puede escribirlo manualmente o marcar **«Generar el correo a partir del nombre de usuario»**, indicar un dominio y rellenar solo los vacíos, exactamente como en «Comparar lista». Los correos manuales no se sustituyen; al cambiar el dominio solo cambian los generados, y al desactivar la opción se borran los generados. Comprueba que corresponden a buzones reales y legítimos. Si el username no es apto para la parte local del correo, hay que introducir la dirección a mano.
+
+Se muestran las filas inválidas, duplicadas, existentes y de grupos no autorizados **sin seleccionar**. Selecciona las altas válidas, elige uno de los tres modos habituales (**enlace por correo**, **contraseña temporal** o **SSO**) y confirma. En SSO se crea una contraseña aleatoria que no se revela ni se envía; revisa también si la recuperación de contraseñas de Joomla permite posteriormente establecer credenciales locales. A partir del umbral configurado se pide escribir el número seleccionado. Las altas se aplican por tandas reanudables y cada cuenta se vuelve a comprobar antes de crearla. Las contraseñas temporales se muestran una sola vez, sin persistirlas.
+
+**A diferencia de «Comparar lista», esta herramienta nunca bloquea usuarios ausentes ni cambia cuentas existentes.** Requiere `usertools.create`; los grupos adicionales requieren además `usertools.addgroups`.
 
 ## Comparar una lista de usuarios
 
