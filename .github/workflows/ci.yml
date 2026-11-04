@@ -165,3 +165,41 @@ jobs:
         run: |
           tail -n 50 "$RUNNER_TEMP/server.log" || true
           tail -n 50 "$RUNNER_TEMP/site/administrator/logs/"*.php || true
+
+  # Temporary, branch-scoped docs sync. Remove after checked-in captures are verified.
+  sync_comparison_screenshots:
+    name: Sync comparison screenshots (temporary)
+    if: github.event_name == 'pull_request' && github.head_ref == 'feat/issue-84-select-compare-blocks'
+    needs: integration
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/issue-84-select-compare-blocks
+      - name: Download verified Joomla screenshots
+        uses: actions/download-artifact@v4
+        with:
+          name: profile-screenshots-${{ github.sha }}
+          path: ${{ runner.temp }}/screenshots
+      - name: Commit updated real UI screenshots once
+        run: |
+          if git log -1 --pretty=%s | grep -Fq '[screenshots from CI]'; then
+            echo "Already imported."
+            exit 0
+          fi
+          test -s "$RUNNER_TEMP/screenshots/03-comparacion-revision.jpg"
+          test -s "$RUNNER_TEMP/screenshots/04-comparacion-resultado.jpg"
+          cp "$RUNNER_TEMP/screenshots/03-comparacion-revision.jpg" docs/screenshots/03-comparacion-revision.jpg
+          cp "$RUNNER_TEMP/screenshots/04-comparacion-resultado.jpg" docs/screenshots/04-comparacion-resultado.jpg
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/screenshots/03-comparacion-revision.jpg docs/screenshots/04-comparacion-resultado.jpg
+          if git diff --cached --quiet; then
+            echo "Both screenshots already match CI."
+            exit 0
+          fi
+          git commit -m 'docs: refresh comparison screenshots [screenshots from CI]'
+          git push origin HEAD:refs/heads/feat/issue-84-select-compare-blocks
