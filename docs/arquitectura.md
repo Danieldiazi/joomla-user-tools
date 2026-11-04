@@ -6,6 +6,8 @@
 
 Esta guía describe la arquitectura de la rama `main` (no una versión histórica fija). Está dirigida a quien necesite localizar una regla, seguir una petición o modificar una herramienta. Para una ruta de lectura más breve, consulta la [guía para desarrolladores](desarrollo.md). Al cambiar los flujos, la persistencia o las garantías, actualiza también esta guía. Las instrucciones de uso están en el [README](../README.md) y la [FAQ](../FAQ.md).
 
+**Alta masiva independiente**: `BulkcreateController`, `BulkcreateModel` y `BulkRegistrationList` ofrecen un flujo exclusivo de creación. El parser conserva identidad, línea, nombre opcional y grupo resuelto en el servidor. Una previsualización vinculada al operador y de un solo uso conserva la huella del grupo; el cliente envía únicamente la selección y los correos, y la confirmación cuenta solo las filas marcadas. Cada alta revalida username, correo, permisos y grupo, reutilizando `Registration::create()`, `AccountMailer` y `ActionLogger`, con tandas reanudables y contraseñas nunca persistidas. No existe operación de bloqueo ni actualización de cuentas preexistentes.
+
 ## 1. Mapa de responsabilidades
 
 ```mermaid

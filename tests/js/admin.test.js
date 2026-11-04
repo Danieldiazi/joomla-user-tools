@@ -196,6 +196,43 @@ const newAccounts = (names, extra = '') => `<form data-ut-review><input type="hi
   <table><thead><tr><th><input type="checkbox" data-ut-add-all></th></tr></thead><tbody>${names.map((n, i) => `<tr data-ut-user="k${i}" data-ut-name="${n}">
   <td><input type="checkbox" data-ut-add></td><td><input type="email" data-ut-email value="${i === 0 ? extra : ''}" disabled></td></tr>`).join('')}</tbody></table></form>`;
 
+test('bulk creation: optional email generator, no default selection and typed count', async () => {
+  const html = '<form data-ut-review data-ut-bulkcreate-review><input data-ut-registrations value="{}"><input data-ut-ready value="0">'
+    + '<div data-ut-email-auto><input type="checkbox" data-ut-email-auto-on><input data-ut-email-domain disabled><span data-ut-email-skipped hidden></span></div>'
+    + '<input type="checkbox" data-ut-add-all><table><tbody>'
+    + '<tr data-ut-user="a" data-ut-name="alpha"><td><input type="checkbox" data-ut-add></td><td><input data-ut-email type="email" disabled></td></tr>'
+    + '<tr data-ut-user="b" data-ut-name="bravo"><td><input type="checkbox" data-ut-add></td><td><input data-ut-email type="email" disabled></td></tr>'
+    + '</tbody></table><div data-ut-confirm data-ut-threshold="2"><div data-ut-typed hidden>'
+    + '<label data-ut-typed-label></label><input data-ut-typed-input></div></div>'
+    + '<strong data-ut-bulkcreate-selected></strong><button data-ut-bulkcreate-submit disabled></button></form>';
+  const doc = await load(html);
+  const form = doc.querySelector('form');
+  const all = form.querySelector('[data-ut-add-all]');
+  const typed = form.querySelector('[data-ut-typed]');
+  const submit = form.querySelector('[data-ut-bulkcreate-submit]');
+  assert.equal(submit.disabled, true, 'no rows are selected by default');
+  assert.equal(form.querySelector('[data-ut-bulkcreate-selected]').textContent, '0');
+  all.checked = true;
+  change(all);
+  assert.equal(submit.disabled, false);
+  assert.equal(typed.hidden, false, 'typed confirmation follows the selected count');
+  assert.equal(form.querySelector('[data-ut-typed-label]').textContent, 'Escribe 2');
+  const on = form.querySelector('[data-ut-email-auto-on]');
+  const domain = form.querySelector('[data-ut-email-domain]');
+  on.checked = true;
+  change(on);
+  domain.value = 'example.org';
+  input(domain);
+  const data = JSON.parse(form.querySelector('[data-ut-registrations]').value);
+  assert.equal(data.a.email, 'alpha@example.org');
+  assert.equal(data.b.email, 'bravo@example.org');
+  const first = form.querySelector('[data-ut-add]');
+  first.checked = false;
+  change(first);
+  assert.equal(typed.hidden, true, 'one selected account does not require typed confirmation');
+  assert.equal(form.querySelector('[data-ut-bulkcreate-selected]').textContent, '1');
+});
+
 test('new accounts: one box ticks or unticks them all and reflects partial selections', async () => {
   const doc = await load(newAccounts(['ana', 'luis', 'eva']));
   const all = doc.querySelector('[data-ut-add-all]');

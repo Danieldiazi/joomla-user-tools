@@ -16,6 +16,10 @@ Para que la hoja de cálculo no ejecute como fórmula un valor que escribió otr
 
 El CSV es un formato de intercambio: si lo vuelves a importar en otro sistema, ten en cuenta ese apóstrofo. Se ha comprobado con LibreOffice Calc 24.2, con y sin la opción de recortar espacios, que ninguna celda protegida se evalúa como fórmula. Excel y Google Sheets no se han probado todavía; la protección sigue las reglas que aplican también esas aplicaciones.
 
+### ¿Se pueden dar de alta usuarios pegando solo sus códigos?
+
+Sí. En **Alta masiva de usuarios** el único dato obligatorio de entrada es el username. El nombre se rellena con ese código si falta, el grupo es Registrados y el correo se completa manualmente o con **«Generar el correo a partir del nombre de usuario»** y un dominio elegido, como en Comparar lista. Joomla exige un correo válido y único antes de crear la cuenta. Solo se crean las filas seleccionadas: no se bloquean ausentes ni se cambian usuarios existentes. Un grupo adicional requiere también permiso `usertools.addgroups`.
+
 ## General
 
 ### ¿Borra usuarios?

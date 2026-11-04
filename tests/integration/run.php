@@ -225,13 +225,13 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['profile', 'explain', 'compare', 'export', 'inactive', 'unblock', 'handover', 'names', 'addgroups', 'sync', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
+Test::check($cards[1] === ['profile', 'explain', 'compare', 'bulkcreate', 'export', 'inactive', 'unblock', 'handover', 'names', 'addgroups', 'sync', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
 Test::check(!preg_match('/<span class="icon-(address-card)"/', $home) && str_contains($home, '<span class="icon-vcard" aria-hidden="true"></span> Account profile'),
     'the profile card uses an icon that Joomla provides');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 20 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 21 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -1957,7 +1957,7 @@ Test::check(!str_contains($blockedProfile, 'data-ut-profile-action="block"') && 
 $site->q('UPDATE #__categories SET created_user_id = ? WHERE id = ?', [$profileCategoryBefore, $ageCategory]);
 
 Test::section('Guided tours');
-$tourViews = ['compare' => 4, 'inactive' => 4, 'unblock' => 3, 'delete' => 4, 'anonymize' => 4, 'addgroups' => 3, 'names' => 3, 'sync' => 4, 'ungroup' => 3, 'move' => 4, 'schedule' => 2];
+$tourViews = ['compare' => 4, 'bulkcreate' => 3, 'inactive' => 4, 'unblock' => 3, 'delete' => 4, 'anonymize' => 4, 'addgroups' => 3, 'names' => 3, 'sync' => 4, 'ungroup' => 3, 'move' => 4, 'schedule' => 2];
 $tours = [];
 foreach ($site->q("SELECT id, uid, autostart, published, extensions FROM #__guidedtours WHERE uid LIKE 'com_usertools.tour-%'") as $row) {
     $tours[substr((string) $row['uid'], strlen('com_usertools.tour-'))] = $row;
@@ -2295,6 +2295,53 @@ Test::check($code === 403, 'but not the suggestions of a tool it cannot use (got
 [$code] = $delegate->request(str_replace('tool=profile', 'tool=explain', $profileSuggest) . '&q=twin');
 Test::check($code === 403, 'nor of the explanation without its permission (got ' . $code . ')');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+
+Test::section('Standalone bulk creation: create only, optional fields, SSO and tampering');
+$bulkUrl = 'index.php?option=com_usertools&view=bulkcreate';
+$bulkIndex = $admin->get($bulkUrl);
+Test::check(str_contains($bulkIndex, 'name="lines"') && str_contains($bulkIndex, 'bulkcreate.preview'),
+    'bulk creation has a dedicated entry form');
+$beforeExisting = $site->q('SELECT name, email, block FROM #__users WHERE username = ?', ['twin_a'])[0];
+$bulkReview = $admin->submit($bulkUrl, [
+    'task' => 'bulkcreate.preview',
+    'lines' => "ut_bulk_new\nut_bulk_dup\nUT_BULK_DUP\ntwin_a\nut_bulk_group;;;8",
+]);
+Test::check(str_contains($bulkReview, 'data-ut-bulkcreate-review')
+    && str_contains($bulkReview, 'data-ut-email-auto')
+    && str_contains($bulkReview, 'User Tools') && str_contains($bulkReview, 'ut_bulk_new'),
+    'review shows new users, selectable rows and optional email generator');
+Test::check(str_contains($bulkReview, 'Repeated username') && str_contains($bulkReview, 'Account already exists')
+    && str_contains($bulkReview, 'Privileged group'),
+    'duplicates, existing users and privileged groups cannot be selected');
+$bulkKey = hash('sha256', 'ut_bulk_new');
+$badKey = hash('sha256', 'ut_bulk_outsider');
+$bulkTampered = $admin->submit($bulkUrl . '&layout=review', [
+    'task' => 'bulkcreate.apply', 'review_ready' => 1, 'confirm' => 1, 'confirm_count' => '1', 'creation_mode' => 'sso',
+    'registrations' => json_encode([
+        $bulkKey => ['checked' => true, 'email' => 'ut_bulk_new@example.test'],
+        $badKey => ['checked' => true, 'email' => 'ut_bulk_outsider@example.test'],
+    ]),
+], 'data-ut-review');
+Test::check($site->userId('ut_bulk_new') === 0 && $site->userId('ut_bulk_outsider') === 0,
+    'a manipulated selection creates no account');
+$bulkResult = $admin->submit($bulkUrl . '&layout=review', [
+    'task' => 'bulkcreate.apply', 'review_ready' => 1, 'confirm' => 1, 'confirm_count' => '1', 'creation_mode' => 'sso',
+    'registrations' => json_encode([$bulkKey => ['checked' => true, 'email' => 'ut_bulk_new@example.test']]),
+], 'data-ut-review');
+$bulkId = $site->userId('ut_bulk_new');
+
+Test::check($bulkId > 0 && str_contains($bulkResult, 'ut_bulk_new'), 'selected SSO account is created');
+$bulkRow = $site->q('SELECT name, email, "requireReset" FROM #__users WHERE id = ?', [$bulkId])[0] ?? [];
+Test::check(($bulkRow['name'] ?? '') === 'ut_bulk_new' && ($bulkRow['email'] ?? '') === 'ut_bulk_new@example.test'
+    && (int) ($bulkRow['requireReset'] ?? -1) === 0,
+    'username-only row uses username as display name and SSO needs no local reset');
+$bulkGroups = $site->q('SELECT group_id FROM #__user_usergroup_map WHERE user_id = ?', [$bulkId]);
+Test::check(count($bulkGroups) === 1 && (int) $bulkGroups[0]['group_id'] === 2,
+    'missing group maps only to Registered');
+Test::check($beforeExisting == $site->q('SELECT name, email, block FROM #__users WHERE username = ?', ['twin_a'])[0],
+    'existing accounts stay unchanged');
+Test::check($site->userId('ut_bulk_dup') === 0 && $site->userId('ut_bulk_outsider') === 0,
+    'duplicated and unauthorized usernames are not created');
 
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);

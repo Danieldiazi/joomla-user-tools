@@ -137,6 +137,14 @@
         }
         form.querySelector('[data-ut-registrations]').value = JSON.stringify(data);
         form.querySelector('[data-ut-ready]').value = '1';
+        // The standalone bulk-creation review confirms only the selected valid rows.
+        if (form.matches('[data-ut-bulkcreate-review]')) {
+          syncTyped(form, ticked);
+          const counter = form.querySelector('[data-ut-bulkcreate-selected]');
+          if (counter) counter.textContent = String(ticked);
+          const submit = form.querySelector('[data-ut-bulkcreate-submit]');
+          if (submit) submit.disabled = ticked === 0;
+        }
       };
       rows.forEach((row) => row.querySelector('[data-ut-add]').addEventListener('change', sync));
       if (all) all.addEventListener('change', () => {
