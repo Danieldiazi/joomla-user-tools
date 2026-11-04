@@ -19,7 +19,7 @@ $openSessions = array_filter($result['converted'], static fn (array $row): bool 
 ?>
 <div class="ut-app">
   <?= LayoutHelper::render('usertools.steps', ['steps' => $this::STEPS, 'current' => 'result', 'label' => 'COM_USERTOOLS_SSO_TITLE'], $layouts) ?>
-  <h2 class="h3"><?= Text::_('COM_USERTOOLS_SSO_RESULT') ?></h2>
+  <h2 class="h3"><?= Text::_('COM_USERTOOLS_SSO_RESULT_HEADING') ?></h2>
   <div class="ut-stats">
     <?php foreach (['COM_USERTOOLS_SSO_CONVERTED' => count($result['converted']),
         'COM_USERTOOLS_SSO_CHANGED' => count($result['changed']),
