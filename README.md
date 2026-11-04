@@ -18,6 +18,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Resumen en el panel | Muestra en el panel de Usuarios las cuentas pendientes, el estado de las tareas y avisos. Disponible desde 2026.10.6. |
 | Grupos de usuarios en el sitio | Módulo del sitio que lista los grupos de un usuario o los miembros de un grupo. Solo lee. Disponible desde 2026.10.9. |
 | Añadir cuentas a grupos | Añade cuentas existentes a grupos por ID o ruta completa, sin quitar grupos ya asignados; exige revisión y confirmación. |
+| Actualizar nombres en bloque | Actualiza el nombre visible de varias cuentas mediante filas `username;nombre`, con selección individual y revisión del valor anterior y el propuesto. |
 | Sincronizar un colectivo | Mantiene los grupos de una rama (personal, socios, alumnado) a partir de una lista: altas, cambios de grupo y salidas. No toca otros grupos ni bloquea a nadie; con revisión y confirmación. |
 | Quitar de grupos | Elige una cuenta, desmarca los grupos de los que debe salir y, si quieres, quítala también de todos sus subgrupos. Con revisión previa y confirmación. Disponible desde 2026.10.9. |
 | Mover grupos | Cambia de una vez el grupo padre de varios grupos, con sus subgrupos, tras revisar qué niveles ganan o pierden sus miembros. Rechaza los movimientos que cambiarían el acceso a la administración. Solo superusuarios. Disponible desde 2026.10.16. |
@@ -52,6 +53,7 @@ La portada y el menú de Componentes organizan las herramientas en **Revisar cue
 - [Resumen en el panel de Usuarios](#resumen-en-el-panel-de-usuarios)
 - [Módulo de grupos de usuarios en el sitio](#módulo-de-grupos-de-usuarios-en-el-sitio)
 - [Añadir cuentas a grupos en bloque](#añadir-cuentas-a-grupos-en-bloque)
+- [Actualizar nombres en bloque](#actualizar-nombres-en-bloque)
 - [Sincronizar un colectivo](#sincronizar-un-colectivo)
 - [Quitar de grupos](#quitar-de-grupos)
 - [Mover grupos](#mover-grupos)
@@ -81,7 +83,7 @@ El instalador comprueba las versiones mínimas, registra la extensión en el reg
 
 ## Recorridos guiados
 
-Las herramientas que cambian cuentas o grupos tienen un **recorrido guiado** de Joomla que explica su pantalla paso a paso: para qué sirve, qué se elige, qué se revisa antes de aplicar y qué protecciones tiene. Los tienen Comparar una lista, Revisar usuarios inactivos, Deshacer bloqueos, Eliminar usuarios inactivos, Anonimizar cuentas, Añadir cuentas a grupos, Sincronizar un colectivo, Quitar de grupos, Mover grupos y Tarea programada.
+Las herramientas que cambian cuentas o grupos tienen un **recorrido guiado** de Joomla que explica su pantalla paso a paso: para qué sirve, qué se elige, qué se revisa antes de aplicar y qué protecciones tiene. Los tienen Comparar una lista, Revisar usuarios inactivos, Deshacer bloqueos, Eliminar usuarios inactivos, Anonimizar cuentas, Añadir cuentas a grupos, Actualizar nombres en bloque, Sincronizar un colectivo, Quitar de grupos, Mover grupos y Tarea programada.
 
 - **Cómo se abre**: con el botón **Recorrido guiado**, junto a Ayuda, en la primera pantalla de cada herramienta. Solo aparece si puedes usar esa herramienta y si los recorridos guiados de Joomla están activados (componente «Recorridos guiados» y plugin «Sistema - Plugin Recorridos guiados»).
 - **Qué hace**: solo explica. Ningún paso pulsa botones, rellena campos ni aplica cambios; puedes cerrarlo en cualquier momento. Se maneja con el teclado y nunca se abre solo.
@@ -246,6 +248,14 @@ Cada eliminación queda en el **registro de acciones de usuarios** con el ID, el
 Desde **User Tools → Añadir cuentas a grupos** se pueden añadir usuarios existentes a grupos sin eliminar sus pertenencias actuales. Introduce una lista de usuarios o correos y un grupo de destino, o pares `usuario;#ID` en líneas independientes. Los grupos se identifican por `#ID` o **ruta completa** (por ejemplo `Public/Registered`); los títulos aislados o rutas duplicadas se rechazan. La revisión muestra qué se añadiría, qué ya existe y qué se excluye. Solo se pueden asignar grupos sin acceso a administración y no se modifican administradores, superusuarios ni la cuenta del operador. Debes confirmar y escribir el número de cuentas. El guardado usa la API de Joomla, comprueba el cierre de sesiones y advierte si permanecen abiertas o no se puede verificar su cierre. Si falla el cierre, puede reintentarse desde el resultado **sin volver a asignar grupos ni duplicar registros**. Cada asignación queda registrada y las listas grandes continúan por tandas.
 
 ![Añadir cuentas a grupos: revisión con las asignaciones que se harán, las que ya existían y las rechazadas](docs/screenshots/25-anadir-grupos-revision.jpg)
+
+## Actualizar nombres en bloque
+
+Desde **User Tools → Actualizar nombres en bloque**, pega una fila por cuenta en el formato `username;Nombre Apellidos`. Se busca la cuenta por su nombre de usuario, sin distinguir mayúsculas; el primer punto y coma separa los campos. La pantalla de revisión muestra el número de línea, el username, el nombre actual, el propuesto y el resultado de validación. Puedes marcar o desmarcar cada fila; solo se aplican las seleccionadas y válidas. Los usernames repetidos, inexistentes y ambiguos, las líneas incorrectas y los nombres de más de 400 caracteres o con caracteres de control no se actualizan. Las cuentas con acceso a la administración, los superusuarios y quien opera quedan protegidos. El guardado usa la API de Joomla y vuelve a comprobar cada cuenta y su nombre actual antes de escribir: si una cambió desde la revisión, se omite esa fila, se indica el motivo y las demás siguen adelante. Las tandas grandes se procesan por partes y el resultado detalla por fila los cambios realizados, las omisiones, los errores y lo que no se aplicó por no estar marcado o no ser válido.
+
+La herramienta solo cambia el campo **Nombre**. No modifica el username, el correo, los grupos, el estado ni la contraseña. Cada cambio realizado se anota en el registro de acciones sin copiar los nombres anterior o propuesto a esa anotación.
+
+![Actualizar nombres en bloque: revisión con el nombre actual y el propuesto, las filas marcadas y las que no se pueden aplicar](docs/screenshots/44-nombres-revision.jpg)
 
 ## Sincronizar un colectivo
 
