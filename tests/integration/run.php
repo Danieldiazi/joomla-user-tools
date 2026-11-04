@@ -2294,5 +2294,51 @@ Test::check($code === 403, 'but not the suggestions of a tool it cannot use (got
 Test::check($code === 403, 'nor of the explanation without its permission (got ' . $code . ')');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 
+Test::section('Standalone bulk creation: create only, optional fields, SSO and tampering');
+$bulkUrl = 'index.php?option=com_usertools&view=bulkcreate';
+$bulkIndex = $admin->get($bulkUrl);
+Test::check(str_contains($bulkIndex, 'name="lines"') && str_contains($bulkIndex, 'bulkcreate.preview'),
+    'bulk creation has a dedicated entry form');
+$beforeExisting = $site->q('SELECT name, email, block FROM #__users WHERE username = ?', ['twin_a'])[0];
+$bulkReview = $admin->submit($bulkUrl, [
+    'task' => 'bulkcreate.preview',
+    'lines' => "ut_bulk_new\nut_bulk_dup\nUT_BULK_DUP\ntwin_a\nut_bulk_group;;;8",
+]);
+Test::check(str_contains($bulkReview, 'data-ut-bulkcreate-review')
+    && str_contains($bulkReview, 'data-ut-email-auto')
+    && str_contains($bulkReview, 'User Tools') && str_contains($bulkReview, 'ut_bulk_new'),
+    'review shows new users, selectable rows and optional email generator');
+Test::check(str_contains($bulkReview, 'Repeated username') && str_contains($bulkReview, 'Account already exists')
+    && str_contains($bulkReview, 'Privileged group'),
+    'duplicates, existing users and privileged groups cannot be selected');
+$bulkKey = hash('sha256', 'ut_bulk_new');
+$badKey = hash('sha256', 'ut_bulk_outsider');
+$bulkTampered = $admin->submit($bulkUrl . '&layout=review', [
+    'task' => 'bulkcreate.apply', 'review_ready' => 1, 'confirm' => 1, 'creation_mode' => 'sso',
+    'registrations' => json_encode([
+        $bulkKey => ['checked' => true, 'email' => 'ut_bulk_new@example.test'],
+        $badKey => ['checked' => true, 'email' => 'ut_bulk_outsider@example.test'],
+    ]),
+], 'data-ut-review');
+Test::check($site->userId('ut_bulk_new') === 0 && $site->userId('ut_bulk_outsider') === 0,
+    'a manipulated selection creates no account');
+$bulkResult = $admin->submit($bulkUrl . '&layout=review', [
+    'task' => 'bulkcreate.apply', 'review_ready' => 1, 'confirm' => 1, 'creation_mode' => 'sso',
+    'registrations' => json_encode([$bulkKey => ['checked' => true, 'email' => 'ut_bulk_new@example.test']]),
+], 'data-ut-review');
+$bulkId = $site->userId('ut_bulk_new');
+Test::check($bulkId > 0 && str_contains($bulkResult, 'ut_bulk_new'), 'selected SSO account is created');
+$bulkRow = $site->q('SELECT name, email, "requireReset" FROM #__users WHERE id = ?', [$bulkId])[0] ?? [];
+Test::check(($bulkRow['name'] ?? '') === 'ut_bulk_new' && ($bulkRow['email'] ?? '') === 'ut_bulk_new@example.test'
+    && (int) ($bulkRow['requireReset'] ?? -1) === 0,
+    'username-only row uses username as display name and SSO needs no local reset');
+$bulkGroups = $site->q('SELECT group_id FROM #__user_usergroup_map WHERE user_id = ?', [$bulkId]);
+Test::check(count($bulkGroups) === 1 && (int) $bulkGroups[0]['group_id'] === 2,
+    'missing group maps only to Registered');
+Test::check($beforeExisting == $site->q('SELECT name, email, block FROM #__users WHERE username = ?', ['twin_a'])[0],
+    'existing accounts stay unchanged');
+Test::check($site->userId('ut_bulk_dup') === 0 && $site->userId('ut_bulk_outsider') === 0,
+    'duplicated and unauthorized usernames are not created');
+
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);
