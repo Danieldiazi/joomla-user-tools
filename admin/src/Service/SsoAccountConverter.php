@@ -45,7 +45,7 @@ final class SsoAccountConverter
     {
         $id = (int) $reviewed['id'];
         $user = $this->users->loadUserById($id);
-        $name = (string) ($user->username ?? $reviewed['username']);
+        $name = (string) $user->username;
         if (!SsoConversionPlan::stillEligible($user, $reviewed, $operator)) {
             return ['status' => self::CHANGED, 'id' => $id, 'username' => $name, 'sessionsClosed' => false];
         }
@@ -62,7 +62,7 @@ final class SsoAccountConverter
         } finally {
             unset($secret, $data);
             // Remove the transient plaintext left on the in-memory Joomla User object.
-            if (isset($user->password_clear)) {
+            if ($user->password_clear !== '') {
                 $user->password_clear = '';
             }
         }
