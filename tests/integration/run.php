@@ -2351,5 +2351,44 @@ Test::check($beforeExisting == $site->q('SELECT name, email, block FROM #__users
 Test::check($site->userId('ut_bulk_dup') === 0 && $site->userId('ut_bulk_outsider') === 0,
     'duplicated and unauthorized usernames are not created');
 
+Test::section('Compare review: select only certain blocks, reject foreign IDs and allow creation only');
+$site->options(['confirm_threshold' => 1, 'batch_seconds' => 10]);
+$site->q('UPDATE #__users SET block = 0 WHERE username IN (?, ?)', ['baja', 'servicio']);
+$baseLogBlocks = $logCount('COM_USERTOOLS_ACTION_LOG_BLOCKED');
+$selectionPreview = $admin->submit('index.php?option=com_usertools&view=compare', [
+    'task' => 'compare.preview', 'names' => $roster(['baja', 'servicio'], []),
+    'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => [],
+]);
+Test::check(str_contains($selectionPreview, 'data-ut-compare-block-id') && str_contains($selectionPreview, 'data-ut-compare-block-all')
+    && str_contains($selectionPreview, 'data-ut-compare-block-counter'), 'comparison review offers explicit block selection');
+$compareSafe = ['task' => 'compare.apply', 'review_ready' => 1, 'selection_ready' => 1, 'confirm' => 1,
+    'creation_mode' => 'sso', 'registrations' => '{}', 'confirm_count' => '1'];
+$forged = $admin->submit('index.php?option=com_usertools&view=compare&layout=review',
+    $compareSafe + ['selected' => json_encode([$site->userId('admin')])], 'data-ut-review');
+Test::check(!$site->blocked('baja') && !$site->blocked('servicio')
+    && str_contains($forged, 'selection'), 'foreign block ID is rejected before writing');
+$partial = $admin->submit('index.php?option=com_usertools&view=compare&layout=review',
+    $compareSafe + ['selected' => json_encode([$site->userId('baja')])], 'data-ut-review');
+Test::check($site->blocked('baja') && !$site->blocked('servicio'), 'only a selected comparison account is blocked');
+Test::check(str_contains($partial, 'Unselected accounts: still active') && str_contains($partial, '>servicio<'),
+    'unselected accounts are reported separately and remain active');
+Test::check($logCount('COM_USERTOOLS_ACTION_LOG_BLOCKED') === $baseLogBlocks + 1,
+    'only the selected block is logged');
+
+$admin->submit('index.php?option=com_usertools&view=compare', [
+    'task' => 'compare.preview', 'names' => $roster(['servicio'], ['ut_compare_create_only']),
+    'protect_admins' => 1, 'excluded' => '', 'excluded_groups' => [],
+]);
+$createOnly = $admin->submit('index.php?option=com_usertools&view=compare&layout=review',
+    ['task' => 'compare.apply', 'review_ready' => 1, 'selection_ready' => 1,
+        'selected' => '[]', 'confirm' => 1, 'creation_mode' => 'sso',
+        'registrations' => json_encode([hash('sha256', 'ut_compare_create_only') =>
+            ['checked' => true, 'email' => 'ut_compare_create_only@example.test']])], 'data-ut-review');
+Test::check($site->userId('ut_compare_create_only') > 0 && !$site->blocked('servicio')
+    && str_contains($createOnly, 'ut_compare_create_only@example.test'),
+    'zero selected blocks can create accounts without blocking anyone');
+Test::check($logCount('COM_USERTOOLS_ACTION_LOG_BLOCKED') === $baseLogBlocks + 1,
+    'create-only review produces no extra block action');
+
 echo "\n" . Test::$passed . ' checks passed, ' . count(Test::$failed) . " failed\n";
 exit(Test::$failed ? 1 : 0);
