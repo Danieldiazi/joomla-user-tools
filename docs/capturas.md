@@ -28,9 +28,9 @@ Además de estas capturas, la CI comprueba el orden de teclado, el despliegue de
 
 ![Recorrido guiado de «Comparar una lista»: el paso que explica la lista vigente, abierto con el botón «Recorrido guiado» junto a Ayuda (2026.10.21)](screenshots/30-recorrido-guiado.jpg)
 
-![Comparación: revisión de cambios, con «marcar todas» y el correo generado a partir del nombre de usuario (2026.10.11)](screenshots/03-comparacion-revision.jpg)
+![Comparación: revisión de bloqueos con casillas inicialmente vacías, «Seleccionar todos los visibles» y contador/confirmación del número marcado (Joomla de pruebas, interfaz en inglés)](screenshots/03-comparacion-revision.jpg)
 
-![Comparación: resultado con contraseñas ocultas](screenshots/04-comparacion-resultado.jpg)
+![Comparación: resultado de un único bloqueo, con las cuentas no seleccionadas identificadas como activas, fuera del lote reversible (Joomla de pruebas, interfaz en inglés)](screenshots/04-comparacion-resultado.jpg)
 
 ![Aviso de lista sin coincidencias](screenshots/05-aviso-sin-coincidencias.jpg)
 

@@ -14,6 +14,7 @@ use Danieldiazi\Component\Usertools\Administrator\Service\AccountMailer;
 use Danieldiazi\Component\Usertools\Administrator\Service\ActionLogger;
 use Danieldiazi\Component\Usertools\Administrator\Service\Comparison;
 use Danieldiazi\Component\Usertools\Administrator\Service\Exclusions;
+use Danieldiazi\Component\Usertools\Administrator\Service\InactiveSelection;
 use Danieldiazi\Component\Usertools\Administrator\Service\Registration;
 use Danieldiazi\Component\Usertools\Administrator\Service\Settings;
 use Danieldiazi\Component\Usertools\Administrator\Service\Toolkit;
@@ -157,7 +158,12 @@ class CompareModel extends BaseDatabaseModel
         }
         // Revalidate the offered set before validating the count or performing any write.
         $review = $this->getReview();
-        $this->checkTypedCount(\count($review['candidates']), $input);
+        // A missing or forged browser selection cannot silently block every candidate.
+        if ((int) ($input['selection_ready'] ?? 0) !== 1) {
+            throw new UserFacingException('COM_USERTOOLS_ERROR_JAVASCRIPT');
+        }
+        $selectedBlocks = InactiveSelection::decode((string) ($input['selected'] ?? '[]'), array_map('intval', $preview['ids']));
+        $this->checkTypedCount(\count($selectedBlocks), $input);
         $draft      = $this->getDraft();
         $directory  = Toolkit::directory();
         $selection  = Registration::select(
@@ -182,9 +188,17 @@ class CompareModel extends BaseDatabaseModel
         $fresh      = $this->calculate($preview['names'], $exclusions);
         $offered    = array_fill_keys($preview['ids'], true);
         $block      = [];
+        $chosen     = array_fill_keys($selectedBlocks, true);
+        $unselected = [];
         foreach ($fresh['candidates'] as $candidate) {
-            if (isset($offered[(int) $candidate->id])) {
-                $block[] = (int) $candidate->id;
+            $id = (int) $candidate->id;
+            if (!isset($offered[$id])) {
+                continue;
+            }
+            if (isset($chosen[$id])) {
+                $block[] = $id;
+            } else {
+                $unselected[] = ['id' => $id, 'username' => (string) $candidate->username];
             }
         }
         // Only usernames and emails are kept: no password is ever stored with the job.
@@ -193,7 +207,8 @@ class CompareModel extends BaseDatabaseModel
             'mode'       => $mode,
             'names'      => $preview['names'],
             'exclusions' => $exclusions->toArray(),
-            'offered'    => \count($preview['ids']),
+            'offered'    => \count($block),
+            'unselected' => $unselected,
             'block'      => $block,
             'create'     => $selection,
             'total'      => \count($block) + \count($selection),
@@ -360,6 +375,7 @@ class CompareModel extends BaseDatabaseModel
     {
         $result = [
             'blocked'   => $job['blocked'],
+            'unselected' => $job['unselected'] ?? [],
             'created'   => $job['created'],
             'errors'    => $job['errors'],
             // Offered accounts that were not blocked nor failed: protected or changed since the review.

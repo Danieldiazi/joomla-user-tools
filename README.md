@@ -8,7 +8,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 |---|---|
 | Ficha de una persona | Consulta identidad, grupos, accesos, contenido y actividad de una cuenta; ofrece enlaces protegidos a sus herramientas. Solo lectura. |
 | Explicar acceso a contenido | Explica por qué una cuenta puede o no ver, editar o publicar un artículo o una categoría, con todas las condiciones que lo impiden. Solo lectura. |
-| Comparar una lista | Propone bloquear las cuentas ausentes de la lista completa, salvo las protegidas, y permite crear los usuarios nuevos que selecciones. |
+| Comparar una lista | Permite seleccionar **qué cuentas ausentes se bloquean** (ninguna marcada por defecto), sin afectar a las no seleccionadas; también permite crear los usuarios nuevos que selecciones. |
 | **Alta masiva de usuarios** | Crea solo cuentas nuevas desde un listado donde únicamente el username es obligatorio; nombre, correo y grupo son opcionales. Revisión y generación opcional de correos. |
 | **Pasar cuentas a acceso por SSO** | Convierte cuentas con `requireReset = 1`: contraseña local aleatoria no revelada, indicador desmarcado y sesiones cerradas, sin tocar grupos ni MFA. |
 | Exportar cuentas a CSV | Descarga las cuentas y sus grupos, fechas, estado y MFA, con filtros y correo opcional bajo un permiso propio. |

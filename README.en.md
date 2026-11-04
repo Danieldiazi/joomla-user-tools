@@ -8,7 +8,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 |---|---|
 | Account profile | Reviews account identity, groups, access, content and activity, with protected links to its tools. Read only. |
 | Explain content access | Explains why an account can or cannot view, edit or publish an article or category, with every condition preventing it. Read only. |
-| Compare a list | Proposes blocking accounts missing from the complete list, except protected accounts, and lets you create selected new users. |
+| Compare a list | Allows choosing **which missing accounts to block** (none selected by default), leaving unselected accounts untouched; also creates selected new users. |
 | **Bulk account creation** | Creates new accounts from usernames alone; optional name, email and group, reviewed before writing, with optional email generation. |
 | **Convert accounts to SSO access** | Converts accounts with `requireReset = 1`: undisclosed new random local password, reset cleared and sessions closed; groups and MFA unchanged. |
 | Export accounts to CSV | Downloads accounts, groups, dates, status and MFA with filters and optional email under its own permission. |

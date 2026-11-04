@@ -164,7 +164,7 @@ No. `OTRO` y `otro` son la misma cuenta, tanto al comparar como en las exclusion
 
 ### ¿Qué pasa si pego una lista incompleta?
 
-Todas las cuentas que falten se propondrán para bloqueo (salvo las protegidas). Por eso hay que pegar siempre la lista **completa** y revisar la pantalla de cambios antes de confirmar. Si **ningún** nombre coincide con una cuenta existente, la revisión muestra un aviso en rojo, porque probablemente se ha pegado la lista equivocada.
+Todas las cuentas que falten se propondrán para bloqueo (salvo las protegidas), pero **ninguna se bloquea automáticamente**: en la revisión debes marcar expresamente las que quieras bloquear. La opción «Seleccionar todos los visibles» respeta el filtro y la confirmación reforzada cuenta solo las marcadas. Las que dejes sin seleccionar siguen activas y aparecen por separado en el resultado. Aun así conviene pegar la lista **completa** y revisar los cambios antes de confirmar. Si **ningún** nombre coincide con una cuenta existente, la revisión muestra un aviso en rojo, porque probablemente se ha pegado la lista equivocada.
 
 ### ¿Se aplica algo al pulsar «Siguiente: revisar cambios»?
 

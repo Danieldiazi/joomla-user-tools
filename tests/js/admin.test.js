@@ -53,6 +53,66 @@ test('Super Users are always locked; backend groups follow "Exclude administrato
   assert.equal(manager.checked, true, 'the manual selection is restored');
 });
 
+test('comparison block review: none selected, filtered select-all, independent registration, typed count', async () => {
+  const cells = [1, 2, 3, 4].map((id) => '<tr><td><input type="checkbox" data-ut-compare-block-id="' + id + '"></td><td>user' + id + '</td></tr>').join('');
+  const doc = await load('<form data-ut-review data-ut-compare-block-review>'
+    + '<input data-ut-compare-block-selected value="[]"><input data-ut-compare-block-ready value="0">'
+    + '<input data-ut-registrations value="{}"><input data-ut-ready value="0">'
+    + '<input type="checkbox" data-ut-compare-block-all>'
+    + '<input type="search" data-ut-filter="blocks">'
+    + '<div><table id="blocks"><tbody>' + cells + '</tbody></table><p data-ut-filter-empty hidden></p></div>'
+    + '<span data-ut-compare-block-counter></span>'
+    + '<div data-ut-confirm data-ut-threshold="3"><div data-ut-typed hidden><label data-ut-typed-label></label><input data-ut-typed-input></div></div>'
+    + '<table><tbody><tr data-ut-user="candidate" data-ut-name="newuser"><td><input type="checkbox" data-ut-add></td><td><input data-ut-email type="email"></td></tr></tbody></table></form>');
+  const form = doc.querySelector('form');
+  assert.equal(form.querySelector('[data-ut-compare-block-ready]').value, '1');
+  assert.equal(form.querySelector('[data-ut-compare-block-selected]').value, '[]', 'none selected by default');
+  const check = form.querySelector('[data-ut-compare-block-id="1"]');
+  check.checked = true;
+  change(check);
+  assert.equal(form.querySelector('[data-ut-compare-block-selected]').value, '[1]');
+  const filter = form.querySelector('[data-ut-filter]');
+  filter.value = 'user3';
+  input(filter);
+  const all = form.querySelector('[data-ut-compare-block-all]');
+  assert.equal(all.checked, false, 'visible subset is initially unselected even though a hidden row is selected');
+  all.checked = true;
+  change(all);
+  assert.equal(form.querySelector('[data-ut-compare-block-selected]').value, '[1,3]', 'select all touches visible rows only');
+  assert.equal(all.checked, true, 'select-all now reflects fully selected visible rows');
+  assert.equal(all.indeterminate, false, 'hidden, unselected rows must not make visible select-all indeterminate');
+  all.checked = false;
+  change(all);
+  assert.equal(form.querySelector('[data-ut-compare-block-selected]').value, '[1]', 'second click deselects only visible rows');
+  assert.equal(form.querySelector('[data-ut-typed]').hidden, true);
+  all.checked = true;
+  change(all);
+  assert.equal(form.querySelector('[data-ut-compare-block-selected]').value, '[1,3]');
+  assert.equal(form.querySelector('[data-ut-typed]').hidden, true, 'two blocks need no typed confirmation');
+  filter.value = '';
+  input(filter);
+  assert.equal(all.checked, false);
+  assert.equal(all.indeterminate, true, 'removing filter recalculates mixed state over all visible candidates');
+  all.checked = true;
+  change(all);
+  assert.equal(form.querySelector('[data-ut-compare-block-selected]').value, '[1,2,3,4]');
+  filter.value = 'no such user';
+  input(filter);
+  assert.equal(all.disabled, true, 'no visible candidates disables select-all');
+  assert.equal(form.querySelector('[data-ut-compare-block-selected]').value, '[1,2,3,4]', 'filter never drops hidden selections');
+  filter.value = '';
+  input(filter);
+  assert.equal(all.disabled, false);
+  assert.equal(all.checked, true);
+  assert.equal(form.querySelector('[data-ut-typed]').hidden, false, 'typed confirmation counts selected blocks');
+  assert.equal(form.querySelector('[data-ut-typed-label]').textContent, 'Escribe 4');
+  assert.equal(form.querySelector('[data-ut-compare-block-counter]').textContent, '4 seleccionadas');
+  check.checked = false;
+  change(check);
+  assert.equal(form.querySelector('[data-ut-compare-block-selected]').value, '[2,3,4]');
+  assert.equal(form.querySelector('[data-ut-registrations]').value, '{}', 'selection does not create new accounts');
+});
+
 test('inactivity review: selection, select-all on visible rows and typed confirmation from the threshold', async () => {
   const rows = [1, 2, 3, 4].map((id) => `<tr><td><input type="checkbox" data-ut-suspend-id="${id}"></td><td>user${id}</td></tr>`).join('');
   const doc = await load(`<form data-ut-suspension-form>

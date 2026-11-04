@@ -70,6 +70,44 @@
     });
 
     // Keep bulk name selections in one field so the review does not hit PHP's max_input_vars limit.
+    // Compare list: only the explicitly selected accounts are ever blocked.
+    // This is independent from the checkboxes used to create missing accounts.
+    document.querySelectorAll('[data-ut-compare-block-review]').forEach((form) => {
+      const boxes = [...form.querySelectorAll('[data-ut-compare-block-id]')];
+      const all = form.querySelector('[data-ut-compare-block-all]');
+      const output = form.querySelector('[data-ut-compare-block-selected]');
+      const ready = form.querySelector('[data-ut-compare-block-ready]');
+      const counter = form.querySelector('[data-ut-compare-block-counter]');
+      const sync = () => {
+        const selected = boxes.filter((box) => box.checked).map((box) => Number(box.dataset.utCompareBlockId));
+        output.value = JSON.stringify(selected);
+        ready.value = '1';
+        if (counter) {
+          const key = selected.length === 1 ? 'COM_USERTOOLS_JS_SELECTED_1' : 'COM_USERTOOLS_JS_SELECTED';
+          counter.textContent = sprintf(text(key, '%d accounts selected'), selected.length);
+        }
+        if (all) {
+          const visible = boxes.filter((box) => !box.closest('tr').hidden);
+          const checkedVisible = visible.filter((box) => box.checked).length;
+          all.disabled = visible.length === 0;
+          all.checked = visible.length > 0 && checkedVisible === visible.length;
+          all.indeterminate = checkedVisible > 0 && checkedVisible < visible.length;
+        }
+        syncTyped(form, selected.length);
+      };
+      boxes.forEach((box) => box.addEventListener('change', sync));
+      if (all) all.addEventListener('change', () => {
+        // Hidden selections are preserved. This toggle reflects the visible subset.
+        boxes.forEach((box) => { if (!box.closest('tr').hidden) box.checked = all.checked; });
+        sync();
+      });
+      // initFilters registers its input listener before this one, so row.hidden
+      // has already been updated when we recalculate the select-all state.
+      form.querySelectorAll('[data-ut-filter]').forEach((filter) => filter.addEventListener('input', sync));
+      form.addEventListener('submit', sync);
+      sync();
+    });
+
     document.querySelectorAll('[data-ut-names-review]').forEach((form) => {
       const table = document.getElementById('ut-names-table');
       const selected = form.querySelector('[data-ut-names-selected]');

@@ -23,7 +23,7 @@ $sso     = array_filter($result['created'], fn ($row) => ($row['mode'] ?? '') ==
   <?= LayoutHelper::render('usertools.steps', ['steps' => ['edit' => 'COM_USERTOOLS_STEP_LIST', 'review' => 'COM_USERTOOLS_STEP_REVIEW', 'result' => 'COM_USERTOOLS_STEP_RESULT'], 'current' => 'result', 'label' => 'COM_USERTOOLS_COMPARE_PROGRESS'], $layouts) ?>
   <h2 class="h3"><?= Text::_('COM_USERTOOLS_RESULT_HEADING') ?></h2>
   <div class="ut-stats">
-    <?php foreach (['COM_USERTOOLS_STAT_BLOCKED' => count($result['blocked']), 'COM_USERTOOLS_STAT_CREATED' => count($result['created']), 'COM_USERTOOLS_STAT_SKIPPED' => (int) ($result['skipped'] ?? 0), 'COM_USERTOOLS_STAT_ERRORS' => count($result['errors'])] as $label => $number) : ?>
+    <?php foreach (['COM_USERTOOLS_STAT_BLOCKED' => count($result['blocked']), 'COM_USERTOOLS_COMPARE_UNSELECTED' => count($result['unselected'] ?? []), 'COM_USERTOOLS_STAT_CREATED' => count($result['created']), 'COM_USERTOOLS_STAT_SKIPPED' => (int) ($result['skipped'] ?? 0), 'COM_USERTOOLS_STAT_ERRORS' => count($result['errors'])] as $label => $number) : ?>
     <div class="card"><div class="card-body"><strong><?= (int) $number ?></strong><span><?= Text::_($label) ?></span></div></div>
     <?php endforeach; ?>
   </div>
@@ -75,6 +75,16 @@ $sso     = array_filter($result['created'], fn ($row) => ($row['mode'] ?? '') ==
       <a class="btn btn-sm btn-outline-secondary" href="<?= Route::_('index.php?option=com_users&view=users&filter[state]=1') ?>"><?= Text::_('COM_USERTOOLS_OPEN_BLOCKED_USERS') ?></a></div>
     <?= LayoutHelper::render('usertools.undo', ['batch' => (string) ($result['batch'] ?? ''), 'can' => $this->can('usertools.unblock')], $layouts) ?>
     <ul class="mb-0"><?php foreach ($result['blocked'] as $row) : ?><li><a href="<?= Route::_('index.php?option=com_users&task=user.edit&id=' . (int) $row['id']) ?>"><?= $this->escape($row['username']) ?></a></li><?php endforeach; ?></ul>
+  </div></section>
+  <?php endif; ?>
+
+  <?php if (!empty($result['unselected'])) : ?>
+  <section class="card ut-card"><div class="card-body">
+    <h3 class="h5"><?= Text::_('COM_USERTOOLS_COMPARE_UNSELECTED_HEADING') ?></h3>
+    <p class="form-text"><?= Text::_('COM_USERTOOLS_COMPARE_UNSELECTED_NOTE') ?></p>
+    <ul class="mb-0"><?php foreach ($result['unselected'] as $row) : ?>
+      <li><a href="<?= Route::_('index.php?option=com_users&task=user.edit&id=' . (int) $row['id']) ?>"><?= $this->escape($row['username']) ?></a></li>
+    <?php endforeach; ?></ul>
   </div></section>
   <?php endif; ?>
 
