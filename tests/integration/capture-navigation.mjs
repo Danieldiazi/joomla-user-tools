@@ -106,7 +106,17 @@ try {
     throw new Error('Review did not serialize the selected block');
   }
   await capture('03-comparacion-revision.jpg');
-  await blockBoxes.first().uncheck();
+  // The disposable CI installation contains fictional test accounts only.
+  // Apply exactly one selected block to capture the new unselected summary.
+  await compareReview.locator('input[name="confirm"]').check();
+  const typedBlockCount = compareReview.locator('[name="confirm_count"]');
+  if (await typedBlockCount.isVisible()) await typedBlockCount.fill('1');
+  await compareReview.locator('button[value="compare.apply"]').click();
+  await page.waitForURL(/view=compare.*layout=result/, { timeout: 30000 });
+  if (!(await page.locator('text=Unselected accounts: still active').isVisible())) {
+    throw new Error('Comparison result does not report unselected accounts');
+  }
+  await capture('04-comparacion-resultado.jpg');
 
   // Exercise the actual Joomla asset as well as the HTTP-only integration client.
   await page.goto(base + '/administrator/index.php?option=com_usertools&view=names');
