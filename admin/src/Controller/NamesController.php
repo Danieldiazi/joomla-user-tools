@@ -47,7 +47,7 @@ class NamesController extends DisplayController
             $this->go($done ? 'view=names&layout=result' : 'view=names&layout=progress');
         } catch (UserFacingException $e) {
             $this->warn($e);
-            $this->go($model->getJob() ? 'view=names&layout=progress' : ($model->getPreview() ? 'view=names&layout=review' : 'view=names'));
+            $this->go($model->getJob() ? 'view=names&layout=progress&autostart=0' : ($model->getPreview() ? 'view=names&layout=review' : 'view=names'));
         }
     }
 
@@ -59,7 +59,8 @@ class NamesController extends DisplayController
             $this->go($done ? 'view=names&layout=result' : 'view=names&layout=progress');
         } catch (UserFacingException $e) {
             $this->warn($e);
-            $this->go('view=names');
+            // Do not immediately re-submit the failing batch in a redirect loop.
+            $this->go($this->model()->getJob() ? 'view=names&layout=progress&autostart=0' : 'view=names');
         }
     }
 
