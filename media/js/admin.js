@@ -473,6 +473,18 @@
       start();
     });
 
+    // Continue bulk name updates in short, checkpointed requests. The normal POST remains
+    // available without JavaScript and after an error (autostart=0).
+    document.querySelectorAll('[data-ut-names-progress]').forEach((root) => {
+      if (root.dataset.utNamesAuto !== '1') return;
+      const form = root.querySelector('[data-ut-names-next]');
+      const next = form && form.querySelector('button[name="task"][value="names.next"]');
+      if (!next) return;
+      const timer = window.setTimeout(() => { form.requestSubmit(next); }, 400);
+      // If the operator continues manually, never send a second copy of the POST.
+      form.addEventListener('submit', () => window.clearTimeout(timer), { once: true });
+    });
+
     // "Add accounts to groups": the target group field only applies to the single-group mode.
     document.querySelectorAll('[data-ut-addgroups-form]').forEach((form) => {
       const wrapper = form.querySelector('[data-ut-ag-group]');
