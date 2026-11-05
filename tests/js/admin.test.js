@@ -491,3 +491,30 @@ test('name apply remains disabled if selection controls cannot initialise', asyn
   assert.equal(doc.querySelector('[data-ut-names-ready]').value, '0');
   assert.equal(doc.querySelector('[data-ut-names-selected]').value, '[]');
 });
+
+test('bulk name progress automatically posts the next saved batch', async () => {
+  const doc = await load('<div data-ut-names-progress data-ut-names-auto="1">'
+    + '<form data-ut-names-next><button name="task" value="names.next"></button></form></div>');
+  const form = doc.querySelector('form');
+  const submitted = [];
+  form.requestSubmit = (button) => { submitted.push(button.value); };
+  await new Promise((resolve) => setTimeout(resolve, 520));
+  assert.deepEqual(submitted, ['names.next']);
+});
+
+test('bulk name progress stops automatic requests on errors or manual submission', async () => {
+  const paused = await load('<div data-ut-names-progress data-ut-names-auto="0">'
+    + '<form data-ut-names-next><button name="task" value="names.next"></button></form></div>');
+  let requests = 0;
+  paused.querySelector('form').requestSubmit = () => { requests += 1; };
+  await new Promise((resolve) => setTimeout(resolve, 520));
+  assert.equal(requests, 0, 'failed request requires a deliberate retry');
+
+  const active = await load('<div data-ut-names-progress data-ut-names-auto="1">'
+    + '<form data-ut-names-next><button name="task" value="names.next"></button></form></div>');
+  const form = active.querySelector('form');
+  form.requestSubmit = () => { requests += 1; };
+  form.dispatchEvent(new active.defaultView.Event('submit', { bubbles: true }));
+  await new Promise((resolve) => setTimeout(resolve, 520));
+  assert.equal(requests, 0, 'a manual submission cancels the scheduled automatic one');
+});
