@@ -84,6 +84,7 @@ $progress = $admin->submit($namesUrl . '&layout=review', ['task' => 'names.apply
     'selection_ready' => 1, 'selected' => json_encode(range(0, 20))], 'data-ut-names-review');
 Test::check(str_contains($progress, 'data-ut-names-next') && $nameRow('names_batch_20')['name'] === 'Batch 20'
     && $nameRow('names_batch_21')['name'] !== 'Batch 21', 'a request processes at most 20 accounts');
+Test::check(str_contains($progress, 'data-ut-names-auto="1"') && str_contains($progress, 'aria-valuenow="95"'), 'progress reports the correct percentage and automatic continuation');
 $site->q('UPDATE #__users SET name = ? WHERE username = ?', ['Edited Between Batches', 'names_batch_21']);
 $resumed = $admin->get($namesUrl);
 Test::check(str_contains($resumed, 'data-ut-names-next'), 'reopening tool resumes the pending batch');
