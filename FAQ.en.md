@@ -100,7 +100,7 @@ Yes. **Add accounts to groups** accepts a list and a single group, or `username;
 
 ### Can I change the names of many accounts at once?
 
-Yes. In **Bulk update names**, paste `username;name` rows, review the current and proposed names, and select the accounts to change. Only the Name field is changed; malformed, duplicate or unmatched rows are skipped, and the result states what happened to each one. If an account changes while you review, only that row is skipped. Administrator accounts, Super Users and the operator are protected. See the [README](README.en.md#bulk-update-names). Selection requires JavaScript; if it is unavailable, applying changes stays disabled. Reopening the tool resumes a pending batch.
+Yes. In **Bulk update names**, paste `username;name` rows, review the current and proposed names, and select the accounts to change. Only the Name field is changed; malformed, duplicate or unmatched rows are skipped, and the result states what happened to each one. If an account changes while you review, only that row is skipped. Administrator accounts, Super Users and the operator are protected. See the [README](README.en.md#bulk-update-names). Selection requires JavaScript; if it is unavailable, applying changes stays disabled. Once confirmed, the requests of up to 20 accounts continue automatically with a progress bar; no further clicks are needed. If JavaScript is unavailable on the progress screen or processing is interrupted, the manual continuation button remains available. A controlled processing error stops automatic continuation so the operator can retry manually without repeating completed accounts. Reopening the tool resumes a pending batch.
 
 ### How do I keep the groups of a team or class in line with the list I receive?
 
