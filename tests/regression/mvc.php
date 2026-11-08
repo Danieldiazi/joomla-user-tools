@@ -115,7 +115,7 @@ namespace {
     $savedPermissions = $identity->permissions;
     $identity->permissions = ['core.manage' => true, 'usertools.profile' => true,
         'com_scheduler:core.manage' => false, 'core.admin' => false];
-    foreach (['accounts' => 0, 'groups' => 403, 'automation' => 403, 'delete' => 403, 'invented' => 404] as $section => $code) {
+    foreach (['consult' => 0, 'accounts' => 403, 'groups' => 403, 'automation' => 403, 'delete' => 403, 'invented' => 404] as $section => $code) {
         $input = new class($section) {
             public function __construct(private string $section) {}
             public function getCmd($name, $default = '') { return ['view' => 'home', 'section' => $this->section][$name] ?? $default; }

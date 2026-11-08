@@ -438,7 +438,7 @@ It requires the *View the access diagnosis* permission. Super Users have it; gra
 
 ### How do I open a User Tools category directly?
 
-Expand **Components → User Tools**: Home keeps the complete home screen and the other four entries open individual categories. Only categories containing tools you may use appear. Dashboard shortcuts follow the same classification; a visible category grants no extra permissions. See [category navigation](README.en.md#category-navigation).
+Expand **Components → User Tools**: Home keeps the complete home screen and the other five entries open individual categories. Only categories containing tools you may use appear. Dashboard shortcuts follow the same classification; a visible category grants no extra permissions. See [category navigation](README.en.md#category-navigation).
 
 ### Why is a category missing or the current tool not marked?
 
