@@ -521,6 +521,10 @@ Los títulos de grupos y niveles enlazan con su edición en Joomla para quien ti
 
 Un cuadro de búsqueda filtra los grupos. **Exportar CSV** descarga la tabla con el ID, la ruta completa de cada grupo, las cifras y los niveles (UTF-8 con BOM y punto y coma); no incluye cuentas. La pantalla usa el permiso *Ver grupos, niveles y contenido por nivel*. La lista de cuentas exige además poder gestionar usuarios en Joomla (el mismo permiso que el gestor de usuarios); sin él, las cifras se ven pero sin enlace. Las listas de artículos exigen poder gestionar artículos en Joomla y, como el gestor de artículos, solo muestran los de niveles que puede ver quien consulta: si no es superusuario, pueden tener menos artículos que la tabla, y la lista lo indica. Se llega desde la portada o con el botón «Ver alcance de cada grupo» de «Grupos y niveles de acceso».
 
+![Alcance de cada grupo](docs/screenshots/45-alcance-grupos.jpg)
+
+![Alcance de cada grupo: artículos que puede ver un grupo](docs/screenshots/47-alcance-articulos.jpg)
+
 ## Contenido por nivel de acceso
 
 Desde la 2026.10.12, **Contenido por nivel de acceso** cuenta qué elementos usa cada nivel de acceso. Joomla solo permite verlo listado a listado, con el filtro «Acceso» de cada uno, o intentando borrar el nivel, que dice en qué tablas se usa pero no qué elementos ni cuántos. Esta pantalla solo lee.
@@ -560,7 +564,7 @@ Desde la 2026.10.15, **Contenido por antigüedad** muestra cuánto contenido lle
 
 ![Contenido por antigüedad: tabla por años](docs/screenshots/20-contenido-antiguedad.jpg)
 
-![Contenido por antigüedad: lista de un año](docs/screenshots/21-contenido-antiguedad-lista.jpg)
+![Contenido por antigüedad: lista ordenada por menos visitas](docs/screenshots/21-contenido-antiguedad-lista.jpg)
 
 ## Diagnóstico de accesos
 

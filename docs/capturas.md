@@ -84,6 +84,12 @@ Además de estas capturas, la CI comprueba el orden de teclado, el despliegue de
 
 ![Grupos y niveles de acceso: matriz de grupos por nivel, exportación CSV y resumen por nivel (2026.10.11)](screenshots/14-grupos-niveles.jpg)
 
+![Alcance de cada grupo: cuentas activas en el grupo y con sus subgrupos, etiqueta «Pocas cuentas», niveles que ve, artículos que puede ver y los que solo ve su rama, con enlace a sus listas (2026.11.7)](screenshots/45-alcance-grupos.jpg)
+
+![Alcance de cada grupo: cuentas activas de una rama, con los grupos de la rama de cada una y sus fechas de último acceso y alta, sin correos (2026.11.7)](screenshots/46-alcance-miembros.jpg)
+
+![Alcance de cada grupo: artículos que puede ver un grupo, con su nivel, el de su categoría y sus visitas (2026.11.7)](screenshots/47-alcance-articulos.jpg)
+
 ![Contenido por nivel de acceso: una fila por nivel y una columna por tipo de elemento, con la tabla de una extensión de adjuntos (2026.10.12)](screenshots/18-contenido-por-nivel.jpg)
 
 ![Mover grupos: revisión con un grupo que se mueve, el subgrupo que va con él y un grupo que no se puede mover, con las cuentas afectadas y los niveles que gana (2026.10.16)](screenshots/22-mover-grupos-revision.jpg)
@@ -94,4 +100,4 @@ Además de estas capturas, la CI comprueba el orden de teclado, el despliegue de
 
 ![Contenido por antigüedad: artículos, categorías de artículos, contactos y canales de noticias por año de última modificación, con filtro por nivel de acceso (2026.10.21)](screenshots/20-contenido-antiguedad.jpg)
 
-![Contenido por antigüedad: lista de los artículos de un año, con enlace a su edición (2026.10.15)](screenshots/21-contenido-antiguedad-lista.jpg)
+![Contenido por antigüedad: artículos de todos los años ordenados por menos visitas, con su fecha de modificación y enlace a su edición (2026.11.7)](screenshots/21-contenido-antiguedad-lista.jpg)

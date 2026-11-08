@@ -522,6 +522,10 @@ Group and level titles link to their edit screens in Joomla for users with the A
 
 A search box filters the groups. **Export CSV** downloads the table with the ID, the full path of each group, the numbers and the levels (UTF-8 with BOM, semicolons); it has no accounts. The screen uses the *View groups, levels and content by level* permission. The list of accounts also requires being able to manage users in Joomla (the same permission as the user manager); without it, the numbers are shown without a link. The article lists require being able to manage articles in Joomla and, like the article manager, only show those of levels the viewer can see: for someone who is not a Super User they may have fewer articles than the table, and the list says so. It is reached from the home screen or with the «View the reach of each group» button of «Groups and access levels».
 
+![Reach of each group (Spanish interface)](docs/screenshots/45-alcance-grupos.jpg)
+
+![Reach of each group: articles a group can view (Spanish interface)](docs/screenshots/47-alcance-articulos.jpg)
+
 ## Content by access level
 
 Since 2026.10.12, **Content by access level** counts which items use each access level. Joomla only shows this list by list, with each one's «Access» filter, or when you try to delete the level, which says in which tables it is used but not which items or how many. This screen only reads.
@@ -561,7 +565,7 @@ Since 2026.10.15, **Content by age** shows how much content has not been touched
 
 ![Content by age: table by year (Spanish interface)](docs/screenshots/20-contenido-antiguedad.jpg)
 
-![Content by age: list of one year (Spanish interface)](docs/screenshots/21-contenido-antiguedad-lista.jpg)
+![Content by age: list sorted by fewest hits (Spanish interface)](docs/screenshots/21-contenido-antiguedad-lista.jpg)
 
 ## Access diagnosis
 

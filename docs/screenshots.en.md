@@ -84,6 +84,12 @@ Besides these screenshots, CI checks keyboard order, menu expansion and the acti
 
 ![Groups and access levels: groups by level matrix, CSV export and summary by level (2026.10.11, Spanish interface)](screenshots/14-grupos-niveles.jpg)
 
+![Reach of each group: active accounts in the group and with its subgroups, «Few accounts» label, levels it has, articles it can view and those only its branch views, with links to their lists (2026.11.7, Spanish interface)](screenshots/45-alcance-grupos.jpg)
+
+![Reach of each group: active accounts of a branch, with the branch groups of each one and their last visit and registration dates, without email addresses (2026.11.7, Spanish interface)](screenshots/46-alcance-miembros.jpg)
+
+![Reach of each group: articles a group can view, with their level, their category's level and their hits (2026.11.7, Spanish interface)](screenshots/47-alcance-articulos.jpg)
+
 ![Content by access level: one row per level and one column per kind of item, including the table of an attachments extension (2026.10.12, Spanish interface)](screenshots/18-contenido-por-nivel.jpg)
 
 ![Move groups: review with a group that moves, the subgroup that goes with it and a group that cannot move, with the accounts affected and the level gained (2026.10.16, Spanish interface)](screenshots/22-mover-grupos-revision.jpg)
@@ -94,4 +100,4 @@ Besides these screenshots, CI checks keyboard order, menu expansion and the acti
 
 ![Content by age: articles, article categories, contacts and news feeds by year of last modification, with an access level filter (2026.10.21, Spanish interface)](screenshots/20-contenido-antiguedad.jpg)
 
-![Content by age: list of one year's articles, with a link to edit them (2026.10.15, Spanish interface)](screenshots/21-contenido-antiguedad-lista.jpg)
+![Content by age: articles from every year sorted by fewest hits, with their modification date and a link to edit them (2026.11.7, Spanish interface)](screenshots/21-contenido-antiguedad-lista.jpg)
