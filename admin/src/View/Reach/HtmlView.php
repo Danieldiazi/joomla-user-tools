@@ -37,6 +37,9 @@ class HtmlView extends BaseHtmlView
     /** @var array{group: ?object, accounts: list<array<string, mixed>>, total: int, blocked: int, page: int} */
     public array $members = ['group' => null, 'accounts' => [], 'total' => 0, 'blocked' => 0, 'page' => 1];
 
+    /** @var array{group: ?object, exclusive: bool, items: list<array<string, mixed>>, total: int, page: int, limited: bool} */
+    public array $articles = ['group' => null, 'exclusive' => false, 'items' => [], 'total' => 0, 'page' => 1, 'limited' => false];
+
     /** @var array<int, object> */
     public array $groups = [];
 
@@ -58,6 +61,13 @@ class HtmlView extends BaseHtmlView
                 $this->groups  = Toolkit::directory()->groups();
                 $this->paths   = $model->getPaths();
                 $this->members = $model->getMembers($input->getInt('group', 0), max(1, $input->getInt('page', 1)));
+            } elseif ($this->getLayout() === 'articles') {
+                // Article titles are shown only to who could list them in Joomla's article manager.
+                if (!$this->canArticles()) {
+                    throw new NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
+                }
+                $this->paths    = $model->getPaths();
+                $this->articles = $model->getArticles($input->getInt('group', 0), $input->getInt('only', 0) === 1, max(1, $input->getInt('page', 1)));
             } else {
                 $this->rows        = $model->getRows($this->few);
                 $this->levelTitles = $model->getLevelTitles();
@@ -77,6 +87,12 @@ class HtmlView extends BaseHtmlView
     public function canUsers(): bool
     {
         return Factory::getApplication()->getIdentity()->authorise('core.manage', 'com_users');
+    }
+
+    /** The article lists need the same permission as Joomla's article manager. */
+    public function canArticles(): bool
+    {
+        return Factory::getApplication()->getIdentity()->authorise('core.manage', 'com_content');
     }
 
     /** Account names link to the profile tool for users who have it. */

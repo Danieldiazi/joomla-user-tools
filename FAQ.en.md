@@ -368,7 +368,7 @@ With **Reach of each group**. For each group it counts the active accounts assig
 
 ### How many articles does each group view? Can I know which ones someone would stop viewing if I retire a group?
 
-«Reach of each group» counts the articles that someone who only belongs to that group can open on the site: published or archived, within their dates and with their level and their category's level within the group's reach. The «Only this branch views» column says how many no group outside this one and its subgroups views. Those are the ones that would be left only to Super Users if you stopped using the branch. Someone in several groups views what all of them view, so it is worth checking their other groups too.
+«Reach of each group» counts the articles that someone who only belongs to that group can open on the site: published or archived, within their dates and with their level and their category's level within the group's reach. The «Only this branch views» column says how many no group outside this one and its subgroups views. Those are the ones that would be left only to Super Users if you stopped using the branch. Both numbers open the list of those articles, with their level, their category's level and their hits, if you can manage articles in Joomla. Someone in several groups views what all of them view, so it is worth checking their other groups too.
 
 ### Why does «Public» have all its articles in «Only this branch views»?
 

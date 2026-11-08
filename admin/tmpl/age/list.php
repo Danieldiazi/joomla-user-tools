@@ -46,7 +46,7 @@ $heading = $this->year === ContentAge::ALL_YEARS ? Text::sprintf('COM_USERTOOLS_
   <nav class="d-flex flex-wrap align-items-center gap-2 mb-2" aria-label="<?= Text::_('COM_USERTOOLS_AGE_ORDER_LABEL') ?>" data-ut-age-order>
     <span><?= Text::_('COM_USERTOOLS_AGE_ORDER_LABEL') ?>:</span>
     <?php foreach ([ContentAge::ORDER_MODIFIED => 'COM_USERTOOLS_AGE_ORDER_MODIFIED', ContentAge::ORDER_HITS => 'COM_USERTOOLS_AGE_ORDER_HITS'] as $order => $label) : ?>
-      <?php if ($order === $this->order) : ?><span class="btn btn-sm btn-secondary disabled" aria-current="true"><?= Text::_($label) ?></span>
+      <?php if ($order === $this->order) : ?><span class="btn btn-sm btn-primary" aria-current="true"><?= Text::_($label) ?></span>
       <?php else : ?><a class="btn btn-sm btn-outline-secondary" href="<?= Route::_($listQ . ($order === ContentAge::ORDER_HITS ? '&order=' . ContentAge::ORDER_HITS : '')) ?>"><?= Text::_($label) ?></a><?php endif; ?>
     <?php endforeach; ?>
   </nav>

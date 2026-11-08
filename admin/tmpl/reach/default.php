@@ -15,6 +15,11 @@ use Joomla\CMS\Session\Session;
 
 /** @var \Danieldiazi\Component\Usertools\Administrator\View\Reach\HtmlView $this */
 $canUsers = $this->canUsers();
+$canList  = $this->canArticles();
+$articles = fn (array $row, bool $only, int $count): string => $canList && $count > 0
+    ? '<a href="' . Route::_('index.php?option=com_usertools&view=reach&layout=articles&group=' . (int) $row['id'] . ($only ? '&only=1' : '')) . '" aria-label="'
+        . $this->escape(Text::sprintf($only ? 'COM_USERTOOLS_REACH_EXCLUSIVE_LABEL' : 'COM_USERTOOLS_REACH_ARTICLES_LABEL', $count, $row['title'])) . '">' . $count . '</a>'
+    : (string) $count;
 $fewQ     = $this->few !== GroupReach::DEFAULT_FEW ? '&few=' . $this->few : '';
 $flagged  = count(array_filter($this->rows, fn (array $row): bool => $row['few']));
 ?>
@@ -72,13 +77,13 @@ $flagged  = count(array_filter($this->rows, fn (array $row): bool => $row['few']
             <?php if ($canUsers && $row['members'] > 0) : ?><a href="<?= Route::_('index.php?option=com_usertools&view=reach&layout=members&group=' . (int) $row['id']) ?>"
               aria-label="<?= $this->escape(Text::sprintf('COM_USERTOOLS_REACH_MEMBERS_LABEL', (int) $row['members'], $row['title'])) ?>"><?= (int) $row['members'] ?></a>
             <?php else : ?><?= (int) $row['members'] ?><?php endif; ?>
-            <?php if ($row['few']) : ?><span class="badge text-bg-warning d-block mt-1" data-ut-reach-few><?= Text::_('COM_USERTOOLS_REACH_FEW') ?></span>
-            <?php elseif ($row['empty'] && !$row['guest']) : ?><span class="badge text-bg-secondary d-block mt-1"><?= Text::_('COM_USERTOOLS_REACH_EMPTY') ?></span><?php endif; ?>
+            <?php if ($row['few']) : ?><span class="badge text-bg-warning ms-1" data-ut-reach-few><?= Text::_('COM_USERTOOLS_REACH_FEW') ?></span>
+            <?php elseif ($row['empty'] && !$row['guest']) : ?><span class="badge text-bg-secondary ms-1"><?= Text::_('COM_USERTOOLS_REACH_EMPTY') ?></span><?php endif; ?>
           </td>
           <td><?php if ($row['superUser']) : ?><?= Text::_('COM_USERTOOLS_REACH_ALL_LEVELS') ?>
             <?php else : ?><?= $this->escape(implode(', ', array_map(fn (int $id): string => $this->levelTitles[$id] ?? '#' . $id, $row['levels']))) ?><?php endif; ?></td>
-          <td class="text-end" data-ut-reach-articles="<?= (int) $row['articles'] ?>"><?= (int) $row['articles'] ?></td>
-          <td class="text-end" data-ut-reach-exclusive="<?= (int) $row['exclusive'] ?>"><?= (int) $row['exclusive'] ?></td>
+          <td class="text-end" data-ut-reach-articles="<?= (int) $row['articles'] ?>"><?= $articles($row, false, (int) $row['articles']) ?></td>
+          <td class="text-end" data-ut-reach-exclusive="<?= (int) $row['exclusive'] ?>"><?= $articles($row, true, (int) $row['exclusive']) ?></td>
         </tr>
       <?php endforeach; ?>
       </tbody>
@@ -88,7 +93,7 @@ $flagged  = count(array_filter($this->rows, fn (array $row): bool => $row['few']
   <div class="alert alert-info mb-0">
     <p><?= Text::_('COM_USERTOOLS_REACH_NOTE_MEMBERS') ?></p>
     <p><?= Text::_('COM_USERTOOLS_REACH_NOTE_ARTICLES') ?></p>
-    <p class="mb-0"><?= Text::_('COM_USERTOOLS_REACH_NOTE_EXCLUSIVE') ?><?php if (!$canUsers) : ?> <?= Text::_('COM_USERTOOLS_REACH_NO_LIST_NOTE') ?><?php endif; ?></p>
+    <p class="mb-0"><?= Text::_('COM_USERTOOLS_REACH_NOTE_EXCLUSIVE') ?><?php if (!$canUsers) : ?> <?= Text::_('COM_USERTOOLS_REACH_NO_LIST_NOTE') ?><?php endif; ?><?php if (!$canList) : ?> <?= Text::_('COM_USERTOOLS_REACH_NO_ARTICLES_NOTE') ?><?php endif; ?></p>
   </div>
   <?php endif; ?>
 </div>

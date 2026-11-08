@@ -71,6 +71,34 @@ class ReachModel extends BaseDatabaseModel
         ];
     }
 
+    /**
+     * One page of the articles behind a group's figure: all it can view, or ($exclusive) only
+     * those its branch alone can view. Titles are limited to the operator's own viewing levels.
+     *
+     * @return array{group: object, exclusive: bool, items: list<array<string, mixed>>, total: int, page: int, limited: bool}
+     */
+    public function getArticles(int $groupId, bool $exclusive, int $page): array
+    {
+        $group = Toolkit::directory()->groups()[$groupId] ?? null;
+        if ($group === null) {
+            throw new UserFacingException('COM_USERTOOLS_REACH_UNKNOWN_GROUP');
+        }
+        $now    = gmdate('Y-m-d H:i:s');
+        $pairs  = GroupReach::selection($this->matrix(), Toolkit::directory()->groups(), $this->reader()->articlesByLevels($now), $groupId, $exclusive);
+        $user   = Toolkit::app()->getIdentity();
+        $levels = $user->authorise('core.admin') ? null : array_values(array_map('intval', $user->getAuthorisedViewLevels()));
+        $total  = $this->reader()->countArticles($pairs, $now, $levels);
+        $page   = GroupReach::page($page, $total);
+        return [
+            'group'     => $group,
+            'exclusive' => $exclusive,
+            'items'     => $this->reader()->listArticles($pairs, $now, $levels, ($page - 1) * GroupReach::PAGE_SIZE, GroupReach::PAGE_SIZE),
+            'total'     => $total,
+            'page'      => $page,
+            'limited'   => $levels !== null,
+        ];
+    }
+
     /** The table as a CSV file, in the interface language. */
     public function csv(int $few): string
     {

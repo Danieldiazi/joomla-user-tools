@@ -93,6 +93,27 @@ final class GroupReachTest extends TestCase
         $this->assertSame($rows[1]['articles'], $rows[1]['exclusive'], 'every group hangs from Public');
     }
 
+    public function testSelectionMatchesTheFigures(): void
+    {
+        $groups = $this->groupTree();
+        $matrix = AccessMatrix::build($groups, $this->levels(), [], 9);
+        $pairs  = fn (int $group, bool $only): array => array_map(fn (array $p) => $p['access'] . '/' . $p['category'],
+            GroupReach::selection($matrix, $groups, $this->articles(), $group, $only));
+        $this->assertSame(['1/1', '2/1', '1/2', '7/1'], $pairs(10, false), 'Socios: public, registered and its own level');
+        $this->assertSame(['7/1'], $pairs(10, true), 'only its own level is exclusive');
+        $this->assertSame(['8/7'], $pairs(11, true));
+        $this->assertSame(['9/1'], $pairs(8, true), 'Super Users: what no other group views');
+        $this->assertCount(7, $pairs(8, false), 'Super Users view every combination');
+        $this->assertSame([], $pairs(999, false), 'an unknown group selects nothing');
+        $rows = array_column(GroupReach::build($matrix, $groups, [], $this->articles()), null, 'id');
+        $sum  = fn (int $group, bool $only): int => array_sum(array_map(fn (array $p) => $p['total'],
+            array_filter($this->articles(), fn (array $p) => in_array($p['access'] . '/' . $p['category'], $pairs($group, $only), true))));
+        foreach ([1, 2, 3, 8, 9, 10, 11] as $id) {
+            $this->assertSame($rows[$id]['articles'], $sum($id, false), "list and count agree for group $id");
+            $this->assertSame($rows[$id]['exclusive'], $sum($id, true), "exclusive list and count agree for group $id");
+        }
+    }
+
     public function testMembersAndFewFlag(): void
     {
         $rows = $this->reach([1 => 50, 2 => 45, 10 => 3, 11 => 1], [], 3);

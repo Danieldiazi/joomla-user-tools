@@ -50,56 +50,16 @@ final class GroupReach
      */
     public static function build(array $matrix, array $groups, array $members, array $articles, int $few = self::DEFAULT_FEW): array
     {
-        $levelsOf = [];
-        $super    = [];
-        foreach ($matrix['rows'] as $row) {
-            $id    = (int) $row['id'];
-            $owned = [];
-            foreach ($row['cells'] as $levelId => $cell) {
-                if (($cell['state'] ?? 'none') !== 'none') {
-                    $owned[(int) $levelId] = true;
-                }
-            }
-            $levelsOf[$id] = $owned;
-            $super[$id]    = (bool) $row['superUser'];
-        }
-
-        // Which ordinary groups can open each combination of article level and category level.
-        // Super User groups are left out: they see everything, so they never make an article
-        // "shared" and are handled on their own below.
-        $viewers = [];
-        foreach ($articles as $index => $pair) {
-            $viewers[$index] = [];
-            foreach ($levelsOf as $groupId => $owned) {
-                if (!$super[$groupId] && isset($owned[(int) $pair['access']], $owned[(int) $pair['category']])) {
-                    $viewers[$index][] = $groupId;
-                }
-            }
-        }
-
+        [$levelsOf, $super, $viewers] = self::analyse($matrix, $articles);
         $rows = [];
         foreach ($matrix['rows'] as $row) {
-            $id       = (int) $row['id'];
-            $group    = $groups[$id] ?? null;
-            $visible  = 0;
-            $only     = 0;
+            $id      = (int) $row['id'];
+            $visible = 0;
+            $only    = 0;
             foreach ($articles as $index => $pair) {
-                $total = (int) $pair['total'];
-                if ($super[$id]) {
-                    $visible += $total;
-                    // Only Super Users can open it: no ordinary group has both levels.
-                    if (!$viewers[$index]) {
-                        $only += $total;
-                    }
-                    continue;
-                }
-                if (!\in_array($id, $viewers[$index], true)) {
-                    continue;
-                }
-                $visible += $total;
-                if ($group !== null && self::insideBranch($viewers[$index], $groups, $group)) {
-                    $only += $total;
-                }
+                [$sees, $alone] = self::reach($id, $index, $groups, $super, $viewers);
+                $visible += $sees ? (int) $pair['total'] : 0;
+                $only    += $alone ? (int) $pair['total'] : 0;
             }
             $count  = (int) ($members[$id] ?? 0);
             $rows[] = [
@@ -119,6 +79,89 @@ final class GroupReach
             ];
         }
         return $rows;
+    }
+
+    /**
+     * The combinations of article level and category level behind one group's figure, so the list
+     * of those articles uses exactly the rule of the table: every article it can view, or only
+     * those its branch alone can view ($exclusive).
+     *
+     * @param  array{levels: list<array<string, mixed>>, rows: list<array<string, mixed>>} $matrix
+     * @param  array<int, object>                                                           $groups
+     * @param  list<array{access: int, category: int, total: int}>                          $articles
+     * @return list<array{access: int, category: int}>
+     */
+    public static function selection(array $matrix, array $groups, array $articles, int $groupId, bool $exclusive): array
+    {
+        [, $super, $viewers] = self::analyse($matrix, $articles);
+        if (!isset($super[$groupId])) {
+            return [];
+        }
+        $pairs = [];
+        foreach ($articles as $index => $pair) {
+            [$sees, $alone] = self::reach($groupId, $index, $groups, $super, $viewers);
+            if ($exclusive ? $alone : $sees) {
+                $pairs[] = ['access' => (int) $pair['access'], 'category' => (int) $pair['category']];
+            }
+        }
+        return $pairs;
+    }
+
+    /**
+     * Levels of each group, which groups are Super Users and which ordinary groups can open each
+     * combination of article level and category level. Super User groups are left out of the
+     * viewers: they see everything, so they never make an article "shared".
+     *
+     * @param  array{levels: list<array<string, mixed>>, rows: list<array<string, mixed>>} $matrix
+     * @param  list<array{access: int, category: int, total: int}>                          $articles
+     * @return array{0: array<int, array<int, true>>, 1: array<int, bool>, 2: array<int, list<int>>}
+     */
+    private static function analyse(array $matrix, array $articles): array
+    {
+        $levelsOf = [];
+        $super    = [];
+        foreach ($matrix['rows'] as $row) {
+            $id    = (int) $row['id'];
+            $owned = [];
+            foreach ($row['cells'] as $levelId => $cell) {
+                if (($cell['state'] ?? 'none') !== 'none') {
+                    $owned[(int) $levelId] = true;
+                }
+            }
+            $levelsOf[$id] = $owned;
+            $super[$id]    = (bool) $row['superUser'];
+        }
+        $viewers = [];
+        foreach ($articles as $index => $pair) {
+            $viewers[$index] = [];
+            foreach ($levelsOf as $groupId => $owned) {
+                if (!$super[$groupId] && isset($owned[(int) $pair['access']], $owned[(int) $pair['category']])) {
+                    $viewers[$index][] = $groupId;
+                }
+            }
+        }
+        return [$levelsOf, $super, $viewers];
+    }
+
+    /**
+     * Whether a group can open the articles of one combination, and whether its branch alone can.
+     * For a Super User group, "alone" means that no ordinary group has both levels.
+     *
+     * @param  array<int, object>     $groups
+     * @param  array<int, bool>       $super
+     * @param  array<int, list<int>>  $viewers
+     * @return array{0: bool, 1: bool}
+     */
+    private static function reach(int $id, int $index, array $groups, array $super, array $viewers): array
+    {
+        if ($super[$id]) {
+            return [true, !$viewers[$index]];
+        }
+        if (!\in_array($id, $viewers[$index], true)) {
+            return [false, false];
+        }
+        $group = $groups[$id] ?? null;
+        return [true, $group !== null && self::insideBranch($viewers[$index], $groups, $group)];
     }
 
     /**

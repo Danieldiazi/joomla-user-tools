@@ -368,7 +368,7 @@ Con **Alcance de cada grupo**. Para cada grupo cuenta las cuentas activas asigna
 
 ### ¿Cuántos artículos ve cada grupo? ¿Puedo saber cuáles dejaría de ver alguien si retiro un grupo?
 
-«Alcance de cada grupo» cuenta los artículos que puede abrir en el sitio alguien que solo pertenece a ese grupo: publicados o archivados, dentro de sus fechas y con su nivel y el de su categoría al alcance del grupo. La columna «Solo los ve esta rama» dice cuántos no ve ningún grupo fuera de este y sus subgrupos. Esos son los que quedarían solo para los superusuarios si dejaras de usar la rama. Quien esté en varios grupos ve lo de todos, así que conviene mirar también sus otros grupos.
+«Alcance de cada grupo» cuenta los artículos que puede abrir en el sitio alguien que solo pertenece a ese grupo: publicados o archivados, dentro de sus fechas y con su nivel y el de su categoría al alcance del grupo. La columna «Solo los ve esta rama» dice cuántos no ve ningún grupo fuera de este y sus subgrupos. Esos son los que quedarían solo para los superusuarios si dejaras de usar la rama. Las dos cifras abren la lista de esos artículos, con su nivel, el de su categoría y sus visitas, si puedes gestionar artículos en Joomla. Quien esté en varios grupos ve lo de todos, así que conviene mirar también sus otros grupos.
 
 ### ¿Por qué «Public» tiene todos sus artículos en «Solo los ve esta rama»?
 

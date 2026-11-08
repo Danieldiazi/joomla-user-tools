@@ -84,6 +84,102 @@ final class GroupReachReader
         return $pairs;
     }
 
+    /**
+     * Number of articles behind one figure of the table: those the site can show now (the same
+     * conditions as articlesByLevels()) whose level and category level are one of $pairs.
+     *
+     * @param list<array{access: int, category: int}> $pairs      GroupReach::selection()
+     * @param list<int>|null                          $viewLevels levels the operator may see; null only for a global Super User
+     */
+    public function countArticles(array $pairs, string $now, ?array $viewLevels): int
+    {
+        $query = $this->articles($pairs, $now, $viewLevels)->select('COUNT(*)');
+        return (int) $this->db->setQuery($query)->loadResult();
+    }
+
+    /**
+     * One page of those articles, by category and title, with what is needed to decide on them.
+     *
+     * @param  list<array{access: int, category: int}> $pairs
+     * @param  list<int>|null                          $viewLevels
+     * @return list<array{id: int, title: string, category: string, level: string, access: int, categoryLevel: string, categoryAccess: int,
+     *     state: int, created_by: int, modified: ?string, hits: int}>
+     */
+    public function listArticles(array $pairs, string $now, ?array $viewLevels, int $offset, int $limit): array
+    {
+        $db    = $this->db;
+        $query = $this->articles($pairs, $now, $viewLevels)
+            ->select([
+                $db->quoteName('a.id'), $db->quoteName('a.title'), $db->quoteName('a.access'), $db->quoteName('a.state'), $db->quoteName('a.created_by'),
+                $db->quoteName('a.modified'), $db->quoteName('a.created'), $db->quoteName('a.hits'), $db->quoteName('c.title', 'category'),
+                $db->quoteName('c.access', 'category_access'), $db->quoteName('l.title', 'level'), $db->quoteName('cl.title', 'category_level'),
+            ])
+            ->join('LEFT', $db->quoteName('#__viewlevels', 'l'), $db->quoteName('l.id') . ' = ' . $db->quoteName('a.access'))
+            ->join('LEFT', $db->quoteName('#__viewlevels', 'cl'), $db->quoteName('cl.id') . ' = ' . $db->quoteName('c.access'))
+            ->order([$db->quoteName('c.title'), $db->quoteName('a.title'), $db->quoteName('a.id')]);
+        $items = [];
+        foreach ($db->setQuery($query, $offset, $limit)->loadObjectList() as $row) {
+            $modified = $row->modified ?? $row->created;
+            $items[]  = [
+                'id'             => (int) $row->id,
+                'title'          => (string) $row->title,
+                'category'       => (string) $row->category,
+                'level'          => (string) ($row->level ?? ''),
+                'access'         => (int) $row->access,
+                'categoryLevel'  => (string) ($row->category_level ?? ''),
+                'categoryAccess' => (int) $row->category_access,
+                'state'          => (int) $row->state,
+                'created_by'     => (int) $row->created_by,
+                'modified'       => $modified !== null ? substr((string) $modified, 0, 19) : null,
+                'hits'           => (int) $row->hits,
+            ];
+        }
+        return $items;
+    }
+
+    /**
+     * The articles of articlesByLevels() limited to some level combinations and, for an operator
+     * who is not a global Super User, to the levels Joomla lets them see (article and category),
+     * as the administrator's article list does: the reach screen counts every article, but titles
+     * are only listed within the operator's own access.
+     *
+     * @param list<array{access: int, category: int}> $pairs
+     * @param list<int>|null                          $viewLevels
+     */
+    private function articles(array $pairs, string $now, ?array $viewLevels): QueryInterface
+    {
+        $db    = $this->db;
+        $query = $db->createQuery()
+            ->from($db->quoteName('#__content', 'a'))
+            ->join('INNER', $db->quoteName('#__categories', 'c'), $db->quoteName('c.id') . ' = ' . $db->quoteName('a.catid'))
+            ->whereIn($db->quoteName('a.state'), self::VISIBLE_STATES)
+            ->where($db->quoteName('c.published') . ' > 0')
+            ->where('(' . $db->quoteName('a.publish_up') . ' IS NULL OR ' . $db->quoteName('a.publish_up') . ' <= :up)')
+            ->where('(' . $db->quoteName('a.publish_down') . ' IS NULL OR ' . $db->quoteName('a.publish_down') . ' >= :down)')
+            ->bind(':up', $now)
+            ->bind(':down', $now);
+        if (!$pairs) {
+            return $query->where('1 = 0');
+        }
+        // Joomla binds by reference: each placeholder needs its own variable, not a reused loop one.
+        $access     = array_map(fn (array $pair): int => (int) $pair['access'], array_values($pairs));
+        $category   = array_map(fn (array $pair): int => (int) $pair['category'], array_values($pairs));
+        $conditions = [];
+        foreach (array_keys($access) as $index) {
+            $conditions[] = '(' . $db->quoteName('a.access') . ' = :pa' . $index . ' AND ' . $db->quoteName('c.access') . ' = :pc' . $index . ')';
+            $query->bind(':pa' . $index, $access[$index], ParameterType::INTEGER)->bind(':pc' . $index, $category[$index], ParameterType::INTEGER);
+        }
+        $query->where('(' . implode(' OR ', $conditions) . ')');
+        if ($viewLevels !== null) {
+            $allowed = array_values(array_unique(array_filter(array_map('intval', $viewLevels), fn (int $id): bool => $id > 0)));
+            if (!$allowed) {
+                return $query->where('1 = 0');
+            }
+            $query->whereIn($db->quoteName('a.access'), $allowed)->whereIn($db->quoteName('c.access'), $allowed);
+        }
+        return $query;
+    }
+
     /** Active accounts in the branch (the group with lft/rgt and its subgroups). */
     public function countMembers(int $lft, int $rgt, bool $blocked = false): int
     {

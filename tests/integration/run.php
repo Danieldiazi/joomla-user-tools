@@ -1255,6 +1255,16 @@ Test::check(str_contains($membersPage, 'data-ut-reach-list-total="1"') && str_co
     && str_contains($membersPage, 'There is also 1 blocked account') && str_contains($membersPage, 'UT reach A1') && !str_contains($membersPage, 'rc_one@example.test'),
     'the list has the active accounts of the branch with their groups, mentions the blocked ones and shows no email');
 Test::check(str_contains($membersPage, 'view=profile&amp;account=' . $site->userId('rc_one')), 'each account opens its profile');
+$articlesLink = $reachUrl . '&layout=articles&group=' . $gid('UT reach A');
+Test::check(str_contains($row($reach, 'data-ut-reach-group', $gid('UT reach A')), 'layout=articles&amp;group=' . $gid('UT reach A') . '&amp;only=1')
+    && str_contains($row($reach, 'data-ut-reach-group', $gid('UT reach A')), 'layout=articles&amp;group=' . $gid('UT reach A') . '"'), 'both article counts link to their lists');
+$reachArticles = $admin->get($articlesLink);
+Test::noPhpErrors($reachArticles, 'the articles a group can view');
+Test::check(str_contains($reachArticles, 'data-ut-reach-articles-total="' . $reachValue($reach, 'UT reach A', 'articles') . '"') && str_contains($reachArticles, 'UT reach level')
+    && !str_contains($reachArticles, 'UT reach expired') && !str_contains($reachArticles, 'UT reach unpublished'), 'the list has as many articles as the table, without expired or unpublished ones');
+$reachOnly = $admin->get($articlesLink . '&only=1');
+Test::check(str_contains($reachOnly, 'data-ut-reach-articles-total="1"') && str_contains($reachOnly, 'UT reach level') && str_contains($reachOnly, 'task=article.edit'),
+    'the exclusive list has only the article its branch alone views, with a link to edit it');
 [$code] = $admin->request($reachUrl . '&layout=members&group=999999');
 Test::check($code === 200 || $code === 303, 'an unknown group leaves the list (got ' . $code . ')');
 preg_match('/href="([^"]*task=reach\.export[^"]*)"/', $reach, $reachExport);
@@ -1274,6 +1284,13 @@ $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_users'", [json_encode
 [$membersCode] = $delegate->request($membersUrl);
 Test::check($code === 200 && !str_contains($delegateReach, 'layout=members') && $membersCode === 403,
     'without managing users in Joomla, the counts are shown but the members are not (got ' . $membersCode . ')');
+$contentRules = (string) $site->q("SELECT rules FROM #__assets WHERE name = 'com_content'")[0]['rules'];
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [json_encode(['core.manage' => ['6' => 0]] + (json_decode($contentRules, true) ?: []))]);
+[$code, $delegateReach] = $delegate->request($reachUrl);
+[$articlesCode] = $delegate->request($articlesLink);
+Test::check($code === 200 && !str_contains($delegateReach, 'layout=articles') && $articlesCode === 403,
+    'without managing articles in Joomla, the article counts are shown but not their titles (got ' . $articlesCode . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [$contentRules]);
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_users'", [$usersRules]);
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 $site->q("DELETE FROM #__content WHERE alias LIKE 'ut-reach-%'");
