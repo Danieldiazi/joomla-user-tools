@@ -36,8 +36,8 @@ Test::section('Category menu: install, upgrade, permissions and native active pa
 $menuComponent = (int) $site->q("SELECT extension_id FROM #__extensions WHERE element = 'com_usertools' AND type = 'component'")[0]['extension_id'];
 $menuRows = fn (): array => $site->q('SELECT id, parent_id, title, link FROM #__menu WHERE component_id = ? AND client_id = 1 ORDER BY lft', [$menuComponent]);
 $menuPlugin = fn (): array => $site->q("SELECT extension_id, enabled, custom_data FROM #__extensions WHERE element = 'usertools' AND type = 'plugin' AND folder = 'system'");
-Test::check(count($menuRows()) === 6 && (int) ($menuPlugin()[0]['enabled'] ?? 0) === 1,
-    'fresh or upgraded package has one root, five submenu entries and an enabled navigation plugin');
+Test::check(count($menuRows()) === 7 && (int) ($menuPlugin()[0]['enabled'] ?? 0) === 1,
+    'fresh or upgraded package has one root, six submenu entries and an enabled navigation plugin');
 $menuPackage = glob(__DIR__ . '/../../dist/pkg_usertools-*.zip')[0] ?? '';
 Test::check($menuPackage !== '', 'the package is available for update tests');
 if ($menuPackage !== '') {
@@ -46,20 +46,21 @@ if ($menuPackage !== '') {
     $site->q('DELETE FROM #__menu WHERE component_id = ? AND client_id = 1 AND parent_id <> 1', [$menuComponent]);
     $site->q("DELETE FROM #__extensions WHERE element = 'usertools' AND type = 'plugin' AND folder = 'system'");
     $upgrade = $site->cli('extension:install --path=' . escapeshellarg(realpath($menuPackage)));
-    Test::check(count($menuRows()) === 6 && count($menuPlugin()) === 1 && (int) $menuPlugin()[0]['enabled'] === 1,
+    Test::check(count($menuRows()) === 7 && count($menuPlugin()) === 1 && (int) $menuPlugin()[0]['enabled'] === 1,
         'upgrading the previous single-link registry creates the categories and enables the new plugin');
     $upgrade = $site->cli('extension:install --path=' . escapeshellarg(realpath($menuPackage)));
-    Test::check(count($menuRows()) === 6 && count($menuPlugin()) === 1, 'repeating the package update does not duplicate navigation');
+    Test::check(count($menuRows()) === 7 && count($menuPlugin()) === 1, 'repeating the package update does not duplicate navigation');
     $site->q("UPDATE #__extensions SET enabled = 0 WHERE element = 'usertools' AND type = 'plugin' AND folder = 'system'");
     $site->cli('extension:install --path=' . escapeshellarg(realpath($menuPackage)));
     Test::check((int) $menuPlugin()[0]['enabled'] === 0, 'later updates respect an explicit disable of the system plugin');
     $site->q("UPDATE #__extensions SET enabled = 1 WHERE element = 'usertools' AND type = 'plugin' AND folder = 'system'");
 }
 $menuHome = $admin->get('index.php?option=com_usertools&view=home');
-Test::check(array_keys(utMenuLinks($menuHome)) === ['', 'accounts', 'groups', 'automation', 'delete'],
-    'the real Joomla administrator menu renders Home and the four categories in order');
-foreach (['accounts' => ['profile', 'explain', 'compare', 'bulkcreate', 'sso', 'export', 'inactive', 'unblock', 'handover', 'names'],
-    'groups' => ['addgroups', 'sync', 'ungroup', 'move', 'access', 'reach', 'usage', 'age', 'diagnose'],
+Test::check(array_keys(utMenuLinks($menuHome)) === ['', 'consult', 'accounts', 'groups', 'automation', 'delete'],
+    'the real Joomla administrator menu renders Home and the five categories in order');
+foreach (['consult' => ['profile', 'explain', 'export', 'access', 'reach', 'usage', 'age', 'diagnose'],
+    'accounts' => ['compare', 'bulkcreate', 'sso', 'inactive', 'unblock', 'handover', 'names'],
+    'groups' => ['addgroups', 'sync', 'ungroup', 'move'],
     'automation' => ['schedule', 'reports'], 'delete' => ['delete', 'anonymize']] as $category => $expected) {
     [$categoryCode, $categoryPage, $categoryHeaders] = $admin->request('index.php?option=com_usertools&view=home&section=' . $category);
     preg_match_all('/data-ut-home-card="([a-z]+)"/', $categoryPage, $categoryCards);
@@ -71,7 +72,7 @@ foreach (['accounts' => ['profile', 'explain', 'compare', 'bulkcreate', 'sso', '
         'category ' . $category . ' has one native active leaf and private response headers');
     Test::noPhpErrors($categoryPage, 'category ' . $category);
 }
-foreach (['profile' => 'accounts', 'access' => 'groups', 'reports' => 'automation', 'delete' => 'delete'] as $view => $category) {
+foreach (['profile' => 'consult', 'access' => 'consult', 'compare' => 'accounts', 'addgroups' => 'groups', 'reports' => 'automation', 'delete' => 'delete'] as $view => $category) {
     $toolPage = $admin->get('index.php?option=com_usertools&view=' . $view);
     Test::check(utMenuLinks($toolPage)[$category]['active'] ?? false, 'tool ' . $view . ' keeps its category active');
     Test::check(str_contains($toolPage, 'Back to '), 'tool ' . $view . ' has a toolbar link back to its category');
@@ -89,7 +90,7 @@ $menuDelegate = new Client($url);
 $menuDelegate->login('delegate', $delegatePassword);
 $limitedHome = $menuDelegate->get('index.php?option=com_usertools&view=home');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $limitedHome, $limitedCards);
-Test::check(array_keys(utMenuLinks($limitedHome)) === ['', 'accounts'] && $limitedCards[1] === ['profile'],
+Test::check(array_keys(utMenuLinks($limitedHome)) === ['', 'consult'] && $limitedCards[1] === ['profile'],
     'one permitted tool yields only Home, its category and that tool');
 [$limitedCategory] = $menuDelegate->request('index.php?option=com_usertools&view=home&section=groups');
 [$limitedTool] = $menuDelegate->request('index.php?option=com_usertools&view=move');
@@ -98,7 +99,7 @@ Test::check($limitedCategory === 403 && $limitedTool === 403 && $limitedSchedule
     'category URL, Super User tool and native scheduler permission are enforced on direct requests');
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.access' => ['6' => 1]])]);
 $changedHome = $menuDelegate->get('index.php?option=com_usertools&view=home');
-Test::check(array_keys(utMenuLinks($changedHome)) === ['', 'groups'] && !str_contains($changedHome, 'data-ut-home-card="profile"'),
+Test::check(array_keys(utMenuLinks($changedHome)) === ['', 'consult'] && str_contains($changedHome, 'data-ut-home-card="access"') && !str_contains($changedHome, 'data-ut-home-card="profile"'),
     'changing permissions changes the menu and home on the next request');
 [$withdrawnCategory] = $menuDelegate->request('index.php?option=com_usertools&view=home&section=accounts');
 Test::check($withdrawnCategory === 403, 'withdrawing the last tool permission withdraws category access');
@@ -114,9 +115,9 @@ Test::check(utMenuLinks($withdrawnMenu) === [] && $withdrawnHome === 403,
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_scheduler'", [$menuSchedulerRules]);
 $outsidePage = $admin->get('index.php?option=com_users&view=users');
-Test::check(array_keys(utMenuLinks($outsidePage)) === ['', 'accounts', 'groups', 'automation', 'delete'],
+Test::check(array_keys(utMenuLinks($outsidePage)) === ['', 'consult', 'accounts', 'groups', 'automation', 'delete'],
     'the navigation integration also runs outside the component');
 $usersDashboard = $admin->get('index.php?option=com_cpanel&view=cpanel&dashboard=users');
 preg_match_all('/data-ut-dashboard-links-category="([a-z]+)"/', $usersDashboard, $dashboardCategories);
-Test::check($dashboardCategories[1] === ['accounts', 'groups', 'automation', 'delete'],
-    'Users dashboard shortcuts use the same four catalogue categories');
+Test::check($dashboardCategories[1] === ['consult', 'accounts', 'groups', 'automation', 'delete'],
+    'Users dashboard shortcuts use the same five catalogue categories');

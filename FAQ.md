@@ -438,7 +438,7 @@ Requiere el permiso *Ver el diagnóstico de accesos*. Los superusuarios lo tiene
 
 ### ¿Cómo abro directamente una categoría de User Tools?
 
-Despliega **Componentes → User Tools**: Inicio conserva la portada completa y las otras cuatro entradas abren cada categoría. Solo aparecen las categorías con herramientas que puedes usar. Los accesos del panel siguen la misma clasificación; una categoría visible no concede permisos adicionales. Consulta la [navegación por categorías](README.md#navegación-por-categorías).
+Despliega **Componentes → User Tools**: Inicio conserva la portada completa y las otras cinco entradas abren cada categoría. Solo aparecen las categorías con herramientas que puedes usar. Los accesos del panel siguen la misma clasificación; una categoría visible no concede permisos adicionales. Consulta la [navegación por categorías](README.md#navegación-por-categorías).
 
 ### ¿Por qué falta una categoría o no queda señalada la herramienta?
 
