@@ -8,7 +8,7 @@ These shared screenshots show the Spanish interface on Joomla 6.2.0. Each captio
 
 Besides these screenshots, CI checks keyboard order, menu expansion and the active category, and saves captures at 200% text size, with a dark preference and at 390 px width. The cards and forms fit at 390 px, but Joomla’s overall header does not wrap the page title and produces a document width of about 600 px, and up to about 780 px with the longest titles, such as “Hand over content and close an account”; the template has not been altered to hide this. This does not establish WCAG conformance or replace screen-reader testing.
 
-![User Tools home screen with its five categories by purpose and all permitted tools, and the Components → User Tools menu expanded with Home active (2026.11.7, Spanish interface)](screenshots/01-portada.jpg)
+![User Tools home screen with its logo, its five categories by purpose and all permitted tools, and the Components → User Tools menu expanded with Home active (2026.11.7, Spanish interface)](screenshots/01-portada.jpg)
 
 ![“Look up and reports” category, marked in the menu, with its eight read-only tools (2026.11.7, Spanish interface)](screenshots/48-menu-consultar.jpg)
 
