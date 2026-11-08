@@ -46,25 +46,28 @@ class AgeModel extends BaseDatabaseModel
     }
 
     /**
-     * One page of the items of a kind last modified in a year.
+     * One page of the items of a kind last modified in a year (ContentAge::ALL_YEARS: every year).
      *
      * @return array{items: list<array<string, mixed>>, total: int, page: int}
      */
-    public function getList(string $kind, int $year, int $level, int $page): array
+    public function getList(string $kind, int $year, int $level, int $page, string $order = ContentAge::ORDER_MODIFIED): array
     {
         $this->assertKind($kind);
         $total = $this->reader()->count($kind, $year, $level);
         $page  = ContentAge::page($page, $total);
-        return ['items' => $this->reader()->items($kind, $year, $level, ($page - 1) * ContentAge::PAGE_SIZE, ContentAge::PAGE_SIZE), 'total' => $total, 'page' => $page];
+        return ['items' => $this->reader()->items($kind, $year, $level, ($page - 1) * ContentAge::PAGE_SIZE, ContentAge::PAGE_SIZE, $order), 'total' => $total, 'page' => $page];
     }
 
-    /** The table, or the items of one year when a kind and a year are given, as a CSV file. */
-    public function csv(string $kind, int $year, int $level): string
+    /**
+     * The table, or the items of a list when a kind is given with a year or ContentAge::ALL_YEARS
+     * ($year null means the table), as a CSV file. The list keeps the order of the screen.
+     */
+    public function csv(string $kind, ?int $year, int $level, string $order = ContentAge::ORDER_MODIFIED): string
     {
         $text = fn (string $key, string $argument = '') => $argument === '' ? Text::_($key) : Text::sprintf($key, $argument);
-        if ($kind !== '' && $year > 0) {
+        if ($kind !== '' && $year !== null) {
             $this->assertKind($kind);
-            $table = ContentAge::exportItems($this->reader()->items($kind, $year, $level), $text, ContentAgeReader::KINDS[$kind]['categoryLabel'] ?? 'COM_USERTOOLS_AGE_CATEGORY');
+            $table = ContentAge::exportItems($this->reader()->items($kind, $year, $level, 0, 0, $order), $text, ContentAgeReader::KINDS[$kind]['categoryLabel'] ?? 'COM_USERTOOLS_AGE_CATEGORY');
         } else {
             $table = ContentAge::export($this->getYears($level), $text);
         }

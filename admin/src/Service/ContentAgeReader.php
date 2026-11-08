@@ -27,21 +27,22 @@ final class ContentAgeReader
      * Kinds of item with a creation and a modification date: table, columns, the component that
      * manages them and the screens to open. A new kind is declared here and nowhere else. Modules,
      * menu items and plugins are left out on purpose: Joomla stores no modification date for them.
+     * `hits` is Joomla's view counter: a total since the item exists, with no date of the last view.
      * `category` is the column joined to #__categories (the parent, for categories themselves),
      * `scope` limits the rows of a shared table and `categoryAccess: false` skips the access check on
      * that joined category, as Joomla's category list only checks each category's own level.
      */
     public const KINDS = [
-        'articles' => ['table' => '#__content', 'title' => 'title', 'state' => 'state', 'category' => 'catid', 'created' => 'created', 'modified' => 'modified',
+        'articles' => ['table' => '#__content', 'title' => 'title', 'state' => 'state', 'category' => 'catid', 'created' => 'created', 'modified' => 'modified', 'hits' => 'hits',
             'author' => 'created_by', 'label' => 'COM_USERTOOLS_USAGE_ARTICLES', 'asset' => 'com_content',
             'item' => 'com_content.article.{id}', 'edit' => 'index.php?option=com_content&task=article.edit&id={id}'],
-        'categories' => ['table' => '#__categories', 'title' => 'title', 'state' => 'published', 'category' => 'parent_id', 'created' => 'created_time', 'modified' => 'modified_time',
+        'categories' => ['table' => '#__categories', 'title' => 'title', 'state' => 'published', 'category' => 'parent_id', 'created' => 'created_time', 'modified' => 'modified_time', 'hits' => 'hits',
             'author' => 'created_user_id', 'scope' => ['extension', 'com_content'], 'categoryAccess' => false, 'label' => 'COM_USERTOOLS_AGE_KIND_CATEGORIES', 'categoryLabel' => 'COM_USERTOOLS_AGE_PARENT_CATEGORY', 'asset' => 'com_content',
             'item' => 'com_content.category.{id}', 'edit' => 'index.php?option=com_categories&task=category.edit&id={id}&extension=com_content'],
-        'contacts' => ['table' => '#__contact_details', 'title' => 'name', 'state' => 'published', 'category' => 'catid', 'created' => 'created', 'modified' => 'modified',
+        'contacts' => ['table' => '#__contact_details', 'title' => 'name', 'state' => 'published', 'category' => 'catid', 'created' => 'created', 'modified' => 'modified', 'hits' => 'hits',
             'author' => 'created_by', 'label' => 'COM_USERTOOLS_USAGE_CONTACTS', 'asset' => 'com_contact',
             'item' => 'com_contact.contact.{id}', 'edit' => 'index.php?option=com_contact&task=contact.edit&id={id}'],
-        'newsfeeds' => ['table' => '#__newsfeeds', 'title' => 'name', 'state' => 'published', 'category' => 'catid', 'created' => 'created', 'modified' => 'modified',
+        'newsfeeds' => ['table' => '#__newsfeeds', 'title' => 'name', 'state' => 'published', 'category' => 'catid', 'created' => 'created', 'modified' => 'modified', 'hits' => 'hits',
             'author' => 'created_by', 'label' => 'COM_USERTOOLS_USAGE_NEWSFEEDS', 'asset' => 'com_newsfeeds',
             'item' => 'com_newsfeeds.newsfeed.{id}', 'edit' => 'index.php?option=com_newsfeeds&task=newsfeed.edit&id={id}'],
     ];
@@ -78,7 +79,7 @@ final class ContentAgeReader
         return $counts;
     }
 
-    /** Number of items last modified in a year. */
+    /** Number of items last modified in a year (0: every year). */
     public function count(string $kind, int $year, int $level = 0): int
     {
         $query = $this->inYear($this->base($kind, $level), $kind, $year)->select('COUNT(*)');
@@ -86,11 +87,12 @@ final class ContentAgeReader
     }
 
     /**
-     * Items last modified in a year, oldest first.
+     * Items last modified in a year (0: every year), oldest first, or with the fewest views first
+     * (ContentAge::ORDER_HITS; the oldest first among equal counts).
      *
-     * @return list<array{id: int, title: string, category: string, level: string, access: int, author: string, created_by: int, state: int, created: ?string, modified: ?string}>
+     * @return list<array{id: int, title: string, category: string, level: string, access: int, author: string, created_by: int, state: int, created: ?string, modified: ?string, hits: int}>
      */
-    public function items(string $kind, int $year, int $level = 0, int $offset = 0, int $limit = 0): array
+    public function items(string $kind, int $year, int $level = 0, int $offset = 0, int $limit = 0, string $order = ContentAge::ORDER_MODIFIED): array
     {
         $db     = $this->db;
         $source = self::KINDS[$kind];
@@ -98,12 +100,14 @@ final class ContentAgeReader
             ->select([
                 $db->quoteName('a.id'), $db->quoteName('a.' . $source['author'], 'created_by'), $db->quoteName('a.' . $source['title'], 'title'), $db->quoteName('a.access'),
                 $db->quoteName('a.' . $source['created'], 'created'), $db->quoteName('a.' . $source['modified'], 'modified'),
-                $db->quoteName('a.' . $source['state'], 'state'), $db->quoteName('c.title', 'category'), $db->quoteName('c.parent_id', 'category_parent'),
+                $db->quoteName('a.' . $source['state'], 'state'), $db->quoteName('a.' . $source['hits'], 'hits'), $db->quoteName('c.title', 'category'), $db->quoteName('c.parent_id', 'category_parent'),
                 $db->quoteName('u.name', 'author'), $db->quoteName('l.title', 'level'),
             ])
             ->join('LEFT', $db->quoteName('#__users', 'u'), $db->quoteName('u.id') . ' = ' . $db->quoteName('a.' . $source['author']))
             ->join('LEFT', $db->quoteName('#__viewlevels', 'l'), $db->quoteName('l.id') . ' = ' . $db->quoteName('a.access'))
-            ->order([$this->dateColumn($kind), $db->quoteName('a.id')]);
+            ->order($order === ContentAge::ORDER_HITS
+                ? [$db->quoteName('a.' . $source['hits']), $this->dateColumn($kind), $db->quoteName('a.id')]
+                : [$this->dateColumn($kind), $db->quoteName('a.id')]);
         $items = [];
         foreach ($db->setQuery($query, $offset, $limit)->loadObjectList() as $row) {
             $items[] = [
@@ -118,6 +122,7 @@ final class ContentAgeReader
                 'state'    => (int) $row->state,
                 'created'  => $row->created !== null ? substr((string) $row->created, 0, 19) : null,
                 'modified' => $row->modified !== null ? substr((string) $row->modified, 0, 19) : null,
+                'hits'     => (int) $row->hits,
             ];
         }
         return $items;
@@ -168,6 +173,9 @@ final class ContentAgeReader
 
     private function inYear(QueryInterface $query, string $kind, int $year): QueryInterface
     {
+        if ($year === ContentAge::ALL_YEARS) {
+            return $query;
+        }
         [$start, $end] = ContentAge::bounds($year);
         return $query->where($this->dateColumn($kind) . ' >= :start')->where($this->dateColumn($kind) . ' < :end')
             ->bind(':start', $start)->bind(':end', $end);

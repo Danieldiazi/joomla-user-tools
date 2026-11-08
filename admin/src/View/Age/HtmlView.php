@@ -16,6 +16,7 @@ use Danieldiazi\Component\Usertools\Administrator\Service\ContentAgeReader;
 use Danieldiazi\Component\Usertools\Administrator\Service\UserFacingException;
 use Danieldiazi\Component\Usertools\Administrator\View\ViewTrait;
 use Joomla\CMS\Access\Exception\NotAllowed;
+use Joomla\CMS\Component\ComponentHelper;
 use Joomla\CMS\Factory;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\MVC\View\HtmlView as BaseHtmlView;
@@ -36,7 +37,12 @@ class HtmlView extends BaseHtmlView
 
     public int $level = 0;
     public string $kind = '';
+    /** The year of the list, or ContentAge::ALL_YEARS. */
     public int $year = 0;
+    public string $order = ContentAge::ORDER_MODIFIED;
+
+    /** False when com_content does not record article views ("Record Hits" in the Articles options). */
+    public bool $recordsHits = true;
     public string $error = '';
 
     public function display($tpl = null): void
@@ -48,12 +54,15 @@ class HtmlView extends BaseHtmlView
         try {
             $this->levels = $model->getLevels();
             if ($this->getLayout() === 'list') {
-                $this->kind = $input->getCmd('kind', '');
-                $this->year = ContentAge::year($input->getInt('year', 0));
-                if ($this->year === 0 || !$this->canList($this->kind)) {
+                $this->kind  = $input->getCmd('kind', '');
+                $year        = ContentAge::listYear($input->getCmd('year', ''));
+                $this->order = ContentAge::order($input->getCmd('order', ''));
+                if ($year === null || !$this->canList($this->kind)) {
                     throw new NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
                 }
-                $this->list = $model->getList($this->kind, $this->year, $this->level, max(1, $input->getInt('page', 1)));
+                $this->year        = $year;
+                $this->recordsHits = $this->kind !== 'articles' || (int) ComponentHelper::getParams('com_content')->get('record_hits', 1) === 1;
+                $this->list        = $model->getList($this->kind, $this->year, $this->level, max(1, $input->getInt('page', 1)), $this->order);
             } else {
                 $this->table = $model->getYears($this->level);
             }

@@ -42,6 +42,7 @@ $export   = fn (string $shape) => Route::_('index.php?option=com_usertools&task=
     <div class="ut-access-tools">
       <input type="search" class="form-control ut-filter" placeholder="<?= Text::_('COM_USERTOOLS_ACCESS_FILTER') ?>" aria-label="<?= Text::_('COM_USERTOOLS_ACCESS_FILTER') ?>" data-ut-filter="ut-access-table">
       <a class="btn btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools&view=usage') ?>"><?= Text::_('COM_USERTOOLS_ACCESS_TO_USAGE') ?></a>
+      <a class="btn btn-outline-secondary" href="<?= Route::_('index.php?option=com_usertools&view=reach') ?>"><?= Text::_('COM_USERTOOLS_ACCESS_TO_REACH') ?></a>
       <div class="btn-group" role="group" aria-label="<?= Text::_('COM_USERTOOLS_EXPORT_CSV') ?>">
         <a class="btn btn-outline-secondary" href="<?= $export(AccessMatrix::EXPORT_MATRIX) ?>" data-ut-export="matrix" title="<?= Text::_('COM_USERTOOLS_ACCESS_EXPORT_MATRIX_DESC') ?>"><?= Text::_('COM_USERTOOLS_ACCESS_EXPORT_MATRIX') ?></a>
         <a class="btn btn-outline-secondary" href="<?= $export(AccessMatrix::EXPORT_PAIRS) ?>" data-ut-export="pairs" title="<?= Text::_('COM_USERTOOLS_ACCESS_EXPORT_PAIRS_DESC') ?>"><?= Text::_('COM_USERTOOLS_ACCESS_EXPORT_PAIRS') ?></a>

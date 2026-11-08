@@ -25,8 +25,9 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 | Quitar de grupos | Elige una cuenta, desmarca los grupos de los que debe salir y, si quieres, quítala también de todos sus subgrupos. Con revisión previa y confirmación. Disponible desde 2026.10.9. |
 | Mover grupos | Cambia de una vez el grupo padre de varios grupos, con sus subgrupos, tras revisar qué niveles ganan o pierden sus miembros. Rechaza los movimientos que cambiarían el acceso a la administración. Solo superusuarios. Disponible desde 2026.10.16. |
 | Grupos y niveles de acceso | Tabla de solo lectura con los niveles de acceso que tiene cada grupo, asignados o heredados. Disponible desde 2026.10.9. |
+| Alcance de cada grupo | Por grupo, las cuentas activas (también las de sus subgrupos), con su lista, y cuántos artículos ven sus miembros y cuántos solo ve esa rama; señala los grupos con pocas cuentas. Solo lee. |
 | Contenido por nivel de acceso | Cuántos artículos, categorías, menús, módulos, campos y demás elementos usan cada nivel, con enlace a cada listado filtrado. Solo lee. Disponible desde 2026.10.12. |
-| Contenido por antigüedad | Tabla por años con cuántos artículos, categorías de artículos, contactos y canales de noticias se modificaron por última vez en cada uno, filtrable por nivel de acceso; cada cifra abre la lista de esos elementos con enlace para editarlos. Solo lee. Disponible desde 2026.10.15. |
+| Contenido por antigüedad | Tabla por años con cuántos artículos, categorías de artículos, contactos y canales de noticias se modificaron por última vez en cada uno, filtrable por nivel de acceso; cada cifra abre la lista de esos elementos con sus visitas y enlace para editarlos, ordenable por menos visitas. Solo lee. Disponible desde 2026.10.15. |
 | Diagnóstico de accesos | Señala cuentas con acceso a la administración sin actividad, si queda un solo superusuario, niveles de acceso que no tiene nadie, contenido con niveles que no existen y grupos sin miembros. Explica cada aviso y solo lee. Disponible desde 2026.10.15. |
 
 **Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
@@ -60,6 +61,7 @@ La portada y el menú de Componentes organizan las herramientas en **Revisar cue
 - [Quitar de grupos](#quitar-de-grupos)
 - [Mover grupos](#mover-grupos)
 - [Grupos y niveles de acceso](#grupos-y-niveles-de-acceso)
+- [Alcance de cada grupo](#alcance-de-cada-grupo)
 - [Contenido por nivel de acceso](#contenido-por-nivel-de-acceso)
 - [Contenido por antigüedad](#contenido-por-antigüedad)
 - [Diagnóstico de accesos](#diagnóstico-de-accesos)
@@ -102,7 +104,7 @@ En **Componentes → User Tools** puedes abrir **Inicio** o una de las cuatro ca
 | Categoría | Herramientas |
 |---|---|
 | Revisar cuentas | Ficha de una persona, explicar acceso a contenido, comparar lista, exportar cuentas, revisar inactivos y deshacer bloqueos. |
-| Grupos y niveles de acceso | Añadir y quitar de grupos, mover grupos, grupos/niveles, contenido por nivel, contenido por antigüedad y diagnóstico. |
+| Grupos y niveles de acceso | Añadir y quitar de grupos, mover grupos, grupos/niveles, alcance de cada grupo, contenido por nivel, contenido por antigüedad y diagnóstico. |
 | Automatización y seguimiento | Configuración del bloqueo automático y resultados/informes. |
 | Eliminar y anonimizar cuentas | Las dos herramientas permanentes, con sus advertencias y confirmaciones. |
 
@@ -499,6 +501,26 @@ Los dos ficheros están en UTF-8 con BOM y separados por punto y coma, para que 
 
 Los títulos de grupos y niveles enlazan con su edición en Joomla para quien tiene el permiso de administrar Usuarios (el mismo que exige Joomla para esas pantallas), y las cifras de cuentas enlazan con el gestor de usuarios para quien puede gestionar usuarios. La pantalla requiere el permiso propio *Ver grupos, niveles y contenido por nivel*: los superusuarios lo tienen; a los demás hay que concedérselo en Opciones → Permisos.
 
+## Alcance de cada grupo
+
+**Alcance de cada grupo** ayuda a decidir qué grupos o niveles de acceso merece la pena revisar o retirar. Para cada grupo dice a cuántas cuentas afecta y cuántos artículos ven sus miembros. Joomla solo da esto por separado: el gestor de usuarios filtra por los miembros directos de un grupo, y los listados de artículos, por un nivel cada vez. Esta pantalla solo lee lo que ya guarda Joomla: no usa tablas propias ni cambia grupos, niveles, cuentas ni artículos.
+
+- **Filas**: los grupos, en su árbol, con las mismas etiquetas que en «Grupos y niveles de acceso» (superusuarios, acceso a la administración e invitados).
+- **Cuentas en el grupo**: las activas asignadas directamente, como en «Grupos y niveles de acceso».
+- **Cuentas con subgrupos**: las activas del grupo y de todos los que cuelgan de él, sin repetir a quien esté en varios. Son las que heredan sus niveles. Las cuentas bloqueadas no se cuentan.
+  - **Pocas cuentas**: la etiqueta marca los grupos con al menos una cuenta y menos de las indicadas en «Marcar grupos con menos de estas cuentas», 5 por defecto. Los grupos sin ninguna se marcan «Sin cuentas»; el diagnóstico de accesos ya los avisa.
+  - **Lista de cuentas**: la cifra abre la lista de esas cuentas, de 50 en 50 y por nombre de usuario, con su nombre, los grupos de la rama a los que pertenecen y las fechas de último acceso y de alta. El nombre abre su ficha. No muestra correos, e indica cuántas cuentas bloqueadas hay sin listarlas. Para quitar a alguien de un grupo está «Quitar de grupos».
+- **Niveles que ve**: los niveles de acceso del grupo, asignados o heredados, más *Público*. Los grupos de superusuarios los ven todos.
+- **Artículos que puede ver**: los artículos que puede abrir en el sitio alguien que solo pertenezca a ese grupo. Se cuentan con las mismas condiciones que comprueba Joomla al abrir un artículo:
+  - el artículo está publicado o archivado y dentro de sus fechas de publicación;
+  - su categoría está publicada o archivada;
+  - el grupo tiene el nivel del artículo **y** el de su categoría.
+
+  Quien está en varios grupos ve lo de todos ellos, así que la cifra describe el grupo, no a una persona concreta.
+- **Solo los ve esta rama**: los artículos que no puede ver ningún grupo fuera de este y de sus subgrupos. Si se dejara de usar la rama, solo los verían los superusuarios y las cuentas asignadas una a una a su nivel, que aquí no se tienen en cuenta. Por ejemplo, si el nivel *Socios* solo lo tiene el grupo «Socios», sus artículos son exclusivos de esa rama. En cambio, los artículos *Registrado* nunca lo son de «Registrado», porque también los ve «Manager». En un grupo de superusuarios, la cifra son los artículos que no puede ver ningún otro grupo. En «Public», del que cuelgan todos, coincide siempre con el total.
+
+Un cuadro de búsqueda filtra los grupos. **Exportar CSV** descarga la tabla con el ID, la ruta completa de cada grupo, las cifras y los niveles (UTF-8 con BOM y punto y coma); no incluye cuentas. La pantalla usa el permiso *Ver grupos, niveles y contenido por nivel*. La lista de cuentas exige además poder gestionar usuarios en Joomla (el mismo permiso que el gestor de usuarios); sin él, las cifras se ven pero sin enlace. Se llega desde la portada o con el botón «Ver alcance de cada grupo» de «Grupos y niveles de acceso».
+
 ## Contenido por nivel de acceso
 
 Desde la 2026.10.12, **Contenido por nivel de acceso** cuenta qué elementos usa cada nivel de acceso. Joomla solo permite verlo listado a listado, con el filtro «Acceso» de cada uno, o intentando borrar el nivel, que dice en qué tablas se usa pero no qué elementos ni cuántos. Esta pantalla solo lee.
@@ -528,9 +550,13 @@ Desde la 2026.10.15, **Contenido por antigüedad** muestra cuánto contenido lle
 - **Fecha**: la de última modificación (UTC, como la guarda Joomla). Un artículo de 2015 revisado el mes pasado cuenta en el año actual.
 - **Estados**: los publicados, despublicados y archivados cuentan; los de la papelera no.
 - **Filtro por nivel de acceso**: cuenta solo los elementos con ese nivel, para ver qué niveles acumulan contenido antiguo.
-- **Lista de un año**: cada cifra abre los elementos de ese año y tipo, del modificado hace más tiempo al más reciente, con título, categoría (en las categorías, su categoría padre; vacía si es de primer nivel), nivel de acceso, autor, estado y fechas de creación y modificación, 50 por página. El título enlaza a la edición en Joomla si puedes editarlo.
+- **Lista de un año**: cada cifra abre los elementos de ese año y tipo, del modificado hace más tiempo al más reciente, con título, categoría (en las categorías, su categoría padre; vacía si es de primer nivel), nivel de acceso, autor, estado, fechas de creación y modificación y visitas, 50 por página. El título enlaza a la edición en Joomla si puedes editarlo. El total de cada columna, en la fila de totales, abre la misma lista con los elementos de todos los años.
+- **Visitas**: el contador que guarda Joomla de cada elemento, el mismo de la columna «Visitas» de sus listados. El botón **Menos visitas** ordena la lista de menos a más visitas y, con las mismas, del modificado hace más tiempo. Así se ven juntos los elementos que casi nadie abre y que llevan tiempo sin tocarse. Joomla solo guarda el total desde que existe el elemento, no la fecha de la última visita, así que la lista no puede decir desde cuándo nadie lo abre. Además:
+  - el contador no sube cuando la página sale de la caché de páginas, ni cuando el elemento aparece en un blog o un listado;
+  - también cuentan las visitas de robots;
+  - si en Contenido → Artículos → Opciones está desactivado «Registrar visitas», la lista lo avisa, porque las visitas de los artículos no avanzan.
 
-**Exportar CSV** descarga la tabla o, desde una lista, todos sus elementos (UTF-8 con BOM y punto y coma). La pantalla necesita el permiso *Ver contenido por antigüedad*; la lista de títulos requiere además poder gestionar ese tipo en Joomla: artículos y categorías en Contenido, contactos en Contactos y canales en Canales de noticias. El filtro, las cifras, los totales, las listas y los CSV respetan los niveles de acceso autorizados del elemento y de su categoría (las categorías, solo el suyo), como los listados de Joomla; los superusuarios globales conservan la vista completa. «Editar propios» solo muestra el enlace en elementos creados por el propio usuario. Sin ese permiso, las cifras se ven pero sin enlace.
+**Exportar CSV** descarga la tabla o, desde una lista, todos sus elementos con sus visitas y en el orden elegido (UTF-8 con BOM y punto y coma). La pantalla necesita el permiso *Ver contenido por antigüedad*; la lista de títulos requiere además poder gestionar ese tipo en Joomla: artículos y categorías en Contenido, contactos en Contactos y canales en Canales de noticias. El filtro, las cifras, los totales, las listas y los CSV respetan los niveles de acceso autorizados del elemento y de su categoría (las categorías, solo el suyo), como los listados de Joomla; los superusuarios globales conservan la vista completa. «Editar propios» solo muestra el enlace en elementos creados por el propio usuario. Sin ese permiso, las cifras se ven pero sin enlace.
 
 ![Contenido por antigüedad: tabla por años](docs/screenshots/20-contenido-antiguedad.jpg)
 

@@ -35,16 +35,29 @@ final class ContentAgeTest extends TestCase
         $this->assertSame(1, ContentAge::page(-3, 500));
     }
 
+    public function testListYearAndOrder(): void
+    {
+        $this->assertSame(ContentAge::ALL_YEARS, ContentAge::listYear('all'), 'year=all lists every year');
+        $this->assertSame(2019, ContentAge::listYear('2019'));
+        $this->assertNull(ContentAge::listYear(''), 'no year is not a list');
+        $this->assertNull(ContentAge::listYear('0'), 'zero is not "all": only the word is');
+        $this->assertNull(ContentAge::listYear('1800'));
+        $this->assertSame(ContentAge::ORDER_HITS, ContentAge::order('hits'));
+        $this->assertSame(ContentAge::ORDER_MODIFIED, ContentAge::order(''));
+        $this->assertSame(ContentAge::ORDER_MODIFIED, ContentAge::order('title; DROP'), 'unknown orders keep the default');
+    }
+
     public function testListExportAndLabels(): void
     {
         $items = [
-            ['id' => 5, 'title' => '=cmd', 'category' => 'News', 'level' => 'Public', 'access' => 1, 'author' => 'Ana', 'state' => 2, 'created' => '2010-01-01 00:00:00', 'modified' => '2012-01-01 00:00:00'],
-            ['id' => 6, 'title' => 'Lost', 'category' => '', 'level' => '', 'access' => 77, 'author' => '', 'state' => 0, 'created' => '2011-01-01 00:00:00', 'modified' => null],
+            ['id' => 5, 'title' => '=cmd', 'category' => 'News', 'level' => 'Public', 'access' => 1, 'author' => 'Ana', 'state' => 2, 'created' => '2010-01-01 00:00:00', 'modified' => '2012-01-01 00:00:00', 'hits' => 12],
+            ['id' => 6, 'title' => 'Lost', 'category' => '', 'level' => '', 'access' => 77, 'author' => '', 'state' => 0, 'created' => '2011-01-01 00:00:00', 'modified' => null, 'hits' => 0],
         ];
         $text  = fn (string $key, string $arg = '') => $arg === '' ? $key : "$key($arg)";
         $table = ContentAge::exportItems($items, $text);
-        $this->assertCount(8, $table['header']);
-        $this->assertSame([5, '=cmd', 'News', 'Public', 'Ana', 'JARCHIVED', '2010-01-01 00:00:00', '2012-01-01 00:00:00'], $table['rows'][0],
+        $this->assertCount(9, $table['header']);
+        $this->assertSame('COM_USERTOOLS_AGE_HITS', $table['header'][8], 'the hits are the last column');
+        $this->assertSame([5, '=cmd', 'News', 'Public', 'Ana', 'JARCHIVED', '2010-01-01 00:00:00', '2012-01-01 00:00:00', 12], $table['rows'][0],
             'formula protection is left to CsvExport');
         $this->assertSame('COM_USERTOOLS_USAGE_MISSING_LEVEL(77)', $table['rows'][1][3], 'a missing level is named by its ID');
         $this->assertSame(['JPUBLISHED', 'JUNPUBLISHED', 'JARCHIVED', 'JTRASHED'], array_map([ContentAge::class, 'stateKey'], [1, 0, 2, -2]));
@@ -54,7 +67,7 @@ final class ContentAgeTest extends TestCase
     {
         $this->assertSame(['articles', 'categories', 'contacts', 'newsfeeds'], array_keys(ContentAgeReader::KINDS));
         foreach (ContentAgeReader::KINDS as $key => $kind) {
-            foreach (['table', 'title', 'state', 'category', 'created', 'modified', 'author', 'label', 'asset', 'item', 'edit'] as $field) {
+            foreach (['table', 'title', 'state', 'category', 'created', 'modified', 'hits', 'author', 'label', 'asset', 'item', 'edit'] as $field) {
                 $this->assertNotSame('', (string) ($kind[$field] ?? ''), $key . ' needs ' . $field);
             }
             $this->assertStringContainsString('{id}', $kind['item'], $key);

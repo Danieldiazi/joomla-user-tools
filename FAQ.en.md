@@ -72,7 +72,7 @@ No. List comparison, manual inactivity review, inactivity deletion and **each** 
 
 ### Who can use it?
 
-Super Users and users with the corresponding delegated permissions under **Options → Permissions**. There are separate permissions for viewing profiles, explaining content access, comparison and blocking, account creation, inactivity review, inactivity deletion, viewing task results, bulk updating names, removing from groups, viewing groups, levels and content by level, viewing content by age and viewing the access diagnosis. Deletion is restricted to Super Users until you explicitly grant it to others. Access to the component also requires `core.manage`.
+Super Users and users with the corresponding delegated permissions under **Options → Permissions**. There are separate permissions for viewing profiles, explaining content access, comparison and blocking, account creation, inactivity review, inactivity deletion, viewing task results, bulk updating names, removing from groups, viewing groups, levels, the reach of each group and content by level, viewing content by age and viewing the access diagnosis. Deletion is restricted to Super Users until you explicitly grant it to others. Access to the component also requires `core.manage`.
 
 ### Does it need JavaScript?
 
@@ -362,6 +362,18 @@ It only appears when some level has accounts assigned directly, without a group.
 
 With **Content by access level**, since 2026.10.12. For each level it counts the articles, categories, menu items, modules, fields, plugins and other items that use it, and each number links to Joomla's list already filtered. Tables of other extensions with an `access` column, such as attachments, are counted as a whole. Details in the [README](README.en.md#content-by-access-level).
 
+### How do I see how many accounts each group has, counting its subgroups, and who they are?
+
+With **Reach of each group**. For each group it counts the active accounts assigned directly and those of everything below it, and marks the groups with fewer than the given number (5 by default). The number opens the list of those accounts, with their profile one click away, if you can manage users in Joomla. Details in the [README](README.en.md#reach-of-each-group).
+
+### How many articles does each group view? Can I know which ones someone would stop viewing if I retire a group?
+
+«Reach of each group» counts the articles that someone who only belongs to that group can open on the site: published or archived, within their dates and with their level and their category's level within the group's reach. The «Only this branch views» column says how many no group outside this one and its subgroups views. Those are the ones that would be left only to Super Users if you stopped using the branch. Someone in several groups views what all of them view, so it is worth checking their other groups too.
+
+### Why does «Public» have all its articles in «Only this branch views»?
+
+Because every group hangs from «Public»: no group is outside its branch. For the other groups the number does tell what they share with others from what is only theirs.
+
 ### Can I delete an access level without breaking anything?
 
 Joomla does not let you delete a level used by any item, including those in the trash. «Content by access level» shows which items use it, so you can change their level first, and the levels no item uses are listed below the table. Keep in mind that a level can also be used only to grant view permissions to groups without having content of its own.
@@ -375,6 +387,10 @@ It requires the *View groups, levels and content by level* permission. Super Use
 ### How do I see the articles nobody has touched for years?
 
 With **Content by age**, since 2026.10.15. It shows a table by year based on the last modification date, and each number opens the list of those articles with a link to edit them. It also counts article categories, contacts and news feeds. Details in the [README](README.en.md#content-by-age).
+
+### Can I see which articles have not been visited in the last months?
+
+Not exactly: Joomla stores how many times each article has been opened, but not when the last time was, and User Tools adds no table of its own to record it. What you can do is open the list of one year, or that of every year with the column total, and select **Fewest hits**. You will see together the articles with the fewest hits and their modification date. Bear in mind that the counter does not go up with the page cache enabled, that robots' hits count too and that it only changes if «Record Hits» is enabled in the Articles options; if it is not, the list warns about it.
 
 ### Why are modules, menus and plugins not shown?
 

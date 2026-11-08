@@ -25,8 +25,9 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 | Remove from groups | Choose an account, untick the groups it should leave and, if you want, also remove it from all their subgroups. With a review and a confirmation. Available since 2026.10.9. |
 | Move groups | Changes the parent of several groups at once, with their subgroups, after reviewing which levels their members gain or lose. Refuses moves that would change administrator access. Super Users only. Available since 2026.10.16. |
 | Groups and access levels | Read-only table of the access levels each group has, assigned or inherited. Available since 2026.10.9. |
+| Reach of each group | For each group, the active accounts (including those of its subgroups), with their list, and how many articles its members view and how many only that branch views; flags groups with few accounts. Read only. |
 | Content by access level | How many articles, categories, menu items, modules, fields and other items use each level, with a link to each filtered list. Read only. Available since 2026.10.12. |
-| Content by age | Table by year with how many articles, article categories, contacts and news feeds were last modified in each one, filterable by access level; each number opens the list of those items with a link to edit them. Read only. Available since 2026.10.15. |
+| Content by age | Table by year with how many articles, article categories, contacts and news feeds were last modified in each one, filterable by access level; each number opens the list of those items with their hits and a link to edit them, sortable by fewest hits. Read only. Available since 2026.10.15. |
 | Access diagnosis | Points out accounts with administrator access and no activity, a single remaining Super User, access levels nobody has, content with levels that do not exist and groups with no members. It explains each notice and is read only. Available since 2026.10.15. |
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
@@ -60,6 +61,7 @@ The home screen and Components menu organise tools into **Review accounts**, **G
 - [Remove from groups](#remove-from-groups)
 - [Move groups](#move-groups)
 - [Groups and access levels](#groups-and-access-levels)
+- [Reach of each group](#reach-of-each-group)
 - [Content by access level](#content-by-access-level)
 - [Content by age](#content-by-age)
 - [Access diagnosis](#access-diagnosis)
@@ -102,7 +104,7 @@ Under **Components → User Tools**, open **Home** or one of the home screen's f
 | Category | Tools |
 |---|---|
 | Review accounts | Account profile, explain content access, compare a list, export accounts, review inactive users and undo blocks. |
-| Groups and access levels | Add and remove memberships, move groups, groups/levels, content by access level, content by age and diagnosis. |
+| Groups and access levels | Add and remove memberships, move groups, groups/levels, reach of each group, content by access level, content by age and diagnosis. |
 | Automation and follow-up | Automatic blocking configuration and results/reports. |
 | Delete and anonymise accounts | Both permanent tools, with their warnings and confirmations. |
 
@@ -500,6 +502,26 @@ Both files are UTF-8 with BOM and semicolon-separated, so Excel opens them with 
 
 Group and level titles link to their edit screens in Joomla for users with the Admin permission on Users (the same one Joomla requires for those screens), and account counts link to the user manager for users who can manage users. The screen requires its own permission, *View groups, levels and content by level*: Super Users have it; grant it to others in Options → Permissions.
 
+## Reach of each group
+
+**Reach of each group** helps to decide which groups or access levels are worth reviewing or retiring. For each group it says how many accounts it affects and how many articles its members view. Joomla only gives this separately: the user manager filters by the direct members of one group, and the article lists by one level at a time. This screen only reads what Joomla already stores: it uses no table of its own and changes no group, level, account or article.
+
+- **Rows**: the groups, in their tree, with the same labels as in «Groups and access levels» (Super Users, administrator access and guests).
+- **Accounts in the group**: the active ones assigned directly, as in «Groups and access levels».
+- **Accounts with subgroups**: the active ones of the group and of every group below it, without repeating anyone who is in several. They are the ones that inherit its levels. Blocked accounts are not counted.
+  - **Few accounts**: the label marks groups with at least one account and fewer than the number in «Flag groups with fewer accounts than», 5 by default. Groups with none are marked «No accounts»; the access diagnosis already reports them.
+  - **List of accounts**: the number opens the list of those accounts, 50 at a time and by username, with their name, the groups of the branch they belong to and their last visit and registration dates. The name opens their profile. It shows no email addresses, and says how many blocked accounts there are without listing them. To take someone out of a group, use «Remove from groups».
+- **Levels it has**: the group's access levels, assigned or inherited, plus *Public*. Super User groups have them all.
+- **Articles it can view**: the articles that someone who only belongs to that group can open on the site. They are counted with the same conditions Joomla checks when an article is opened:
+  - the article is published or archived and within its publishing dates;
+  - its category is published or archived;
+  - the group has the article's level **and** its category's level.
+
+  Someone in several groups views what all of them view, so the number describes the group, not a particular person.
+- **Only this branch views**: the articles that no group outside this one and its subgroups can view. If the branch stopped being used, only Super Users and accounts assigned to their level one by one, which are not taken into account here, would view them. For example, if only the «Socios» group has the *Socios* level, its articles are exclusive to that branch. *Registered* articles, however, are never exclusive to «Registered», because «Manager» views them too. For a Super User group, the number is the articles no other group can view. For «Public», which every group hangs from, it always equals the total.
+
+A search box filters the groups. **Export CSV** downloads the table with the ID, the full path of each group, the numbers and the levels (UTF-8 with BOM, semicolons); it has no accounts. The screen uses the *View groups, levels and content by level* permission. The list of accounts also requires being able to manage users in Joomla (the same permission as the user manager); without it, the numbers are shown without a link. It is reached from the home screen or with the «View the reach of each group» button of «Groups and access levels».
+
 ## Content by access level
 
 Since 2026.10.12, **Content by access level** counts which items use each access level. Joomla only shows this list by list, with each one's «Access» filter, or when you try to delete the level, which says in which tables it is used but not which items or how many. This screen only reads.
@@ -529,9 +551,13 @@ Since 2026.10.15, **Content by age** shows how much content has not been touched
 - **Date**: the last modification date (UTC, as Joomla stores it). A 2015 article reviewed last month counts in the current year.
 - **Statuses**: published, unpublished and archived items count; trashed ones do not.
 - **Access level filter**: counts only the items with that level, to see which levels pile up old content.
-- **List of one year**: each number opens the items of that year and kind, from the least recently modified to the most recent, with title, category (for categories, their parent category; empty for top-level ones), access level, author, status and creation and modification dates, 50 per page. The title links to Joomla's edit screen if you can edit it.
+- **List of one year**: each number opens the items of that year and kind, from the least recently modified to the most recent, with title, category (for categories, their parent category; empty for top-level ones), access level, author, status, creation and modification dates and hits, 50 per page. The title links to Joomla's edit screen if you can edit it. The total of each column, in the row of totals, opens the same list with the items of every year.
+- **Hits**: the counter Joomla keeps for each item, the same as the «Hits» column of its lists. The **Fewest hits** button sorts the list from fewest to most hits and, with the same hits, from the one modified longest ago. This puts together the items almost nobody opens and that have not been touched for a long time. Joomla only stores the total since the item exists, not the date of the last hit, so the list cannot say since when nobody opens it. Also:
+  - the counter does not go up when the page comes from the page cache, or when the item appears in a blog or a list;
+  - robots' hits count too;
+  - if «Record Hits» is disabled in Content → Articles → Options, the list warns about it, because article hits do not change.
 
-**Export CSV** downloads the table or, from a list, all its items (UTF-8 with BOM, semicolons). The screen requires the *View content by age* permission; the list of titles also requires being able to manage that kind in Joomla: articles and categories in Content, contacts in Contacts and feeds in News Feeds. Filters, counts, totals, lists and CSV exports respect the authorized viewing levels of both the item and its category (categories, only their own), as Joomla’s lists do; global Super Users retain the full audit view. “Edit own” only links items created by the current user. Without it, the numbers are shown without a link.
+**Export CSV** downloads the table or, from a list, all its items with their hits and in the chosen order (UTF-8 with BOM, semicolons). The screen requires the *View content by age* permission; the list of titles also requires being able to manage that kind in Joomla: articles and categories in Content, contacts in Contacts and feeds in News Feeds. Filters, counts, totals, lists and CSV exports respect the authorized viewing levels of both the item and its category (categories, only their own), as Joomla’s lists do; global Super Users retain the full audit view. “Edit own” only links items created by the current user. Without it, the numbers are shown without a link.
 
 ![Content by age: table by year (Spanish interface)](docs/screenshots/20-contenido-antiguedad.jpg)
 

@@ -19,13 +19,17 @@ use Joomla\CMS\Session\Session;
 $list    = $this->list;
 $source  = ContentAgeReader::KINDS[$this->kind];
 $levelQ  = $this->level > 0 ? '&level=' . $this->level : '';
-$base    = 'index.php?option=com_usertools&view=age&layout=list&kind=' . $this->kind . '&year=' . $this->year . $levelQ;
+$yearQ   = $this->year === ContentAge::ALL_YEARS ? 'all' : (string) $this->year;
+$orderQ  = $this->order === ContentAge::ORDER_HITS ? '&order=' . ContentAge::ORDER_HITS : '';
+$listQ   = 'index.php?option=com_usertools&view=age&layout=list&kind=' . $this->kind . '&year=' . $yearQ . $levelQ;
+$base    = $listQ . $orderQ;
 $pages   = max(1, (int) ceil($list['total'] / ContentAge::PAGE_SIZE));
 $user    = Factory::getApplication()->getIdentity();
 $text    = fn (string $key, string $argument = '') => $argument === '' ? Text::_($key) : Text::sprintf($key, $argument);
-$heading = Text::sprintf('COM_USERTOOLS_AGE_LIST_HEADING', Text::_($source['label']), $this->year);
+$heading = $this->year === ContentAge::ALL_YEARS ? Text::sprintf('COM_USERTOOLS_AGE_LIST_HEADING_ALL', Text::_($source['label']))
+    : Text::sprintf('COM_USERTOOLS_AGE_LIST_HEADING', Text::_($source['label']), $this->year);
 ?>
-<div class="ut-app ut-wide" data-ut-age-list="<?= $this->escape($this->kind) ?>" data-ut-age-list-year="<?= (int) $this->year ?>">
+<div class="ut-app ut-wide" data-ut-age-list="<?= $this->escape($this->kind) ?>" data-ut-age-list-year="<?= $this->escape($yearQ) ?>" data-ut-age-list-order="<?= $this->escape($this->order) ?>">
   <p><a href="<?= Route::_('index.php?option=com_usertools&view=age' . $levelQ) ?>"><span aria-hidden="true">←</span> <?= Text::_('COM_USERTOOLS_AGE_BACK') ?></a></p>
   <?php if ($this->error) : ?>
     <div class="alert alert-danger"><?= Text::_($this->error) ?></div>
@@ -34,11 +38,19 @@ $heading = Text::sprintf('COM_USERTOOLS_AGE_LIST_HEADING', Text::_($source['labe
     <h2 class="h4 mb-0"><?= $this->escape($heading) ?><?php if ($this->level > 0) : ?> · <?= $this->escape($this->levelTitle()) ?><?php endif; ?></h2>
     <div class="ut-access-tools">
       <a class="btn btn-outline-secondary" data-ut-export="age-list"
-        href="<?= Route::_('index.php?option=com_usertools&task=age.export&kind=' . $this->kind . '&year=' . $this->year . $levelQ . '&' . Session::getFormToken() . '=1') ?>"><?= Text::_('COM_USERTOOLS_EXPORT_CSV') ?></a>
+        href="<?= Route::_('index.php?option=com_usertools&task=age.export&kind=' . $this->kind . '&year=' . $yearQ . $levelQ . $orderQ . '&' . Session::getFormToken() . '=1') ?>"><?= Text::_('COM_USERTOOLS_EXPORT_CSV') ?></a>
     </div>
   </div>
   <p class="mt-2" data-ut-age-list-total="<?= (int) $list['total'] ?>"><?= Text::sprintf($list['total'] === 1 ? 'COM_USERTOOLS_AGE_LIST_TOTAL_1' : 'COM_USERTOOLS_AGE_LIST_TOTAL', (int) $list['total']) ?>
-    <?= Text::_('COM_USERTOOLS_AGE_LIST_ORDER') ?></p>
+    <?= Text::_($this->order === ContentAge::ORDER_HITS ? 'COM_USERTOOLS_AGE_LIST_ORDER_HITS' : 'COM_USERTOOLS_AGE_LIST_ORDER') ?></p>
+  <nav class="d-flex flex-wrap align-items-center gap-2 mb-2" aria-label="<?= Text::_('COM_USERTOOLS_AGE_ORDER_LABEL') ?>" data-ut-age-order>
+    <span><?= Text::_('COM_USERTOOLS_AGE_ORDER_LABEL') ?>:</span>
+    <?php foreach ([ContentAge::ORDER_MODIFIED => 'COM_USERTOOLS_AGE_ORDER_MODIFIED', ContentAge::ORDER_HITS => 'COM_USERTOOLS_AGE_ORDER_HITS'] as $order => $label) : ?>
+      <?php if ($order === $this->order) : ?><span class="btn btn-sm btn-secondary disabled" aria-current="true"><?= Text::_($label) ?></span>
+      <?php else : ?><a class="btn btn-sm btn-outline-secondary" href="<?= Route::_($listQ . ($order === ContentAge::ORDER_HITS ? '&order=' . ContentAge::ORDER_HITS : '')) ?>"><?= Text::_($label) ?></a><?php endif; ?>
+    <?php endforeach; ?>
+  </nav>
+  <?php if (!$this->recordsHits) : ?><div class="alert alert-warning" data-ut-age-hits-off><?= Text::_('COM_USERTOOLS_AGE_HITS_OFF') ?></div><?php endif; ?>
   <?php if (!$list['items']) : ?>
     <p class="text-muted"><?= Text::_('COM_USERTOOLS_AGE_LIST_EMPTY') ?></p>
   <?php else : ?>
@@ -53,6 +65,7 @@ $heading = Text::sprintf('COM_USERTOOLS_AGE_LIST_HEADING', Text::_($source['labe
         <th scope="col"><?= Text::_('COM_USERTOOLS_AGE_STATE') ?></th>
         <th scope="col"><?= Text::_('COM_USERTOOLS_AGE_CREATED') ?></th>
         <th scope="col"><?= Text::_('COM_USERTOOLS_AGE_MODIFIED') ?></th>
+        <th scope="col" class="text-end"><?= Text::_('COM_USERTOOLS_AGE_HITS') ?></th>
       </tr></thead>
       <tbody>
       <?php foreach ($list['items'] as $item) : ?>
@@ -70,6 +83,7 @@ $heading = Text::sprintf('COM_USERTOOLS_AGE_LIST_HEADING', Text::_($source['labe
           <td><?= Text::_(ContentAge::stateKey((int) $item['state'])) ?></td>
           <td><?= $this->date($item['created']) ?></td>
           <td><?= $this->date($item['modified']) ?></td>
+          <td class="text-end" data-ut-age-hits="<?= (int) $item['hits'] ?>"><?= (int) $item['hits'] ?></td>
         </tr>
       <?php endforeach; ?>
       </tbody>
@@ -85,5 +99,6 @@ $heading = Text::sprintf('COM_USERTOOLS_AGE_LIST_HEADING', Text::_($source['labe
   </nav>
   <?php endif; ?>
   <?php endif; ?>
+  <p class="text-body-secondary mt-3 mb-0"><?= Text::_('COM_USERTOOLS_AGE_HITS_NOTE') ?></p>
   <?php endif; ?>
 </div>
