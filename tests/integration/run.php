@@ -225,13 +225,13 @@ Test::check(str_contains($home, 'Compare a list of users') && str_contains($home
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['profile', 'explain', 'compare', 'bulkcreate', 'sso', 'export', 'inactive', 'unblock', 'handover', 'names', 'addgroups', 'sync', 'ungroup', 'move', 'access', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
+Test::check($cards[1] === ['profile', 'explain', 'compare', 'bulkcreate', 'sso', 'export', 'inactive', 'unblock', 'handover', 'names', 'addgroups', 'sync', 'ungroup', 'move', 'access', 'reach', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
 Test::check(!preg_match('/<span class="icon-(address-card)"/', $home) && str_contains($home, '<span class="icon-vcard" aria-hidden="true"></span> Account profile'),
     'the profile card uses an icon that Joomla provides');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 22 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 23 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -998,6 +998,31 @@ $rootCategory = $site->q('SELECT id, access FROM #__categories WHERE parent_id =
 $site->q('UPDATE #__categories SET access = ? WHERE id = ?', [$agePrivate, (int) $rootCategory['id']]);
 Test::check($ageCount($delegate->get($ageUrl), 2012, 'categories') === 1, 'a visible category counts even if its parent has a level the delegate cannot view');
 $site->q('UPDATE #__categories SET access = ? WHERE id = ?', [(int) $rootCategory['access'], (int) $rootCategory['id']]);
+// Hits: Joomla's own counter, shown in the lists and usable as their order; no table of its own.
+$site->q('UPDATE #__content SET hits = 30 WHERE id = ?', [$a2012]);
+$site->q('UPDATE #__content SET hits = 2 WHERE id = ?', [$a2012Own]);
+$site->q('UPDATE #__content SET hits = 7 WHERE id = ?', [$privateArticle]);
+$byHits = $admin->get($ageUrl . '&layout=list&kind=articles&year=2012&order=hits');
+Test::noPhpErrors($byHits, 'the list ordered by hits');
+Test::check(str_contains($byHits, 'data-ut-age-list-order="hits"') && strpos($byHits, 'UT old-b') < strpos($byHits, 'UT private') && strpos($byHits, 'UT private') < strpos($byHits, 'UT old-a')
+    && str_contains($byHits, 'data-ut-age-hits="30"'), 'the list shows the hits and can start with the fewest');
+$byDate = $admin->get($ageUrl . '&layout=list&kind=articles&year=2012');
+Test::check(strpos($byDate, 'UT old-a') < strpos($byDate, 'UT private') && str_contains($byDate, 'order=hits'), 'the default order is still the oldest modification, with a link to order by hits');
+preg_match('/href="([^"]*task=age\.export[^"]*order=hits[^"]*)"/', $byHits, $hitsExport);
+[$code, $csv] = $admin->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($hitsExport[1] ?? '')));
+$csvLines = array_values(array_filter(preg_split('/\R/', substr((string) $csv, 3)) ?: [], static fn (string $l): bool => $l !== ''));
+Test::check($code === 200 && str_ends_with($csvLines[0] ?? '', ';Hits') && str_starts_with($csvLines[1] ?? '', $a2012Own . ';') && str_ends_with($csvLines[1] ?? '', ';2'),
+    'the CSV of the list has the hits and keeps its order');
+$allYears = $admin->get($ageUrl . '&layout=list&kind=articles&year=all&order=hits');
+Test::check(str_contains($allYears, 'data-ut-age-list-year="all"') && str_contains($allYears, 'UT old-registered') && str_contains($allYears, 'UT old-a') && !str_contains($allYears, 'UT old-trash')
+    && str_contains($admin->get($ageUrl), 'kind=articles&amp;year=all'), 'the total of a column lists that kind across every year, without the trash');
+$contentParams = (string) $site->q("SELECT params FROM #__extensions WHERE type = 'component' AND element = 'com_content'")[0]['params'];
+Test::check(!str_contains($byHits, 'data-ut-age-hits-off'), 'no warning while Joomla records hits');
+$site->q("UPDATE #__extensions SET params = ? WHERE type = 'component' AND element = 'com_content'", [json_encode(['record_hits' => 0] + (json_decode($contentParams, true) ?: []))]);
+Test::check(str_contains($admin->get($ageUrl . '&layout=list&kind=articles&year=2012'), 'data-ut-age-hits-off'), 'the list warns when Joomla does not record article hits');
+$site->q("UPDATE #__extensions SET params = ? WHERE type = 'component' AND element = 'com_content'", [$contentParams]);
+[$code] = $admin->request($ageUrl . '&layout=list&kind=articles&year=0');
+Test::check($code === 403, 'year 0 is not "every year" (got ' . $code . ')');
 $site->q('UPDATE #__categories SET modified_time = ? WHERE id = ?', [$ageCategoryModified, $ageCategory]);
 $site->q('DELETE FROM #__contact_details WHERE id = ?', [$ageContact]);
 foreach ($ageAssets as $assetId) {
@@ -1189,6 +1214,92 @@ $site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_en
 Test::check($code === 403 && !str_contains($delegate->get('index.php?option=com_usertools'), 'data-ut-home-card="move"'), 'a non Super User cannot open "Move groups" (got ' . $code . ')');
 $site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
 $site->q("DELETE FROM #__viewlevels WHERE title = 'UT move level'");
+
+Test::section('Reach of each group');
+$reachUrl = 'index.php?option=com_usertools&view=reach';
+foreach ([['UT reach A', 'Registered'], ['UT reach A1', 'UT reach A']] as [$title, $parent]) {
+    $site->q('INSERT INTO #__usergroups (parent_id, lft, rgt, title) VALUES (?, 0, 0, ?)', [$gid($parent), $title]);
+}
+$rebuildGroups();
+$site->q("INSERT INTO #__viewlevels (title, ordering, rules) VALUES ('UT reach level', 99, ?)", [json_encode([$gid('UT reach A')])]);
+$reachLevel = (int) $site->q("SELECT id FROM #__viewlevels WHERE title = 'UT reach level'")[0]['id'];
+$site->addUser('rc_one', 'UT reach A1');
+$site->addUser('rc_blocked', 'UT reach A');
+$site->q("UPDATE #__users SET block = 1 WHERE username = 'rc_blocked'");
+$reachCategory = (int) $site->q("SELECT id FROM #__categories WHERE extension = 'com_content' AND parent_id <> 0 AND published = 1 AND access = 1 ORDER BY id")[0]['id'];
+$site->q("DELETE FROM #__content WHERE alias LIKE 'ut-reach-%'");
+foreach ([['level', $reachLevel, 1, null], ['expired', $reachLevel, 1, '2001-01-01 00:00:00'], ['unpublished', $reachLevel, 0, null]] as [$alias, $access, $state, $down]) {
+    $site->q('INSERT INTO #__content (title, alias, introtext, "fulltext", state, catid, created, created_by, modified, publish_down, images, urls, attribs, access, metadesc, metadata, language)'
+        . " VALUES (?, ?, '', '', ?, ?, ?, ?, ?, ?, '{}', '{}', '{}', ?, '', '{}', '*')",
+        ['UT reach ' . $alias, 'ut-reach-' . $alias, $state, $reachCategory, '2020-01-01 00:00:00', $site->userId(getenv('UT_ADMIN_USER') ?: 'admin'), '2020-01-01 00:00:00', $down, $access]);
+}
+$reach = $admin->get($reachUrl);
+Test::noPhpErrors($reach, 'the reach of each group');
+$reachValue = fn (string $html, string $title, string $field): int => preg_match('/data-ut-reach-' . $field . '="(\d+)"/', $row($html, 'data-ut-reach-group', $gid($title)), $m) ? (int) $m[1] : -1;
+Test::check($reachValue($reach, 'UT reach A', 'direct') === 0 && $reachValue($reach, 'UT reach A', 'members') === 1 && $reachValue($reach, 'UT reach A1', 'members') === 1,
+    'blocked accounts are not counted and a group counts the accounts of its subgroups');
+Test::check(str_contains($row($reach, 'data-ut-reach-group', $gid('UT reach A')), 'data-ut-reach-few') && str_contains($reach, 'data-ut-reach-flagged='),
+    'a group with fewer accounts than the threshold is flagged');
+Test::check(!str_contains($row($admin->get($reachUrl . '&few=1'), 'data-ut-reach-group', $gid('UT reach A')), 'data-ut-reach-few'), 'the threshold can be changed');
+Test::check($reachValue($reach, 'UT reach A', 'articles') === $reachValue($reach, 'Registered', 'articles') + 1,
+    'the group views what Registered views plus its own level, without expired or unpublished articles');
+Test::check($reachValue($reach, 'UT reach A', 'exclusive') === 1 && $reachValue($reach, 'UT reach A1', 'exclusive') === 0 && $reachValue($reach, 'Registered', 'exclusive') === 0,
+    'only the branch that alone can view an article has it as exclusive');
+Test::check($reachValue($reach, 'Super Users', 'articles') >= $reachValue($reach, 'UT reach A', 'articles') && str_contains($row($reach, 'data-ut-reach-group', $gid('Super Users')), 'All (Super Users)'),
+    'Super Users view every article');
+$membersUrl = $reachUrl . '&layout=members&group=' . $gid('UT reach A');
+Test::check(str_contains($row($reach, 'data-ut-reach-group', $gid('UT reach A')), 'layout=members&amp;group=' . $gid('UT reach A')), 'the account count links to the list of members');
+$membersPage = $admin->get($membersUrl);
+Test::noPhpErrors($membersPage, 'the members of a group');
+Test::check(str_contains($membersPage, 'data-ut-reach-list-total="1"') && str_contains($membersPage, 'rc_one') && !str_contains($membersPage, 'rc_blocked')
+    && str_contains($membersPage, 'There is also 1 blocked account') && str_contains($membersPage, 'UT reach A1') && !str_contains($membersPage, 'rc_one@example.test'),
+    'the list has the active accounts of the branch with their groups, mentions the blocked ones and shows no email');
+Test::check(str_contains($membersPage, 'view=profile&amp;account=' . $site->userId('rc_one')), 'each account opens its profile');
+$articlesLink = $reachUrl . '&layout=articles&group=' . $gid('UT reach A');
+Test::check(str_contains($row($reach, 'data-ut-reach-group', $gid('UT reach A')), 'layout=articles&amp;group=' . $gid('UT reach A') . '&amp;only=1')
+    && str_contains($row($reach, 'data-ut-reach-group', $gid('UT reach A')), 'layout=articles&amp;group=' . $gid('UT reach A') . '"'), 'both article counts link to their lists');
+$reachArticles = $admin->get($articlesLink);
+Test::noPhpErrors($reachArticles, 'the articles a group can view');
+Test::check(str_contains($reachArticles, 'data-ut-reach-articles-total="' . $reachValue($reach, 'UT reach A', 'articles') . '"') && str_contains($reachArticles, 'UT reach level')
+    && !str_contains($reachArticles, 'UT reach expired') && !str_contains($reachArticles, 'UT reach unpublished'), 'the list has as many articles as the table, without expired or unpublished ones');
+$reachOnly = $admin->get($articlesLink . '&only=1');
+Test::check(str_contains($reachOnly, 'data-ut-reach-articles-total="1"') && str_contains($reachOnly, 'UT reach level') && str_contains($reachOnly, 'task=article.edit'),
+    'the exclusive list has only the article its branch alone views, with a link to edit it');
+[$code] = $admin->request($reachUrl . '&layout=members&group=999999');
+Test::check($code === 200 || $code === 303, 'an unknown group leaves the list (got ' . $code . ')');
+preg_match('/href="([^"]*task=reach\.export[^"]*)"/', $reach, $reachExport);
+[$code, $csv, $headers] = $admin->request(preg_replace('#^.*/administrator/#', '', html_entity_decode($reachExport[1] ?? '')));
+Test::check($code === 200 && str_starts_with($headers['content-type'] ?? '', 'text/csv') && str_contains($csv, $gid('UT reach A') . ';"UT reach A";"Public / Registered / UT reach A";0;1;'),
+    'the table downloads as CSV with the path and the counts');
+[, , $tokenless] = $admin->request('index.php?option=com_usertools&task=reach.export');
+Test::check(!str_starts_with($tokenless['content-type'] ?? '', 'text/csv'), 'without the token there is no CSV');
+Test::check(str_contains($admin->get('index.php?option=com_usertools&view=access'), 'view=reach'), 'the groups and levels screen links to the reach');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1]])]);
+[$code] = $delegate->request($reachUrl);
+Test::check($code === 403, 'the screen needs the "View groups, levels and content by level" permission (got ' . $code . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_usertools'", [json_encode(['core.manage' => ['6' => 1], 'usertools.access' => ['6' => 1]])]);
+$usersRules = (string) $site->q("SELECT rules FROM #__assets WHERE name = 'com_users'")[0]['rules'];
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_users'", [json_encode(['core.manage' => ['6' => 0]] + (json_decode($usersRules, true) ?: []))]);
+[$code, $delegateReach] = $delegate->request($reachUrl);
+[$membersCode] = $delegate->request($membersUrl);
+Test::check($code === 200 && !str_contains($delegateReach, 'layout=members') && $membersCode === 403,
+    'without managing users in Joomla, the counts are shown but the members are not (got ' . $membersCode . ')');
+$contentRules = (string) $site->q("SELECT rules FROM #__assets WHERE name = 'com_content'")[0]['rules'];
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [json_encode(['core.manage' => ['6' => 0]] + (json_decode($contentRules, true) ?: []))]);
+[$code, $delegateReach] = $delegate->request($reachUrl);
+[$articlesCode] = $delegate->request($articlesLink);
+Test::check($code === 200 && !str_contains($delegateReach, 'layout=articles') && $articlesCode === 403,
+    'without managing articles in Joomla, the article counts are shown but not their titles (got ' . $articlesCode . ')');
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_content'", [$contentRules]);
+$site->q("UPDATE #__assets SET rules = ? WHERE name = 'com_users'", [$usersRules]);
+$site->q("UPDATE #__assets SET rules = '{}' WHERE name = 'com_usertools'");
+$site->q("DELETE FROM #__content WHERE alias LIKE 'ut-reach-%'");
+$site->q("DELETE FROM #__viewlevels WHERE title = 'UT reach level'");
+foreach (['rc_one', 'rc_blocked'] as $name) {
+    $site->cli('user:delete --username=' . $name);
+}
+$site->q("DELETE FROM #__usergroups WHERE title LIKE 'UT reach%'");
+$rebuildGroups();
 
 
 Test::section('Anonymize accounts');
@@ -2166,11 +2277,11 @@ $site->q('UPDATE #__users SET block = 1 WHERE id = ?', [$hoGone]);
 $hoA = $addArticle('ho-a', '2024-01-01 00:00:00');
 $hoB = $addArticle('ho-b', '2024-01-02 00:00:00', 0);
 $hoC = $addArticle('ho-c', '2024-01-03 00:00:00', -2);
-// Two articles with the same alias in one category: Joomla's table refuses to store the second one.
-$hoTwin = $addArticle('ho-twin', '2024-01-04 00:00:00');
-$site->q("UPDATE #__content SET alias = 'ut-age-ho-dup' WHERE id = ?", [$hoTwin]);
+// An article with a blank title: Joomla's table check() always refuses to store it. (A duplicate
+// alias is not reliable here: the check loads "an" article with that alias without an order, and
+// PostgreSQL may return the article itself once its rows have moved.)
 $hoD = $addArticle('ho-d', '2024-01-05 00:00:00');
-$site->q("UPDATE #__content SET alias = 'ut-age-ho-dup' WHERE id = ?", [$hoD]);
+$site->q("UPDATE #__content SET title = ' ' WHERE id = ?", [$hoD]);
 $site->q('UPDATE #__content SET created_by = ? WHERE id IN (?, ?, ?, ?)', [$hoSource, $hoA, $hoB, $hoC, $hoD]);
 $site->q("UPDATE #__content SET created_by_alias = 'Redacción' WHERE id = ?", [$hoA]);
 $hoAuthor = static fn (int $id): int => (int) ($site->q('SELECT created_by FROM #__content WHERE id = ?', [$id])[0]['created_by'] ?? 0);

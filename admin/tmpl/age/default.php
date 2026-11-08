@@ -81,7 +81,13 @@ $listed  = array_filter(array_column($table['kinds'], 'key'), fn (string $kind) 
       </tbody>
       <tfoot><tr>
         <th scope="row"><?= Text::_('COM_USERTOOLS_USAGE_TOTAL') ?></th>
-        <?php foreach ($table['kinds'] as $kind) : ?><td class="text-center fw-semibold"><?= (int) $kind['total'] ?></td><?php endforeach; ?>
+        <?php foreach ($table['kinds'] as $kind) : ?>
+        <td class="text-center fw-semibold" data-ut-age-kind-total="<?= $this->escape($kind['key']) ?>">
+          <?php if ($kind['total'] > 0 && in_array($kind['key'], $listed, true)) : ?><a href="<?= Route::_('index.php?option=com_usertools&view=age&layout=list&kind=' . $kind['key'] . '&year=all' . $levelQ) ?>"
+            aria-label="<?= $this->escape(Text::sprintf('COM_USERTOOLS_AGE_ALL_YEARS_LABEL', (int) $kind['total'], $kind['label'])) ?>"><?= (int) $kind['total'] ?></a>
+          <?php else : ?><?= (int) $kind['total'] ?><?php endif; ?>
+        </td>
+        <?php endforeach; ?>
         <td class="text-end fw-semibold"><?= (int) $table['total'] ?></td>
       </tr></tfoot>
     </table>

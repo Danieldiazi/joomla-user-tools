@@ -25,10 +25,11 @@ class AgeController extends DisplayController
         $this->checkToken('get');
         $identity = $this->app->getIdentity();
         $kind     = $this->input->getCmd('kind', '');
-        $year     = ContentAge::year($this->input->getInt('year', 0));
+        $year     = ContentAge::listYear($this->input->getCmd('year', ''));
         $level    = max(0, $this->input->getInt('level', 0));
+        $order    = ContentAge::order($this->input->getCmd('order', ''));
         // Titles of items are only listed to users who can manage that kind of item in Joomla.
-        $listing  = $kind !== '' && $year > 0;
+        $listing  = $kind !== '' && $year !== null;
         if (!$identity->authorise('usertools.content', 'com_usertools')
             || ($listing && !$identity->authorise('core.manage', ContentAgeReader::KINDS[$kind]['asset'] ?? 'com_content'))) {
             throw new NotAllowed(Text::_('JERROR_ALERTNOAUTHOR'), 403);
@@ -36,13 +37,13 @@ class AgeController extends DisplayController
         /** @var AgeModel $model */
         $model = $this->getModel('Age', 'Administrator', ['ignore_request' => true]);
         try {
-            $csv = $model->csv($listing ? $kind : '', $year, $level);
+            $csv = $model->csv($listing ? $kind : '', $listing ? $year : null, $level, $order);
         } catch (\Throwable) {
             $this->app->enqueueMessage(Text::_('COM_USERTOOLS_AGE_UNREADABLE'), 'warning');
             $this->setRedirect('index.php?option=com_usertools&view=age');
             return;
         }
-        $name = 'usertools-content-age-' . ($listing ? $kind . '-' . $year . '-' : '') . gmdate('Ymd') . '.csv';
+        $name = 'usertools-content-age-' . ($listing ? $kind . '-' . ($year === ContentAge::ALL_YEARS ? 'all' : $year) . '-' : '') . gmdate('Ymd') . '.csv';
         Toolkit::app()->setHeader('Content-Type', 'text/csv; charset=utf-8', true);
         Toolkit::app()->setHeader('Content-Disposition', 'attachment; filename="' . $name . '"', true);
         Toolkit::app()->setHeader('Cache-Control', 'no-store, private', true);

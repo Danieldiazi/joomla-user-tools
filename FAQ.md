@@ -72,7 +72,7 @@ No. La comparación de listas, la revisión manual por inactividad, la eliminaci
 
 ### ¿Quién puede usarlo?
 
-Los superusuarios y los usuarios con los permisos delegados correspondientes en **Opciones → Permisos**. Hay permisos separados para consultar fichas, explicar el acceso a contenido, comparar listas y bloquear, crear cuentas, revisar usuarios inactivos, eliminar usuarios inactivos, consultar resultados de tareas, actualizar nombres en bloque, quitar de grupos, ver grupos, niveles y contenido por nivel, ver contenido por antigüedad y ver el diagnóstico de accesos. El de eliminar no se concede a nadie más que a los superusuarios hasta que lo des expresamente. El acceso al componente también requiere `core.manage`.
+Los superusuarios y los usuarios con los permisos delegados correspondientes en **Opciones → Permisos**. Hay permisos separados para consultar fichas, explicar el acceso a contenido, comparar listas y bloquear, crear cuentas, revisar usuarios inactivos, eliminar usuarios inactivos, consultar resultados de tareas, actualizar nombres en bloque, quitar de grupos, ver grupos, niveles, alcance de cada grupo y contenido por nivel, ver contenido por antigüedad y ver el diagnóstico de accesos. El de eliminar no se concede a nadie más que a los superusuarios hasta que lo des expresamente. El acceso al componente también requiere `core.manage`.
 
 ### ¿Necesita JavaScript?
 
@@ -362,6 +362,18 @@ Solo aparece cuando algún nivel tiene cuentas asignadas directamente, sin grupo
 
 Con **Contenido por nivel de acceso**, desde la 2026.10.12. Cuenta, para cada nivel, los artículos, categorías, menús, módulos, campos, plugins y demás elementos que lo usan, y cada cifra enlaza al listado de Joomla ya filtrado. Las tablas de otras extensiones con columna `access`, como las de adjuntos, se cuentan enteras. Detalles en el [README](README.md#contenido-por-nivel-de-acceso).
 
+### ¿Cómo veo cuántas cuentas tiene cada grupo, contando sus subgrupos, y quiénes son?
+
+Con **Alcance de cada grupo**. Para cada grupo cuenta las cuentas activas asignadas directamente y las de todo lo que cuelga de él, y marca los que tienen menos de las indicadas (5 por defecto). La cifra abre la lista de esas cuentas, con su ficha a un clic, si puedes gestionar usuarios en Joomla. Detalles en el [README](README.md#alcance-de-cada-grupo).
+
+### ¿Cuántos artículos ve cada grupo? ¿Puedo saber cuáles dejaría de ver alguien si retiro un grupo?
+
+«Alcance de cada grupo» cuenta los artículos que puede abrir en el sitio alguien que solo pertenece a ese grupo: publicados o archivados, dentro de sus fechas y con su nivel y el de su categoría al alcance del grupo. La columna «Solo los ve esta rama» dice cuántos no ve ningún grupo fuera de este y sus subgrupos. Esos son los que quedarían solo para los superusuarios si dejaras de usar la rama. Las dos cifras abren la lista de esos artículos, con su nivel, el de su categoría y sus visitas, si puedes gestionar artículos en Joomla. Quien esté en varios grupos ve lo de todos, así que conviene mirar también sus otros grupos.
+
+### ¿Por qué «Public» tiene todos sus artículos en «Solo los ve esta rama»?
+
+Porque todos los grupos cuelgan de «Public»: ningún grupo queda fuera de su rama. En los demás grupos la cifra sí distingue lo que comparten con otros de lo que es solo suyo.
+
 ### ¿Puedo borrar un nivel de acceso sin romper nada?
 
 Joomla no deja borrar un nivel que use algún elemento, incluidos los de la papelera. En «Contenido por nivel de acceso» verás qué elementos lo usan, para cambiarles el nivel antes, y bajo la tabla aparecen los niveles que no usa ningún elemento. Recuerda que un nivel también puede servir solo para dar permisos de vista por grupos sin tener contenido propio.
@@ -375,6 +387,10 @@ Requiere el permiso *Ver grupos, niveles y contenido por nivel*. Los superusuari
 ### ¿Cómo veo los artículos que llevan años sin tocarse?
 
 Con **Contenido por antigüedad**, desde la 2026.10.15. Muestra una tabla por años según la fecha de última modificación, y cada cifra abre la lista de esos artículos con enlace para editarlos. Cuenta también categorías de artículos, contactos y canales de noticias. Detalles en el [README](README.md#contenido-por-antigüedad).
+
+### ¿Puedo ver qué artículos no se han visitado en los últimos meses?
+
+No exactamente: Joomla guarda cuántas veces se ha abierto cada artículo, pero no cuándo fue la última vez, y User Tools no añade tablas propias para registrarlo. Lo que sí puedes hacer es abrir la lista de un año, o la de todos los años con el total de la columna, y pulsar **Menos visitas**. Verás juntos los artículos con menos visitas y su fecha de modificación. Ten en cuenta que el contador no sube con la caché de páginas activa, que también cuenta las visitas de robots y que solo avanza si «Registrar visitas» está activado en las opciones de Artículos; si no lo está, la lista lo avisa.
 
 ### ¿Por qué no aparecen los módulos, los menús ni los plugins?
 

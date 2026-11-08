@@ -20,6 +20,13 @@ final class ContentAge
     /** Items per page in the list of one year. */
     public const PAGE_SIZE = 50;
 
+    /** The list of one kind across every year, asked for with year=all. */
+    public const ALL_YEARS = 0;
+
+    /** Orders of a list: oldest modification first, or fewest views first. */
+    public const ORDER_MODIFIED = 'modified';
+    public const ORDER_HITS     = 'hits';
+
     /** Years accepted in requests. */
     public const MIN_YEAR = 1900;
     public const MAX_YEAR = 9999;
@@ -55,6 +62,24 @@ final class ContentAge
     {
         $year = filter_var($value, FILTER_VALIDATE_INT);
         return $year !== false && $year >= self::MIN_YEAR && $year <= self::MAX_YEAR ? $year : 0;
+    }
+
+    /**
+     * The year of a list request: a valid year, ALL_YEARS for "all", or null when it is neither.
+     */
+    public static function listYear(string $value): ?int
+    {
+        if ($value === 'all') {
+            return self::ALL_YEARS;
+        }
+        $year = self::year($value);
+        return $year > 0 ? $year : null;
+    }
+
+    /** A list order from a request; anything unknown keeps the default. */
+    public static function order(string $value): string
+    {
+        return $value === self::ORDER_HITS ? self::ORDER_HITS : self::ORDER_MODIFIED;
     }
 
     /**
@@ -102,18 +127,19 @@ final class ContentAge
     /**
      * The items of one year as rows for a CSV file.
      *
-     * @param  list<array{id: int, title: string, category: string, level: string, access: int, author: string, state: int, created: ?string, modified: ?string}> $items
+     * @param  list<array{id: int, title: string, category: string, level: string, access: int, author: string, state: int, created: ?string, modified: ?string, hits: int}> $items
      * @param  callable(string, string=): string $text
      * @return array{header: list<string>, rows: list<list<int|string>>}
      */
     public static function exportItems(array $items, callable $text, string $categoryLabel = 'COM_USERTOOLS_AGE_CATEGORY'): array
     {
         $header = [$text('COM_USERTOOLS_AGE_ID'), $text('COM_USERTOOLS_AGE_TITLE_COL'), $text($categoryLabel), $text('COM_USERTOOLS_ACCESS_LEVEL'),
-            $text('COM_USERTOOLS_AGE_AUTHOR'), $text('COM_USERTOOLS_AGE_STATE'), $text('COM_USERTOOLS_AGE_CREATED'), $text('COM_USERTOOLS_AGE_MODIFIED')];
+            $text('COM_USERTOOLS_AGE_AUTHOR'), $text('COM_USERTOOLS_AGE_STATE'), $text('COM_USERTOOLS_AGE_CREATED'), $text('COM_USERTOOLS_AGE_MODIFIED'),
+            $text('COM_USERTOOLS_AGE_HITS')];
         $rows = [];
         foreach ($items as $item) {
             $rows[] = [$item['id'], $item['title'], $item['category'], self::levelName($item, $text), $item['author'], $text(self::stateKey($item['state'])),
-                (string) $item['created'], (string) $item['modified']];
+                (string) $item['created'], (string) $item['modified'], (int) ($item['hits'] ?? 0)];
         }
         return ['header' => $header, 'rows' => $rows];
     }
