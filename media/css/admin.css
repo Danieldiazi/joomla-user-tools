@@ -52,6 +52,8 @@
 .ut-tree-branch{display:inline-block;margin-inline-end:.35rem;color:var(--bs-secondary-color,#6c757d)}
 @media (max-width:575.98px){.ut-steps{flex-direction:column;gap:.25rem}}
 .ut-home-note{margin-bottom:0}
+.ut-home-logo-wrap{margin-bottom:1rem}
+.ut-home-logo{display:block;max-width:100%;height:auto;background:#fff;border-radius:.5rem;padding:.25rem .5rem}
 .ut-home-section{margin-top:1.5rem}
 .ut-home-heading{font-size:1.35rem;font-weight:600;padding-bottom:.3rem;margin-bottom:.4rem;border-bottom:1px solid var(--bs-border-color)}
 .ut-home-section-desc{color:var(--bs-secondary-color);max-width:60rem;margin-bottom:.75rem}

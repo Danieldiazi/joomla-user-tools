@@ -8,6 +8,7 @@
 
 \defined('_JEXEC') or die;
 
+use Joomla\CMS\HTML\HTMLHelper;
 use Joomla\CMS\Language\Text;
 use Joomla\CMS\Router\Route;
 
@@ -20,6 +21,11 @@ $states = [
 [$stateColour, $stateKey] = $states[$this->pluginState];
 ?>
 <div class="ut-app ut-home" data-ut-category="<?= $this->escape($this->section) ?>">
+  <?php if ($this->section === '') : ?>
+  <?php // The logo has a white background on purpose: its blue would not read on a dark theme. ?>
+  <p class="ut-home-logo-wrap"><?= HTMLHelper::_('image', 'com_usertools/usertools-logo.png', Text::_('COM_USERTOOLS_HOME_LOGO_ALT'),
+      ['class' => 'ut-home-logo', 'width' => 320, 'height' => 103, 'data-ut-home-logo' => ''], true) ?></p>
+  <?php endif; ?>
   <p class="lead"><?= Text::_('COM_USERTOOLS_HOME_INTRO') ?></p>
   <div class="alert alert-info d-flex gap-2 ut-home-note">
     <span class="icon-shield" aria-hidden="true"></span>

@@ -2,6 +2,8 @@
 
 [Español](README.md) · **English**
 
+<p align="center"><img src="media/images/usertools-logo.png" alt="User Tools for Joomla" width="400"></p>
+
 Account administration tools for **Joomla 6**: compare a current user list, create accounts, review inactivity and schedule account blocking with reports.
 
 | Tool | What it does |

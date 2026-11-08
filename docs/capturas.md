@@ -8,7 +8,7 @@ Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cad
 
 Además de estas capturas, la CI comprueba el orden de teclado, el despliegue del menú y la categoría activa, y guarda capturas a texto al 200 %, con preferencia oscura y a 390 px de ancho. Las tarjetas y los formularios caben a 390 px, pero la cabecera general de Joomla no parte el título de la página y genera un ancho de documento de unos 600 px, y hasta unos 780 px con los títulos más largos, como el de «Traspasar contenido y dar de baja»; no se ha alterado la plantilla para ocultarlo. Esto no acredita conformidad WCAG ni sustituye pruebas con lector de pantalla.
 
-![Portada de User Tools con sus cinco categorías por finalidad y todas las herramientas permitidas, y el menú Componentes → User Tools desplegado con Inicio activo (2026.11.7)](screenshots/01-portada.jpg)
+![Portada de User Tools con su logo, sus cinco categorías por finalidad y todas las herramientas permitidas, y el menú Componentes → User Tools desplegado con Inicio activo (2026.11.7)](screenshots/01-portada.jpg)
 
 ![Categoría «Consultar e informes», señalada en el menú, con sus ocho herramientas de solo lectura (2026.11.7)](screenshots/48-menu-consultar.jpg)
 

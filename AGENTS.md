@@ -46,7 +46,7 @@ Se distribuye como un paquete con el componente `com_usertools`, los plugins `pl
 | `admin/src/View/`, `admin/tmpl/`, `admin/layouts/usertools/` | Vistas MVC, plantillas y layouts compartidos (exclusiones, pasos, confirmación). |
 | `admin/access.xml`, `admin/config.xml` | Permisos propios (`usertools.*`) y Opciones. |
 | `admin/language/{es-ES,en-GB}/` | Idiomas del componente. |
-| `media/` | CSS y JS, registrados en `joomla.asset.json`. |
+| `media/` | CSS y JS, registrados en `joomla.asset.json`, y el logo de la portada (`images/usertools-logo.png`). |
 | `plugins/task/usertools/` | Plugin de tarea programada. |
 | `modules/mod_usertools/` | Módulo del panel de Usuarios. Solo presenta datos: las cifras y avisos los calculan `DashboardSummary` y `Toolkit::dashboard()`, con caché que se limpia con `Toolkit::clearDashboardCache()` cuando cambian cuentas u Opciones. |
 | `modules/mod_usertools_groups/` | Módulo del sitio de solo lectura. No depende del componente: `GroupTree` (reglas puras del árbol de grupos, con pruebas unitarias) y `MembershipHelper` (consultas). Nunca muestra correos ni cuentas bloqueadas, y por defecto oculta las cuentas con acceso a la administración. |

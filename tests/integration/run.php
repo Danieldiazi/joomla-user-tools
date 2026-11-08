@@ -237,6 +237,11 @@ Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
 $admin->get('index.php?option=com_config&view=component&component=com_usertools');
 require __DIR__ . '/navigation.php';
+Test::check(preg_match('/<img[^>]+src="([^"]*media\/com_usertools\/images\/usertools-logo\.png(?:\?[^"]*)?)"[^>]*alt="User Tools for Joomla"/', $home, $logo) === 1,
+    'the home screen presents the extension with its logo and a text alternative');
+[$logoCode, , $logoHeaders] = $admin->request('../' . ltrim(preg_replace('#^https?://[^/]+#', '', html_entity_decode($logo[1] ?? '')), '/'));
+Test::check($logoCode === 200 && str_starts_with($logoHeaders['content-type'] ?? '', 'image/png'), 'the logo is installed in the media folder (got ' . $logoCode . ')');
+Test::check(!str_contains($admin->get('index.php?option=com_usertools&view=home&section=consult'), 'data-ut-home-logo'), 'category pages do not repeat the logo');
 
 // Test clients do not execute JavaScript: explicitly submit the IDs that a human
 // selected from the reviewed table, rather than relying on implicit blocking.
