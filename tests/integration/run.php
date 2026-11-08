@@ -231,7 +231,7 @@ Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 
     'deletion says «Permanent» and its consequence in text, not only in red');
 Test::check(!preg_match('/<span class="icon-(address-card)"/', $home) && str_contains($home, '<span class="icon-vcard" aria-hidden="true"></span> Account profile'),
     'the profile card uses an icon that Joomla provides');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 22 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 23 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -2260,11 +2260,11 @@ $site->q('UPDATE #__users SET block = 1 WHERE id = ?', [$hoGone]);
 $hoA = $addArticle('ho-a', '2024-01-01 00:00:00');
 $hoB = $addArticle('ho-b', '2024-01-02 00:00:00', 0);
 $hoC = $addArticle('ho-c', '2024-01-03 00:00:00', -2);
-// Two articles with the same alias in one category: Joomla's table refuses to store the second one.
-$hoTwin = $addArticle('ho-twin', '2024-01-04 00:00:00');
-$site->q("UPDATE #__content SET alias = 'ut-age-ho-dup' WHERE id = ?", [$hoTwin]);
+// An article with a blank title: Joomla's table check() always refuses to store it. (A duplicate
+// alias is not reliable here: the check loads "an" article with that alias without an order, and
+// PostgreSQL may return the article itself once its rows have moved.)
 $hoD = $addArticle('ho-d', '2024-01-05 00:00:00');
-$site->q("UPDATE #__content SET alias = 'ut-age-ho-dup' WHERE id = ?", [$hoD]);
+$site->q("UPDATE #__content SET title = ' ' WHERE id = ?", [$hoD]);
 $site->q('UPDATE #__content SET created_by = ? WHERE id IN (?, ?, ?, ?)', [$hoSource, $hoA, $hoB, $hoC, $hoD]);
 $site->q("UPDATE #__content SET created_by_alias = 'Redacción' WHERE id = ?", [$hoA]);
 $hoAuthor = static fn (int $id): int => (int) ($site->q('SELECT created_by FROM #__content WHERE id = ?', [$id])[0]['created_by'] ?? 0);
