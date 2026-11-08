@@ -4,15 +4,17 @@
 
 [Back to the README](../README.en.md)
 
-These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, access diagnosis and the content by age list in 2026.10.15, move groups in 2026.10.16, add accounts to groups, export accounts and undo blocks in 2026.10.19, the account profile in 2026.10.20, the content by age table with its four kinds, the automation, groups and delete categories and the guided tour in 2026.10.21, and the home screen, the “Review accounts” and “Groups and access levels” categories, the account profile, the Users dashboard, the access explanation, synchronising a group branch, handing over content and the anonymisation result in 2026.11.0, and those of bulk updating names in 2026.11.4. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
+These shared screenshots show the Spanish interface on Joomla 6.2.0. Each caption gives the version the screenshot was taken with when it is recent: deletion in 2026.10.5, remove from groups in 2026.10.9 and 2026.10.16, the comparison review and groups and access levels in 2026.10.11, content by access level in 2026.10.12, access diagnosis in 2026.10.15, move groups in 2026.10.16, add accounts to groups, export accounts and undo blocks in 2026.10.19, the account profile in 2026.10.20, the content by age table with its four kinds, the automation and delete categories and the guided tour in 2026.10.21, and the account profile, the access explanation, synchronising a group branch, handing over content and the anonymisation result in 2026.11.0, those of bulk updating names in 2026.11.4, and the home screen, the “Look up and reports”, “Manage accounts” and “Manage groups” categories, the Users dashboard, the reach of each group and the content by age list in 2026.11.7. Screenshots without a version show an older interface and may differ from the current one. For current options and behaviour, see the [README](../README.en.md) and [FAQ](../FAQ.en.md).
 
 Besides these screenshots, CI checks keyboard order, menu expansion and the active category, and saves captures at 200% text size, with a dark preference and at 390 px width. The cards and forms fit at 390 px, but Joomla’s overall header does not wrap the page title and produces a document width of about 600 px, and up to about 780 px with the longest titles, such as “Hand over content and close an account”; the template has not been altered to hide this. This does not establish WCAG conformance or replace screen-reader testing.
 
-![User Tools home screen with its four categories and all permitted tools, and the Components → User Tools menu expanded with Home active (2026.11.0, Spanish interface)](screenshots/01-portada.jpg)
+![User Tools home screen with its five categories by purpose and all permitted tools, and the Components → User Tools menu expanded with Home active (2026.11.7, Spanish interface)](screenshots/01-portada.jpg)
 
-![“Review accounts” category, marked in the menu, with its seven tools, including “Hand over content and close an account” (2026.11.0, Spanish interface)](screenshots/31-menu-cuentas.jpg)
+![“Look up and reports” category, marked in the menu, with its eight read-only tools (2026.11.7, Spanish interface)](screenshots/48-menu-consultar.jpg)
 
-![“Groups and access levels” category, marked in the menu, with its eight tools, including “Synchronise a group branch” (2026.11.0, Spanish interface)](screenshots/32-menu-grupos.jpg)
+![“Manage accounts” category, marked in the menu, with its seven tools, including “Hand over content and close an account” (2026.11.7, Spanish interface)](screenshots/31-menu-cuentas.jpg)
+
+![“Manage groups” category, marked in the menu, with its four tools, including “Synchronise a group branch” (2026.11.7, Spanish interface)](screenshots/32-menu-grupos.jpg)
 
 ![“Automation and follow-up” category: automatic inactivity blocking, with its plugin status, and task results (2026.10.21, Spanish interface)](screenshots/33-menu-automatizacion.jpg)
 
@@ -80,7 +82,7 @@ Besides these screenshots, CI checks keyboard order, menu expansion and the acti
 
 ![Task report details](screenshots/10-informe-tarea.jpg)
 
-![User Tools module on the Users dashboard: diagnosis notice, accounts to review, tasks with their mode and result, and shortcuts grouped by the same categories as the menu (2026.11.0, Spanish interface)](screenshots/13-panel-usuarios.jpg)
+![User Tools module on the Users dashboard: diagnosis notice, accounts to review, tasks with their mode and result, and shortcuts grouped by the same five categories as the menu (2026.11.7, Spanish interface)](screenshots/13-panel-usuarios.jpg)
 
 ![Groups and access levels: groups by level matrix, CSV export and summary by level (2026.10.11, Spanish interface)](screenshots/14-grupos-niveles.jpg)
 

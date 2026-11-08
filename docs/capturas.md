@@ -4,15 +4,17 @@
 
 [Volver al README](../README.md)
 
-Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos y la lista de contenido por antigüedad de 2026.10.15, las de mover grupos de 2026.10.16, las de añadir cuentas a grupos, exportar cuentas y deshacer bloqueos de 2026.10.19, las de la ficha de una persona de 2026.10.20, la tabla de contenido por antigüedad con sus cuatro tipos, las categorías de automatización, grupos y eliminación, y el recorrido guiado, de 2026.10.21, y la portada, las categorías «Revisar cuentas» y «Grupos y niveles de acceso», la ficha de una persona, el panel de Usuarios, la explicación de acceso, sincronizar un colectivo, traspasar contenido y el resultado de la anonimización, de 2026.11.0, y las de actualizar nombres en bloque, de 2026.11.4. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
+Estas capturas compartidas muestran la interfaz en español en Joomla 6.2.0. Cada pie indica la versión en que se hizo la captura cuando es reciente: las de eliminación son de 2026.10.5, las de quitar de grupos de 2026.10.9 y 2026.10.16, la revisión de la comparación y la de grupos y niveles de acceso de 2026.10.11, la de contenido por nivel de acceso de 2026.10.12, las de diagnóstico de accesos de 2026.10.15, las de mover grupos de 2026.10.16, las de añadir cuentas a grupos, exportar cuentas y deshacer bloqueos de 2026.10.19, las de la ficha de una persona de 2026.10.20, la tabla de contenido por antigüedad con sus cuatro tipos, las categorías de automatización y eliminación, y el recorrido guiado, de 2026.10.21, y la ficha de una persona, la explicación de acceso, sincronizar un colectivo, traspasar contenido y el resultado de la anonimización, de 2026.11.0, las de actualizar nombres en bloque, de 2026.11.4, y la portada, las categorías «Consultar e informes», «Gestionar cuentas» y «Gestionar grupos», el panel de Usuarios, el alcance de cada grupo y la lista de contenido por antigüedad, de 2026.11.7. Las que no indican versión corresponden a una interfaz anterior y pueden diferir de la actual. Para las opciones y el comportamiento vigentes, consulta el [README](../README.md) y las [preguntas frecuentes](../FAQ.md).
 
 Además de estas capturas, la CI comprueba el orden de teclado, el despliegue del menú y la categoría activa, y guarda capturas a texto al 200 %, con preferencia oscura y a 390 px de ancho. Las tarjetas y los formularios caben a 390 px, pero la cabecera general de Joomla no parte el título de la página y genera un ancho de documento de unos 600 px, y hasta unos 780 px con los títulos más largos, como el de «Traspasar contenido y dar de baja»; no se ha alterado la plantilla para ocultarlo. Esto no acredita conformidad WCAG ni sustituye pruebas con lector de pantalla.
 
-![Portada de User Tools con sus cuatro categorías y todas las herramientas permitidas, y el menú Componentes → User Tools desplegado con Inicio activo (2026.11.0)](screenshots/01-portada.jpg)
+![Portada de User Tools con sus cinco categorías por finalidad y todas las herramientas permitidas, y el menú Componentes → User Tools desplegado con Inicio activo (2026.11.7)](screenshots/01-portada.jpg)
 
-![Categoría «Revisar cuentas», señalada en el menú, con sus siete herramientas, entre ellas «Traspasar contenido y dar de baja» (2026.11.0)](screenshots/31-menu-cuentas.jpg)
+![Categoría «Consultar e informes», señalada en el menú, con sus ocho herramientas de solo lectura (2026.11.7)](screenshots/48-menu-consultar.jpg)
 
-![Categoría «Grupos y niveles de acceso», señalada en el menú, con sus ocho herramientas, entre ellas «Sincronizar un colectivo» (2026.11.0)](screenshots/32-menu-grupos.jpg)
+![Categoría «Gestionar cuentas», señalada en el menú, con sus siete herramientas, entre ellas «Traspasar contenido y dar de baja» (2026.11.7)](screenshots/31-menu-cuentas.jpg)
+
+![Categoría «Gestionar grupos», señalada en el menú, con sus cuatro herramientas, entre ellas «Sincronizar un colectivo» (2026.11.7)](screenshots/32-menu-grupos.jpg)
 
 ![Categoría «Automatización y seguimiento»: bloqueo automático por inactividad, con el estado de su plugin, y resultados de tareas (2026.10.21)](screenshots/33-menu-automatizacion.jpg)
 
@@ -80,7 +82,7 @@ Además de estas capturas, la CI comprueba el orden de teclado, el despliegue de
 
 ![Detalle de un informe de tarea](screenshots/10-informe-tarea.jpg)
 
-![Módulo User Tools en el panel de Usuarios: aviso del diagnóstico, cuentas para revisar, tareas con su modo y resultado, y accesos directos agrupados por las mismas categorías del menú (2026.11.0)](screenshots/13-panel-usuarios.jpg)
+![Módulo User Tools en el panel de Usuarios: aviso del diagnóstico, cuentas para revisar, tareas con su modo y resultado, y accesos directos agrupados por las mismas cinco categorías del menú (2026.11.7)](screenshots/13-panel-usuarios.jpg)
 
 ![Grupos y niveles de acceso: matriz de grupos por nivel, exportación CSV y resumen por nivel (2026.10.11)](screenshots/14-grupos-niveles.jpg)
 

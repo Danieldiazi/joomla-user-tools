@@ -34,7 +34,7 @@ Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usu
 
 **Bloquear conserva la cuenta y sus datos; eliminar la borra y no se puede deshacer.** Solo la herramienta manual de eliminación borra cuentas. Ninguna herramienta reactiva cuentas automáticamente.
 
-La portada y el menú de Componentes organizan las herramientas en **Revisar cuentas**, **Grupos y niveles de acceso**, **Automatización y seguimiento** y **Eliminar y anonimizar cuentas**. Inicio muestra todas las herramientas permitidas; cada categoría abre solo las suyas. Los accesos del panel de Usuarios mantienen esa misma clasificación.
+La portada y el menú de Componentes organizan las herramientas según lo que vayas a hacer: **Consultar e informes** (nada de lo que hay ahí cambia el sitio), **Gestionar cuentas**, **Gestionar grupos**, **Automatización y seguimiento** y **Eliminar y anonimizar cuentas**. Inicio muestra todas las herramientas permitidas; cada categoría abre solo las suyas. Los accesos del panel de Usuarios mantienen esa misma clasificación.
 
 **Requisitos:** Joomla 6 y PHP 8.3 o posterior. Compatible con MySQL/MariaDB y PostgreSQL.  
 **Descarga:** [última release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest), paquete `pkg_usertools-VERSIÓN.zip`.  
@@ -101,22 +101,23 @@ El instalador crea los recorridos y los actualiza en cada versión; si cambias s
 
 ## Navegación por categorías
 
-En **Componentes → User Tools** puedes abrir **Inicio** o una de las cuatro categorías de la portada:
+En **Componentes → User Tools** puedes abrir **Inicio** o una de las cinco categorías de la portada:
 
 | Categoría | Herramientas |
 |---|---|
-| Revisar cuentas | Ficha de una persona, explicar acceso a contenido, comparar lista, exportar cuentas, revisar inactivos y deshacer bloqueos. |
-| Grupos y niveles de acceso | Añadir y quitar de grupos, mover grupos, grupos/niveles, alcance de cada grupo, contenido por nivel, contenido por antigüedad y diagnóstico. |
+| Consultar e informes | Ficha de una persona, explicar acceso a contenido, exportar cuentas, grupos y niveles de acceso, alcance de cada grupo, contenido por nivel, contenido por antigüedad y diagnóstico de accesos. Solo leen. |
+| Gestionar cuentas | Comparar lista, alta masiva, pasar a SSO, revisar inactivos, deshacer bloqueos, traspasar contenido y actualizar nombres. |
+| Gestionar grupos | Añadir a grupos, sincronizar un colectivo, quitar de grupos y mover grupos. |
 | Automatización y seguimiento | Configuración del bloqueo automático y resultados/informes. |
 | Eliminar y anonimizar cuentas | Las dos herramientas permanentes, con sus advertencias y confirmaciones. |
 
 Cada categoría muestra sus herramientas y sus explicaciones. **Inicio** conserva la portada completa. Solo aparecen herramientas permitidas y categorías que tengan alguna disponible; esto también se aplica a los accesos del panel de Usuarios. La configuración de tareas requiere poder gestionar el programador de Joomla; ver sus resultados requiere el permiso propio de informes.
 
-Al abrir una herramienta, revisión, resultado o informe, su categoría permanece señalada en el menú. La barra ofrece **Volver a [categoría]** e **Inicio de User Tools**. Los enlaces solo abren pantallas: no ejecutan cambios y cada herramienta conserva su revisión, permisos y confirmaciones. Las direcciones antiguas siguen funcionando; una categoría desconocida se rechaza.
+Al abrir una herramienta, revisión, resultado o informe, su categoría permanece señalada en el menú. La barra ofrece **Volver a [categoría]** e **Inicio de User Tools**. Los enlaces solo abren pantallas: no ejecutan cambios y cada herramienta conserva su revisión, permisos y confirmaciones. Las direcciones antiguas siguen funcionando; una categoría desconocida se rechaza. Desde la 2026.11.7, las herramientas de solo lectura están juntas en «Consultar e informes»; las direcciones de «Revisar cuentas» y «Grupos y niveles de acceso» abren ahora «Gestionar cuentas» y «Gestionar grupos».
 
 El paquete incluye **Sistema - User Tools**, que integra el filtrado y la categoría activa con el menú de Joomla. Se habilita al instalarlo por primera vez, también al actualizar desde una versión sin ese plugin. Si después lo deshabilitas, las siguientes actualizaciones respetan tu decisión y la portada avisa. Para recuperar el filtrado y la categoría activa, habilítalo en **Sistema → Gestionar → Plugins**. Los permisos de las pantallas siguen comprobándose en el servidor.
 
-La [galería de capturas](docs/capturas.md) muestra la portada, las cuatro categorías con el menú desplegado y el panel de Usuarios.
+La [galería de capturas](docs/capturas.md) muestra la portada, las categorías con el menú desplegado y el panel de Usuarios.
 
 ## Ficha de una persona
 
@@ -170,7 +171,7 @@ La herramienta **Exportar cuentas a CSV** requiere el permiso `usertools.export`
 
 ## Alta masiva de usuarios (solo crear)
 
-En **Componentes → User Tools → Revisar cuentas → Alta masiva de usuarios**, pega una cuenta por línea con el formato `usuario;nombre;correo;grupo` (hasta 2.000 líneas):
+En **Componentes → User Tools → Gestionar cuentas → Alta masiva de usuarios**, pega una cuenta por línea con el formato `usuario;nombre;correo;grupo` (hasta 2.000 líneas):
 
 ```text
 jperez
@@ -189,7 +190,7 @@ Se muestran las filas inválidas, duplicadas, existentes y de grupos no autoriza
 
 ## Pasar cuentas a acceso por SSO
 
-La herramienta **Revisar cuentas → Pasar cuentas a acceso por SSO** (`usertools.sso`) muestra únicamente cuentas con **«Requerir restablecimiento de contraseña»** (`requireReset = 1`). Permite filtrar por **grupo y subgrupos**, **activas/bloqueadas** y **si alguna vez accedieron**.
+La herramienta **Gestionar cuentas → Pasar cuentas a acceso por SSO** (`usertools.sso`) muestra únicamente cuentas con **«Requerir restablecimiento de contraseña»** (`requireReset = 1`). Permite filtrar por **grupo y subgrupos**, **activas/bloqueadas** y **si alguna vez accedieron**.
 
 En la revisión se ven usuario, nombre, correo, estado, última visita, fecha de alta y grupos. **No hay ninguna cuenta marcada inicialmente**. Puedes seleccionar todos los visibles tras filtrar, revisar el contador y confirmar la operación (con número escrito si se alcanza el umbral de Opciones). La revisión de un solo uso caduca a los **15 minutos**.
 

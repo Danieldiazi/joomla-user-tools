@@ -223,15 +223,15 @@ $admin->login(getenv('UT_ADMIN_USER') ?: 'admin', getenv('UT_ADMIN_PASS') ?: die
 $home = $admin->get('index.php?option=com_usertools');
 Test::check(str_contains($home, 'Compare a list of users') && str_contains($home, 'Task results'), 'home lists every tool for a Super User');
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
-Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
+Test::check($sections[1] === ['consult', 'accounts', 'groups', 'automation', 'delete'], 'home groups the tools in five sections, read-only first and deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
-Test::check($cards[1] === ['profile', 'explain', 'compare', 'bulkcreate', 'sso', 'export', 'inactive', 'unblock', 'handover', 'names', 'addgroups', 'sync', 'ungroup', 'move', 'access', 'reach', 'usage', 'age', 'diagnose', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
+Test::check($cards[1] === ['profile', 'explain', 'export', 'access', 'reach', 'usage', 'age', 'diagnose', 'compare', 'bulkcreate', 'sso', 'inactive', 'unblock', 'handover', 'names', 'addgroups', 'sync', 'ungroup', 'move', 'schedule', 'reports', 'delete', 'anonymize'], 'every tool has its card, in order');
 $deleteCard = substr($home, (int) strpos($home, 'data-ut-home-card="delete"'), 1500);
 Test::check(str_contains($deleteCard, 'Permanent') && str_contains($deleteCard, 'Deletion cannot be undone.') && str_contains($deleteCard, 'btn-outline-danger'),
     'deletion says «Permanent» and its consequence in text, not only in red');
 Test::check(!preg_match('/<span class="icon-(address-card)"/', $home) && str_contains($home, '<span class="icon-vcard" aria-hidden="true"></span> Account profile'),
     'the profile card uses an icon that Joomla provides');
-Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 4 && substr_count($home, '<h3 class="card-title ut-card-title"') === 23 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
+Test::check(substr_count($home, '<h2 class="ut-home-heading"') === 5 && substr_count($home, '<h3 class="card-title ut-card-title"') === 23 && str_contains($home, 'aria-describedby="ut-card-ungroup"'),
     'sections are h2 and cards h3; each button is described by its card title');
 Test::check(str_contains($home, 'Task plugin:') && !str_contains($home, 'MANUAL'), 'the plugin state sits in the task card; no repeated «Manual» labels');
 Test::check(!str_contains($home, 'User Tools home'), 'the home screen has no link to itself in the toolbar');
@@ -918,7 +918,7 @@ $categoryAgeList = $admin->get($ageUrl . '&layout=list&kind=categories&year=2012
 Test::check(str_contains($categoryAgeList, 'data-ut-age-list-total="1"') && str_contains($categoryAgeList, '>' . htmlspecialchars($ageCategoryTitle) . '</a>')
     && str_contains($categoryAgeList, 'option=com_categories&amp;task=category.edit&amp;id=' . $ageCategory . '&amp;extension=com_content')
     && str_contains($categoryAgeList, 'Parent category'), 'the list of categories links to their edit screen and names the parent column');
-utCheckCategory($categoryAgeList, 'groups', 'content age category list');
+utCheckCategory($categoryAgeList, 'consult', 'content age category list');
 $contactAgeList = $admin->get($ageUrl . '&layout=list&kind=contacts&year=2011');
 Test::check(str_contains($contactAgeList, 'data-ut-age-list-total="1"') && str_contains($contactAgeList, 'option=com_contact&amp;task=contact.edit&amp;id=' . $ageContact)
     && str_contains($contactAgeList, 'UT age contact'), 'the list of contacts uses their name and links to their edit screen');

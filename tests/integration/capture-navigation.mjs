@@ -35,7 +35,7 @@ try {
   await page.locator('[data-ut-category=""]').waitFor();
   await capture('01-portada.jpg');
   for (const [category, name] of [
-    ['accounts', '31-menu-cuentas.jpg'], ['groups', '32-menu-grupos.jpg'],
+    ['consult', '48-menu-consultar.jpg'], ['accounts', '31-menu-cuentas.jpg'], ['groups', '32-menu-grupos.jpg'],
     ['automation', '33-menu-automatizacion.jpg'], ['delete', '34-menu-eliminacion.jpg'],
   ]) {
     await page.goto(home + '&section=' + category);
@@ -215,7 +215,7 @@ try {
     menuKeyboardOrder: true, keyboardExpandCollapse: true, activeCategories: true,
     narrowCategoryFits: true, layout, language: 'en-GB',
     scope: 'Joomla disposable CI site; own category content, not a WCAG conformity assessment',
-    captures: ['home', 'four categories', 'Users dashboard', '390px', '200% root font', 'dark colour preference'],
+    captures: ['home', 'five categories', 'Users dashboard', '390px', '200% root font', 'dark colour preference'],
   }, null, 2));
   console.log('Category navigation captures and keyboard/layout checks completed');
 } finally {

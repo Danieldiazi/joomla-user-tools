@@ -34,7 +34,7 @@ Account administration tools for **Joomla 6**: compare a current user list, crea
 
 **Blocking preserves the account and its data; deletion removes it permanently and cannot be undone.** Only the manual deletion tool deletes accounts. No tool automatically reactivates accounts.
 
-The home screen and Components menu organise tools into **Review accounts**, **Groups and access levels**, **Automation and follow-up**, and **Delete and anonymise accounts**. Home shows every permitted tool; each category opens only its own tools. The Users dashboard shortcuts follow the same classification.
+The home screen and Components menu organise tools by what you are going to do: **Look up and reports** (nothing there changes the site), **Manage accounts**, **Manage groups**, **Automation and follow-up**, and **Delete and anonymise accounts**. Home shows every permitted tool; each category opens only its own tools. The Users dashboard shortcuts follow the same classification.
 
 **Requirements:** Joomla 6 and PHP 8.3 or later. Compatible with MySQL/MariaDB and PostgreSQL.  
 **Download:** [latest release](https://github.com/Danieldiazi/joomla-user-tools/releases/latest), package `pkg_usertools-VERSION.zip`.  
@@ -101,22 +101,23 @@ The installer creates the tours and updates them with each version; if you chang
 
 ## Category navigation
 
-Under **Components → User Tools**, open **Home** or one of the home screen's four categories:
+Under **Components → User Tools**, open **Home** or one of the home screen's five categories:
 
 | Category | Tools |
 |---|---|
-| Review accounts | Account profile, explain content access, compare a list, export accounts, review inactive users and undo blocks. |
-| Groups and access levels | Add and remove memberships, move groups, groups/levels, reach of each group, content by access level, content by age and diagnosis. |
+| Look up and reports | Account profile, explain content access, export accounts, groups and access levels, reach of each group, content by access level, content by age and access diagnosis. Read only. |
+| Manage accounts | Compare a list, bulk creation, convert to SSO, review inactive users, undo blocks, hand over content and update names. |
+| Manage groups | Add to groups, synchronise a group branch, remove from groups and move groups. |
 | Automation and follow-up | Automatic blocking configuration and results/reports. |
 | Delete and anonymise accounts | Both permanent tools, with their warnings and confirmations. |
 
 Each category shows its tools and explanations. **Home** keeps the complete home screen. Only permitted tools and categories containing an available tool appear; the Users dashboard shortcuts follow the same rules. Task configuration requires permission to manage Joomla's scheduler; viewing results requires the dedicated reports permission.
 
-The category stays marked in the menu when opening a tool, review, result or report. The toolbar offers **Back to [category]** and **User Tools home**. Links only open screens: they do not execute changes, and each tool keeps its review, permissions and confirmations. Old URLs still work; unknown categories are rejected.
+The category stays marked in the menu when opening a tool, review, result or report. The toolbar offers **Back to [category]** and **User Tools home**. Links only open screens: they do not execute changes, and each tool keeps its review, permissions and confirmations. Old URLs still work; unknown categories are rejected. Since 2026.11.7, the read-only tools are together in «Look up and reports»; the addresses of «Review accounts» and «Groups and access levels» now open «Manage accounts» and «Manage groups».
 
 The package includes **System - User Tools**, which integrates permission filtering and the active category with Joomla's menu. It is enabled when first installed, including upgrades from a version without this plugin. If you subsequently disable it, later updates respect that choice and the home screen displays a notice. Enable it under **System → Manage → Plugins** to restore filtering and active categories. Screen permissions are still enforced on the server.
 
-The [screenshot gallery](docs/screenshots.en.md) shows the home screen, the four categories with the menu expanded and the Users dashboard (Spanish interface).
+The [screenshot gallery](docs/screenshots.en.md) shows the home screen, the categories with the menu expanded and the Users dashboard (Spanish interface).
 
 ## Account profile
 
@@ -171,7 +172,7 @@ It requires its own *Explain content access* permission (`usertools.explain`), p
 
 ## Bulk account creation (create only)
 
-Open **Components → User Tools → Review accounts → Bulk account creation** and paste one account per line with `username;name;email;group` (up to 2,000 lines):
+Open **Components → User Tools → Manage accounts → Bulk account creation** and paste one account per line with `username;name;email;group` (up to 2,000 lines):
 
 ```text
 jperez
@@ -190,7 +191,7 @@ Duplicate, existing, malformed and unauthorized group rows are not selectable, n
 
 ## Convert accounts to SSO access
 
-**Review accounts → Convert accounts to SSO access** (`usertools.sso`) lists only accounts with **Require Password Reset** (`requireReset = 1`). Filter by **group and descendants**, **active/blocked status** and **whether the account has ever logged in**.
+**Manage accounts → Convert accounts to SSO access** (`usertools.sso`) lists only accounts with **Require Password Reset** (`requireReset = 1`). Filter by **group and descendants**, **active/blocked status** and **whether the account has ever logged in**.
 
 The review shows username, display name, email, status, last login, registration date and groups. **All accounts start unselected**; select visible rows after filtering, review the live count and confirm (typing the number when the configured threshold is reached). The one-use preview expires after **15 minutes**.
 

@@ -95,7 +95,7 @@ foreach (['usertools.xml', 'services/provider.php', 'src/Extension/Usertools.php
     $check(in_array($file, $navFiles, true), "navigation plugin contains $file");
 }
 $menuManifest = simplexml_load_string((string) $read($com, 'com_usertools.xml'));
-$check(count($menuManifest->administration->submenu->menu) === 5, 'component declares Home and four category links');
+$check(count($menuManifest->administration->submenu->menu) === 6, 'component declares Home and five category links');
 foreach (['es-ES', 'en-GB'] as $tag) {
     $menuStrings = parse_ini_string((string) $read($com, "admin/language/$tag/com_usertools.sys.ini"), false, INI_SCANNER_RAW) ?: [];
     $mainStrings = parse_ini_string((string) $read($com, "admin/language/$tag/com_usertools.ini"), false, INI_SCANNER_RAW) ?: [];
