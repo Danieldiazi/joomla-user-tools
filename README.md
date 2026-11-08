@@ -2,6 +2,8 @@
 
 **Español** · [English](README.en.md)
 
+<p align="center"><img src="media/images/usertools-logo.png" alt="User Tools para Joomla" width="400"></p>
+
 Herramientas para administrar cuentas en **Joomla 6**: comparar una lista de usuarios vigentes, crear cuentas nuevas, revisar la inactividad y programar bloqueos con informes.
 
 | Herramienta | Qué hace |

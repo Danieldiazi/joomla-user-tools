@@ -13,6 +13,7 @@
     <filename>joomla.asset.json</filename>
     <folder>css</folder>
     <folder>js</folder>
+    <folder>images</folder>
   </media>
   <administration>
     <menu link="option=com_usertools" img="class:users">COM_USERTOOLS</menu>

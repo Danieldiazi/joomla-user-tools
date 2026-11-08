@@ -222,6 +222,11 @@ $site->options(['confirm_threshold' => 3, 'creation_mode' => 'email', 'compare_p
 $admin->login(getenv('UT_ADMIN_USER') ?: 'admin', getenv('UT_ADMIN_PASS') ?: die("UT_ADMIN_PASS is required\n"));
 $home = $admin->get('index.php?option=com_usertools');
 Test::check(str_contains($home, 'Compare a list of users') && str_contains($home, 'Task results'), 'home lists every tool for a Super User');
+Test::check(preg_match('/<img[^>]+src="([^"]*media\/com_usertools\/images\/usertools-logo\.png(?:\?[^"]*)?)"[^>]*alt="User Tools for Joomla"/', $home, $logo) === 1,
+    'the home screen presents the extension with its logo and a text alternative');
+[$logoCode, , $logoHeaders] = $admin->request('../' . ltrim(preg_replace('#^https?://[^/]+#', '', html_entity_decode($logo[1] ?? '')), '/'));
+Test::check($logoCode === 200 && str_starts_with($logoHeaders['content-type'] ?? '', 'image/png'), 'the logo is installed in the media folder (got ' . $logoCode . ')');
+Test::check(!str_contains($admin->get('index.php?option=com_usertools&view=home&section=consult'), 'data-ut-home-logo'), 'category pages do not repeat the logo');
 preg_match_all('/data-ut-home-section="([a-z]+)"/', $home, $sections);
 Test::check($sections[1] === ['accounts', 'groups', 'automation', 'delete'], 'home groups the tools in four sections, deletion last (' . implode(',', $sections[1]) . ')');
 preg_match_all('/data-ut-home-card="([a-z]+)"/', $home, $cards);
